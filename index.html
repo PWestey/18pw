@@ -691,9 +691,10 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
 
 <nav class="nav">
   <button data-view="home" class="on"><span class="ic">🏠</span>Home</button>
-  <button data-view="tasks"><span class="ic">✓</span>Tasks</button>
-  <button data-view="roster"><span class="ic">⛨</span>Roster</button>
-  <button data-view="campaign"><span class="ic">⚔</span>Campaign</button>
+  <button data-view="quests"><span class="ic">📜</span>Quests</button>
+  <button data-view="heroes"><span class="ic">⛨</span>Heroes</button>
+  <button data-view="battles"><span class="ic">⚔</span>Battles</button>
+  <button data-view="growth"><span class="ic">🌱</span>Growth</button>
 </nav>
 
 <!-- battle arena -->
@@ -2018,7 +2019,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=25;
-const APP_BUILD='v1.37.1-r1.2-roster-hardening';
+const APP_BUILD='v1.38.0-r1.3-navigation-cleanup';
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
@@ -2329,17 +2330,21 @@ function render(){
   if(ambient){clearInterval(ambient);ambient=null;}
   clearSpriteLoops();
   try{
+    view=viewAlias(view);
+    setNavActive(view);
     renderHUD();
     const v=document.getElementById('view');
     if(view==='home') renderHome(v);
-    else if(view==='tasks') renderTasks(v);
-    else if(view==='roster') renderRoster(v);
-    else renderCampaign(v);
+    else if(view==='quests') renderQuests(v);
+    else if(view==='heroes') renderHeroes(v);
+    else if(view==='battles') renderBattles(v);
+    else if(view==='growth') renderGrowth(v);
+    else { view='home'; setNavActive(view); renderHome(v); }
   }catch(err){
     console.error('Life Quest render failed',err);
     const v=document.getElementById('view');
     if(v) v.innerHTML='<div class="empty" style="margin-top:18px"><b>Screen could not load.</b><br>'+esc(err.message||err)+'<br><br><button class="go" id="repairAfterError">Repair save and return Home</button></div>';
-    const b=document.getElementById('repairAfterError'); if(b) b.onclick=()=>{ try{ sanitizeHeroes(); migrate(); view='home'; document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.view==='home')); renderHUD(); render(); save(); toast('Save repaired.'); }catch(e){ console.error(e); toast('Repair failed — use Settings backup tools.'); } };
+    const b=document.getElementById('repairAfterError'); if(b) b.onclick=()=>{ try{ sanitizeHeroes(); migrate(); view='home'; setNavActive('home'); renderHUD(); render(); save(); toast('Save repaired.'); }catch(e){ console.error(e); toast('Repair failed — use Settings backup tools.'); } };
   }
 }
 
@@ -2371,7 +2376,31 @@ function whyForTask(it){ const k=domainOf(it); const label=k?DKEY[k].label:'Gene
 function rewardPreview(it){ const k=domainOf(it); const charge=TUNE.chargeByDiff[it.diff]||TUNE.chargeByDiff.med; const bits=[]; if(k&&DKEY[k]) bits.push(DKEY[k].label+' XP'); else bits.push('Life XP'); bits.push('+'+charge+'h charge'); bits.push('light rewards'); return bits.join(' · '); }
 function nextUnlockHero(){ const locked=lockedHeroes(); if(!locked.length) return null; const wish=locked.filter(h=>(S.wishlist||[]).includes(h.id)); return (wish[0]||locked.find(h=>h.name==='Wolverine')||locked[0]); }
 function featuredHero(){ const owned=S.heroes.filter(h=>h.owned); if(!owned.length) return null; if(S.focus){ const f=owned.find(h=>h.id===S.focus); if(f) return f; } return owned.slice().sort((a,b)=>powerOf(b)-powerOf(a))[0]; }
-function navTo(vw){ view=vw; document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.view===vw)); render(); }
+function viewAlias(vw){ return ({tasks:'quests',roster:'heroes',campaign:'battles'}[vw]||vw||'home'); }
+function setNavActive(vw){ const cv=viewAlias(vw); document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',viewAlias(x.dataset.view)===cv)); }
+function navTo(vw){ view=viewAlias(vw); setNavActive(view); render(); }
+function renderQuests(v){ renderTasks(v); }
+function renderHeroes(v){ renderRoster(v); }
+function renderBattles(v){ renderCampaign(v); }
+function growthCardHTML(icon,title,tag,body,summary,buttonId,buttonText){ return '<div class="lifecard"><h3><span>'+icon+' '+title+'</span><span>'+tag+'</span></h3><p>'+body+'</p>'+(summary||'')+'<div class="lifeactions"><button class="primary" id="'+buttonId+'">'+buttonText+'</button></div></div>'; }
+function renderGrowth(v){
+  const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain();
+  const sm=DKEY[strong.k], lm=DKEY[light.k];
+  v.innerHTML=
+    '<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">who I am becoming</span></div>'+
+    monthlySummaryHTML()+
+    '<div class="identityFocus"><b style="color:var(--ink)">Focus:</b> Meaning first, loot second. Use this tab for domains, reflection, base-building, research, and recovery.</div>'+
+    '<div class="lifesys-grid">'+
+      growthCardHTML('🌱','Domain Levels','Identity XP','Your real actions level the areas of life you care about most.','<div class="domainGrid">'+domainTilesHTML(4)+'</div>'+balanceChestHTML(),'openDomainsHome','View all domains')+
+      growthCardHTML('🏡','Life Base','Sanctuary','Watch your real-life domains become rooms you are building over time.',sanctuarySummaryHTML(),'openSanctuary','Open Life Base')+
+      growthCardHTML('🃏','Strategy + Research','Cards','Equip up to 3 light bonuses and buy permanent research upgrades from weekly reflection.',strategySummaryHTML(),'openStrategy','Open Strategy')+
+      growthCardHTML('🧭','Weekly Review',(W.reviewed?'Done':'Open'),'Notice momentum, name the lightest area, and choose the next faithful step.','<div class="reviewline"><span>Strongest</span><b>'+(sm?sm.icon+' '+sm.label:'—')+'</b></div><div class="reviewline"><span>Lightest</span><b>'+(lm?lm.icon+' '+lm.label:'—')+'</b></div>','openReview','Open weekly review')+
+      growthCardHTML('📅','Monthly Review','Identity','Review the bigger pattern: wins, drift, domains, and the man you are becoming.',recapCenterHTML(),'openMonthly','Open monthly review')+
+      growthCardHTML('🕊️','Grace & Recovery',(S.grace||0)+' tokens','Recovery Day and Grace Tokens protect momentum without pretending hard days were full-output days.','<div class="lifeactions" style="margin-top:0"><button class="primary" id="openRecovery">Start recovery anchor</button><button id="openGrace">How grace works</button></div>','openWeeklyRecap','Preview weekly recap')+
+    '</div>';
+  bindLifeCards();
+}
+
 
 function nextChestInfo(){
   const W=ensureWeek(), pct=W.done/weekPossible()*100;
@@ -2551,52 +2580,38 @@ function renderHome(v){
   const hour=new Date().getHours();
   const hello=hour<5?'Late night':hour<12?'Good morning':hour<17?'Good afternoon':hour<21?'Good evening':'Winding down';
   const line=pct>=100?'Every box checked. That’s a day well built.':pct>=60?'Strong momentum today — keep going.':pct>0?'You’ve started, and starting is the hard part.':'Pick one thing and begin. Small reps build the life.';
-  const owned=ownedCount(), bonus=Math.round((collectionMult()-1)*100), fh=featuredHero();
-  const camp=teamPower('campaign'), act=activeIds().size;
+  const next=suggestNext(), priorities=topPriorities(3), fh=featuredHero();
   const touched=new Set(dailies.filter(d=>d.done&&domainOf(d)).map(d=>domainOf(d)));
   const domRow=DOMAINS.map(d=>'<span title="'+d[1]+'" style="font-size:18px;filter:'+(touched.has(d[0])?'none':'grayscale(1) opacity(.3)')+'">'+d[3]+'</span>').join('');
-  const next=suggestNext(), priorities=topPriorities(3), unlock=nextUnlockHero();
-  const cry=S.crystals, unlockCost=(S.summonTickets||0)>0?1:(unlock?UNLOCK_TARGET:UNLOCK_RANDOM), sumPct=Math.min(100,(S.summonTickets||0)>0?100:cry/unlockCost*100);
-  const Rb=ensureRaid(), boss=currentBoss(), bpct=Math.min(100,Rb.dmg/Rb.max*100), bwk=boss.weak.map(k=>DKEY[k]?DKEY[k].icon+' '+DKEY[k].label:'').join(' · ');
-  const setup=!S.onboarded?'<div class="setupcard" id="setupCard"><h3>⚙ Finish V1 setup</h3><p>Quick check: make the quests yours, confirm your starter squad, then download a backup before future GitHub updates.</p><div class="setuprow"><button id="setupTasks">Customize quests</button><button id="setupSquad">Review squad</button><button id="setupBackup">Open backup</button><button id="setupDone">Done</button></div></div>':'';
+  const setup=!S.onboarded?'<div class="setupcard" id="setupCard"><h3>⚙ Finish setup</h3><p>Quick check: make the quests yours, confirm your starter squad, then download a backup before future updates.</p><div class="setuprow"><button id="setupTasks">Customize quests</button><button id="setupSquad">Review squad</button><button id="setupBackup">Open backup</button><button id="setupDone">Done</button></div></div>':'';
   const priorityHTML=priorities.length?'<div class="prioritylist">'+priorities.map((it,idx)=>{ const k=domainOf(it), dk=k?DKEY[k]:null; return '<div class="priorityitem" data-pid="'+it.id+'"><div class="pi" style="color:'+(dk?dk.color:'var(--accent2)')+'">'+(dk?dk.icon:'•')+'</div><div class="pt"><div class="pn">'+esc(it.title)+'</div><div class="pm">'+(dk?dk.label+' · ':'')+rewardPreview(it)+'</div></div><span style="color:var(--muted);font-weight:900">#'+(idx+1)+'</span></div>'; }).join('')+'</div>':'<div class="empty" style="padding:14px;margin-top:10px">All core actions are done. Rest is part of the work.</div>';
-  const nextHTML=next?'<div class="stagecard nextBig" id="nextCard" style="text-align:left;margin-bottom:13px;cursor:pointer"><h3 style="font-size:15px;margin-bottom:7px">🧭 Next best action</h3><p style="margin:0 0 4px;font-weight:1000;color:var(--ink);font-size:17px">'+esc(next.title)+'</p><p style="margin:0 0 8px;color:var(--muted);font-weight:650;line-height:1.35">'+whyForTask(next)+'</p><div style="font-size:12px;font-weight:900;color:#8bd0ff">'+rewardPreview(next)+'</div><div class="nbBtns"><button id="doNext" class="go" style="flex:1">Go to task</button><button id="refreshNext" style="flex:1;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Refresh</button></div></div>':'<div class="stagecard nextBig" style="border-color:#37c46e55;margin-bottom:13px"><h3>All clear 🎉</h3><p style="margin:0">Your main daily board is clear. Protect the win.</p></div>';
+  const nextHTML=next?'<div class="stagecard nextBig" id="nextCard" style="text-align:left;margin-bottom:13px;cursor:pointer"><h3 style="font-size:15px;margin-bottom:7px">🧭 Next best action</h3><p style="margin:0 0 4px;font-weight:1000;color:var(--ink);font-size:17px">'+esc(next.title)+'</p><p style="margin:0 0 8px;color:var(--muted);font-weight:650;line-height:1.35">'+whyForTask(next)+'</p><div style="font-size:12px;font-weight:900;color:#8bd0ff">'+rewardPreview(next)+'</div><div class="nbBtns"><button id="doNext" class="go" style="flex:1">Go to quest</button><button id="refreshNext" style="flex:1;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Refresh</button></div></div>':'<div class="stagecard nextBig" style="border-color:#37c46e55;margin-bottom:13px"><h3>All clear 🎉</h3><p style="margin:0">Your main daily board is clear. Protect the win.</p></div>';
+  const squadPreview=squad('campaign').slice(0,TUNE.teamSize).map(id=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return ''; return '<div class="slot full"><div class="ava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+(h.img?'<img src="'+h.img+'">':initials(h.name))+'</div></div>'; }).join('');
   v.innerHTML=
     '<div class="head"><h2>'+hello+'</h2><span style="color:var(--muted);font-weight:700;font-size:13px">'+dateStamp()+'</span></div><div class="titlebar">🏷 '+esc(currentTitle())+'</div>'+setup+
     '<div style="color:var(--muted);font-weight:600;font-size:13px;margin:-6px 2px 14px">'+line+'</div>'+nextHTML+
-    monthlySummaryHTML()+bestGameActionHTML()+useChargeHTML()+lastActionHTML()+closestRewardHTML()+
-    '<div class="stagecard" style="margin-bottom:13px;text-align:left"><h3 style="display:flex;justify-content:space-between"><span>Today’s Quest</span><span style="color:var(--accent2)">'+doneN+' / '+totN+'</span></h3>'+priorityHTML+
+    monthlySummaryHTML()+lastActionHTML()+closestRewardHTML()+bestGameActionHTML()+useChargeHTML()+
+    '<div class="stagecard" style="margin-bottom:13px;text-align:left"><h3 style="display:flex;justify-content:space-between"><span>Today’s Progress</span><span style="color:var(--accent2)">'+doneN+' / '+totN+'</span></h3>'+priorityHTML+
       '<div class="dummybar" style="height:12px;margin:12px 0 6px"><i style="width:'+pct+'%;background:linear-gradient(90deg,#37c46e,#36e0e6)"></i></div>'+ 
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><div style="display:flex;gap:9px">'+domRow+'</div><span style="font-size:11px;color:var(--muted);font-weight:700">life areas today</span></div>'+ 
-      '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:9px;border-top:1px solid var(--line);padding-top:8px">🕛 Day resets at midnight · '+dayEndsIn()+' left · 📦 Week resets Monday 12:00 AM · '+weekEndsIn()+' left</div></div>'+ 
-    '<div style="background:linear-gradient(135deg,rgba(54,224,230,.10),rgba(58,123,213,.10));border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:13px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-family:Orbitron;font-weight:800;font-size:13px;color:#36e0e6">COLLECTION LV '+gCL+'</div><div style="font-size:12px;font-weight:800;color:var(--good)">+'+bonus+'% all heroes</div></div>'+ 
-      '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;font-weight:700;color:var(--muted)"><span>'+owned+' heroes</span><span>CP '+gCP.toLocaleString()+'</span><span>'+act+' active</span><span>⚔ Campaign '+camp.toLocaleString()+'</span><span>📚 '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+' albums</span><span>🕊️ '+(S.grace||0)+' grace</span></div></div>'+ 
-    '<div class="stagecard" id="goSummon" style="margin-bottom:13px;cursor:pointer;text-align:left"><h3 style="display:flex;justify-content:space-between"><span>📦 Next Unlock</span><span style="color:#8bd0ff">'+((S.summonTickets||0)>0?(S.summonTickets||0)+'🎟':cry+' / '+unlockCost+' ◆')+'</span></h3>'+ 
-      '<div class="dummybar" style="height:10px;margin:8px 0 4px"><i style="width:'+sumPct+'%;background:linear-gradient(90deg,#3a7bd5,#36e0e6)"></i></div>'+ 
-      '<p style="margin:6px 0 0">'+(unlock?('Target: '+esc(unlock.name)+' · '+esc(unlock.ip)+' · '+unlock.role):'Every hero unlocked!')+'</p></div>'+ 
-    '<div class="stagecard" id="goBoss" style="border-color:#ff5d6c55;margin-bottom:13px;cursor:pointer;text-align:left"><h3 style="display:flex;justify-content:space-between"><span>'+boss.icon+' '+boss.name+'</span><span style="color:#ff8a95">'+bpct.toFixed(0)+'%</span></h3>'+ 
-      '<div class="dummybar" style="height:10px;margin:8px 0 6px"><i style="width:'+bpct+'%;background:linear-gradient(90deg,#ff5d6c,#ffb01f)"></i></div>'+ 
-      '<p style="margin:6px 0 0">Weak to '+bwk+' · Week resets Monday 12:00 AM · '+weekEndsIn()+' left</p></div>'+ 
-    lifeSystemCardsHTML()+
+      '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:9px;border-top:1px solid var(--line);padding-top:8px">🕛 Day resets at midnight · '+dayEndsIn()+' left · 📦 Week resets Monday · '+weekEndsIn()+' left</div></div>'+ 
+    '<div class="team-strip" style="margin-bottom:13px"><div class="lab"><span>Campaign Squad</span><b>PWR '+teamPower('campaign')+'</b></div><div class="team-row">'+(squadPreview||'<div class="empty" style="width:100%;padding:10px">No Campaign squad yet.</div>')+'</div><button class="ghost" id="homeEditSquad" style="margin-top:10px;width:100%">Open Battles</button></div>'+ 
     (fh?'<div class="head"><h2>Featured Hero</h2></div>'+ 
       '<div class="card" id="featHero" data-id="'+fh.id+'" style="cursor:pointer"><div class="diff" style="background:'+fh.color+'"></div><div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(160deg,'+fh.color+',#0008);display:flex;align-items:center;justify-content:center;font-family:Orbitron;font-weight:900;color:#fff;margin-right:10px;overflow:hidden">'+(fh.img?'<img src="'+fh.img+'" style="width:100%;height:100%;object-fit:cover">':initials(fh.name))+'</div>'+ 
-        '<div class="body"><div class="t">'+esc(fh.name)+(S.focus===fh.id?' 🎯':'')+'</div><div class="meta">'+fh.ip+' · '+fh.role+' · Lv '+fh.level+' · PWR '+powerOf(fh)+' · Bond Lv '+bondLevel(fh)+' · Weekly focus</div></div></div>':'<div class="head"><h2>Featured Hero</h2></div><div class="featured-empty" id="pickFeatured">No featured hero set yet. Pick one favorite from Roster → Set as Featured Hero to make the Home screen feel more personal.</div>');
-  bindHomeActions(); bindBestGameAction(); bindUseChargeHome(); bindClosestReward();
-  const goToNext=()=>{ if(!next){toast('All clear — protect the win.'); return;} subtab=(S.todos||[]).some(t=>t.id===next.id)?'todos':'dailies'; navTo('tasks'); };
+        '<div class="body"><div class="t">'+esc(fh.name)+(S.focus===fh.id?' 🎯':'')+'</div><div class="meta">'+fh.ip+' · '+fh.role+' · Lv '+fh.level+' · PWR '+powerOf(fh)+' · Bond Lv '+bondLevel(fh)+' · Weekly focus</div></div></div>':'<div class="head"><h2>Featured Hero</h2></div><div class="featured-empty" id="pickFeatured">No featured hero set yet. Pick one favorite from Heroes → Set as Featured Hero.</div>');
+  bindBestGameAction(); bindUseChargeHome(); bindClosestReward();
+  const goToNext=()=>{ if(!next){toast('All clear — protect the win.'); return;} subtab=(S.todos||[]).some(t=>t.id===next.id)?'todos':'dailies'; navTo('quests'); };
   const nc=document.getElementById('nextCard'); if(nc) nc.onclick=goToNext;
   const dn=document.getElementById('doNext'); if(dn) dn.onclick=(e)=>{ e.stopPropagation(); goToNext(); };
   const rn=document.getElementById('refreshNext'); if(rn) rn.onclick=(e)=>{ e.stopPropagation(); const it=suggestNext(); toast(it?'Next: '+it.title:'All clear — protect the win.'); };
-  document.querySelectorAll('.priorityitem').forEach(x=>x.onclick=()=>{ const id=x.dataset.pid; subtab=(S.todos||[]).some(t=>t.id===id)?'todos':'dailies'; navTo('tasks'); });
-  const gs=document.getElementById('goSummon'); if(gs) gs.onclick=()=>navTo('roster');
-  const gb=document.getElementById('goBoss'); if(gb) gb.onclick=()=>{ campSub='raid'; navTo('campaign'); };
+  document.querySelectorAll('.priorityitem').forEach(x=>x.onclick=()=>{ const id=x.dataset.pid; subtab=(S.todos||[]).some(t=>t.id===id)?'todos':'dailies'; navTo('quests'); });
   const fhEl=document.getElementById('featHero'); if(fhEl) fhEl.onclick=()=>openHeroSheet(fhEl.dataset.id);
-  const pf=document.getElementById('pickFeatured'); if(pf) pf.onclick=()=>navTo('roster');
-  const st=document.getElementById('setupTasks'); if(st) st.onclick=()=>{ subtab='dailies'; navTo('tasks'); };
-  const ss=document.getElementById('setupSquad'); if(ss) ss.onclick=()=>{ campSub='campaign'; navTo('campaign'); };
+  const pf=document.getElementById('pickFeatured'); if(pf) pf.onclick=()=>navTo('heroes');
+  const he=document.getElementById('homeEditSquad'); if(he) he.onclick=()=>{ campSub='campaign'; navTo('battles'); };
+  const st=document.getElementById('setupTasks'); if(st) st.onclick=()=>{ subtab='dailies'; navTo('quests'); };
+  const ss=document.getElementById('setupSquad'); if(ss) ss.onclick=()=>{ campSub='campaign'; navTo('battles'); };
   const sb=document.getElementById('setupBackup'); if(sb) sb.onclick=()=>document.getElementById('openSettings').click();
   const doneBtn=document.getElementById('setupDone'); if(doneBtn) doneBtn.onclick=()=>{ S.onboarded=true; render(); save(); };
-  bindLifeCards();
 }
 
 /* ----- TASKS ----- */
@@ -2769,7 +2784,7 @@ let rosState={tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'
 function rosterIPs(){ sanitizeHeroes(); return Array.from(new Set(S.heroes.map(h=>h.ip||'Custom'))).sort(); }
 function isFavorite(id){ return Array.isArray(S.favorites)&&S.favorites.includes(id); }
 function toggleFavorite(id){ if(!Array.isArray(S.favorites)) S.favorites=[]; if(S.favorites.includes(id)) S.favorites=S.favorites.filter(x=>x!==id); else S.favorites.push(id); save(); }
-function canEquipAnyGear(h){ return h.owned && SLOTS.some(slot=>!h.gear||!h.gear[slot]) && (S.inventory||[]).some(g=>g.slot===slot); }
+function canEquipAnyGear(h){ return h.owned && SLOTS.some(slot=>(!h.gear||!h.gear[slot]) && (S.inventory||[]).some(g=>g&&g.slot===slot)); }
 function canUpgradeAnyGear(h){ if(!h.owned||!h.gear) return false; return SLOTS.some(slot=>{ const g=h.gear[slot]; if(!g)return false; const c=gearCostOf(g); return g.level<gearMaxLvl(g) && (S.gold||0)>=c.gold && (S.dust||0)>=c.dust; }); }
 function heroReadyState(h){
   if(!h.owned) return '';
@@ -2981,8 +2996,14 @@ function renderCampaign(v){
   const tp=teamPower(campSub);
   const sq=squad(campSub);
   const slots=formationHTML(campSub);
-  const tabs='<div class="segs" style="margin-bottom:14px"><button id="cs_camp" class="'+(campSub==='campaign'?'on':'')+'">Campaign</button><button id="cs_tower" class="'+(campSub==='tower'?'on':'')+'">Tower</button><button id="cs_raid" class="'+(campSub==='raid'?'on':'')+'">Raid</button></div>';
-  if(campSub==='raid'){
+  const tabs='<div class="segs" style="margin-bottom:14px"><button id="cs_camp" class="'+(campSub==='campaign'?'on':'')+'">Campaign</button><button id="cs_tower" class="'+(campSub==='tower'?'on':'')+'">Tower</button><button id="cs_raid" class="'+(campSub==='raid'?'on':'')+'">Raid</button><button id="cs_dungeons" class="'+(campSub==='dungeons'?'on':'')+'">Dungeons</button></div>';
+  if(campSub==='dungeons'){
+    const c=dungeonCounts();
+    v.innerHTML=tabs+
+      '<div class="stagecard" style="border-color:#ffd95a66"><h3>🛕 Domain Dungeons</h3><p>Weekly Room Trials. They reward real actions in each life area — no extra grind.</p></div>'+
+      '<div class="dungeonBox"><div class="dh"><b>Weekly Trials</b><span>'+c.ready+' ready · '+c.claimed+'/8 cleared</span></div><div class="dungeonGrid">'+DOMAINS.map(d=>dungeonCardHTML(d[0])).join('')+'</div></div>';
+    v.querySelectorAll('[data-dungeon]').forEach(btn=>btn.onclick=()=>{ claimDungeon(btn.dataset.dungeon); renderHUD(); render(); save(); });
+  } else if(campSub==='raid'){
     const R=ensureRaid(), pct=Math.min(100,R.dmg/R.max*100), mult=1+tp/1000, boss=currentBoss();
     const weakChips=boss.weak.map(k=>DKEY[k]?'<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:'+DKEY[k].color+'22;color:'+DKEY[k].color+';margin:0 6px 4px 0">'+DKEY[k].icon+' '+DKEY[k].label+' ×'+WEAK_MULT+'</span>':'').join('');
     v.innerHTML=tabs+
@@ -3037,6 +3058,7 @@ function renderCampaign(v){
   const ct=document.getElementById('cs_camp'); if(ct) ct.onclick=()=>{campSub='campaign';render();};
   const tt=document.getElementById('cs_tower'); if(tt) tt.onclick=()=>{campSub='tower';render();};
   const rt=document.getElementById('cs_raid'); if(rt) rt.onclick=()=>{campSub='raid';render();};
+  const dt=document.getElementById('cs_dungeons'); if(dt) dt.onclick=()=>{campSub='dungeons';render();};
   document.querySelectorAll('[data-lineup-edit]').forEach(b=>b.onclick=()=>openSquadPicker(b.dataset.lineupEdit||campSub));
 }
 
@@ -4436,7 +4458,7 @@ async function showFieldTestMode(){
 
 function v1ChecklistItems(autoBackupInfo){
   const checks=healthChecks(), sum=healthSummary(checks), bs=backupSummary();
-  const saveOk=(S.saveVersion===SAVE_VERSION), buildOk=(APP_BUILD.includes('r1-acceptance-fixes')||APP_BUILD.includes('r1.1-core-loop')||APP_BUILD.includes('r1.2-privacy-subtractive'));
+  const saveOk=(S.saveVersion===SAVE_VERSION), buildOk=(APP_BUILD.includes('r1-acceptance-fixes')||APP_BUILD.includes('r1.1-core-loop')||APP_BUILD.includes('r1.2-privacy-subtractive')||APP_BUILD.includes('navigation-cleanup'));
   const rosterOk=(S.heroes||[]).length===449;
   const systemsOk=sum.bad===0;
   const autoOk=!!autoBackupInfo;
@@ -4588,6 +4610,8 @@ function showDebugPanel(){
 function versionRowsHTML(){
   const rows=[
     ['v1.35','Release 1 acceptance fixes: result buttons, Best Game Action, collapsed Home systems'],
+    ['v1.37.2','Roster gear-slot crash fix'],
+    ['v1.37.1','Roster save hardening'],
     ['v1.37','Privacy-safe public seed + subtractive Home polish'],
     ['v1.36','Release 1.1 Core Loop Perfection'],
     ['v1.34','Field Test Mode + Bug Reporter'],
@@ -4744,10 +4768,10 @@ function showReveal(h,opts){ opts=opts||{};
       '<button id="rvCont" style="background:transparent;color:var(--muted);border:1px solid var(--line)">Continue</button>'+
     '</div>';
   document.getElementById('revealModal').classList.add('show');
-  const focusUnlockedInRoster=()=>{ view='roster'; rosState.tab='owned'; rosState.q=h.name; rosState.role='all'; rosState.ip='all'; document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.view==='roster')); };
+  const focusUnlockedInRoster=()=>{ view='heroes'; rosState.tab='owned'; rosState.q=h.name; rosState.role='all'; rosState.ip='all'; setNavActive('heroes'); };
   const close=()=>{ document.getElementById('revealModal').classList.remove('show'); focusUnlockedInRoster(); renderHUD(); render(); };
   document.getElementById('rvView').onclick=()=>{ document.getElementById('revealModal').classList.remove('show'); renderHUD(); render(); openHeroSheet(h.id); };
-  const ad=document.getElementById('rvAdd'); if(ad) ad.onclick=()=>{ const arr=squad('campaign'); if(!arr.includes(h.id) && arr.length<TUNE.teamSize) arr.push(h.id); save(); document.getElementById('revealModal').classList.remove('show'); campSub='campaign'; view='campaign'; document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.view==='campaign')); renderHUD(); render(); toast(h.name+' added to Campaign'); };
+  const ad=document.getElementById('rvAdd'); if(ad) ad.onclick=()=>{ const arr=squad('campaign'); if(!arr.includes(h.id) && arr.length<TUNE.teamSize) arr.push(h.id); save(); document.getElementById('revealModal').classList.remove('show'); campSub='campaign'; view='battles'; setNavActive('battles'); renderHUD(); render(); toast(h.name+' added to Campaign'); };
   const ag=document.getElementById('rvAgain'); if(ag) ag.onclick=()=>{ const nh=randomUnlock(); if(nh) showReveal(nh,{fromSummon:true}); };
   document.getElementById('rvCont').onclick=close;
 }
