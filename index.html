@@ -1004,8 +1004,8 @@ const TASKEXP={easy:10,med:25,hard:50};
 function applyLevels(h){ let c; while(h.level<rankCap(h) && (h.exp||0)>=(c=TUNE.levelCost(h.level))){ h.exp-=c; h.level++; } }
 function catchUpPct(lvl,hi){ if(lvl>=hi) return 0; const r=lvl/hi; if(r<0.5) return 0.5; if(r<0.8) return 0.25; return 0.1; }
 function gainExp(amount){ if(!S.heroes.length || !(amount>0)) return;
-  amount*=collXpMult();
-  const owned=S.heroes.filter(h=>h.owned); if(!owned.length) return;
+  sanitizeHeroes(); amount*=collXpMult();
+  const owned=S.heroes.filter(h=>h&&h.owned); if(!owned.length) return;
   const hi=Math.max(1,...owned.map(h=>h.level));
   const active=activeIds();
   owned.forEach(h=>{ let share = active.has(h.id) ? amount : amount*catchUpPct(h.level,hi);
@@ -1015,10 +1015,10 @@ function gainExp(amount){ if(!S.heroes.length || !(amount>0)) return;
   recalcCollection(); }
 /* ===== collection power / level ===== */
 let gCP=0, gCL=0;
-function heroCP(h){ if(!h.owned) return 0; let cp=10;
+function heroCP(h){ if(!h||!h.owned) return 0; let cp=10;
   if(h.level>=25)cp+=5; if(h.level>=50)cp+=10; if(h.level>=75)cp+=15; if(h.level>=100)cp+=25;
   cp+=rankIdx(h)*6; cp+=(h.prestige||0)*50; cp+=bondLevel(h)*2; return cp; }
-function collectionPowerTotal(){ let t=0; S.heroes.forEach(h=>{ t+=heroCP(h); }); return t+albumBonusCP(); }
+function collectionPowerTotal(){ sanitizeHeroes(); let t=0; S.heroes.forEach(h=>{ t+=heroCP(h); }); return t+albumBonusCP(); }
 function albumOwned(a){ return a.members.reduce((n,id)=>{const h=S.heroes.find(x=>x.id===id);return n+((h&&h.owned)?1:0);},0); }
 function albumComplete(a){ return albumOwned(a)>=a.members.length; }
 function albumBonusCP(){ return ALBUMS.reduce((t,a)=>t+(albumComplete(a)?a.cp:0),0); }
@@ -1030,7 +1030,7 @@ function clFromCP(cp){ return Math.floor((-1+Math.sqrt(1+0.4*cp))/2); }
 function cpForLevel(L){ return 10*L*(L+1); }
 function recalcCollection(){ gCP=collectionPowerTotal(); gCL=clFromCP(gCP); }
 function collectionMult(){ return 1+0.01*gCL; }
-function ownedCount(){ return S.heroes.reduce((n,h)=>n+(h.owned?1:0),0); }
+function ownedCount(){ sanitizeHeroes(); return S.heroes.reduce((n,h)=>n+((h&&h.owned)?1:0),0); }
 function collGoldMult(){ return 1+0.01*Math.floor(gCL/5); }
 function collXpMult(){ return (1+0.01*Math.floor(gCL/10))*prestigeAccountXpMult(); }
 /* ===== hero bond / affinity ===== */
@@ -1871,18 +1871,58 @@ function gainBond(domain,amount){ if(!domain||!(amount>0)) return []; const gain
   if(gains.length) recalcCollection();
   gains.sort((a,b)=>(b.levelUp?1:0)-(a.levelUp?1:0)||b.lv-a.lv||a.name.localeCompare(b.name));
   return gains; }
-function seedRoster(){ const have=new Set(S.heroes.map(h=>h.id));
+
+function normalizeRole(role){
+  role=String(role||'').trim();
+  if(['Tank','DPS','Support'].includes(role)) return role;
+  if(['Healer','Mender','Medic','Protector'].includes(role)) return 'Support';
+  if(['Vanguard','Guardian','Bruiser','Defender'].includes(role)) return 'Tank';
+  if(['Striker','Assassin','Caster','Hunter','Controller','Specialist','Leader','Damage'].includes(role)) return 'DPS';
+  return 'DPS';
+}
+function validHero(h){ return !!(h && typeof h==='object' && typeof h.id==='string' && h.id.trim()); }
+function normalizeHero(h){
+  if(!h || typeof h!=='object') return null;
+  if(!h.id || typeof h.id!=='string') h.id='custom_'+uid();
+  const base=ROSTER.find(r=>r.id===h.id)||{};
+  h.name = String(h.name || base.name || 'Custom Hero');
+  h.ip = String(h.ip || base.ip || 'Custom');
+  h.role = normalizeRole(h.role || base.role);
+  h.color = h.color || base.color || '#36e0e6';
+  if(typeof h.level!=='number' || !isFinite(h.level)) h.level=1;
+  h.level=Math.max(1,Math.floor(h.level));
+  if(typeof h.rank!=='number' || !isFinite(h.rank)) h.rank=0;
+  h.rank=Math.max(0,Math.floor(h.rank));
+  if(typeof h.prestige!=='number' || !isFinite(h.prestige)) h.prestige=0;
+  h.prestige=Math.max(0,Math.floor(h.prestige));
+  if(typeof h.exp!=='number' || !isFinite(h.exp)) h.exp=0;
+  if(typeof h.bondXp!=='number' || !isFinite(h.bondXp)) h.bondXp=0;
+  if(h.owned===undefined) h.owned=!!base.owned;
+  h.owned=!!h.owned;
+  if(!Array.isArray(h.aff) || !h.aff.length) h.aff=(RAFF[h.id]||base.aff||affByRole(h.role)).slice();
+  if(!Array.isArray(h.tags)) h.tags=[];
+  if(!h.gear || typeof h.gear!=='object' || ('w' in h.gear)) h.gear={weapon:null,armor:null,boots:null,relic:null};
+  ['weapon','armor','boots','relic'].forEach(slot=>{ if(!(slot in h.gear)) h.gear[slot]=null; });
+  return h;
+}
+function sanitizeHeroes(){
+  if(!Array.isArray(S.heroes)) S.heroes=[];
+  const seen=new Set();
+  S.heroes=S.heroes.map(normalizeHero).filter(h=>h && !seen.has(h.id) && seen.add(h.id));
+}
+function seedRoster(){ sanitizeHeroes(); const have=new Set(S.heroes.map(h=>h.id));
   ROSTER.forEach(r=>{
     const existing=S.heroes.find(h=>h.id===r.id);
     if(existing){
+      normalizeHero(existing);
       if(!existing.archetype && r.archetype) existing.archetype=r.archetype;
       if((!Array.isArray(existing.tags)||!existing.tags.length) && Array.isArray(r.tags)) existing.tags=r.tags.slice();
       if(!Array.isArray(existing.aff)||!existing.aff.length) existing.aff=(r.aff||[]).slice();
       return;
     }
     if(!have.has(r.id)) S.heroes.push({id:r.id,name:r.name,ip:r.ip,role:r.role,color:r.color,img:null,level:1,rank:0,prestige:0,exp:0,bondXp:0,aff:(r.aff||[]).slice(),archetype:r.archetype||null,tags:Array.isArray(r.tags)?r.tags.slice():[],gear:{weapon:null,armor:null,boots:null,relic:null},owned:!!r.owned});
-  }); }
-function lockedHeroes(){ return S.heroes.filter(h=>!h.owned); }
+  }); sanitizeHeroes(); }
+function lockedHeroes(){ sanitizeHeroes(); return S.heroes.filter(h=>h&&!h.owned); }
 const RAFF=Object.fromEntries(ROSTER.map(r=>[r.id,(r.aff||[]).slice()]));
 const UNLOCK_RANDOM=100, UNLOCK_TARGET=250, CRYSTALS={easy:3,med:6,hard:10};
 const TICKET_SHARDS_PER=10, TICKET_SHARD_DROP=0.05, WISHLIST_PITY=10;
@@ -1978,7 +2018,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=25;
-const APP_BUILD='v1.37.0-r1.2-privacy-subtractive';
+const APP_BUILD='v1.37.1-r1.2-roster-hardening';
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
@@ -2043,7 +2083,8 @@ function migrate(){
   (S.dailies||[]).forEach(d=>{ if(!d.freq)d.freq='daily'; if(d.done===undefined)d.done=false; if(!d.pk)d.pk=periodKey(d.freq); if(!('domain' in d)) d.domain=guessDomain(d.title)||null; });
   (S.habits||[]).forEach(h=>{ if(!h.freq)h.freq='daily'; if(!h.pk)h.pk=periodKey(h.freq); if(!('domain' in h)) h.domain=guessDomain(h.title)||null; });
   (S.todos||[]).forEach(t=>{ if(!('domain' in t)) t.domain=guessDomain(t.title)||null; });
-  (S.heroes||[]).forEach(h=>{ if(!h.gear || ('w' in h.gear)) h.gear={weapon:null,armor:null,boots:null,relic:null}; if(typeof h.rank!=='number') h.rank=0; if(typeof h.prestige!=='number') h.prestige=0; if(typeof h.exp!=='number') h.exp=0; if(typeof h.bondXp!=='number') h.bondXp=0; if(h.owned===undefined) h.owned=true; if(!h.ip) h.ip='Custom'; if(h.role==='Healer') h.role='Support'; if(!Array.isArray(h.aff)||!h.aff.length) h.aff=(RAFF[h.id]||affByRole(h.role)); });
+  sanitizeHeroes();
+  (S.heroes||[]).forEach(h=>{ normalizeHero(h); });
   // ---- version-gated one-time migrations ----
   const fromV=S.saveVersion||1;
   if(fromV<2){
@@ -2241,16 +2282,17 @@ function chargeCapText(){
 }
 
 /* hero stats */
-function hpOf(h){ return Math.round((TUNE.roleBase[h.role].hp*TUNE.heroScale(h.level)+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)); }
-function atkOf(h){ return Math.round((TUNE.roleBase[h.role].atk*TUNE.heroScale(h.level)+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)); }
-function powerOf(h){ return Math.round(hpOf(h)/8+atkOf(h)*2); }
+function roleBaseOf(role){ return TUNE.roleBase[normalizeRole(role)] || TUNE.roleBase.DPS; }
+function hpOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.hp*TUNE.heroScale(h.level||1)+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)); }
+function atkOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.atk*TUNE.heroScale(h.level||1)+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)); }
+function powerOf(h){ if(!h) return 0; return Math.round(hpOf(h)/8+atkOf(h)*2); }
 const SQUADS=[['campaign','Campaign','⚔'],['tower','Tower','⛰'],['raid','Raid','☠']];
 function squad(mode){ if(!S.squads) S.squads={campaign:[],tower:[],raid:[]}; if(!Array.isArray(S.squads[mode])) S.squads[mode]=[]; return S.squads[mode]; }
 function inSquad(mode,id){ return squad(mode).includes(id); }
 function inAnySquad(id){ return SQUADS.some(s=>inSquad(s[0],id)); }
 function squadIcons(id){ return SQUADS.filter(s=>inSquad(s[0],id)).map(s=>s[2]).join(''); }
 function activeIds(){ const set=new Set(); SQUADS.forEach(s=>squad(s[0]).forEach(id=>set.add(id))); return set; }
-function teamPower(mode){ return squad(mode).reduce((s,id)=>{const h=S.heroes.find(x=>x.id===id);return s+(h?powerOf(h):0);},0); }
+function teamPower(mode){ sanitizeHeroes(); return squad(mode).reduce((s,id)=>{const h=S.heroes.find(x=>x.id===id);return s+(h?powerOf(h):0);},0); }
 function toggleSquad(mode,id){ const arr=squad(mode), i=arr.indexOf(id); if(i>=0){arr.splice(i,1);return true;} if(arr.length>=TUNE.teamSize){toast(SQUADS.find(s=>s[0]===mode)[1]+' squad is full ('+TUNE.teamSize+')');return false;} arr.push(id); return true; }
 
 function ensureAppSettings(){ if(!S.appSettings||typeof S.appSettings!=='object') S.appSettings={reduceMotion:false,compactMode:false,confirmDanger:true,developerTools:false}; return S.appSettings; }
@@ -2286,12 +2328,19 @@ function renderHUD(){
 function render(){
   if(ambient){clearInterval(ambient);ambient=null;}
   clearSpriteLoops();
-  renderHUD();
-  const v=document.getElementById('view');
-  if(view==='home') renderHome(v);
-  else if(view==='tasks') renderTasks(v);
-  else if(view==='roster') renderRoster(v);
-  else renderCampaign(v);
+  try{
+    renderHUD();
+    const v=document.getElementById('view');
+    if(view==='home') renderHome(v);
+    else if(view==='tasks') renderTasks(v);
+    else if(view==='roster') renderRoster(v);
+    else renderCampaign(v);
+  }catch(err){
+    console.error('Life Quest render failed',err);
+    const v=document.getElementById('view');
+    if(v) v.innerHTML='<div class="empty" style="margin-top:18px"><b>Screen could not load.</b><br>'+esc(err.message||err)+'<br><br><button class="go" id="repairAfterError">Repair save and return Home</button></div>';
+    const b=document.getElementById('repairAfterError'); if(b) b.onclick=()=>{ try{ sanitizeHeroes(); migrate(); view='home'; document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.view==='home')); renderHUD(); render(); save(); toast('Save repaired.'); }catch(e){ console.error(e); toast('Repair failed — use Settings backup tools.'); } };
+  }
 }
 
 /* ----- HOME ----- */
@@ -2717,7 +2766,7 @@ function onTaskClick(e){
 
 /* ----- ROSTER ----- */
 let rosState={tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', quick:'all', sort:'power'};
-function rosterIPs(){ return Array.from(new Set(S.heroes.map(h=>h.ip))).sort(); }
+function rosterIPs(){ sanitizeHeroes(); return Array.from(new Set(S.heroes.map(h=>h.ip||'Custom'))).sort(); }
 function isFavorite(id){ return Array.isArray(S.favorites)&&S.favorites.includes(id); }
 function toggleFavorite(id){ if(!Array.isArray(S.favorites)) S.favorites=[]; if(S.favorites.includes(id)) S.favorites=S.favorites.filter(x=>x!==id); else S.favorites.push(id); save(); }
 function canEquipAnyGear(h){ return h.owned && SLOTS.some(slot=>!h.gear||!h.gear[slot]) && (S.inventory||[]).some(g=>g.slot===slot); }
@@ -2739,6 +2788,7 @@ function rosterMatchesQuery(h,q){
   return parts.includes(q);
 }
 function rosterFiltered(){
+  sanitizeHeroes();
   let list=S.heroes.slice();
   if(rosState.tab==='owned') list=list.filter(h=>h.owned);
   else if(rosState.tab==='locked') list=list.filter(h=>!h.owned);
