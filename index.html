@@ -550,6 +550,15 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
 .gameActionCard:before{content:"";position:absolute;inset:auto -20% -70% -20%;height:90px;background:radial-gradient(circle,#ffb01f55,transparent 65%);opacity:.38}
 .gameActionCard h3{position:relative;z-index:2;font-size:15px;margin:0 0 7px;display:flex;justify-content:space-between;gap:8px}.gameActionCard h3 span:last-child{font-family:Orbitron;color:#ffd95a;font-size:10px}
 .gameActionCard .gt{position:relative;z-index:2;margin:0 0 4px;font-weight:1000;color:var(--ink);font-size:16px}.gameActionCard .gs{position:relative;z-index:2;margin:0;color:var(--muted);font-weight:750;line-height:1.35;font-size:12px}
+
+.lastActionCard{background:linear-gradient(135deg,rgba(55,214,122,.12),rgba(54,224,230,.08));border:1px solid #37d67a55;border-radius:14px;padding:13px;margin:0 0 13px;text-align:left;position:relative;overflow:hidden;cursor:pointer}
+.lastActionCard:before{content:"";position:absolute;inset:auto -25% -70% -25%;height:90px;background:radial-gradient(circle,#37d67a44,transparent 68%);opacity:.42}
+.lastActionCard h3,.closestRewardCard h3,.useChargeCard h3{position:relative;z-index:2;font-size:14px;margin:0 0 7px;display:flex;justify-content:space-between;gap:8px;align-items:center}.lastActionCard h3 span:last-child,.closestRewardCard h3 span:last-child,.useChargeCard h3 span:last-child{font-family:Orbitron;color:#8bd0ff;font-size:10px}
+.lastActionCard .lat,.closestRewardCard .crt,.useChargeCard .uct{position:relative;z-index:2;margin:0 0 4px;font-weight:1000;color:var(--ink);font-size:15px;line-height:1.25}.lastActionCard .las,.closestRewardCard .crs,.useChargeCard .ucs{position:relative;z-index:2;margin:0;color:var(--muted);font-weight:750;line-height:1.35;font-size:12px}
+.lastActionCard .laNext{position:relative;z-index:2;margin-top:8px;border-top:1px solid #ffffff12;padding-top:8px;color:#dfe8ff;font-size:12px;font-weight:850;line-height:1.35}
+.closestRewardCard{background:linear-gradient(135deg,rgba(255,176,31,.13),rgba(139,208,255,.08));border:1px solid #ffb01f55;border-radius:14px;padding:13px;margin:0 0 13px;text-align:left;cursor:pointer;position:relative;overflow:hidden}.closestRewardCard:before{content:"";position:absolute;inset:auto -25% -72% -25%;height:90px;background:radial-gradient(circle,#ffb01f55,transparent 68%);opacity:.35}.closestRewardCard h3 span:last-child{color:#ffd95a}
+.useChargeCard{background:linear-gradient(135deg,rgba(91,209,255,.14),rgba(31,111,235,.11));border:1px solid #5bd1ff66;border-radius:14px;padding:13px;margin:0 0 13px;text-align:left;cursor:pointer;position:relative;overflow:hidden}.useChargeCard:before{content:"";position:absolute;inset:auto -25% -72% -25%;height:90px;background:radial-gradient(circle,#5bd1ff55,transparent 68%);opacity:.35}.useChargeCard h3 span:last-child{color:#5bd1ff}
+.undoBar{position:fixed;left:50%;bottom:132px;transform:translateX(-50%) translateY(18px);z-index:97;width:min(360px,calc(100vw - 28px));background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:15px;padding:11px 12px;box-shadow:0 18px 42px #0009;opacity:0;pointer-events:none;transition:.24s;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.undoBar.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}.undoBar .ut{font-weight:950;font-size:13px}.undoBar .um{font-size:11px;color:var(--muted);font-weight:800;margin-top:2px}.undoBar button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:9px 12px;font-weight:900}.undoBar.blocked button{display:none}.undoBar.blocked{border-color:#ffb01f66;background:linear-gradient(180deg,#231c10,var(--panel2))}
 .moreSystems{grid-column:1/-1;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:10px;margin-top:4px}
 .moreSystems>summary{cursor:pointer;font-family:Orbitron;font-size:13px;font-weight:900;color:#8bd0ff;list-style:none;display:flex;justify-content:space-between;align-items:center}
 .moreSystems>summary::-webkit-details-marker{display:none}.moreSystems>summary:after{content:"Show";font-size:10px;color:var(--muted)}.moreSystems[open]>summary:after{content:"Hide"}
@@ -658,6 +667,50 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
 .domainLevelModal .domainTile{margin-bottom:8px}
 
 
+
+/* ===== v1.38.2 mobile polish ===== */
+.wallet{position:static!important;top:auto!important}
+.arena .result{width:min(460px,calc(100vw - 28px));max-height:calc(100dvh - 150px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+@media (max-width:560px){
+  .arena .result{max-height:calc(100dvh - 138px);padding:18px 16px}
+  .arena .result h2{font-size:26px}
+  .battle-summary{max-height:none}
+  .battle-result-head{grid-template-columns:1fr 1fr 1fr}
+  .result .resultActions{position:sticky;bottom:-18px;background:linear-gradient(180deg,transparent,rgba(7,9,15,.98) 22%);padding-top:10px;margin-bottom:-4px}
+}
+.gearDelta{display:inline-flex;align-items:center;gap:3px;border-radius:999px;padding:2px 7px;margin-left:6px;font-family:Orbitron;font-size:9px;font-weight:1000;vertical-align:middle}
+.gearDelta.up{color:#7dffb0;background:#37d67a18;border:1px solid #37d67a55}
+.gearDelta.down{color:#ff9ba5;background:#ff5d6c18;border:1px solid #ff5d6c55}
+.gearDelta.same{color:var(--muted);background:#ffffff08;border:1px solid #ffffff18}
+.ginv.upgrade{border-color:#37d67a66;background:#37d67a0d}
+.ginv.downgrade{border-color:#ff5d6c55;background:#ff5d6c0d}
+.ginv.samegear{border-color:#ffffff18}
+
+
+/* ===== v1.38.3 task popup + roster card polish ===== */
+.taskburst{top:82px;max-height:48vh;overflow:hidden}
+.rewardpop:not(.show){display:block}
+.undoBar{bottom:calc(92px + env(safe-area-inset-bottom));z-index:98}
+.undoBar.show{animation:undoQuickFade 1.1s ease both}
+@keyframes undoQuickFade{0%{opacity:0;transform:translateX(-50%) translateY(18px)}15%,78%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(10px)}}
+.hero.inteam::after{display:none!important}
+.hero .readybadge{top:35px;right:6px;bottom:auto}
+.hero .archline,.hero .passline{position:relative;z-index:2}
+@media (max-width:430px){.hero{padding-bottom:14px}.hero .badrow{gap:3px}.hero .badge{font-size:7px;padding:2px 4px}.hero .archline,.hero .passline{font-size:9px;line-height:1.22}.hero .hr{font-size:10px;line-height:1.25}.hero .readybadge{font-size:7px;padding:2px 5px}}
+
+/* ===== v1.38.4 hero filters + squad picker cleanup ===== */
+.clearFiltersBtn{width:100%;background:linear-gradient(135deg,rgba(255,93,108,.18),rgba(255,176,31,.10));border:1px solid #ff5d6c66;color:#ffb5bd;border-radius:12px;padding:10px 12px;font-weight:1000;font-size:13px;margin:0 0 10px;font-family:'Rajdhani'}
+.filterSummary{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 8px;color:var(--muted);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.5px}
+.squadTools{background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:13px;padding:10px;margin:10px 0}
+.squadTools input{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:11px;padding:10px 12px;font-size:14px;font-weight:750;margin-bottom:8px;font-family:'Rajdhani'}
+.squadTools .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.squadTools select{min-width:0;width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:9px;font-size:12px;font-weight:850;font-family:'Rajdhani'}
+.squadTools .clearMini{width:100%;margin-top:8px;background:var(--panel2);border:1px solid #ff5d6c55;color:#ffb5bd;border-radius:10px;padding:9px;font-size:12px;font-weight:1000;font-family:'Rajdhani'}
+.squadpicker .pmeta{display:block;min-width:0;line-height:1.22}
+.squadpicker .pname{display:block;font-weight:1000;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.squadpicker .psub{display:block;font-size:11px;color:var(--muted);font-weight:800;line-height:1.32;white-space:normal}
+.squadpicker .candidateCount{color:var(--muted);font-size:11px;font-weight:900;margin:8px 2px}
+
 </style>
 </head>
 <body>
@@ -682,9 +735,10 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
 
 <nav class="nav">
   <button data-view="home" class="on"><span class="ic">🏠</span>Home</button>
-  <button data-view="tasks"><span class="ic">✓</span>Tasks</button>
-  <button data-view="roster"><span class="ic">⛨</span>Roster</button>
-  <button data-view="campaign"><span class="ic">⚔</span>Campaign</button>
+  <button data-view="quests"><span class="ic">📜</span>Quests</button>
+  <button data-view="heroes"><span class="ic">⛨</span>Heroes</button>
+  <button data-view="battles"><span class="ic">⚔</span>Battles</button>
+  <button data-view="growth"><span class="ic">🌱</span>Growth</button>
 </nav>
 
 <!-- battle arena -->
@@ -726,13 +780,17 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
   <button class="go" id="importBackup" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">⤒ Restore from file</button>
   <button class="go" id="restoreAuto" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">↩ Restore last auto-backup</button>
   <button class="go" id="backupCenter" style="background:linear-gradient(135deg,#37d67a,#36e0e6);color:#06170d;margin-top:8px">🧰 Open Backup Center</button>
-  <button class="go" id="healthCheck" style="background:linear-gradient(135deg,#36e0e6,#37d67a);color:#06170d;margin-top:8px">🩺 Run Save Health Check</button>
-  <button class="go" id="versionHistory" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🧾 Version & Migration Status</button>
-  <button class="go" id="v1Checklist" style="background:linear-gradient(135deg,#ffb01f,#37d67a);color:#06170d;margin-top:8px">✅ V1 Readiness Checklist</button>
-  <button class="go" id="fieldTest" style="background:linear-gradient(135deg,#8bd0ff,#ffb01f);color:#06170d;margin-top:8px">🧪 Field Test Mode</button>
-  <button class="go" id="bugReporter" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🐞 Bug Reporter</button>
-  <button class="go" id="debugPanel" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🛠 Debug Panel</button>
-  <button class="go" id="selectiveReset" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🧯 Selective Reset Tools</button>
+  <button class="go" id="devToolsToggle" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🛠 Show Developer Tools</button>
+  <div id="devToolsWrap" style="display:none">
+    <div class="safehint" style="margin-top:8px"><b>Developer tools:</b> diagnostics and field-test utilities stay hidden during normal daily use.</div>
+    <button class="go" id="healthCheck" style="background:linear-gradient(135deg,#36e0e6,#37d67a);color:#06170d;margin-top:8px">🩺 Run Save Health Check</button>
+    <button class="go" id="versionHistory" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🧾 Version & Migration Status</button>
+    <button class="go" id="v1Checklist" style="background:linear-gradient(135deg,#ffb01f,#37d67a);color:#06170d;margin-top:8px">✅ V1 Readiness Checklist</button>
+    <button class="go" id="fieldTest" style="background:linear-gradient(135deg,#8bd0ff,#ffb01f);color:#06170d;margin-top:8px">🧪 Field Test Mode</button>
+    <button class="go" id="bugReporter" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🐞 Bug Reporter</button>
+    <button class="go" id="debugPanel" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🛠 Debug Panel</button>
+    <button class="go" id="selectiveReset" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🧯 Selective Reset Tools</button>
+  </div>
   <button class="ghost" id="resetAll">Reset everything</button>
 </div></div>
 
@@ -781,7 +839,7 @@ const RARCOLOR={common:'#9aa6c2',rare:'#4a90ff',epic:'#a259ff',legendary:'#ffb01
 const SLOTS=['weapon','armor','boots','relic'];
 const SLOTICON={weapon:'⚔',armor:'🛡',boots:'🥾',relic:'🔮'};
 const SLOTNAME={weapon:'Weapon',armor:'Armor',boots:'Boots',relic:'Relic'};
-const TASKREWARD={easy:{g:5,d:2,drop:0.02,cores:0},med:{g:15,d:5,drop:0.04,cores:1},hard:{g:30,d:10,drop:0.07,cores:2}};
+const TASKREWARD={easy:{g:5,d:2,drop:0.06,cores:0},med:{g:15,d:5,drop:0.10,cores:1},hard:{g:30,d:10,drop:0.15,cores:2}};
 const RANKS=[{name:'Recruit',cap:10},{name:'Veteran',cap:20},{name:'Elite',cap:30},{name:'Champion',cap:40},{name:'Mythic',cap:50},{name:'Ascended',cap:60},{name:'Legendary',cap:75},{name:'Eternal',cap:100}];
 const RANKUP=[{cores:10,gold:100},{cores:25,gold:250},{cores:50,gold:500},{cores:100,boss:1},{cores:150,boss:2},{cores:250,boss:3},{cores:400,boss:5,sparks:1}];
 function rankIdx(h){ return h.rank||0; }
@@ -803,7 +861,7 @@ function walletHTML(extra){ const l=typeof ensureChargeLedger==='function'?ensur
     ['◇','Stones',S.stones||0,'#cdbcff'],
     ['✦✦','Sparks',S.sparks||0,'#ffd95a']
   ];
-  return '<div class="wallet" style="position:sticky;top:0;z-index:4;background:linear-gradient(180deg,var(--panel),rgba(0,0,0,.72));backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;padding:10px;margin:8px 0 13px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px">'+
+  return '<div class="wallet" style="background:linear-gradient(180deg,var(--panel),rgba(0,0,0,.72));border:1px solid var(--line);border-radius:14px;padding:10px;margin:8px 0 13px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px">'+
     rows.map(r=>'<div style="background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;min-width:0"><div style="color:'+r[3]+';font-family:Orbitron;font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r[0]+' '+r[2]+'</div><div style="color:var(--muted);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r[1]+'</div></div>').join('')+
     (extra?'<div style="grid-column:1/-1;color:var(--muted);font-size:11px;font-weight:800">'+extra+'</div>':'')+'</div>';
 }
@@ -991,8 +1049,8 @@ const TASKEXP={easy:10,med:25,hard:50};
 function applyLevels(h){ let c; while(h.level<rankCap(h) && (h.exp||0)>=(c=TUNE.levelCost(h.level))){ h.exp-=c; h.level++; } }
 function catchUpPct(lvl,hi){ if(lvl>=hi) return 0; const r=lvl/hi; if(r<0.5) return 0.5; if(r<0.8) return 0.25; return 0.1; }
 function gainExp(amount){ if(!S.heroes.length || !(amount>0)) return;
-  amount*=collXpMult();
-  const owned=S.heroes.filter(h=>h.owned); if(!owned.length) return;
+  sanitizeHeroes(); amount*=collXpMult();
+  const owned=S.heroes.filter(h=>h&&h.owned); if(!owned.length) return;
   const hi=Math.max(1,...owned.map(h=>h.level));
   const active=activeIds();
   owned.forEach(h=>{ let share = active.has(h.id) ? amount : amount*catchUpPct(h.level,hi);
@@ -1002,10 +1060,10 @@ function gainExp(amount){ if(!S.heroes.length || !(amount>0)) return;
   recalcCollection(); }
 /* ===== collection power / level ===== */
 let gCP=0, gCL=0;
-function heroCP(h){ if(!h.owned) return 0; let cp=10;
+function heroCP(h){ if(!h||!h.owned) return 0; let cp=10;
   if(h.level>=25)cp+=5; if(h.level>=50)cp+=10; if(h.level>=75)cp+=15; if(h.level>=100)cp+=25;
   cp+=rankIdx(h)*6; cp+=(h.prestige||0)*50; cp+=bondLevel(h)*2; return cp; }
-function collectionPowerTotal(){ let t=0; S.heroes.forEach(h=>{ t+=heroCP(h); }); return t+albumBonusCP(); }
+function collectionPowerTotal(){ sanitizeHeroes(); let t=0; S.heroes.forEach(h=>{ t+=heroCP(h); }); return t+albumBonusCP(); }
 function albumOwned(a){ return a.members.reduce((n,id)=>{const h=S.heroes.find(x=>x.id===id);return n+((h&&h.owned)?1:0);},0); }
 function albumComplete(a){ return albumOwned(a)>=a.members.length; }
 function albumBonusCP(){ return ALBUMS.reduce((t,a)=>t+(albumComplete(a)?a.cp:0),0); }
@@ -1017,7 +1075,7 @@ function clFromCP(cp){ return Math.floor((-1+Math.sqrt(1+0.4*cp))/2); }
 function cpForLevel(L){ return 10*L*(L+1); }
 function recalcCollection(){ gCP=collectionPowerTotal(); gCL=clFromCP(gCP); }
 function collectionMult(){ return 1+0.01*gCL; }
-function ownedCount(){ return S.heroes.reduce((n,h)=>n+(h.owned?1:0),0); }
+function ownedCount(){ sanitizeHeroes(); return S.heroes.reduce((n,h)=>n+((h&&h.owned)?1:0),0); }
 function collGoldMult(){ return 1+0.01*Math.floor(gCL/5); }
 function collXpMult(){ return (1+0.01*Math.floor(gCL/10))*prestigeAccountXpMult(); }
 /* ===== hero bond / affinity ===== */
@@ -1741,26 +1799,19 @@ function showRecoveryModal(){ const rec=todayRecovery(); const box=document.getE
 function showGraceInfo(){ const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return; box.innerHTML='<div class="ico">🕊️</div><h2>Grace Tokens</h2><p>Grace protects momentum without creating an excuse to drift.</p><div style="text-align:left;margin-top:12px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--muted);font-weight:600;line-height:1.45"><b style="color:var(--ink)">Current:</b> '+(S.grace||0)+'<br><br>When you miss a day that would normally break a streak, one Grace Token is used automatically to keep you on the path. Earn them through strong consistency, weekly boss wins, streak milestones, and weekly review.</div><button id="graceClose" style="margin-top:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px 18px;font-family:Orbitron;font-weight:800;width:100%">Got it</button>'; modal.classList.add('show'); document.getElementById('graceClose').onclick=()=>modal.classList.remove('show'); }
 function lifeSystemCardsHTML(){ const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain(); const sm=DKEY[strong.k], lm=DKEY[light.k]; const rec=todayRecovery(); const counts=DOMAINS.filter(d=>d[0]!=='hobbies').map(d=>({k:d[0],n:domainCount(d[0])})); const max=Math.max(1,...counts.map(x=>x.n)); const bars=counts.slice(0,4).map(x=>{ const m=DKEY[x.k]; return '<div class="domainbar"><span>'+m.icon+' '+m.label.split(' ')[0]+'</span><div class="bar"><i style="width:'+(x.n/max*100)+'%;background:'+m.color+'"></i></div><b>'+x.n+'</b></div>'; }).join('');
   const primary =
-    '<div class="lifecard"><h3><span>🌱 Domain Levels</span><span style="color:#8bd0ff">Identity XP</span></h3><p>Your real actions now level the areas of life you care about most.</p><div class="domainGrid">'+domainTilesHTML(4)+'</div><div class="lifeactions"><button class="primary" id="openDomainsHome">View all domains</button></div>'+balanceChestHTML()+'</div>'+
-    '<div class="lifecard"><h3><span>🗺 Quest Board</span><span style="color:#8bd0ff">Arcs</span></h3><p>Daily, weekly, chain, and hero quests give direction beyond the checklist.</p>'+questBoardHTML()+'</div>'+
-    '<div class="lifecard"><h3><span>💞 Hero Bonds</span><span style="color:#ff9bd7">Favorites</span></h3><p>Turn repeated real-life actions into long-term connection with your favorite heroes.</p>'+bondFocusCardHTML()+'</div>'+
-    '<div class="lifecard"><h3><span>🛡 Hard Day Mode</span><span style="color:'+(holdLineComplete()?'var(--good)':'#cdbcff')+'">'+(holdLineComplete()?'Held':'Open')+'</span></h3><p>When the day is heavy, do not abandon the path. Hold the line with any 3 small anchors.</p>'+holdLineCardHTML()+'</div>'+
+    '<div class="lifecard"><h3><span>🌱 Domain Levels</span><span style="color:#8bd0ff">Identity XP</span></h3><p>Your real actions level the areas of life you care about most.</p><div class="domainGrid">'+domainTilesHTML(4)+'</div><div class="lifeactions"><button class="primary" id="openDomainsHome">View all domains</button></div>'+balanceChestHTML()+'</div>'+
+    '<div class="lifecard"><h3><span>🗺 Quest Board</span><span style="color:#8bd0ff">One board</span></h3><p>Daily, weekly, chains, hard-day anchors, hero quests, and raid progress live here instead of competing for attention.</p>'+questBoardHTML()+'</div>'+
     '<div class="lifecard"><h3><span>🧭 Weekly Review</span><span style="color:'+(W.reviewed?'var(--good)':'var(--muted)')+'">'+(W.reviewed?'Done':'Open')+'</span></h3><p>Strongest: '+(sm?sm.icon+' '+sm.label:'—')+' · Lightest: '+(lm?lm.icon+' '+lm.label:'—')+'</p><div class="domain-bars">'+bars+'</div><div class="lifeactions"><button class="primary" id="openReview">Open review</button></div></div>'+
     '<div class="lifecard"><h3><span>🌱 Gentle Nudge</span><span style="color:'+(lm?lm.color:'var(--accent2)')+'">'+(lm?lm.icon:'')+'</span></h3><p>'+(lm?lm.label:'This area')+' has been quiet this week. Suggested quest: <b style="color:var(--ink)">'+esc(suggestedQuestForDomain(light.k))+'</b></p><div class="mini">encouragement, not guilt</div></div>';
   const more =
-    '<details class="moreSystems"><summary><span>More Systems</span><span style="font-family:Inter;color:var(--muted);font-size:11px">Life Base · Dungeons · Strategy · Recaps · Safety</span></summary><div class="moregrid">'+
-      '<div class="lifecard"><h3><span>🧾 Hero Quests</span><span style="color:#ff9bd7">Bond Lv 7</span></h3><p>Bonded heroes unlock personal weekly quests tied to their affinities.</p>'+heroQuestSummaryHTML()+'</div>'+
+    '<details class="moreSystems"><summary><span>More Systems</span><span style="font-family:Inter;color:var(--muted);font-size:11px">Life Base · Dungeons · Strategy · Recaps</span></summary><div class="moregrid">'+
+      '<div class="lifecard"><h3><span>💞 Hero Bonds</span><span style="color:#ff9bd7">Favorites</span></h3><p>Turn repeated real-life actions into long-term connection with your favorite heroes.</p>'+bondFocusCardHTML()+'</div>'+
       '<div class="lifecard"><h3><span>🏡 Life Base</span><span style="color:#7dffb0">Sanctuary</span></h3><p>Watch your real-life domains become rooms you are building over time.</p>'+sanctuarySummaryHTML()+'</div>'+
       '<div class="lifecard"><h3><span>🛕 Domain Dungeons</span><span style="color:#ffd95a">Trials</span></h3><p>Clear weekly room trials for rewards tied to each life domain.</p>'+dungeonSummaryHTML()+'</div>'+
       '<div class="lifecard"><h3><span>🃏 Strategy + Research</span><span style="color:#cdbcff">Cards</span></h3><p>Equip 3 light bonuses and buy permanent research upgrades from weekly reflection.</p>'+strategySummaryHTML()+'</div>'+
       '<div class="lifecard"><h3><span>★ Prestige Hall</span><span style="color:#ffd95a">Long-term</span></h3><p>Showcase favorite heroes who have begun New Cycles and track catch-up progress.</p>'+prestigeHallHTML()+'</div>'+
-      '<div class="lifecard"><h3><span>🧭 Man I’m Becoming</span><span style="color:#ff9bd7">Monthly</span></h3><p>Zoom out from today and see the man your actions are forming.</p>'+monthlySummaryHTML()+'</div>'+
       '<div class="lifecard"><h3><span>📤 Recap Center</span><span style="color:#8bd0ff">Export</span></h3><p>Copy or download weekly/monthly recaps for longer-term reflection.</p>'+recapCenterHTML()+'</div>'+
       '<div class="lifecard"><h3><span>🕊️ Grace & Recovery</span><span>'+((S.grace||0))+' tokens</span></h3><p>Recovery Day is for heavy days: one small anchor, no shame spiral. Grace Tokens protect streaks automatically when needed.</p><div class="lifeactions"><button class="primary" id="openRecovery">'+(rec&&rec.done?'Recovery done':'Start recovery anchor')+'</button><button id="openGrace">How grace works</button></div></div>'+
-      '<div class="lifecard"><h3><span>🧪 Field Test Mode</span><span style="color:#8bd0ff">Test week</span></h3><p>Run the smoke test checklist and copy bug reports during real use.</p>'+fieldTestSummaryHTML()+'</div>'+
-      '<div class="lifecard"><h3><span>✅ V1 Polish</span><span style="color:#ffd95a">Final pass</span></h3><p>Use this before deploying or adding more scope.</p>'+v1PolishHTML()+'</div>'+
-      '<div class="lifecard"><h3><span>🧰 Backup Center</span><span style="color:#7dffb0">Safety</span></h3><p>Download backups, restore safely, and open repair tools before GitHub releases.</p><div class="backupBox"><div class="bh"><b>Save Safety</b><span>'+APP_BUILD+'</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">Backup, import validation, auto-backup restore, debug report, and selective reset tools.</p><div class="lifeactions"><button class="primary" id="openBackupHome">Open Backup Center</button></div></div></div>'+
-      '<div class="lifecard"><h3><span>🩺 Stability Center</span><span style="color:#37d67a">QA</span></h3><p>Run a save health check before and after GitHub updates.</p><div class="healthBox"><div class="hh"><b>Save Health</b><span>'+APP_BUILD+'</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">Checks roster, squads, assignments, migrations, and save version.</p><div class="lifeactions"><button class="primary" id="openHealthHome">Run Health Check</button></div></div></div>'+
       '<div class="lifecard"><h3><span>🧬 Hero Archetypes</span><span style="color:#cdbcff">Reference</span></h3><p>Every hero keeps Tank/DPS/Support plus a combat archetype for role identity and synergy.</p><div class="roadmapNote"><b style="color:var(--ink)">Archetypes:</b> Guardian, Bruiser, Striker, Assassin, Caster, Healer, Protector, Controller, Hunter, Specialist, and Leader.</div></div>'+
     '</div></details>';
   return '<div class="lifesys-grid">'+primary+more+'</div>'; }
@@ -1865,18 +1916,58 @@ function gainBond(domain,amount){ if(!domain||!(amount>0)) return []; const gain
   if(gains.length) recalcCollection();
   gains.sort((a,b)=>(b.levelUp?1:0)-(a.levelUp?1:0)||b.lv-a.lv||a.name.localeCompare(b.name));
   return gains; }
-function seedRoster(){ const have=new Set(S.heroes.map(h=>h.id));
+
+function normalizeRole(role){
+  role=String(role||'').trim();
+  if(['Tank','DPS','Support'].includes(role)) return role;
+  if(['Healer','Mender','Medic','Protector'].includes(role)) return 'Support';
+  if(['Vanguard','Guardian','Bruiser','Defender'].includes(role)) return 'Tank';
+  if(['Striker','Assassin','Caster','Hunter','Controller','Specialist','Leader','Damage'].includes(role)) return 'DPS';
+  return 'DPS';
+}
+function validHero(h){ return !!(h && typeof h==='object' && typeof h.id==='string' && h.id.trim()); }
+function normalizeHero(h){
+  if(!h || typeof h!=='object') return null;
+  if(!h.id || typeof h.id!=='string') h.id='custom_'+uid();
+  const base=ROSTER.find(r=>r.id===h.id)||{};
+  h.name = String(h.name || base.name || 'Custom Hero');
+  h.ip = String(h.ip || base.ip || 'Custom');
+  h.role = normalizeRole(h.role || base.role);
+  h.color = h.color || base.color || '#36e0e6';
+  if(typeof h.level!=='number' || !isFinite(h.level)) h.level=1;
+  h.level=Math.max(1,Math.floor(h.level));
+  if(typeof h.rank!=='number' || !isFinite(h.rank)) h.rank=0;
+  h.rank=Math.max(0,Math.floor(h.rank));
+  if(typeof h.prestige!=='number' || !isFinite(h.prestige)) h.prestige=0;
+  h.prestige=Math.max(0,Math.floor(h.prestige));
+  if(typeof h.exp!=='number' || !isFinite(h.exp)) h.exp=0;
+  if(typeof h.bondXp!=='number' || !isFinite(h.bondXp)) h.bondXp=0;
+  if(h.owned===undefined) h.owned=!!base.owned;
+  h.owned=!!h.owned;
+  if(!Array.isArray(h.aff) || !h.aff.length) h.aff=(RAFF[h.id]||base.aff||affByRole(h.role)).slice();
+  if(!Array.isArray(h.tags)) h.tags=[];
+  if(!h.gear || typeof h.gear!=='object' || ('w' in h.gear)) h.gear={weapon:null,armor:null,boots:null,relic:null};
+  ['weapon','armor','boots','relic'].forEach(slot=>{ if(!(slot in h.gear)) h.gear[slot]=null; });
+  return h;
+}
+function sanitizeHeroes(){
+  if(!Array.isArray(S.heroes)) S.heroes=[];
+  const seen=new Set();
+  S.heroes=S.heroes.map(normalizeHero).filter(h=>h && !seen.has(h.id) && seen.add(h.id));
+}
+function seedRoster(){ sanitizeHeroes(); const have=new Set(S.heroes.map(h=>h.id));
   ROSTER.forEach(r=>{
     const existing=S.heroes.find(h=>h.id===r.id);
     if(existing){
+      normalizeHero(existing);
       if(!existing.archetype && r.archetype) existing.archetype=r.archetype;
       if((!Array.isArray(existing.tags)||!existing.tags.length) && Array.isArray(r.tags)) existing.tags=r.tags.slice();
       if(!Array.isArray(existing.aff)||!existing.aff.length) existing.aff=(r.aff||[]).slice();
       return;
     }
     if(!have.has(r.id)) S.heroes.push({id:r.id,name:r.name,ip:r.ip,role:r.role,color:r.color,img:null,level:1,rank:0,prestige:0,exp:0,bondXp:0,aff:(r.aff||[]).slice(),archetype:r.archetype||null,tags:Array.isArray(r.tags)?r.tags.slice():[],gear:{weapon:null,armor:null,boots:null,relic:null},owned:!!r.owned});
-  }); }
-function lockedHeroes(){ return S.heroes.filter(h=>!h.owned); }
+  }); sanitizeHeroes(); }
+function lockedHeroes(){ sanitizeHeroes(); return S.heroes.filter(h=>h&&!h.owned); }
 const RAFF=Object.fromEntries(ROSTER.map(r=>[r.id,(r.aff||[]).slice()]));
 const UNLOCK_RANDOM=100, UNLOCK_TARGET=250, CRYSTALS={easy:3,med:6,hard:10};
 const TICKET_SHARDS_PER=10, TICKET_SHARD_DROP=0.05, WISHLIST_PITY=10;
@@ -1901,12 +1992,33 @@ function gearMaxLvl(g){ return RARMAX[g.rarity]; }
 function gearCostOf(g){ const m=RARMULT[g.rarity]; return {gold:Math.round(25*m*(g.level+1)), dust:Math.round(10*m*(g.level+1))}; }
 function gearName(g){ const t={weapon:'Blade',armor:'Plate',boots:'Greaves',relic:'Relic'}; return cap(g.rarity)+' '+t[g.slot]; }
 function newGear(slot,rarity){ return {id:uid(),slot,rarity:rarity||'common',level:0}; }
-function rollRarity(stage){ const s=stage||1, r=Math.random();
-  const legc=Math.min(0.03+s*0.004,0.22), epc=legc+Math.min(0.12+s*0.006,0.4), rrc=epc+0.3;
-  if(r<legc) return s>=30?'mythic':'legendary';
-  if(r<epc) return 'epic';
-  if(r<rrc) return 'rare';
-  return 'common'; }
+function gearLadder(stage){
+  const s=Math.max(1,stage||1);
+  if(s<25) return {common:.82,rare:.18,epic:0,legendary:0,mythic:0,eternal:0,label:'Stages 1-24'};
+  if(s<50) return {common:.66,rare:.29,epic:.05,legendary:0,mythic:0,eternal:0,label:'Stages 25-49'};
+  if(s<75) return {common:.52,rare:.34,epic:.12,legendary:.02,mythic:0,eternal:0,label:'Stages 50-74'};
+  if(s<100) return {common:.38,rare:.38,epic:.19,legendary:.05,mythic:0,eternal:0,label:'Stages 75-99'};
+  if(s<125) return {common:.26,rare:.40,epic:.24,legendary:.08,mythic:.02,eternal:0,label:'Stages 100-124'};
+  if(s<150) return {common:.18,rare:.36,epic:.30,legendary:.13,mythic:.03,eternal:0,label:'Stages 125-149'};
+  if(s<200) return {common:.12,rare:.30,epic:.35,legendary:.18,mythic:.045,eternal:.005,label:'Stages 150-199'};
+  return {common:.08,rare:.24,epic:.36,legendary:.23,mythic:.08,eternal:.01,label:'Stages 200+'};
+}
+function rollRarity(stage){
+  const w=gearLadder(stage), r=Math.random(); let acc=0;
+  for(const k of RARITY){ acc+=(w[k]||0); if(r<acc) return k; }
+  return 'common';
+}
+function gearDropChance(diff,stage,source){
+  const base={easy:.06,med:.10,hard:.15}[diff]||.10;
+  const s=Math.max(1,stage||1), stageBonus=Math.min(.08,Math.floor(s/25)*0.01);
+  if(source==='campaign') return Math.min(.25,.15+stageBonus);
+  return Math.min(.24,base+stageBonus);
+}
+function gearLadderText(stage){
+  const w=gearLadder(stage||1);
+  const parts=RARITY.filter(k=>(w[k]||0)>0).map(k=>cap(k)+' '+Math.round((w[k]||0)*100)+'%');
+  return w.label+': '+parts.join(' · ');
+}
 function gearStat(g){ const p=gearPower(g);
   if(g.slot==='weapon') return {atk:p,hp:0};
   if(g.slot==='armor') return {atk:0,hp:Math.round(p*8)};
@@ -1923,7 +2035,7 @@ function taskLoot(diff,domain){ const r=TASKREWARD[diff]||TASKREWARD.med; S.gold
   const sb=strategyLootBonus(domain,diff); if(sb.crystals){S.crystals+=sb.crystals;} if(sb.gold){S.gold+=sb.gold;} if(sb.dust){S.dust+=sb.dust;}
   lastTaskLoot={diff,domain,crystals:cr+(sb.crystals||0),gold:r.g+(sb.gold||0),dust:r.d+(sb.dust||0),cores:r.cores||0,gear:null,shard:false,raid:null,exp:TASKEXP[diff]||TASKEXP.med,msgs:[],strategy:sb};
   let s=' · +'+cr+'◆ +'+r.g+'⦿ +'+r.d+'❖'+(r.cores?' +'+r.cores+'◈':'')+(sb.labels&&sb.labels.length?' · Cards '+sb.labels.join(' · '):'');
-  if(Math.random()<r.drop){ const g=newGear(SLOTS[Math.floor(Math.random()*4)],rollRarity(S.maxCleared||1)); grantGear(g); lastTaskLoot.gear=cap(g.rarity)+' '+SLOTNAME[g.slot]; s+=' · '+cap(g.rarity)+' gear dropped!'; }
+  if(Math.random()<gearDropChance(diff,S.maxCleared||1,'task')){ const g=newGear(SLOTS[Math.floor(Math.random()*4)],rollRarity(S.maxCleared||1)); grantGear(g); lastTaskLoot.gear=cap(g.rarity)+' '+SLOTNAME[g.slot]; s+=' · '+cap(g.rarity)+' gear dropped!'; }
   if(Math.random()<TICKET_SHARD_DROP){ lastTaskLoot.shard=true; s+=' · '+grantTicketShard(1); }
   const raid=dealRaid(diff,domain); lastTaskLoot.raid=raid; lastTaskLoot.msgs=raid.msgs||[]; s+=' · ⚔'+raid.rd+(raid.weak?' raid ⚡WEAK!':' raid'); if(raid.msgs.length) s+=' · '+raid.msgs.join(' · ');
   gainExp(TASKEXP[diff]||TASKEXP.med);
@@ -1971,303 +2083,26 @@ function domainChip(it){ const k=domainOf(it); if(!k) return ''; const d=DKEY[k]
 function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:'+DKEY[k].color+'22;color:'+DKEY[k].color+';margin:0 6px 6px 0">'+DKEY[k].icon+' '+DKEY[k].label+'</span>':'').join(''); }
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
-const SAVE_VERSION=23;
-const APP_BUILD='v1.35.0-r1-acceptance-fixes';
+const SAVE_VERSION=25;
+const APP_BUILD='v1.38.5-r1.3-home-timeago-fix';
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
-/* ===== PERSONAL DAILY IMPORT ===== */
-const PERSONAL_DAILIES_V8 = [
-  {
-    "title": "Wake Up at 5",
-    "diff": "hard",
-    "freq": "daily",
-    "domain": "discipline"
-  },
-  {
-    "title": "Make my bed",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "home"
-  },
-  {
-    "title": "Brush my teeth (morning)",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "discipline"
-  },
-  {
-    "title": "Feed Finn & Refill Water",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "home"
-  },
-  {
-    "title": "Sunlight in the morning",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "discipline"
-  },
-  {
-    "title": "Take Meds & Supplements",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "discipline"
-  },
-  {
-    "title": "80% Healthy Foods",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "fitness"
-  },
-  {
-    "title": "Meditation",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "faith"
-  },
-  {
-    "title": "Gratitude",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "faith"
-  },
-  {
-    "title": "Affirmations & Values",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "discipline"
-  },
-  {
-    "title": "Pep Talk",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "discipline"
-  },
-  {
-    "title": "Read the Bible",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "faith"
-  },
-  {
-    "title": "Pray Alone",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "faith"
-  },
-  {
-    "title": "Help in the morning",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "marriage"
-  },
-  {
-    "title": "Clear Mail",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "work"
-  },
-  {
-    "title": "Clear Emails",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "work"
-  },
-  {
-    "title": "Clear Texts & Messages",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "discipline"
-  },
-  {
-    "title": "Origin Market Recap",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "work"
-  },
-  {
-    "title": "Review Team's Queues",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "work"
-  },
-  {
-    "title": "Review Tickets About to Breach in Standup",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "work"
-  },
-  {
-    "title": "Review CSATs",
-    "diff": "med",
-    "freq": "weekly",
-    "domain": "work"
-  },
-  {
-    "title": "Message Parnell, Taylor, Taylor, Michael, etc",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "work"
-  },
-  {
-    "title": "Clear To-Do List at Work",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "work"
-  },
-  {
-    "title": "Project Work",
-    "diff": "hard",
-    "freq": "daily",
-    "domain": "work"
-  },
-  {
-    "title": "Exercise",
-    "diff": "hard",
-    "freq": "daily",
-    "domain": "fitness"
-  },
-  {
-    "title": "Mobility Workout",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "fitness"
-  },
-  {
-    "title": "One load of laundry",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "home"
-  },
-  {
-    "title": "10 Minutes Cleaning",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "home"
-  },
-  {
-    "title": "Pick Up Dog Poops",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "home"
-  },
-  {
-    "title": "Go through cards - am I doing my tasks consistently?",
-    "diff": "med",
-    "freq": "weekly",
-    "domain": "discipline"
-  },
-  {
-    "title": "Learn Something New",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "hobbies"
-  },
-  {
-    "title": "Read a self-help book",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "hobbies"
-  },
-  {
-    "title": "Practice Photography",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "hobbies"
-  },
-  {
-    "title": "Engage with a random person",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "discipline"
-  },
-  {
-    "title": "Contact a Friend",
-    "diff": "med",
-    "freq": "weekly",
-    "domain": "hobbies"
-  },
-  {
-    "title": "Say Thank You",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "faith"
-  },
-  {
-    "title": "No Phone Around Girls",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "fatherhood"
-  },
-  {
-    "title": "Ten-Minute Miracle - Liv",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "fatherhood"
-  },
-  {
-    "title": "Ten-Minute Miracle - Emmy",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "fatherhood"
-  },
-  {
-    "title": "Emmy homework",
-    "diff": "med",
-    "freq": "daily",
-    "domain": "fatherhood"
-  },
-  {
-    "title": "Connection Questions",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "marriage"
-  },
-  {
-    "title": "Pick Two Recipes & Cook",
-    "diff": "hard",
-    "freq": "weekly",
-    "domain": "home"
-  },
-  {
-    "title": "Pray Before Dinner",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "faith"
-  },
-  {
-    "title": "Hug & Kiss Megan",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "marriage"
-  },
-  {
-    "title": "Note for Megan",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "marriage"
-  },
-  {
-    "title": "Review Finances",
-    "diff": "med",
-    "freq": "weekly",
-    "domain": "home"
-  },
-  {
-    "title": "Read",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "hobbies"
-  },
-  {
-    "title": "Make Out Before Bed",
-    "diff": "easy",
-    "freq": "daily",
-    "domain": "marriage"
-  }
+/* ===== PUBLIC STARTER DAILY SEED =====
+   Public builds must never ship a real person's routine. Existing saves keep their user's tasks.
+   These generic examples only seed a brand-new save or repair an empty task list. */
+const PUBLIC_STARTER_DAILIES_V1 = [
+  {title:'Start with prayer or reflection',diff:'easy',freq:'daily',domain:'faith'},
+  {title:'Move your body',diff:'med',freq:'daily',domain:'fitness'},
+  {title:'Serve your spouse or household',diff:'easy',freq:'daily',domain:'marriage'},
+  {title:'Be present with your kids or family',diff:'easy',freq:'daily',domain:'fatherhood'},
+  {title:'Complete one focused work block',diff:'med',freq:'daily',domain:'work'},
+  {title:'Reset one small area at home',diff:'easy',freq:'daily',domain:'home'},
+  {title:'Protect one boundary from distraction',diff:'med',freq:'daily',domain:'discipline'},
+  {title:'Enjoy a healthy hobby after anchors',diff:'easy',freq:'daily',domain:'hobbies'},
+  {title:'Weekly review: what kind of person am I becoming?',diff:'med',freq:'weekly',domain:'faith'}
 ];
-function makePersonalDaily(spec, old){
+function makeStarterDaily(spec, old){
   const freq=spec.freq||'daily';
   const curKey=periodKey(freq);
   const keepDone=old && old.freq===freq && old.pk===curKey ? !!old.done : false;
@@ -2282,10 +2117,10 @@ function makePersonalDaily(spec, old){
     pk: curKey
   };
 }
-function importPersonalDailiesV8(){
-  const byTitle=new Map((S.dailies||[]).map(d=>[String(d.title||'').trim().toLowerCase(), d]));
-  S.dailies=PERSONAL_DAILIES_V8.map(spec=>makePersonalDaily(spec, byTitle.get(String(spec.title||'').trim().toLowerCase())));
-  S.personalDailiesVersion=8;
+function seedStarterDailiesIfEmpty(){
+  if(Array.isArray(S.dailies) && S.dailies.length) return;
+  S.dailies=PUBLIC_STARTER_DAILIES_V1.map(spec=>makeStarterDaily(spec,null));
+  S.starterDailiesVersion=1;
 }
 
 function migrate(){
@@ -2314,7 +2149,8 @@ function migrate(){
   (S.dailies||[]).forEach(d=>{ if(!d.freq)d.freq='daily'; if(d.done===undefined)d.done=false; if(!d.pk)d.pk=periodKey(d.freq); if(!('domain' in d)) d.domain=guessDomain(d.title)||null; });
   (S.habits||[]).forEach(h=>{ if(!h.freq)h.freq='daily'; if(!h.pk)h.pk=periodKey(h.freq); if(!('domain' in h)) h.domain=guessDomain(h.title)||null; });
   (S.todos||[]).forEach(t=>{ if(!('domain' in t)) t.domain=guessDomain(t.title)||null; });
-  (S.heroes||[]).forEach(h=>{ if(!h.gear || ('w' in h.gear)) h.gear={weapon:null,armor:null,boots:null,relic:null}; if(typeof h.rank!=='number') h.rank=0; if(typeof h.prestige!=='number') h.prestige=0; if(typeof h.exp!=='number') h.exp=0; if(typeof h.bondXp!=='number') h.bondXp=0; if(h.owned===undefined) h.owned=true; if(!h.ip) h.ip='Custom'; if(h.role==='Healer') h.role='Support'; if(!Array.isArray(h.aff)||!h.aff.length) h.aff=(RAFF[h.id]||affByRole(h.role)); });
+  sanitizeHeroes();
+  (S.heroes||[]).forEach(h=>{ normalizeHero(h); });
   // ---- version-gated one-time migrations ----
   const fromV=S.saveVersion||1;
   if(fromV<2){
@@ -2342,9 +2178,10 @@ function migrate(){
     if(!S.lifeWeek||typeof S.lifeWeek!=='object') S.lifeWeek={wk:periodKey('weekly'),domains:{},completed:0,reviewed:false,balanceClaimed:false};
     if(!S.recoveryDays||typeof S.recoveryDays!=='object') S.recoveryDays={};
   }
-  if(fromV<8 || S.personalDailiesVersion!==8){
-    importPersonalDailiesV8();
-  }
+  // Privacy: never overwrite an existing user's tasks with bundled examples.
+  // Only repair/seed a save that has no daily tasks at all.
+  seedStarterDailiesIfEmpty();
+  if('personalDailiesVersion' in S) delete S.personalDailiesVersion;
   if(fromV<9){
     if(!S.chargeLedger||typeof S.chargeLedger!=='object') S.chargeLedger={day:periodKey('daily'),earned:0};
     // v1.9.0 briefly allowed runaway charge with the 48-task import. Cap existing bank once.
@@ -2401,8 +2238,12 @@ function migrate(){
     if(!S.prestigeMilestonesClaimed||typeof S.prestigeMilestonesClaimed!=='object') S.prestigeMilestonesClaimed={};
   }
   if(fromV<23){
-    if(!S.appSettings||typeof S.appSettings!=='object') S.appSettings={reduceMotion:false,compactMode:false,confirmDanger:true};
+    if(!S.appSettings||typeof S.appSettings!=='object') S.appSettings={reduceMotion:false,compactMode:false,confirmDanger:true,developerTools:false};
   }
+  if(fromV<24){
+    if(!('lastActionResult' in S)) S.lastActionResult=null;
+  }
+  if(!('lastActionResult' in S)) S.lastActionResult=null;
   S.saveVersion=SAVE_VERSION;
   ensureDomainStats(); ensureDayStats(); ensureQuestState(); ensureStrategyState(); ensureAssignments(); ensureDungeons(); ensureMonthStats(); ensurePrestigeState(); ensurePrestigeMilestones(); ensureHeroQuests(); ensurePrestigeMilestones();
   seedRoster();
@@ -2418,13 +2259,13 @@ function migrate(){
 function seed(){
   return {
     saveVersion:SAVE_VERSION, appBuild:APP_BUILD, lastSavedAt:null,
-    theme:'web', lastSeen:Date.now(), lastDay:todayStr(), doneMode:'bottom', appSettings:{reduceMotion:false,compactMode:false,confirmDanger:true}, onboarded:false, titlesUnlocked:{Adventurer:true}, activeTitle:'Adventurer',
+    theme:'web', lastSeen:Date.now(), lastDay:todayStr(), doneMode:'bottom', appSettings:{reduceMotion:false,compactMode:false,confirmDanger:true,developerTools:false}, onboarded:false, titlesUnlocked:{Adventurer:true}, activeTitle:'Adventurer', lastActionResult:null, starterDailiesVersion:1,
     lifeWeek:{wk:periodKey('weekly'),domains:{},completed:0,reviewed:false,balanceClaimed:false,holdLine:0}, recoveryDays:{}, holdLine:{day:periodKey('daily'),anchors:{},rewarded:false}, dayStats:{day:periodKey('daily'),completed:0,domains:{}}, questState:{daily:{day:periodKey('daily'),claimed:{}},weekly:{wk:periodKey('weekly'),claimed:{}},chains:{wk:periodKey('weekly'),claimed:{}}}, cards:{owned:['morning_prayer','iron_will','family_shield','deep_work','clean_house','sabbath_rhythm'],loadout:['morning_prayer','iron_will','family_shield']}, research:{points:0,nodes:{}}, assignments:{rooms:{}}, dungeonState:{wk:periodKey('weekly'),claimed:{}}, monthStats:{mo:periodKey('monthly'),domains:{},completed:0,wins:[],reviewed:false}, prestigeHistory:[], heroQuestState:{wk:periodKey('weekly'),claimed:{}}, prestigeMilestonesClaimed:{}, domainStats:{},
     charge:6, chargeLedger:{day:periodKey('daily'),earned:0}, stage:1, maxCleared:0,
     crystals:0, summonTickets:0, ticketShards:0, summonPity:0, wishlist:[], favorites:[], albumsClaimed:{starter_legacy:true}, didAutoStarterSquad:false,
     heroes:[],
     squads:{campaign:[],tower:[],raid:[]},
-    dailies:PERSONAL_DAILIES_V8.map(spec=>makePersonalDaily(spec,null)),
+    dailies:PUBLIC_STARTER_DAILIES_V1.map(spec=>makeStarterDaily(spec,null)),
     habits:[
       {id:uid(),title:'Hydrate',diff:'easy',freq:'daily',up:true,down:false,count:0,pk:periodKey('daily')},
       {id:uid(),title:'Doomscroll',diff:'med',freq:'daily',up:false,down:true,count:0,pk:periodKey('daily')}
@@ -2455,6 +2296,26 @@ async function save(){ if(S){ S.lastSavedAt=Date.now(); S.appBuild=APP_BUILD; } 
 const BAKKEY=KEY+'__autobak';
 async function autoBackup(reason){ try{ const cur=await Store.get(KEY); if(cur) await Store.set(BAKKEY,JSON.stringify({reason:reason||'',at:Date.now(),data:cur})); }catch(e){} }
 async function readAutoBackup(){ try{ const raw=await Store.get(BAKKEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+function timeAgo(ts){
+  const t=Number(ts||0);
+  if(!Number.isFinite(t)||t<=0) return 'recently';
+  const diff=Math.max(0,Date.now()-t);
+  const sec=Math.floor(diff/1000);
+  if(sec<5) return 'just now';
+  if(sec<60) return sec+'s ago';
+  const min=Math.floor(sec/60);
+  if(min<60) return min+'m ago';
+  const hr=Math.floor(min/60);
+  if(hr<24) return hr+'h ago';
+  const day=Math.floor(hr/24);
+  if(day<7) return day+'d ago';
+  const wk=Math.floor(day/7);
+  if(wk<5) return wk+'w ago';
+  const mo=Math.floor(day/30);
+  if(mo<12) return mo+'mo ago';
+  return Math.floor(day/365)+'y ago';
+}
+
 
 /* ===== economy ===== */
 function expRate(){ return TUNE.expPerHour*(1+TUNE.stageRateBonus*S.maxCleared); }
@@ -2507,19 +2368,20 @@ function chargeCapText(){
 }
 
 /* hero stats */
-function hpOf(h){ return Math.round((TUNE.roleBase[h.role].hp*TUNE.heroScale(h.level)+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)); }
-function atkOf(h){ return Math.round((TUNE.roleBase[h.role].atk*TUNE.heroScale(h.level)+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)); }
-function powerOf(h){ return Math.round(hpOf(h)/8+atkOf(h)*2); }
+function roleBaseOf(role){ return TUNE.roleBase[normalizeRole(role)] || TUNE.roleBase.DPS; }
+function hpOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.hp*TUNE.heroScale(h.level||1)+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)); }
+function atkOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.atk*TUNE.heroScale(h.level||1)+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)); }
+function powerOf(h){ if(!h) return 0; return Math.round(hpOf(h)/8+atkOf(h)*2); }
 const SQUADS=[['campaign','Campaign','⚔'],['tower','Tower','⛰'],['raid','Raid','☠']];
 function squad(mode){ if(!S.squads) S.squads={campaign:[],tower:[],raid:[]}; if(!Array.isArray(S.squads[mode])) S.squads[mode]=[]; return S.squads[mode]; }
 function inSquad(mode,id){ return squad(mode).includes(id); }
 function inAnySquad(id){ return SQUADS.some(s=>inSquad(s[0],id)); }
 function squadIcons(id){ return SQUADS.filter(s=>inSquad(s[0],id)).map(s=>s[2]).join(''); }
 function activeIds(){ const set=new Set(); SQUADS.forEach(s=>squad(s[0]).forEach(id=>set.add(id))); return set; }
-function teamPower(mode){ return squad(mode).reduce((s,id)=>{const h=S.heroes.find(x=>x.id===id);return s+(h?powerOf(h):0);},0); }
+function teamPower(mode){ sanitizeHeroes(); return squad(mode).reduce((s,id)=>{const h=S.heroes.find(x=>x.id===id);return s+(h?powerOf(h):0);},0); }
 function toggleSquad(mode,id){ const arr=squad(mode), i=arr.indexOf(id); if(i>=0){arr.splice(i,1);return true;} if(arr.length>=TUNE.teamSize){toast(SQUADS.find(s=>s[0]===mode)[1]+' squad is full ('+TUNE.teamSize+')');return false;} arr.push(id); return true; }
 
-function ensureAppSettings(){ if(!S.appSettings||typeof S.appSettings!=='object') S.appSettings={reduceMotion:false,compactMode:false,confirmDanger:true}; return S.appSettings; }
+function ensureAppSettings(){ if(!S.appSettings||typeof S.appSettings!=='object') S.appSettings={reduceMotion:false,compactMode:false,confirmDanger:true,developerTools:false}; return S.appSettings; }
 function applyAppSettings(){
   const a=ensureAppSettings();
   document.body.classList.toggle('reduce-motion',!!a.reduceMotion);
@@ -2552,12 +2414,23 @@ function renderHUD(){
 function render(){
   if(ambient){clearInterval(ambient);ambient=null;}
   clearSpriteLoops();
-  renderHUD();
-  const v=document.getElementById('view');
-  if(view==='home') renderHome(v);
-  else if(view==='tasks') renderTasks(v);
-  else if(view==='roster') renderRoster(v);
-  else renderCampaign(v);
+  try{
+    view=viewAlias(view);
+    setNavActive(view);
+    renderHUD();
+    const v=document.getElementById('view');
+    if(view==='home') renderHome(v);
+    else if(view==='quests') renderQuests(v);
+    else if(view==='heroes') renderHeroes(v);
+    else if(view==='battles') renderBattles(v);
+    else if(view==='growth') renderGrowth(v);
+    else { view='home'; setNavActive(view); renderHome(v); }
+  }catch(err){
+    console.error('Life Quest render failed',err);
+    const v=document.getElementById('view');
+    if(v) v.innerHTML='<div class="empty" style="margin-top:18px"><b>Screen could not load.</b><br>'+esc(err.message||err)+'<br><br><button class="go" id="repairAfterError">Repair save and return Home</button></div>';
+    const b=document.getElementById('repairAfterError'); if(b) b.onclick=()=>{ try{ sanitizeHeroes(); migrate(); view='home'; setNavActive('home'); renderHUD(); render(); save(); toast('Save repaired.'); }catch(e){ console.error(e); toast('Repair failed — use Settings backup tools.'); } };
+  }
 }
 
 /* ----- HOME ----- */
@@ -2585,10 +2458,34 @@ function whyForTask(it){ const k=domainOf(it); const label=k?DKEY[k].label:'Gene
   if(k==='hobbies') return 'Healthy hobbies are best after anchors are handled.';
   return label+' is open today. A small completed action is a win.';
 }
-function rewardPreview(it){ const charge=TUNE.chargeByDiff[it.diff]||TUNE.chargeByDiff.med, cr=CRYSTALS[it.diff]||CRYSTALS.med; const r=TASKREWARD[it.diff]||TASKREWARD.med; const bits=['+'+charge+'h charge','+'+cr+'◆','+'+r.g+'⦿']; if(r.d)bits.push('+'+r.d+'❖'); if(domainOf(it))bits.push('Bond XP'); return bits.join(' · '); }
+function rewardPreview(it){ const k=domainOf(it); const charge=TUNE.chargeByDiff[it.diff]||TUNE.chargeByDiff.med; const bits=[]; if(k&&DKEY[k]) bits.push(DKEY[k].label+' XP'); else bits.push('Life XP'); bits.push('+'+charge+'h charge'); bits.push('light rewards'); return bits.join(' · '); }
 function nextUnlockHero(){ const locked=lockedHeroes(); if(!locked.length) return null; const wish=locked.filter(h=>(S.wishlist||[]).includes(h.id)); return (wish[0]||locked.find(h=>h.name==='Wolverine')||locked[0]); }
 function featuredHero(){ const owned=S.heroes.filter(h=>h.owned); if(!owned.length) return null; if(S.focus){ const f=owned.find(h=>h.id===S.focus); if(f) return f; } return owned.slice().sort((a,b)=>powerOf(b)-powerOf(a))[0]; }
-function navTo(vw){ view=vw; document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.view===vw)); render(); }
+function viewAlias(vw){ return ({tasks:'quests',roster:'heroes',campaign:'battles'}[vw]||vw||'home'); }
+function setNavActive(vw){ const cv=viewAlias(vw); document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',viewAlias(x.dataset.view)===cv)); }
+function navTo(vw){ view=viewAlias(vw); setNavActive(view); render(); }
+function renderQuests(v){ renderTasks(v); }
+function renderHeroes(v){ renderRoster(v); }
+function renderBattles(v){ renderCampaign(v); }
+function growthCardHTML(icon,title,tag,body,summary,buttonId,buttonText){ return '<div class="lifecard"><h3><span>'+icon+' '+title+'</span><span>'+tag+'</span></h3><p>'+body+'</p>'+(summary||'')+'<div class="lifeactions"><button class="primary" id="'+buttonId+'">'+buttonText+'</button></div></div>'; }
+function renderGrowth(v){
+  const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain();
+  const sm=DKEY[strong.k], lm=DKEY[light.k];
+  v.innerHTML=
+    '<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">who I am becoming</span></div>'+
+    monthlySummaryHTML()+
+    '<div class="identityFocus"><b style="color:var(--ink)">Focus:</b> Meaning first, loot second. Use this tab for domains, reflection, base-building, research, and recovery.</div>'+
+    '<div class="lifesys-grid">'+
+      growthCardHTML('🌱','Domain Levels','Identity XP','Your real actions level the areas of life you care about most.','<div class="domainGrid">'+domainTilesHTML(4)+'</div>'+balanceChestHTML(),'openDomainsHome','View all domains')+
+      growthCardHTML('🏡','Life Base','Sanctuary','Watch your real-life domains become rooms you are building over time.',sanctuarySummaryHTML(),'openSanctuary','Open Life Base')+
+      growthCardHTML('🃏','Strategy + Research','Cards','Equip up to 3 light bonuses and buy permanent research upgrades from weekly reflection.',strategySummaryHTML(),'openStrategy','Open Strategy')+
+      growthCardHTML('🧭','Weekly Review',(W.reviewed?'Done':'Open'),'Notice momentum, name the lightest area, and choose the next faithful step.','<div class="reviewline"><span>Strongest</span><b>'+(sm?sm.icon+' '+sm.label:'—')+'</b></div><div class="reviewline"><span>Lightest</span><b>'+(lm?lm.icon+' '+lm.label:'—')+'</b></div>','openReview','Open weekly review')+
+      growthCardHTML('📅','Monthly Review','Identity','Review the bigger pattern: wins, drift, domains, and the man you are becoming.',recapCenterHTML(),'openMonthly','Open monthly review')+
+      growthCardHTML('🕊️','Grace & Recovery',(S.grace||0)+' tokens','Recovery Day and Grace Tokens protect momentum without pretending hard days were full-output days.','<div class="lifeactions" style="margin-top:0"><button class="primary" id="openRecovery">Start recovery anchor</button><button id="openGrace">How grace works</button></div>','openWeeklyRecap','Preview weekly recap')+
+    '</div>';
+  bindLifeCards();
+}
+
 
 function nextChestInfo(){
   const W=ensureWeek(), pct=W.done/weekPossible()*100;
@@ -2670,6 +2567,97 @@ function bindHomeActions(){
   const hw=document.getElementById('homeWeakDomain'); if(hw) hw.onclick=()=>{ const w=weakDomainInfo(); toast(w.meta.label+': '+w.suggest); subtab='dailies'; navTo('tasks'); };
 }
 
+
+let pendingTaskUndo=null, pendingTaskUndoTimer=null;
+function taskSnapshot(){ try{return JSON.stringify(S);}catch(e){return null;} }
+function majorRewardBlocked(loot,extraMsgs){
+  loot=loot||{}; extraMsgs=extraMsgs||[];
+  return !!(loot.gear||loot.shard||(loot.msgs&&loot.msgs.length)||extraMsgs.length||String((extraMsgs||[]).join(' ')).match(/Chest|gear|Spark|Ticket|Legendary|Epic/i));
+}
+function undoBarHide(){ const b=document.getElementById('undoBar'); if(b)b.classList.remove('show'); if(pendingTaskUndoTimer){clearTimeout(pendingTaskUndoTimer);pendingTaskUndoTimer=null;} }
+function showUndoBar(snapshot,label,blocked){
+  let b=document.getElementById('undoBar');
+  if(!b){ b=document.createElement('div'); b.id='undoBar'; document.body.appendChild(b); }
+  b.className='undoBar'+(blocked?' blocked':'');
+  if(blocked){
+    pendingTaskUndo=null;
+    b.innerHTML='<div><div class="ut">Undo unavailable</div><div class="um">Major reward claimed from '+esc(label||'this action')+'. Snapshot reversal is blocked to protect loot state.</div></div><button>Undo</button>';
+    b.classList.add('show'); clearTimeout(pendingTaskUndoTimer); pendingTaskUndoTimer=setTimeout(undoBarHide,1400); return;
+  }
+  if(!snapshot) return;
+  pendingTaskUndo={snapshot,label:label||'task',at:Date.now()};
+  b.innerHTML='<div><div class="ut">'+esc(label||'Task')+' completed</div><div class="um">Undo available for a few seconds. Rewards will be reversed safely.</div></div><button id="undoTaskBtn">Undo</button>';
+  b.classList.add('show');
+  const btn=document.getElementById('undoTaskBtn');
+  if(btn) btn.onclick=async ()=>{ if(!pendingTaskUndo)return; try{ S=JSON.parse(pendingTaskUndo.snapshot); migrate(); recalcCollection(); renderHUD(); render(); await save(); toast('Task undone. Rewards reversed.'); }catch(e){ toast('Undo failed — save state protected.'); } pendingTaskUndo=null; undoBarHide(); };
+  clearTimeout(pendingTaskUndoTimer); pendingTaskUndoTimer=setTimeout(()=>{pendingTaskUndo=null; undoBarHide();},1100);
+}
+function heroMomentFor(domain,diff,title){
+  const h=taskHeroFor(domain), name=h?h.name:'Your team';
+  const actions={fitness:'used Iron Will Strike',faith:'cast Shield of Peace',marriage:'raised the Hearthguard',fatherhood:'raised the Hearthguard',discipline:'broke the Chain of Impulse',work:'called Strategy Burst',home:'restored the Homefront',hobbies:'channeled Joyful Focus'};
+  const lower=String(title||'').toLowerCase();
+  const key=domain|| (lower.includes('workout')?'fitness':lower.includes('prayer')||lower.includes('bible')?'faith':lower.includes('game-free')?'discipline':null);
+  if(diff==='hard'||key==='fitness'||key==='faith'||key==='marriage'||key==='fatherhood'||key==='discipline'||key==='work'||key==='home') return {hero:name,action:actions[key]||'created momentum',key:key||domain};
+  return null;
+}
+function recordLastAction(item,kind,charged,gains,titles,extraMsgs){
+  const loot=lastTaskLoot||{}, domain=domainOf(item)||item.domain||null, dm=domain&&DKEY[domain]?DKEY[domain]:null, dg=lastDomainGain&&lastDomainGain.k===domain?lastDomainGain:null;
+  const h=taskHeroFor(domain), hm=heroMomentFor(domain,item.diff,item.title);
+  const rewards=[];
+  if(charged>0) rewards.push('+'+charged+'h Charge'); else rewards.push('Charge cap reached');
+  if(loot.crystals) rewards.push('+'+loot.crystals+'◆');
+  if(loot.gold) rewards.push('+'+loot.gold+' Gold');
+  if(loot.dust) rewards.push('+'+loot.dust+' Dust');
+  if(loot.cores) rewards.push('+'+loot.cores+' Cores');
+  if(dg) rewards.push('+'+dg.xp+' '+DKEY[dg.k].label+' XP'+(dg.levelUp?' · Lv '+dg.lv:'') );
+  if(gains&&gains.length) rewards.push('+'+gains[0].xp+' '+gains[0].name+' Bond XP'+(gains.length>1?' +'+(gains.length-1)+' more':''));
+  if(titles&&titles.length) rewards.push('Title: '+titles[0]);
+  const progress=[];
+  if(loot.raid&&loot.raid.rd) progress.push((h?h.name:'Your squad')+' struck '+(currentBoss()?currentBoss().name:'Weekly Boss')+' for '+rewardNumber(loot.raid.rd)+' damage'+(loot.raid.weak?' · WEAK':'')+'.');
+  if(extraMsgs&&extraMsgs.length) progress.push(extraMsgs[0]);
+  if(hm) progress.push(hm.hero+' '+hm.action+'.');
+  S.lastActionResult={title:item.title||'Task complete',kind:kind||'task',domain,domainLabel:dm?dm.label:'General',domainIcon:dm?dm.icon:'✓',diff:item.diff||'med',at:Date.now(),rewards,progress,next:nextGoalLine(),hero:h?h.name:null,heroMoment:hm};
+}
+function lastActionHTML(){
+  const la=S.lastActionResult; if(!la) return '';
+  const when=la.at?timeAgo(la.at):'recently';
+  const reward=(la.rewards||[]).slice(0,5).join(' · ');
+  const progress=(la.progress||[]).slice(0,2).join(' ');
+  return '<div class="lastActionCard" id="lastActionCard"><h3><span>✅ Last Action</span><span>'+esc(when)+'</span></h3><p class="lat">'+esc(la.domainIcon||'✓')+' '+esc(la.domainLabel||'Life')+' moved forward: '+esc(la.title)+'</p><p class="las">'+esc(progress||'You acted like the person you are becoming.')+'</p><div class="laNext">'+esc(la.next||nextGoalLine())+' · '+esc(reward||'light rewards gained')+'</div></div>';
+}
+function closestDomainReward(){
+  const stats=ensureDomainStats();
+  return DOMAINS.map(d=>{ const m=domainMeta(d[0]); return {k:d[0],label:d[1],icon:d[3],need:Math.max(0,Math.ceil(m.next-m.xp)),lv:m.lv}; }).sort((a,b)=>a.need-b.need)[0];
+}
+function closestRewardInfo(){
+  const ci=nextChestInfo(); if(ci.ready) return {kind:'chest',title:'Weekly Chest ready',sub:'Claim '+ci.name+' Chest before reset.',tag:'CLAIM'};
+  if(ci.need>0 && ci.need<=2) return {kind:'tasks',title:ci.need+' task'+(ci.need===1?'':'s')+' from Weekly Chest',sub:'One real-life action can push the week forward.',tag:'CLOSE'};
+  const ri=nextRaidInfo(); if(ri.ready) return {kind:'raid',title:'Raid Tier '+ri.tier+'% ready',sub:'Claim the Weekly Boss reward tier.',tag:'CLAIM'};
+  if(ri.need>0 && ri.need<=Math.max(2500,ensureRaid().max*.12)) return {kind:'raid',title:rewardNumber(ri.need)+' damage from Raid Tier '+ri.tier+'%',sub:'A hard or weak-domain task may be enough.',tag:'CLOSE'};
+  const up=readyUpgradeHero(); if(up&&up.type!=='progress') return {kind:'upgrade',title:up.label+': '+up.h.name,sub:'This is a direct power bump waiting for you.',tag:'READY',id:up.h.id};
+  const d=closestDomainReward(); if(d&&d.need<=75) return {kind:'domain',title:d.need+' XP from '+d.label+' Lv '+(d.lv+1),sub:'Complete a matching task to move that identity forward.',tag:'DOMAIN',domain:d.k};
+  const si=summonReadyInfo(); if(si.ready) return {kind:'summon',title:si.label,sub:si.sub+(si.target?' · '+si.target.name:''),tag:'READY'};
+  const target=nextUnlockHero(); if(target) return {kind:'summon',title:Math.max(0,UNLOCK_RANDOM-(S.crystals||0))+'◆ from random summon',sub:'Target chase: '+target.name+'.',tag:'UNLOCK'};
+  return {kind:'tasks',title:'One task from more momentum',sub:'The next completed action still moves the game.',tag:'NEXT'};
+}
+function closestRewardHTML(){ const c=closestRewardInfo(); return '<div class="closestRewardCard" id="closestReward" data-kind="'+c.kind+'" '+(c.id?'data-id="'+c.id+'"':'')+' '+(c.domain?'data-domain="'+c.domain+'"':'')+'><h3><span>🎯 Closest Reward</span><span>'+esc(c.tag)+'</span></h3><p class="crt">'+esc(c.title)+'</p><p class="crs">'+esc(c.sub)+'</p></div>'; }
+function bindClosestReward(){ const el=document.getElementById('closestReward'); if(!el)return; el.onclick=()=>{ const k=el.dataset.kind; if(k==='chest'||k==='tasks'){ subtab='dailies'; navTo('tasks'); } else if(k==='raid'){ campSub='raid'; navTo('campaign'); } else if(k==='upgrade'){ if(el.dataset.id) openHeroSheet(el.dataset.id); else navTo('roster'); } else if(k==='domain'){ subtab='dailies'; navTo('tasks'); } else if(k==='summon'){ navTo('roster'); } }; }
+function useChargeInfo(){
+  if((S.charge||0)<=0.05) return null;
+  if(squad('campaign').length) return {mode:'campaign',label:'Use Charge: Campaign Stage '+S.stage,sub:'You have '+chargeDisplay()+'h stored. Push the next stage now.',tag:'BATTLE'};
+  if(squad('tower').length) return {mode:'tower',label:'Use Charge: Tower Floor '+S.tower,sub:'Spend this momentum on upgrade fuel.',tag:'CLIMB'};
+  if(squad('raid').length) return {mode:'raid',label:'Use Charge: Weekly Boss',sub:'Open the boss view and pick a weak task to land the next strike.',tag:'RAID'};
+  return null;
+}
+function useChargeHTML(){ const u=useChargeInfo(); return u?'<div class="useChargeCard" id="useChargeHome" data-mode="'+u.mode+'"><h3><span>⚡ One-Tap Charge</span><span>'+esc(u.tag)+'</span></h3><p class="uct">'+esc(u.label)+'</p><p class="ucs">'+esc(u.sub)+'</p></div>':''; }
+function bindUseChargeHome(){ const el=document.getElementById('useChargeHome'); if(!el)return; el.onclick=()=>{ const m=el.dataset.mode; if(m==='campaign'||m==='tower') startBattle(m); else { campSub='raid'; navTo('campaign'); } }; }
+function defeatDramaHTML(){
+  if(!battleState) return '';
+  const enemies=battleState.enemies||[], total=enemies.reduce((n,e)=>n+(e.max||0),0), left=enemies.reduce((n,e)=>n+Math.max(0,e.hp||0),0), pct=total?Math.round(left/total*100):100;
+  if(pct<=15) return '<div class="enemyTip" style="border-color:#ffb01f66;background:#ffb01f10;color:#ffd95a"><b>Close fight:</b> enemy had '+pct+'% HP left.<br>One upgrade or one hard task may be enough.</div>';
+  return '<div class="enemyTip"><b>Power gap:</b> your squad needs more power or better balance before this clears cleanly.</div>';
+}
+
 function renderHome(v){
   recalcCollection();
   const dailies=(S.dailies||[]).filter(d=>d.freq==='daily');
@@ -2677,52 +2665,38 @@ function renderHome(v){
   const hour=new Date().getHours();
   const hello=hour<5?'Late night':hour<12?'Good morning':hour<17?'Good afternoon':hour<21?'Good evening':'Winding down';
   const line=pct>=100?'Every box checked. That’s a day well built.':pct>=60?'Strong momentum today — keep going.':pct>0?'You’ve started, and starting is the hard part.':'Pick one thing and begin. Small reps build the life.';
-  const owned=ownedCount(), bonus=Math.round((collectionMult()-1)*100), fh=featuredHero();
-  const camp=teamPower('campaign'), act=activeIds().size;
+  const next=suggestNext(), priorities=topPriorities(3), fh=featuredHero();
   const touched=new Set(dailies.filter(d=>d.done&&domainOf(d)).map(d=>domainOf(d)));
   const domRow=DOMAINS.map(d=>'<span title="'+d[1]+'" style="font-size:18px;filter:'+(touched.has(d[0])?'none':'grayscale(1) opacity(.3)')+'">'+d[3]+'</span>').join('');
-  const next=suggestNext(), priorities=topPriorities(3), unlock=nextUnlockHero();
-  const cry=S.crystals, unlockCost=(S.summonTickets||0)>0?1:(unlock?UNLOCK_TARGET:UNLOCK_RANDOM), sumPct=Math.min(100,(S.summonTickets||0)>0?100:cry/unlockCost*100);
-  const Rb=ensureRaid(), boss=currentBoss(), bpct=Math.min(100,Rb.dmg/Rb.max*100), bwk=boss.weak.map(k=>DKEY[k]?DKEY[k].icon+' '+DKEY[k].label:'').join(' · ');
-  const setup=!S.onboarded?'<div class="setupcard" id="setupCard"><h3>⚙ Finish V1 setup</h3><p>Quick check: make the quests yours, confirm your starter squad, then download a backup before future GitHub updates.</p><div class="setuprow"><button id="setupTasks">Customize quests</button><button id="setupSquad">Review squad</button><button id="setupBackup">Open backup</button><button id="setupDone">Done</button></div></div>':'';
+  const setup=!S.onboarded?'<div class="setupcard" id="setupCard"><h3>⚙ Finish setup</h3><p>Quick check: make the quests yours, confirm your starter squad, then download a backup before future updates.</p><div class="setuprow"><button id="setupTasks">Customize quests</button><button id="setupSquad">Review squad</button><button id="setupBackup">Open backup</button><button id="setupDone">Done</button></div></div>':'';
   const priorityHTML=priorities.length?'<div class="prioritylist">'+priorities.map((it,idx)=>{ const k=domainOf(it), dk=k?DKEY[k]:null; return '<div class="priorityitem" data-pid="'+it.id+'"><div class="pi" style="color:'+(dk?dk.color:'var(--accent2)')+'">'+(dk?dk.icon:'•')+'</div><div class="pt"><div class="pn">'+esc(it.title)+'</div><div class="pm">'+(dk?dk.label+' · ':'')+rewardPreview(it)+'</div></div><span style="color:var(--muted);font-weight:900">#'+(idx+1)+'</span></div>'; }).join('')+'</div>':'<div class="empty" style="padding:14px;margin-top:10px">All core actions are done. Rest is part of the work.</div>';
-  const nextHTML=next?'<div class="stagecard nextBig" id="nextCard" style="text-align:left;margin-bottom:13px;cursor:pointer"><h3 style="font-size:15px;margin-bottom:7px">🧭 Next best action</h3><p style="margin:0 0 4px;font-weight:1000;color:var(--ink);font-size:17px">'+esc(next.title)+'</p><p style="margin:0 0 8px;color:var(--muted);font-weight:650;line-height:1.35">'+whyForTask(next)+'</p><div style="font-size:12px;font-weight:900;color:#8bd0ff">'+rewardPreview(next)+'</div><div class="nbBtns"><button id="doNext" class="go" style="flex:1">Go to task</button><button id="refreshNext" style="flex:1;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Refresh</button></div></div>':'<div class="stagecard nextBig" style="border-color:#37c46e55;margin-bottom:13px"><h3>All clear 🎉</h3><p style="margin:0">Your main daily board is clear. Protect the win.</p></div>';
+  const nextHTML=next?'<div class="stagecard nextBig" id="nextCard" style="text-align:left;margin-bottom:13px;cursor:pointer"><h3 style="font-size:15px;margin-bottom:7px">🧭 Next best action</h3><p style="margin:0 0 4px;font-weight:1000;color:var(--ink);font-size:17px">'+esc(next.title)+'</p><p style="margin:0 0 8px;color:var(--muted);font-weight:650;line-height:1.35">'+whyForTask(next)+'</p><div style="font-size:12px;font-weight:900;color:#8bd0ff">'+rewardPreview(next)+'</div><div class="nbBtns"><button id="doNext" class="go" style="flex:1">Go to quest</button><button id="refreshNext" style="flex:1;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Refresh</button></div></div>':'<div class="stagecard nextBig" style="border-color:#37c46e55;margin-bottom:13px"><h3>All clear 🎉</h3><p style="margin:0">Your main daily board is clear. Protect the win.</p></div>';
+  const squadPreview=squad('campaign').slice(0,TUNE.teamSize).map(id=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return ''; return '<div class="slot full"><div class="ava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+(h.img?'<img src="'+h.img+'">':initials(h.name))+'</div></div>'; }).join('');
   v.innerHTML=
     '<div class="head"><h2>'+hello+'</h2><span style="color:var(--muted);font-weight:700;font-size:13px">'+dateStamp()+'</span></div><div class="titlebar">🏷 '+esc(currentTitle())+'</div>'+setup+
     '<div style="color:var(--muted);font-weight:600;font-size:13px;margin:-6px 2px 14px">'+line+'</div>'+nextHTML+
-    bestGameActionHTML()+homeActionCardsHTML()+
-    '<div class="stagecard" style="margin-bottom:13px;text-align:left"><h3 style="display:flex;justify-content:space-between"><span>Today’s Quest</span><span style="color:var(--accent2)">'+doneN+' / '+totN+'</span></h3>'+priorityHTML+
+    monthlySummaryHTML()+lastActionHTML()+closestRewardHTML()+bestGameActionHTML()+useChargeHTML()+
+    '<div class="stagecard" style="margin-bottom:13px;text-align:left"><h3 style="display:flex;justify-content:space-between"><span>Today’s Progress</span><span style="color:var(--accent2)">'+doneN+' / '+totN+'</span></h3>'+priorityHTML+
       '<div class="dummybar" style="height:12px;margin:12px 0 6px"><i style="width:'+pct+'%;background:linear-gradient(90deg,#37c46e,#36e0e6)"></i></div>'+ 
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><div style="display:flex;gap:9px">'+domRow+'</div><span style="font-size:11px;color:var(--muted);font-weight:700">life areas today</span></div>'+ 
-      '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:9px;border-top:1px solid var(--line);padding-top:8px">🕛 Day resets at midnight · '+dayEndsIn()+' left · 📦 Week resets Monday 12:00 AM · '+weekEndsIn()+' left</div></div>'+ 
-    '<div style="background:linear-gradient(135deg,rgba(54,224,230,.10),rgba(58,123,213,.10));border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:13px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-family:Orbitron;font-weight:800;font-size:13px;color:#36e0e6">COLLECTION LV '+gCL+'</div><div style="font-size:12px;font-weight:800;color:var(--good)">+'+bonus+'% all heroes</div></div>'+ 
-      '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;font-weight:700;color:var(--muted)"><span>'+owned+' heroes</span><span>CP '+gCP.toLocaleString()+'</span><span>'+act+' active</span><span>⚔ Campaign '+camp.toLocaleString()+'</span><span>📚 '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+' albums</span><span>🕊️ '+(S.grace||0)+' grace</span></div></div>'+ 
-    '<div class="stagecard" id="goSummon" style="margin-bottom:13px;cursor:pointer;text-align:left"><h3 style="display:flex;justify-content:space-between"><span>📦 Next Unlock</span><span style="color:#8bd0ff">'+((S.summonTickets||0)>0?(S.summonTickets||0)+'🎟':cry+' / '+unlockCost+' ◆')+'</span></h3>'+ 
-      '<div class="dummybar" style="height:10px;margin:8px 0 4px"><i style="width:'+sumPct+'%;background:linear-gradient(90deg,#3a7bd5,#36e0e6)"></i></div>'+ 
-      '<p style="margin:6px 0 0">'+(unlock?('Target: '+esc(unlock.name)+' · '+esc(unlock.ip)+' · '+unlock.role):'Every hero unlocked!')+'</p></div>'+ 
-    '<div class="stagecard" id="goBoss" style="border-color:#ff5d6c55;margin-bottom:13px;cursor:pointer;text-align:left"><h3 style="display:flex;justify-content:space-between"><span>'+boss.icon+' '+boss.name+'</span><span style="color:#ff8a95">'+bpct.toFixed(0)+'%</span></h3>'+ 
-      '<div class="dummybar" style="height:10px;margin:8px 0 6px"><i style="width:'+bpct+'%;background:linear-gradient(90deg,#ff5d6c,#ffb01f)"></i></div>'+ 
-      '<p style="margin:6px 0 0">Weak to '+bwk+' · Week resets Monday 12:00 AM · '+weekEndsIn()+' left</p></div>'+ 
-    lifeSystemCardsHTML()+
+      '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:9px;border-top:1px solid var(--line);padding-top:8px">🕛 Day resets at midnight · '+dayEndsIn()+' left · 📦 Week resets Monday · '+weekEndsIn()+' left</div></div>'+ 
+    '<div class="team-strip" style="margin-bottom:13px"><div class="lab"><span>Campaign Squad</span><b>PWR '+teamPower('campaign')+'</b></div><div class="team-row">'+(squadPreview||'<div class="empty" style="width:100%;padding:10px">No Campaign squad yet.</div>')+'</div><button class="ghost" id="homeEditSquad" style="margin-top:10px;width:100%">Open Battles</button></div>'+ 
     (fh?'<div class="head"><h2>Featured Hero</h2></div>'+ 
       '<div class="card" id="featHero" data-id="'+fh.id+'" style="cursor:pointer"><div class="diff" style="background:'+fh.color+'"></div><div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(160deg,'+fh.color+',#0008);display:flex;align-items:center;justify-content:center;font-family:Orbitron;font-weight:900;color:#fff;margin-right:10px;overflow:hidden">'+(fh.img?'<img src="'+fh.img+'" style="width:100%;height:100%;object-fit:cover">':initials(fh.name))+'</div>'+ 
-        '<div class="body"><div class="t">'+esc(fh.name)+(S.focus===fh.id?' 🎯':'')+'</div><div class="meta">'+fh.ip+' · '+fh.role+' · Lv '+fh.level+' · PWR '+powerOf(fh)+' · Bond Lv '+bondLevel(fh)+' · Weekly focus</div></div></div>':'<div class="head"><h2>Featured Hero</h2></div><div class="featured-empty" id="pickFeatured">No featured hero set yet. Pick one favorite from Roster → Set as Featured Hero to make the Home screen feel more personal.</div>');
-  bindHomeActions(); bindBestGameAction();
-  const goToNext=()=>{ if(!next){toast('All clear — protect the win.'); return;} subtab=(S.todos||[]).some(t=>t.id===next.id)?'todos':'dailies'; navTo('tasks'); };
+        '<div class="body"><div class="t">'+esc(fh.name)+(S.focus===fh.id?' 🎯':'')+'</div><div class="meta">'+fh.ip+' · '+fh.role+' · Lv '+fh.level+' · PWR '+powerOf(fh)+' · Bond Lv '+bondLevel(fh)+' · Weekly focus</div></div></div>':'<div class="head"><h2>Featured Hero</h2></div><div class="featured-empty" id="pickFeatured">No featured hero set yet. Pick one favorite from Heroes → Set as Featured Hero.</div>');
+  bindBestGameAction(); bindUseChargeHome(); bindClosestReward();
+  const goToNext=()=>{ if(!next){toast('All clear — protect the win.'); return;} subtab=(S.todos||[]).some(t=>t.id===next.id)?'todos':'dailies'; navTo('quests'); };
   const nc=document.getElementById('nextCard'); if(nc) nc.onclick=goToNext;
   const dn=document.getElementById('doNext'); if(dn) dn.onclick=(e)=>{ e.stopPropagation(); goToNext(); };
   const rn=document.getElementById('refreshNext'); if(rn) rn.onclick=(e)=>{ e.stopPropagation(); const it=suggestNext(); toast(it?'Next: '+it.title:'All clear — protect the win.'); };
-  document.querySelectorAll('.priorityitem').forEach(x=>x.onclick=()=>{ const id=x.dataset.pid; subtab=(S.todos||[]).some(t=>t.id===id)?'todos':'dailies'; navTo('tasks'); });
-  const gs=document.getElementById('goSummon'); if(gs) gs.onclick=()=>navTo('roster');
-  const gb=document.getElementById('goBoss'); if(gb) gb.onclick=()=>{ campSub='raid'; navTo('campaign'); };
+  document.querySelectorAll('.priorityitem').forEach(x=>x.onclick=()=>{ const id=x.dataset.pid; subtab=(S.todos||[]).some(t=>t.id===id)?'todos':'dailies'; navTo('quests'); });
   const fhEl=document.getElementById('featHero'); if(fhEl) fhEl.onclick=()=>openHeroSheet(fhEl.dataset.id);
-  const pf=document.getElementById('pickFeatured'); if(pf) pf.onclick=()=>navTo('roster');
-  const st=document.getElementById('setupTasks'); if(st) st.onclick=()=>{ subtab='dailies'; navTo('tasks'); };
-  const ss=document.getElementById('setupSquad'); if(ss) ss.onclick=()=>{ campSub='campaign'; navTo('campaign'); };
+  const pf=document.getElementById('pickFeatured'); if(pf) pf.onclick=()=>navTo('heroes');
+  const he=document.getElementById('homeEditSquad'); if(he) he.onclick=()=>{ campSub='campaign'; navTo('battles'); };
+  const st=document.getElementById('setupTasks'); if(st) st.onclick=()=>{ subtab='dailies'; navTo('quests'); };
+  const ss=document.getElementById('setupSquad'); if(ss) ss.onclick=()=>{ campSub='campaign'; navTo('battles'); };
   const sb=document.getElementById('setupBackup'); if(sb) sb.onclick=()=>document.getElementById('openSettings').click();
   const doneBtn=document.getElementById('setupDone'); if(doneBtn) doneBtn.onclick=()=>{ S.onboarded=true; render(); save(); };
-  bindLifeCards();
 }
 
 /* ----- TASKS ----- */
@@ -2779,6 +2753,8 @@ function taskHeroFor(domain){
   return h||S.heroes.find(x=>x.owned)||null;
 }
 function taskActionVerb(h,domain){
+  const domainMove={fitness:'Iron Will Strike',faith:'Shield of Peace',marriage:'Hearthguard',fatherhood:'Hearthguard',discipline:'Chainbreaker',work:'Strategy Burst',home:'Homefront Restore',hobbies:'Joyful Focus'};
+  if(domainMove[domain]) return domainMove[domain];
   if(!h) return 'Momentum';
   const p=passiveOf(h);
   if(p&&p.name) return p.name;
@@ -2801,6 +2777,7 @@ function nextGoalLine(){
 }
 function showTaskDopamine(item,kind,charged,gains){
   try{
+    const rp=document.getElementById('rewardPop'); if(rp){ rp.classList.remove('show'); clearTimeout(window.rewardPopT); }
     const domain=domainOf(item)||item.domain||null, dm=domain&&DKEY[domain]?DKEY[domain]:null, h=taskHeroFor(domain), loot=lastTaskLoot||{};
     const dmg=pseudoTaskDamage(item.diff,h,loot), weak=loot.raid&&loot.raid.weak;
     let box=document.getElementById('taskBurst');
@@ -2823,7 +2800,7 @@ function showTaskDopamine(item,kind,charged,gains){
       '<div class="next">'+esc(bond)+'<br>'+esc(dline)+'<br>'+esc(nextGoalLine())+'</div></div>';
     box.classList.add('show');
     clearTimeout(window.taskBurstT);
-    window.taskBurstT=setTimeout(()=>box.classList.remove('show'),3600);
+    window.taskBurstT=setTimeout(()=>box.classList.remove('show'),2300);
   }catch(e){ console.warn('task dopamine failed',e); }
 }
 
@@ -2841,29 +2818,62 @@ function onTaskClick(e){
   const el=e.target.closest('[data-act]'); if(!el) return;
   const act=el.dataset.act,id=el.dataset.id;
   const f=arr=>arr.find(x=>x.id===id);
-  if(act==='daily'){ const d=f(S.dailies); const base=TUNE.chargeByDiff[d.diff];
-    if(!d.done){ d.done=true; d.streak++; const bn=Math.min(TUNE.streakBonusCap,Math.floor(d.streak/TUNE.streakBonusPer)); const charged=bankCharge(d.diff,base+bn); d.chargeAwarded=charged;
-      let msg=charged>0?'+'+charged+'h charge ⚡'+(charged<base+bn?' · charge cap reached':''):'Charge cap reached ✓'; if(bn&&charged>0) msg+=' (streak bonus available)'; const pk=periodKey(d.freq);
-      if(d.lootedPk!==pk){ msg+=taskLoot(d.diff,d.domain); trackLifeAction(d.domain,d.diff,'daily'); const bu=gainBond(d.domain,BONDXP[d.diff]||0); const tu=unlockTitles(d.domain,d.diff); gainBond._last=bu; gainBond._titles=tu; msg+=bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); d.lootedPk=pk; if(d.freq==='daily'){ ensureWeek().done++; const cm=checkChests(); if(cm.length) msg+=' · '+cm.join(' · '); } }
+  if(act==='daily'){
+    const d=f(S.dailies); if(!d)return; const base=TUNE.chargeByDiff[d.diff];
+    if(!d.done){
+      const undoSnap=taskSnapshot(); lastTaskLoot=null; lastDomainGain=null; gainBond._last=[]; gainBond._titles=[];
+      d.done=true; d.streak++;
+      const bn=Math.min(TUNE.streakBonusCap,Math.floor(d.streak/TUNE.streakBonusPer));
+      const charged=bankCharge(d.diff,base+bn); d.chargeAwarded=charged;
+      let msg=charged>0?'+'+charged+'h charge ⚡'+(charged<base+bn?' · charge cap reached':''):'Charge cap reached ✓'; if(bn&&charged>0) msg+=' (streak bonus available)';
+      const pk=periodKey(d.freq), extraMsgs=[]; let bu=[], tu=[];
+      if(d.lootedPk!==pk){
+        msg+=taskLoot(d.diff,d.domain); trackLifeAction(d.domain,d.diff,'daily'); bu=gainBond(d.domain,BONDXP[d.diff]||0); tu=unlockTitles(d.domain,d.diff); gainBond._last=bu; gainBond._titles=tu; msg+=bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); d.lootedPk=pk;
+        if(d.freq==='daily'){ ensureWeek().done++; const cm=checkChests(); if(cm.length){ extraMsgs.push(...cm); msg+=' · '+cm.join(' · '); } }
+      }
       msg+=checkStreakMilestone(d);
-      flash(el); el.closest('.card')?.classList.add('pulseTask'); toast(msg); rewardSummary(d.title+' complete', baseRewardItems(d.diff,charged).concat(bondItems(gainBond._last||[],d.domain),titleItems(gainBond._titles||[]),[{txt:chargeCapText(),cls:charged>0?'':'warn'}])); showTaskDopamine(d,'daily',charged,gainBond._last||[]);  }
-    else { const awarded=d.chargeAwarded||0; d.done=false; d.streak=Math.max(0,d.streak-1); S.charge=Math.max(0,+(S.charge-awarded).toFixed(3)); const led=ensureChargeLedger(); led.earned=Math.max(0,+(led.earned-awarded).toFixed(3)); d.chargeAwarded=0; } }
-  else if(act==='hplus'){ const h=f(S.habits); h.count++; const pk=periodKey(h.freq);
+      const blocked=majorRewardBlocked(lastTaskLoot,extraMsgs);
+      recordLastAction(d,'daily',charged,bu,tu,extraMsgs);
+      flash(el); el.closest('.card')?.classList.add('pulseTask'); toast(msg);
+      rewardSummary(d.title+' complete', baseRewardItems(d.diff,charged).concat(bondItems(bu,d.domain),titleItems(tu),[{txt:chargeCapText(),cls:charged>0?'':'warn'}, blocked?{txt:'Undo unavailable: major reward claimed',cls:'warn'}:null]));
+      showTaskDopamine(d,'daily',charged,bu); showUndoBar(undoSnap,d.title,blocked);
+    } else {
+      const awarded=d.chargeAwarded||0; d.done=false; d.streak=Math.max(0,d.streak-1); S.charge=Math.max(0,+(S.charge-awarded).toFixed(3)); const led=ensureChargeLedger(); led.earned=Math.max(0,+(led.earned-awarded).toFixed(3)); d.chargeAwarded=0;
+    }
+  }
+  else if(act==='hplus'){
+    const h=f(S.habits); if(!h)return; const undoSnap=taskSnapshot(); lastTaskLoot=null; lastDomainGain=null;
+    h.count++; const pk=periodKey(h.freq);
     if(h.chgPk!==pk){ h.chgPk=pk; h.chg=0; }
-    if(h.chg<TUNE.habitChargeCap){ h.chg++; const charged=bankCharge(h.diff); trackLifeAction(h.domain,h.diff,'habit'); const bu=gainBond(h.domain,BONDXP[h.diff]||0); const tu=unlockTitles(h.domain,h.diff); flash(el); const txt=(charged>0?'+'+charged+'h charge ⚡':'Charge cap reached ✓')+(h.chg>=TUNE.habitChargeCap?' · habit charge maxed today':'')+bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); toast(txt); rewardSummary(h.title+' logged', [{txt:charged>0?'+'+charged+'h charge':'charge cap reached',cls:charged>0?'main':'warn'},{txt:chargeCapText(),cls:''}].concat(bondItems(bu,h.domain),titleItems(tu))); showTaskDopamine(h,'habit',charged,bu);  }
-    else { flash(el); toast('Logged ✓ · charge maxed for today'); } }
-  else if(act==='hminus'){ const h=f(S.habits); h.count--; flash(el); toast('Logged a slip'); }
-  else if(act==='todo'){ const t=f(S.todos); if(!t.done){ t.done=true; const charged=bankCharge(t.diff); let msg=charged>0?'+'+charged+'h charge ⚡':'Charge cap reached ✓'; let bu=[]; if(!t.looted){ msg+=taskLoot(t.diff,t.domain); trackLifeAction(t.domain,t.diff,'quest'); bu=gainBond(t.domain,BONDXP[t.diff]||0); const tu=unlockTitles(t.domain,t.diff); t._titles=tu; msg+=bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); t.looted=true; } flash(el); toast(msg); rewardSummary(t.title+' complete', baseRewardItems(t.diff,charged).concat(bondItems(bu,t.domain),titleItems(t._titles||[]),[{txt:chargeCapText(),cls:''}])); showTaskDopamine(t,'quest',charged,bu);  } else t.done=false; }
+    if(h.chg<TUNE.habitChargeCap){ h.chg++; const charged=bankCharge(h.diff); trackLifeAction(h.domain,h.diff,'habit'); const bu=gainBond(h.domain,BONDXP[h.diff]||0); const tu=unlockTitles(h.domain,h.diff); flash(el); const txt=(charged>0?'+'+charged+'h charge ⚡':'Charge cap reached ✓')+(h.chg>=TUNE.habitChargeCap?' · habit charge maxed today':'')+bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); toast(txt); recordLastAction(h,'habit',charged,bu,tu,[]); rewardSummary(h.title+' logged', [{txt:charged>0?'+'+charged+'h charge':'charge cap reached',cls:charged>0?'main':'warn'},{txt:chargeCapText(),cls:''}].concat(bondItems(bu,h.domain),titleItems(tu))); showTaskDopamine(h,'habit',charged,bu); showUndoBar(undoSnap,h.title,false); }
+    else { flash(el); toast('Logged ✓ · charge maxed for today'); }
+  }
+  else if(act==='hminus'){ const h=f(S.habits); if(!h)return; h.count--; flash(el); toast('Logged a slip'); }
+  else if(act==='todo'){
+    const t=f(S.todos); if(!t)return;
+    if(!t.done){
+      const undoSnap=taskSnapshot(); lastTaskLoot=null; lastDomainGain=null;
+      t.done=true; const charged=bankCharge(t.diff); let msg=charged>0?'+'+charged+'h charge ⚡':'Charge cap reached ✓'; let bu=[], tu=[], extraMsgs=[];
+      if(!t.looted){ msg+=taskLoot(t.diff,t.domain); trackLifeAction(t.domain,t.diff,'quest'); bu=gainBond(t.domain,BONDXP[t.diff]||0); tu=unlockTitles(t.domain,t.diff); t._titles=tu; msg+=bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); t.looted=true; }
+      const blocked=majorRewardBlocked(lastTaskLoot,extraMsgs);
+      recordLastAction(t,'quest',charged,bu,tu,extraMsgs);
+      flash(el); toast(msg); rewardSummary(t.title+' complete', baseRewardItems(t.diff,charged).concat(bondItems(bu,t.domain),titleItems(t._titles||[]),[{txt:chargeCapText(),cls:''}, blocked?{txt:'Undo unavailable: major reward claimed',cls:'warn'}:null])); showTaskDopamine(t,'quest',charged,bu); showUndoBar(undoSnap,t.title,blocked);
+    } else t.done=false;
+  }
   else if(act==='edit'){ openTaskSheet(id); return; }
   renderHUD(); render(); save();
 }
 
+
 /* ----- ROSTER ----- */
 let rosState={tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', quick:'all', sort:'power'};
-function rosterIPs(){ return Array.from(new Set(S.heroes.map(h=>h.ip))).sort(); }
+function defaultRosState(){ return {tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', quick:'all', sort:'power'}; }
+function rosterFiltersActive(){ return !!(rosState.q || rosState.tab!=='owned' || rosState.role!=='all' || rosState.ip!=='all' || rosState.domain!=='all' || rosState.archetype!=='all' || rosState.quick!=='all' || rosState.sort!=='power'); }
+function resetRosterFilters(){ rosState=defaultRosState(); }
+function rosterIPs(){ sanitizeHeroes(); return Array.from(new Set(S.heroes.map(h=>h.ip||'Custom'))).sort(); }
 function isFavorite(id){ return Array.isArray(S.favorites)&&S.favorites.includes(id); }
 function toggleFavorite(id){ if(!Array.isArray(S.favorites)) S.favorites=[]; if(S.favorites.includes(id)) S.favorites=S.favorites.filter(x=>x!==id); else S.favorites.push(id); save(); }
-function canEquipAnyGear(h){ return h.owned && SLOTS.some(slot=>!h.gear||!h.gear[slot]) && (S.inventory||[]).some(g=>g.slot===slot); }
+function canEquipAnyGear(h){ return h.owned && SLOTS.some(slot=>(!h.gear||!h.gear[slot]) && (S.inventory||[]).some(g=>g&&g.slot===slot)); }
 function canUpgradeAnyGear(h){ if(!h.owned||!h.gear) return false; return SLOTS.some(slot=>{ const g=h.gear[slot]; if(!g)return false; const c=gearCostOf(g); return g.level<gearMaxLvl(g) && (S.gold||0)>=c.gold && (S.dust||0)>=c.dust; }); }
 function heroReadyState(h){
   if(!h.owned) return '';
@@ -2882,6 +2892,7 @@ function rosterMatchesQuery(h,q){
   return parts.includes(q);
 }
 function rosterFiltered(){
+  sanitizeHeroes();
   let list=S.heroes.slice();
   if(rosState.tab==='owned') list=list.filter(h=>h.owned);
   else if(rosState.tab==='locked') list=list.filter(h=>!h.owned);
@@ -2982,6 +2993,7 @@ function renderRoster(v){
       '<select id="rosIP" style="padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:12px">'+ipOpts.map(p=>'<option value="'+esc(p)+'"'+(rosState.ip===p?' selected':'')+'>'+(p==='all'?'All worlds':esc(p))+'</option>').join('')+'</select>'+
       '<select id="rosSort" style="padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:12px">'+[['power','Power'],['favorites','Favorites'],['ready','Ready'],['level','Level'],['rank','Rank'],['bond','Bond'],['cp','Collection'],['recent','Recent'],['role','Role'],['archetype','Archetype'],['name','A–Z']].map(o=>'<option value="'+o[0]+'"'+(rosState.sort===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>'+
     '</div>'+
+    (rosterFiltersActive()?'<button class="clearFiltersBtn" id="rosClearFilters">✕ Clear hero filters</button>':'')+
     '<div class="rgrid" id="rg"></div>';
   const g=document.getElementById('rg');
   function fillGrid(){
@@ -3003,6 +3015,7 @@ function renderRoster(v){
   document.getElementById('rosArch').onchange=e=>{ rosState.archetype=e.target.value; fillGrid(); };
   document.getElementById('rosIP').onchange=e=>{ rosState.ip=e.target.value; fillGrid(); };
   document.getElementById('rosSort').onchange=e=>{ rosState.sort=e.target.value; fillGrid(); };
+  const cf=document.getElementById('rosClearFilters'); if(cf) cf.onclick=()=>{ resetRosterFilters(); renderRoster(v); };
   g.onclick=e=>{
     const f=e.target.closest('.fav'); if(f){ toggleFavorite(f.dataset.id); renderRoster(v); return; }
     const w=e.target.closest('.wish'); if(w){ toggleWish(w.dataset.id); fillGrid(); return; }
@@ -3046,11 +3059,63 @@ function initials(n){ return (n||'?').trim().split(/\s+/).map(w=>w[0]).join('').
 
 /* ----- CAMPAIGN ----- */
 
+
+let squadPickState={q:'', role:'all', domain:'all', ip:'all', archetype:'all', sort:'power'};
+function defaultSquadPickState(){ return {q:'', role:'all', domain:'all', ip:'all', archetype:'all', sort:'power'}; }
+function squadPickFiltersActive(){ return !!(squadPickState.q || squadPickState.role!=='all' || squadPickState.domain!=='all' || squadPickState.ip!=='all' || squadPickState.archetype!=='all' || squadPickState.sort!=='power'); }
+function squadPickerFiltered(list){
+  list=(list||[]).slice();
+  if(squadPickState.role!=='all') list=list.filter(h=>h.role===squadPickState.role);
+  if(squadPickState.domain!=='all') list=list.filter(h=>Array.isArray(h.aff)&&h.aff.includes(squadPickState.domain));
+  if(squadPickState.ip!=='all') list=list.filter(h=>h.ip===squadPickState.ip);
+  if(squadPickState.archetype!=='all') list=list.filter(h=>heroArchetype(h)&&heroArchetype(h).key===squadPickState.archetype);
+  if(squadPickState.q) list=list.filter(h=>rosterMatchesQuery(h,squadPickState.q));
+  const sort=squadPickState.sort;
+  list.sort((a,b)=>
+    sort==='level'?b.level-a.level :
+    sort==='role'?a.role.localeCompare(b.role)||powerOf(b)-powerOf(a) :
+    sort==='name'?a.name.localeCompare(b.name) :
+    sort==='bond'?bondLevel(b)-bondLevel(a)||(b.bondXp||0)-(a.bondXp||0) :
+    sort==='archetype'?(heroArchetype(a)?.label||'').localeCompare(heroArchetype(b)?.label||'')||powerOf(b)-powerOf(a) :
+    powerOf(b)-powerOf(a)
+  );
+  return list;
+}
+function squadCandidateButtonHTML(h,mode){
+  const arr=squad(mode), on=arr.includes(h.id), full=!on&&arr.length>=TUNE.teamSize, disabled=full?' disabled':'';
+  const face=h.img?'<img src="'+h.img+'">':initials(h.name), p=passiveOf(h), a=heroArchetype(h);
+  return '<button class="pickHero '+(on?'on':'')+'" data-pick="'+h.id+'"'+disabled+' style="'+(disabled?'opacity:.45':'')+'"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="pmeta"><span class="pname">'+esc(h.name)+'</span><span class="psub">'+esc(h.ip)+' · '+h.role+' · PWR '+powerOf(h)+(a?' · '+esc(a.label):'')+(p?' · '+esc(p.name):'')+'</span></span><span class="status">'+(on?'✓':'＋')+'</span></button>';
+}
+function refreshSquadCandidates(mode){
+  const holder=document.getElementById('sqCandidateList'), count=document.getElementById('sqCandidateCount'); if(!holder)return;
+  const all=S.heroes.filter(h=>h.owned), filtered=squadPickerFiltered(all);
+  if(count) count.textContent=filtered.length+' / '+all.length+' heroes shown';
+  holder.innerHTML=filtered.length?filtered.map(h=>squadCandidateButtonHTML(h,mode)).join(''):'<div class="empty">No heroes match these filters.<br>Clear filters or search less specifically.</div>';
+}
+function bindSquadPickerFilters(mode){
+  const q=document.getElementById('sqSearch'); if(q) q.oninput=()=>{ squadPickState.q=q.value; refreshSquadCandidates(mode); };
+  [['sqRole','role'],['sqDomain','domain'],['sqIP','ip'],['sqArch','archetype'],['sqSort','sort']].forEach(pair=>{ const el=document.getElementById(pair[0]); if(el) el.onchange=()=>{ squadPickState[pair[1]]=el.value; refreshSquadCandidates(mode); }; });
+  const clear=document.getElementById('sqClearFilters'); if(clear) clear.onclick=()=>{ squadPickState=defaultSquadPickState(); openSquadPicker(mode); };
+}
+function squadPickerToolsHTML(allCount,shownCount){
+  const ipOpts=['all'].concat(rosterIPs()), domainOpts=['all'].concat(DOMAINS.map(d=>d[0])), archOpts=['all'].concat(archetypeOptions());
+  return '<div class="squadTools"><div class="filterSummary"><span>Find heroes</span><span id="sqCandidateCount">'+shownCount+' / '+allCount+' heroes shown</span></div>'+ 
+    '<input type="text" id="sqSearch" placeholder="🔎 Search name, world, passive, role…" value="'+esc(squadPickState.q)+'">'+
+    '<div class="grid">'+
+      '<select id="sqRole">'+['all','Tank','DPS','Support'].map(r=>'<option value="'+r+'"'+(squadPickState.role===r?' selected':'')+'>'+(r==='all'?'All roles':r)+'</option>').join('')+'</select>'+
+      '<select id="sqDomain">'+domainOpts.map(d=>'<option value="'+d+'"'+(squadPickState.domain===d?' selected':'')+'>'+(d==='all'?'All domains':(DKEY[d]?DKEY[d].label:d))+'</option>').join('')+'</select>'+
+      '<select id="sqArch">'+archOpts.map(a=>'<option value="'+a+'"'+(squadPickState.archetype===a?' selected':'')+'>'+(a==='all'?'All archetypes':ARCHETYPE_DEFS[a].label)+'</option>').join('')+'</select>'+
+      '<select id="sqIP">'+ipOpts.map(p=>'<option value="'+esc(p)+'"'+(squadPickState.ip===p?' selected':'')+'>'+(p==='all'?'All worlds':esc(p))+'</option>').join('')+'</select>'+ 
+      '<select id="sqSort"><option value="power" '+(squadPickState.sort==='power'?'selected':'')+'>Power</option><option value="level" '+(squadPickState.sort==='level'?'selected':'')+'>Level</option><option value="bond" '+(squadPickState.sort==='bond'?'selected':'')+'>Bond</option><option value="role" '+(squadPickState.sort==='role'?'selected':'')+'>Role</option><option value="archetype" '+(squadPickState.sort==='archetype'?'selected':'')+'>Archetype</option><option value="name" '+(squadPickState.sort==='name'?'selected':'')+'>A–Z</option></select>'+ 
+    '</div>'+(squadPickFiltersActive()?'<button class="clearMini" id="sqClearFilters">✕ Clear formation filters</button>':'')+'</div>';
+}
+
 function openSquadPicker(mode){
   mode=mode||campSub||'campaign';
   const meta=SQUADS.find(s=>s[0]===mode)||SQUADS[0];
   const arr=squad(mode);
-  const owned=S.heroes.filter(h=>h.owned).sort((a,b)=>powerOf(b)-powerOf(a));
+  const allOwned=S.heroes.filter(h=>h.owned);
+  const owned=squadPickerFiltered(allOwned);
   const s=document.getElementById('sheet');
   const selected=arr.map((id,i)=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return ''; const row=formationRow(i), face=h.img?'<img src="'+h.img+'">':initials(h.name); return '<div class="pickSlot '+row+'"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="slotmeta"><span class="slotname">'+(i+1)+'. '+esc(h.name)+'</span><span class="slotsub">'+(row==='front'?'Front Row':'Back Row')+' · '+h.role+' · '+formationBonus(h,row)+'</span></span><span class="slotbtns"><button data-move="up" data-id="'+h.id+'">↑</button><button data-move="down" data-id="'+h.id+'">↓</button><button data-move="'+(row==='front'?'back':'front')+'" data-id="'+h.id+'">'+(row==='front'?'Back':'Front')+'</button><button data-remove="'+h.id+'">×</button></span></div>'; }).join('') || '<span class="pill warn">No heroes assigned</span>';
   s.innerHTML='<div class="squadpicker"><h3>'+meta[2]+' Edit '+meta[1]+' Formation</h3>'+walletHTML()+
@@ -3059,10 +3124,12 @@ function openSquadPicker(mode){
     synergyPanelHTML(mode)+
     '<div class="formtip" style="margin-bottom:10px">Tanks prefer front. Supports prefer back. DPS can go either way: front hits harder but is targeted more, back is safer.</div>'+ 
     '<div class="btnset" style="margin-bottom:8px"><button id="sqClear" class="ghost">Clear</button><button id="sqDone" class="go">Done</button></div>'+ 
-    owned.map(h=>{ const on=arr.includes(h.id), full=!on&&arr.length>=TUNE.teamSize; const disabled=full?' disabled':''; const face=h.img?'<img src="'+h.img+'">':initials(h.name); const p=passiveOf(h); return '<button class="pickHero '+(on?'on':'')+'" data-pick="'+h.id+'"'+disabled+' style="'+(disabled?'opacity:.45':'')+'"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="pmeta"><span class="pname">'+esc(h.name)+'</span><span class="psub">'+esc(h.ip)+' · '+h.role+' · PWR '+powerOf(h)+(p?' · '+p.name:'')+'</span></span><span class="status">'+(on?'✓':'＋')+'</span></button>'; }).join('')+'</div>';
+    squadPickerToolsHTML(allOwned.length,owned.length)+
+    '<div id="sqCandidateList">'+owned.map(h=>squadCandidateButtonHTML(h,mode)).join('')+'</div></div>';
   showScrim('scrim');
   document.getElementById('sqDone').onclick=()=>{ hideScrim(); renderHUD(); render(); save(); };
   document.getElementById('sqClear').onclick=()=>{ S.squads[mode]=[]; openSquadPicker(mode); renderHUD(); save(); };
+  bindSquadPickerFilters(mode);
   s.onclick=e=>{
     const mv=e.target.closest('[data-move]'); if(mv){ moveSquadHero(mode,mv.dataset.id,mv.dataset.move); openSquadPicker(mode); renderHUD(); render(); save(); return; }
     const rm=e.target.closest('[data-remove]'); if(rm){ toggleSquad(mode,rm.dataset.remove); openSquadPicker(mode); renderHUD(); render(); save(); return; }
@@ -3074,8 +3141,14 @@ function renderCampaign(v){
   const tp=teamPower(campSub);
   const sq=squad(campSub);
   const slots=formationHTML(campSub);
-  const tabs='<div class="segs" style="margin-bottom:14px"><button id="cs_camp" class="'+(campSub==='campaign'?'on':'')+'">Campaign</button><button id="cs_tower" class="'+(campSub==='tower'?'on':'')+'">Tower</button><button id="cs_raid" class="'+(campSub==='raid'?'on':'')+'">Raid</button></div>';
-  if(campSub==='raid'){
+  const tabs='<div class="segs" style="margin-bottom:14px"><button id="cs_camp" class="'+(campSub==='campaign'?'on':'')+'">Campaign</button><button id="cs_tower" class="'+(campSub==='tower'?'on':'')+'">Tower</button><button id="cs_raid" class="'+(campSub==='raid'?'on':'')+'">Raid</button><button id="cs_dungeons" class="'+(campSub==='dungeons'?'on':'')+'">Dungeons</button></div>';
+  if(campSub==='dungeons'){
+    const c=dungeonCounts();
+    v.innerHTML=tabs+
+      '<div class="stagecard" style="border-color:#ffd95a66"><h3>🛕 Domain Dungeons</h3><p>Weekly Room Trials. They reward real actions in each life area — no extra grind.</p></div>'+
+      '<div class="dungeonBox"><div class="dh"><b>Weekly Trials</b><span>'+c.ready+' ready · '+c.claimed+'/8 cleared</span></div><div class="dungeonGrid">'+DOMAINS.map(d=>dungeonCardHTML(d[0])).join('')+'</div></div>';
+    v.querySelectorAll('[data-dungeon]').forEach(btn=>btn.onclick=()=>{ claimDungeon(btn.dataset.dungeon); renderHUD(); render(); save(); });
+  } else if(campSub==='raid'){
     const R=ensureRaid(), pct=Math.min(100,R.dmg/R.max*100), mult=1+tp/1000, boss=currentBoss();
     const weakChips=boss.weak.map(k=>DKEY[k]?'<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:'+DKEY[k].color+'22;color:'+DKEY[k].color+';margin:0 6px 4px 0">'+DKEY[k].icon+' '+DKEY[k].label+' ×'+WEAK_MULT+'</span>':'').join('');
     v.innerHTML=tabs+
@@ -3130,6 +3203,7 @@ function renderCampaign(v){
   const ct=document.getElementById('cs_camp'); if(ct) ct.onclick=()=>{campSub='campaign';render();};
   const tt=document.getElementById('cs_tower'); if(tt) tt.onclick=()=>{campSub='tower';render();};
   const rt=document.getElementById('cs_raid'); if(rt) rt.onclick=()=>{campSub='raid';render();};
+  const dt=document.getElementById('cs_dungeons'); if(dt) dt.onclick=()=>{campSub='dungeons';render();};
   document.querySelectorAll('[data-lineup-edit]').forEach(b=>b.onclick=()=>openSquadPicker(b.dataset.lineupEdit||campSub));
 }
 
@@ -3406,8 +3480,8 @@ function raidRecapHTML(){
   return '<div class="raidRecap"><div class="rh"><b>'+b.icon+' '+esc(b.name)+'</b><span>'+pct.toFixed(0)+'%</span></div><div class="xpbar" style="height:10px;margin:8px 0"><i style="width:'+pct+'%;background:linear-gradient(90deg,#ff5d6c,#ffb01f)"></i></div><div style="font-size:12px;color:var(--muted);font-weight:750;line-height:1.35">Weak to '+weak+'<br>'+(ni.ready?'Reward tier ready.':'Need '+ni.need.toLocaleString()+' damage for '+ni.tier+'% tier.')+'</div><div class="raidTierDots">'+tiers+'</div></div>';
 }
 function questBoardHTML(){
-  const qc=questCounts();
-  return '<div class="questBoard"><div class="qh"><b>🗺 Quest Board</b><span>'+qc.ready+' ready · '+qc.done+' claimed</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">Daily, weekly, chain, and hero quests turn the checklist into a clear path.</p><div class="questMiniGrid"><div class="questMini"><b>'+qc.d.filter(q=>q.ready).length+'/'+qc.d.length+'</b><span>Daily</span></div><div class="questMini"><b>'+qc.w.filter(q=>q.ready).length+'/'+qc.w.length+'</b><span>Weekly</span></div><div class="questMini"><b>'+qc.c.filter(q=>q.ready).length+'/'+qc.c.length+'</b><span>Chains</span></div></div><div class="lifeactions"><button class="primary" id="openQuestBoard">Open Quest Board</button></div>'+raidRecapHTML()+'</div>';
+  const qc=questCounts(), hn=holdLineCount(), hd=holdLineComplete();
+  return '<div class="questBoard"><div class="qh"><b>🗺 Quest Board</b><span>'+qc.ready+' ready · '+qc.done+' claimed</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">One board for today, this week, hard-day anchors, chains, hero quests, and raid progress.</p><div class="questMiniGrid"><div class="questMini"><b>'+qc.d.filter(q=>q.ready).length+'/'+qc.d.length+'</b><span>Daily</span></div><div class="questMini"><b>'+qc.w.filter(q=>q.ready).length+'/'+qc.w.length+'</b><span>Weekly</span></div><div class="questMini"><b>'+qc.c.filter(q=>q.ready).length+'/'+qc.c.length+'</b><span>Chains</span></div><div class="questMini"><b>'+(hd?'✓':hn+'/3')+'</b><span>Hold</span></div></div><div class="lifeactions"><button class="primary" id="openQuestBoard">Open Quest Board</button></div>'+raidRecapHTML()+'</div>';
 }
 function showQuestBoard(){
   const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
@@ -3416,12 +3490,13 @@ function showQuestBoard(){
     '<div style="text-align:left"><b>Daily Quests</b>'+questRowsHTML(qc.d,'daily')+'</div>'+
     '<div style="text-align:left;margin-top:10px"><b>Weekly Quests</b>'+questRowsHTML(qc.w,'weekly')+'</div>'+
     '<div style="text-align:left;margin-top:10px"><b>Quest Chains</b>'+chainRowsHTML(qc.c)+'</div>'+
+    '<div style="text-align:left;margin-top:10px"><b>Hold the Line</b>'+holdLineCardHTML()+'</div>'+
     '<div style="text-align:left;margin-top:10px"><b>Hero Quests</b>'+heroQuestSummaryHTML()+'</div>'+
     '<div style="text-align:left;margin-top:10px"><b>Weekly Raid Recap</b>'+raidRecapHTML()+'</div>'+
     '<button id="questClose" style="margin-top:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px 18px;font-weight:800;width:100%">Close</button>';
   modal.classList.add('show');
   document.getElementById('questClose').onclick=()=>modal.classList.remove('show');
-  box.querySelectorAll('[data-claim]').forEach(btn=>btn.onclick=()=>{ claimQuest(btn.dataset.claim,btn.dataset.qid); modal.classList.remove('show'); }); const ohq=document.getElementById('openHeroQuests'); if(ohq) ohq.onclick=showHeroQuests;
+  box.querySelectorAll('[data-claim]').forEach(btn=>btn.onclick=()=>{ claimQuest(btn.dataset.claim,btn.dataset.qid); modal.classList.remove('show'); }); const ohq=document.getElementById('openHeroQuests'); if(ohq) ohq.onclick=showHeroQuests; const ohl=document.getElementById('openHoldLine'); if(ohl) ohl.onclick=showHoldLineModal;
 }
 
 
@@ -4091,7 +4166,7 @@ function endBattle(win){
     const gold=(8+S.stage*2)*(boss?3:1), dust=(4+S.stage)*(boss?3:1);
     gainExp(reward); S.gold+=gold; S.dust+=dust;
     let drop='';
-    if(boss || Math.random()<0.15){ const g=newGear(SLOTS[Math.floor(Math.random()*4)], rollRarity(S.stage + (boss?6:0))); grantGear(g); drop='<br>Loot: '+cap(g.rarity)+' '+SLOTNAME[g.slot]; }
+    if(boss || Math.random()<gearDropChance('med',S.stage,'campaign')){ const g=newGear(SLOTS[Math.floor(Math.random()*4)], rollRarity(S.stage + (boss?6:0))); grantGear(g); drop='<br>Loot: '+cap(g.rarity)+' '+SLOTNAME[g.slot]; }
     if(boss){ S.bossCores+=1; drop+=' · +1 ◆ Boss Core'; if(Math.random()<0.08){ S.sparks+=1; drop+=' · +1 ✦✦ Spark!'; } }
     if(S.stage>S.maxCleared) S.maxCleared=S.stage;
     S.stage++;
@@ -4099,7 +4174,7 @@ function endBattle(win){
     r.innerHTML='<h2>VICTORY</h2><p>Stage cleared. Your squad pushes forward.</p>'+battleResultMiniHTML(true)+'<div class="rewardgrid"><div>+'+reward+' EXP</div><div>+'+gold+' ⦿ Gold</div><div>+'+dust+' ❖ Dust</div><div>Stage '+S.stage+'</div></div><p>'+drop+'</p>'+battleSummaryHTML()+victoryFooter('Auto-advancing');
     wireAuto();
   } else {
-    r.innerHTML='<h2>'+(battleMode==='tower'?'FLOOR HELD':'DEFEATED')+'</h2><p>'+(battleMode==='tower'?'This floor turned you back.<br>Strengthen your team and climb again.':'Your team got overwhelmed.<br>Do habits, level your heroes, then try again.')+'</p>'+battleResultMiniHTML(false)+battleSummaryHTML()+'<div class="resultActions"><button id="arenaNext" class="go">Retry ▶</button><button id="arenaLineup" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Change Lineup</button><button id="arenaUpgrade" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Upgrade Heroes</button><button id="arenaHome" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Home</button></div>';
+    r.innerHTML='<h2>'+(battleMode==='tower'?'FLOOR HELD':'DEFEATED')+'</h2><p>'+(battleMode==='tower'?'This floor turned you back.<br>Strengthen your team and climb again.':'Your team got overwhelmed.<br>Do habits, level your heroes, then try again.')+'</p>'+defeatDramaHTML()+battleResultMiniHTML(false)+battleSummaryHTML()+'<div class="resultActions"><button id="arenaNext" class="go">Retry ▶</button><button id="arenaLineup" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Change Lineup</button><button id="arenaUpgrade" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Upgrade Heroes</button><button id="arenaHome" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Home</button></div>';
     document.getElementById('arenaNext').onclick=nextBattle; document.getElementById('arenaLineup').onclick=battleChangeLineup; document.getElementById('arenaUpgrade').onclick=battleUpgradeHeroes; document.getElementById('arenaHome').onclick=closeArenaToHome;
   }
   save();
@@ -4143,9 +4218,9 @@ function openHeroSheet(id){
   const preview=()=>img?'<img src="'+img+'">':(initials(name)||'?');
   let html='<h3>'+(editing?'Edit Hero':'New Hero')+'</h3>'+
     '<div class="avapick"><div class="prev" id="hPrev" style="background:linear-gradient(160deg,'+color+',#0008)">'+preview()+'</div>'+
-      '<div class="up"><button id="hUpload">'+(img?'Replace image':'Upload image')+'</button>'+
-      '<button id="hAdjust" style="margin-top:7px;display:'+(img?'block':'none')+'">Adjust crop / zoom</button>'+
-      '<button id="hRemoveImg" style="margin-top:7px;display:'+(img?'block':'none')+';background:transparent;color:var(--bad)">Remove image</button>'+
+      '<div class="up"><button type="button" id="hUpload">'+(img?'Replace image':'Upload image')+'</button>'+
+      '<button type="button" id="hAdjust" style="margin-top:7px;display:'+(img?'block':'none')+'">Adjust crop / zoom</button>'+
+      '<button type="button" id="hRemoveImg" style="margin-top:7px;display:'+(img?'block':'none')+';background:transparent;color:var(--bad)">Remove image</button>'+
       '<small>Optional — local only. Crop, zoom, and framing are saved into the portrait.</small></div></div>'+
     '<label>Name</label><input type="text" id="h_name" maxlength="22" value="'+esc(name)+'">'+
     '<label>Role</label><div class="segs" id="h_role">'+ROLES.map(r=>'<button data-r="'+r+'" class="'+(r===role?'on':'')+'">'+r+'</button>').join('')+'</div>'+
@@ -4261,7 +4336,8 @@ function openGearSheet(heroId){
   let pickSlot=null;
   const sheet=document.getElementById('sheet');
   function gearRender(){
-    let html='<h3>Gear · '+esc(h.name)+'</h3>'+walletHTML('Gear upgrades use Gold, Dust, Stones, and sometimes promotion materials. Power: ⚔ '+powerOf(h));
+    let html='<h3>Gear · '+esc(h.name)+'</h3>'+walletHTML('Gear upgrades use Gold, Dust, Stones, and sometimes promotion materials. Power: ⚔ '+powerOf(h))+
+    '<div class="safehint"><b>Gear ladder:</b> '+esc(gearLadderText(S.maxCleared||1))+'<br>Higher Campaign stages unlock better rarity odds.</div>';
     if(pickSlot){
       html+='<div style="color:var(--muted);font-weight:700;font-size:13px;margin-bottom:10px">Equip '+SLOTNAME[pickSlot]+'</div>';
       if(h.gear[pickSlot]) html+='<button class="go" id="g_unequip" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-bottom:10px">Unequip current</button>';
@@ -4269,7 +4345,12 @@ function openGearSheet(heroId){
       const commons=items.filter(x=>x.rarity==='common');
       if(commons.length) html+='<button class="go" id="g_salvagecommon" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-bottom:10px">♻ Salvage all Common ('+commons.length+')</button>';
       if(!items.length) html+='<div class="empty">No '+SLOTNAME[pickSlot]+' gear yet.<br>Win stages or finish tasks to find some.</div>';
-      else items.forEach(it=>{ html+='<div class="ginv"><div class="gi" style="color:'+RARCOLOR[it.rarity]+'">'+SLOTICON[it.slot]+'</div><div class="gb"><div class="gname" style="color:'+RARCOLOR[it.rarity]+'">'+gearName(it)+'</div><div class="gsub">Lv '+it.level+' · ⚡'+gearPower(it)+'</div></div><button class="pick" data-equip="'+it.id+'">Equip</button><button class="pick" data-salvage="'+it.id+'" style="margin-left:6px">♻'+salvageValue(it)+'</button></div>'; });
+      else items.forEach(it=>{
+        const current=h.gear[pickSlot]||null, currentPower=current?gearPower(current):0, itemPower=gearPower(it), delta=itemPower-currentPower;
+        const dCls=delta>0?'up':(delta<0?'down':'same'), rowCls=delta>0?'upgrade':(delta<0?'downgrade':'samegear');
+        const dText=delta>0?'▲ +'+delta:(delta<0?'▼ '+delta:'=');
+        html+='<div class="ginv '+rowCls+'"><div class="gi" style="color:'+RARCOLOR[it.rarity]+'">'+SLOTICON[it.slot]+'</div><div class="gb"><div class="gname" style="color:'+RARCOLOR[it.rarity]+'">'+gearName(it)+'<span class="gearDelta '+dCls+'">'+dText+'</span></div><div class="gsub">Lv '+it.level+' · ⚡'+itemPower+(current?' · current ⚡'+currentPower:' · empty slot')+'</div></div><button class="pick" data-equip="'+it.id+'">Equip</button><button class="pick" data-salvage="'+it.id+'" style="margin-left:6px">♻'+salvageValue(it)+'</button></div>';
+      });
       html+='<button class="ghost" id="g_back" style="color:var(--ink)">Back</button>';
     } else {
       SLOTS.forEach(slot=>{ const g=h.gear[slot];
@@ -4303,9 +4384,23 @@ function openGearSheet(heroId){
 /* image pick + portrait crop editor, preserving aspect ratio & transparency */
 function pickImage(cb,startData){
   if(startData){ openPortraitCrop(startData,cb); return; }
-  const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
-  inp.onchange=()=>{ const file=inp.files[0]; if(!file)return; const fr=new FileReader();
-    fr.onload=()=>openPortraitCrop(fr.result,cb); fr.readAsDataURL(file); };
+  // iOS/Safari is much more reliable when the file input is attached to the DOM
+  // before click(). Keep it visually hidden but real, then clean it up after use.
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='image/*';
+  inp.style.position='fixed'; inp.style.left='-9999px'; inp.style.top='0';
+  inp.style.width='1px'; inp.style.height='1px'; inp.style.opacity='0';
+  inp.style.pointerEvents='none'; inp.setAttribute('aria-hidden','true');
+  let cleaned=false;
+  const cleanup=()=>{ if(cleaned)return; cleaned=true; try{ inp.remove(); }catch(e){} };
+  inp.onchange=()=>{ const file=inp.files&&inp.files[0]; if(!file){ cleanup(); return; }
+    const fr=new FileReader();
+    fr.onload=()=>{ cleanup(); openPortraitCrop(fr.result,cb); };
+    fr.onerror=()=>{ cleanup(); toast('Could not read that image'); };
+    fr.readAsDataURL(file);
+  };
+  inp.oncancel=cleanup;
+  document.body.appendChild(inp);
   inp.click();
 }
 function openPortraitCrop(src,cb){
@@ -4341,12 +4436,18 @@ function openPortraitCrop(src,cb){
 /* pick a full sprite sheet/* pick a full sprite sheet (capped width, keep transparency) */
 function pickSheet(cb){
   const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
-  inp.onchange=()=>{ const file=inp.files[0]; if(!file)return; const fr=new FileReader();
+  inp.style.position='fixed'; inp.style.left='-9999px'; inp.style.top='0';
+  inp.style.width='1px'; inp.style.height='1px'; inp.style.opacity='0'; inp.style.pointerEvents='none';
+  let cleaned=false; const cleanup=()=>{ if(cleaned)return; cleaned=true; try{ inp.remove(); }catch(e){} };
+  inp.onchange=()=>{ const file=inp.files&&inp.files[0]; if(!file){ cleanup(); return; } const fr=new FileReader();
     fr.onload=()=>{ const im=new Image(); im.onload=()=>{ const cap=1536; const sc=Math.min(1,cap/im.width);
       const cv=document.createElement('canvas'); cv.width=Math.round(im.width*sc); cv.height=Math.round(im.height*sc);
       cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
-      cb(cv.toDataURL('image/png'), cv.width, cv.height); }; im.src=fr.result; };
+      cleanup(); cb(cv.toDataURL('image/png'), cv.width, cv.height); }; im.onerror=()=>{ cleanup(); toast('Could not load that image'); }; im.src=fr.result; };
+    fr.onerror=()=>{ cleanup(); toast('Could not read that image'); };
     fr.readAsDataURL(file); };
+  inp.oncancel=cleanup;
+  document.body.appendChild(inp);
   inp.click();
 }
 
@@ -4408,6 +4509,8 @@ document.getElementById('openSettings').onclick=()=>{
   const app=ensureAppSettings(), ms=document.getElementById('motionSeg'), cs=document.getElementById('compactSeg');
   if(ms) ms.querySelectorAll('button').forEach(b=>{ b.classList.toggle('on',(app.reduceMotion?'on':'off')===b.dataset.m); b.onclick=()=>{ app.reduceMotion=b.dataset.m==='on'; ms.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); applyAppSettings(); save(); }; });
   if(cs) cs.querySelectorAll('button').forEach(b=>{ b.classList.toggle('on',(app.compactMode?'on':'off')===b.dataset.m); b.onclick=()=>{ app.compactMode=b.dataset.m==='on'; cs.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); applyAppSettings(); save(); render(); }; });
+  const dt=document.getElementById('devToolsToggle'), dw=document.getElementById('devToolsWrap');
+  if(dt&&dw){ dw.style.display=app.developerTools?'block':'none'; dt.textContent=app.developerTools?'🛠 Hide Developer Tools':'🛠 Show Developer Tools'; dt.onclick=()=>{ app.developerTools=!app.developerTools; dw.style.display=app.developerTools?'block':'none'; dt.textContent=app.developerTools?'🛠 Hide Developer Tools':'🛠 Show Developer Tools'; save(); }; }
   const hc=document.getElementById('healthCheck'); if(hc) hc.onclick=showHealthCheck;
   const bc=document.getElementById('backupCenter'); if(bc) bc.onclick=showBackupCenter;
   const vh=document.getElementById('versionHistory'); if(vh) vh.onclick=showVersionStatus;
@@ -4427,7 +4530,7 @@ function fieldTestSteps(){
     ['Backup safety','Open Backup Center, download a backup, then run Save Health Check.'],
     ['Task completion','Complete one easy daily and confirm charge, currencies, domain XP, Bond XP, Quest Board progress, and dopamine popup.'],
     ['Quest Board','Open Quest Board and confirm Daily, Weekly, Chain, Hero Quest, and Raid sections render without trapping the modal.'],
-    ['Battle flow','Run Campaign once at 1x, 2x, and 4x. Confirm Auto On/Off, Replay, Stop, Home, and result summary work.'],
+    ['Battle flow','Run Campaign once at 1x, 2x, and 4x. Confirm Auto On/Off, Replay, Change Lineup, Upgrade Heroes after defeat, Home, and result summary work.'],
     ['Roster flow','Open Roster, search by archetype, use Prestige filter, open a hero sheet, and close cleanly.'],
     ['Bond flow','Open a favorite hero Bond Journal, check Hero Quest visibility, and return home.'],
     ['Life Base flow','Open Life Base, tap a room, assign/clear a hero, and return to Life Base.'],
@@ -4526,7 +4629,7 @@ async function showFieldTestMode(){
 
 function v1ChecklistItems(autoBackupInfo){
   const checks=healthChecks(), sum=healthSummary(checks), bs=backupSummary();
-  const saveOk=(S.saveVersion===SAVE_VERSION), buildOk=APP_BUILD==='v1.34.0-field-test';
+  const saveOk=(S.saveVersion===SAVE_VERSION), buildOk=(APP_BUILD.includes('r1-acceptance-fixes')||APP_BUILD.includes('r1.1-core-loop')||APP_BUILD.includes('r1.2-privacy-subtractive')||APP_BUILD.includes('navigation-cleanup')||APP_BUILD.includes('image-upload-fix')||APP_BUILD.includes('mobile-polish')||APP_BUILD.includes('hero-filter-squad-search')||APP_BUILD.includes('home-timeago-fix'));
   const rosterOk=(S.heroes||[]).length===449;
   const systemsOk=sum.bad===0;
   const autoOk=!!autoBackupInfo;
@@ -4678,6 +4781,15 @@ function showDebugPanel(){
 function versionRowsHTML(){
   const rows=[
     ['v1.35','Release 1 acceptance fixes: result buttons, Best Game Action, collapsed Home systems'],
+    ['v1.38.4','Hero clear filters plus searchable/filterable squad formation picker'],
+    ['v1.38.3','Popup cleanup, 1-second undo, roster card overlap fix, staged gear ladder'],
+    ['v1.38.2','Mobile polish: non-sticky resource wallet, scroll-safe battle results, gear upgrade/downgrade arrows'],
+    ['v1.38.1','Image upload picker reliability fix'],
+    ['v1.38.0','Navigation cleanup into Home / Quests / Heroes / Battles / Growth'],
+    ['v1.37.2','Roster gear-slot crash fix'],
+    ['v1.37.1','Roster save hardening'],
+    ['v1.37','Privacy-safe public seed + subtractive Home polish'],
+    ['v1.36','Release 1.1 Core Loop Perfection'],
     ['v1.34','Field Test Mode + Bug Reporter'],
     ['v1.33','Final V1 polish + readiness checklist'],
     ['v1.32','Backup Center + safe settings'],
@@ -4700,7 +4812,7 @@ function showVersionStatus(){
 }
 async function selectiveReset(kind){
   await autoBackup('before-selective-reset-'+kind);
-  if(kind==='ui'){ S.theme='web'; S.doneMode='bottom'; S.appSettings={reduceMotion:false,compactMode:false,confirmDanger:true}; applyTheme(); toast('UI settings reset.'); }
+  if(kind==='ui'){ S.theme='web'; S.doneMode='bottom'; S.appSettings={reduceMotion:false,compactMode:false,confirmDanger:true,developerTools:false}; applyTheme(); toast('UI settings reset.'); }
   if(kind==='squads'){ S.squads={campaign:[],tower:[],raid:[]}; S.didAutoStarterSquad=false; toast('Squads cleared.'); }
   if(kind==='assignments'){ S.assignments={rooms:{}}; toast('Room assignments cleared.'); }
   if(kind==='weekly'){ S.lifeWeek={wk:periodKey('weekly'),domains:{},completed:0,reviewed:false,balanceClaimed:false,holdLine:0}; S.questState={daily:{day:periodKey('daily'),claimed:{}},weekly:{wk:periodKey('weekly'),claimed:{}},chains:{wk:periodKey('weekly'),claimed:{}}}; S.dungeonState={wk:periodKey('weekly'),claimed:{}}; S.heroQuestState={wk:periodKey('weekly'),claimed:{}}; toast('Current week systems reset.'); }
@@ -4832,10 +4944,10 @@ function showReveal(h,opts){ opts=opts||{};
       '<button id="rvCont" style="background:transparent;color:var(--muted);border:1px solid var(--line)">Continue</button>'+
     '</div>';
   document.getElementById('revealModal').classList.add('show');
-  const focusUnlockedInRoster=()=>{ view='roster'; rosState.tab='owned'; rosState.q=h.name; rosState.role='all'; rosState.ip='all'; document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.view==='roster')); };
+  const focusUnlockedInRoster=()=>{ view='heroes'; rosState.tab='owned'; rosState.q=h.name; rosState.role='all'; rosState.ip='all'; setNavActive('heroes'); };
   const close=()=>{ document.getElementById('revealModal').classList.remove('show'); focusUnlockedInRoster(); renderHUD(); render(); };
   document.getElementById('rvView').onclick=()=>{ document.getElementById('revealModal').classList.remove('show'); renderHUD(); render(); openHeroSheet(h.id); };
-  const ad=document.getElementById('rvAdd'); if(ad) ad.onclick=()=>{ const arr=squad('campaign'); if(!arr.includes(h.id) && arr.length<TUNE.teamSize) arr.push(h.id); save(); document.getElementById('revealModal').classList.remove('show'); campSub='campaign'; view='campaign'; document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x.dataset.view==='campaign')); renderHUD(); render(); toast(h.name+' added to Campaign'); };
+  const ad=document.getElementById('rvAdd'); if(ad) ad.onclick=()=>{ const arr=squad('campaign'); if(!arr.includes(h.id) && arr.length<TUNE.teamSize) arr.push(h.id); save(); document.getElementById('revealModal').classList.remove('show'); campSub='campaign'; view='battles'; setNavActive('battles'); renderHUD(); render(); toast(h.name+' added to Campaign'); };
   const ag=document.getElementById('rvAgain'); if(ag) ag.onclick=()=>{ const nh=randomUnlock(); if(nh) showReveal(nh,{fromSummon:true}); };
   document.getElementById('rvCont').onclick=close;
 }
