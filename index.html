@@ -711,10 +711,323 @@ function domainChip(it){ const k=domainOf(it); if(!k) return ''; const d=DKEY[k]
 function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:'+DKEY[k].color+'22;color:'+DKEY[k].color+';margin:0 6px 6px 0">'+DKEY[k].icon+' '+DKEY[k].label+'</span>':'').join(''); }
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
-const SAVE_VERSION=7;
-const APP_BUILD='v1.8.0-romantasy-roster';
+const SAVE_VERSION=8;
+const APP_BUILD='v1.9.0-personal-dailies';
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
+
+/* ===== PERSONAL DAILY IMPORT ===== */
+const PERSONAL_DAILIES_V8 = [
+  {
+    "title": "Wake Up at 5",
+    "diff": "hard",
+    "freq": "daily",
+    "domain": "discipline"
+  },
+  {
+    "title": "Make my bed",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "home"
+  },
+  {
+    "title": "Brush my teeth (morning)",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "discipline"
+  },
+  {
+    "title": "Feed Finn & Refill Water",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "home"
+  },
+  {
+    "title": "Sunlight in the morning",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "discipline"
+  },
+  {
+    "title": "Take Meds & Supplements",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "discipline"
+  },
+  {
+    "title": "80% Healthy Foods",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "fitness"
+  },
+  {
+    "title": "Meditation",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "faith"
+  },
+  {
+    "title": "Gratitude",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "faith"
+  },
+  {
+    "title": "Affirmations & Values",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "discipline"
+  },
+  {
+    "title": "Pep Talk",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "discipline"
+  },
+  {
+    "title": "Read the Bible",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "faith"
+  },
+  {
+    "title": "Pray Alone",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "faith"
+  },
+  {
+    "title": "Help in the morning",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "marriage"
+  },
+  {
+    "title": "Clear Mail",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "work"
+  },
+  {
+    "title": "Clear Emails",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "work"
+  },
+  {
+    "title": "Clear Texts & Messages",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "discipline"
+  },
+  {
+    "title": "Origin Market Recap",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "work"
+  },
+  {
+    "title": "Review Team's Queues",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "work"
+  },
+  {
+    "title": "Review Tickets About to Breach in Standup",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "work"
+  },
+  {
+    "title": "Review CSATs",
+    "diff": "med",
+    "freq": "weekly",
+    "domain": "work"
+  },
+  {
+    "title": "Message Parnell, Taylor, Taylor, Michael, etc",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "work"
+  },
+  {
+    "title": "Clear To-Do List at Work",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "work"
+  },
+  {
+    "title": "Project Work",
+    "diff": "hard",
+    "freq": "daily",
+    "domain": "work"
+  },
+  {
+    "title": "Exercise",
+    "diff": "hard",
+    "freq": "daily",
+    "domain": "fitness"
+  },
+  {
+    "title": "Mobility Workout",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "fitness"
+  },
+  {
+    "title": "One load of laundry",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "home"
+  },
+  {
+    "title": "10 Minutes Cleaning",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "home"
+  },
+  {
+    "title": "Pick Up Dog Poops",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "home"
+  },
+  {
+    "title": "Go through cards - am I doing my tasks consistently?",
+    "diff": "med",
+    "freq": "weekly",
+    "domain": "discipline"
+  },
+  {
+    "title": "Learn Something New",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "hobbies"
+  },
+  {
+    "title": "Read a self-help book",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "hobbies"
+  },
+  {
+    "title": "Practice Photography",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "hobbies"
+  },
+  {
+    "title": "Engage with a random person",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "discipline"
+  },
+  {
+    "title": "Contact a Friend",
+    "diff": "med",
+    "freq": "weekly",
+    "domain": "hobbies"
+  },
+  {
+    "title": "Say Thank You",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "faith"
+  },
+  {
+    "title": "No Phone Around Girls",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "fatherhood"
+  },
+  {
+    "title": "Ten-Minute Miracle - Liv",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "fatherhood"
+  },
+  {
+    "title": "Ten-Minute Miracle - Emmy",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "fatherhood"
+  },
+  {
+    "title": "Emmy homework",
+    "diff": "med",
+    "freq": "daily",
+    "domain": "fatherhood"
+  },
+  {
+    "title": "Connection Questions",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "marriage"
+  },
+  {
+    "title": "Pick Two Recipes & Cook",
+    "diff": "hard",
+    "freq": "weekly",
+    "domain": "home"
+  },
+  {
+    "title": "Pray Before Dinner",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "faith"
+  },
+  {
+    "title": "Hug & Kiss Megan",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "marriage"
+  },
+  {
+    "title": "Note for Megan",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "marriage"
+  },
+  {
+    "title": "Review Finances",
+    "diff": "med",
+    "freq": "weekly",
+    "domain": "home"
+  },
+  {
+    "title": "Read",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "hobbies"
+  },
+  {
+    "title": "Make Out Before Bed",
+    "diff": "easy",
+    "freq": "daily",
+    "domain": "marriage"
+  }
+];
+function makePersonalDaily(spec, old){
+  const freq=spec.freq||'daily';
+  const curKey=periodKey(freq);
+  const keepDone=old && old.freq===freq && old.pk===curKey ? !!old.done : false;
+  return {
+    id: old&&old.id ? old.id : uid(),
+    title: spec.title,
+    diff: spec.diff||'easy',
+    freq,
+    domain: spec.domain||guessDomain(spec.title)||null,
+    streak: old&&typeof old.streak==='number' ? old.streak : 0,
+    done: keepDone,
+    pk: curKey
+  };
+}
+function importPersonalDailiesV8(){
+  const byTitle=new Map((S.dailies||[]).map(d=>[String(d.title||'').trim().toLowerCase(), d]));
+  S.dailies=PERSONAL_DAILIES_V8.map(spec=>makePersonalDaily(spec, byTitle.get(String(spec.title||'').trim().toLowerCase())));
+  S.personalDailiesVersion=8;
+}
+
 function migrate(){
   if(S.doneMode===undefined) S.doneMode='bottom';
   S.appBuild=APP_BUILD;
@@ -765,6 +1078,9 @@ function migrate(){
     if(!S.lifeWeek||typeof S.lifeWeek!=='object') S.lifeWeek={wk:periodKey('weekly'),domains:{},completed:0,reviewed:false};
     if(!S.recoveryDays||typeof S.recoveryDays!=='object') S.recoveryDays={};
   }
+  if(fromV<8 || S.personalDailiesVersion!==8){
+    importPersonalDailiesV8();
+  }
   S.saveVersion=SAVE_VERSION;
   seedRoster();
   if(!S.squads) S.squads={campaign:(S.team||[]).slice(0,TUNE.teamSize), tower:[], raid:[]};
@@ -785,14 +1101,7 @@ function seed(){
     crystals:0, wishlist:[], albumsClaimed:{starter_legacy:true}, didAutoStarterSquad:false,
     heroes:[],
     squads:{campaign:[],tower:[],raid:[]},
-    dailies:[
-      {id:uid(),title:'Workout',diff:'hard',freq:'daily',streak:0,done:false,pk:periodKey('daily')},
-      {id:uid(),title:'Walk / steps',diff:'med',freq:'daily',streak:0,done:false,pk:periodKey('daily')},
-      {id:uid(),title:'Read',diff:'easy',freq:'daily',streak:0,done:false,pk:periodKey('daily')},
-      {id:uid(),title:'Deep-work block',diff:'hard',freq:'daily',streak:0,done:false,pk:periodKey('daily')},
-      {id:uid(),title:'Tidy one space',diff:'easy',freq:'daily',streak:0,done:false,pk:periodKey('daily')},
-      {id:uid(),title:'Plan the week',diff:'med',freq:'weekly',streak:0,done:false,pk:periodKey('weekly')}
-    ],
+    dailies:PERSONAL_DAILIES_V8.map(spec=>makePersonalDaily(spec,null)),
     habits:[
       {id:uid(),title:'Hydrate',diff:'easy',freq:'daily',up:true,down:false,count:0,pk:periodKey('daily')},
       {id:uid(),title:'Doomscroll',diff:'med',freq:'daily',up:false,down:true,count:0,pk:periodKey('daily')}
