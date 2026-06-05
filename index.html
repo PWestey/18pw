@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- v1.91.0 2.0 RC HARDENING + CLUTTER FIX: phone-first bug/layout cleanup, stuck overlay purge, collapsed battle strategy details, hero filter drawer, mobile nav clearance. -->
+<!-- v1.91.2 2.0 RC BATTLE + GEAR FIXES: Home regression repair, autosave hero sheet, modal auto-close, roster level/gear restoration, battle hub consolidation, portrait/gear sizing. -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2083,7 +2083,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=27;
-const APP_BUILD='v1.91.0-2-0-rc-hardening-clutter-fix';
+const APP_BUILD='v1.91.2-2-0-rc-battle-gear-fixes';
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
@@ -11245,6 +11245,309 @@ v189RCReportText=function(){ const rows=v191HardeningChecks(); return ['LIFE QUE
 const __v191_versionRowsHTML=typeof versionRowsHTML==='function'?versionRowsHTML:null;
 versionRowsHTML=function(){ const top='<div class="versionRow"><b>v1.91.0</b><span>2.0 RC Hardening & Clutter Fix: stuck overlay purge, collapsed battle strategy details, hero filter drawer, 2-column mobile roster, bottom-nav spacing, and phone-first layout QA</span></div>'; return top+(__v191_versionRowsHTML?__v191_versionRowsHTML():''); };
 (function(){ try{ v191InjectStyles(); setTimeout(v191Polish,0); }catch(e){} })();
+
+
+/* ===== v1.91.1 2.0 RC Mobile Bug Fixes =====
+   Bug/layout only: repair Home regression, restore roster level/gear readability,
+   auto-save/auto-close hero sheet, consolidate Battle hub cards, enlarge battle/gear portraits. */
+function lq911InjectStyles(){
+  if(document.getElementById('lq911MobileBugFixStyles')) return;
+  const st=document.createElement('style'); st.id='lq911MobileBugFixStyles';
+  st.textContent=`
+    :root{--lq911-nav-clearance:calc(132px + env(safe-area-inset-bottom))}
+    #view,.view,.wrap{padding-bottom:var(--lq911-nav-clearance)!important;box-sizing:border-box!important}
+    .toast{max-width:min(320px,calc(100vw - 74px))!important;bottom:calc(96px + env(safe-area-inset-bottom))!important;z-index:86!important;pointer-events:none!important}
+    .toast:not(.show){display:none!important}.toast:empty{display:none!important}
+
+    /* HOME: single quest hub, no badge-covered hero face, no stacked inner overlays. */
+    .lq911HomeHub{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--sceneColor,#ff5d6c) 34%,var(--line));border-radius:28px;padding:18px;margin:8px 0 16px;background:
+      radial-gradient(520px 260px at 88% -10%,color-mix(in srgb,var(--sceneColor,#ff5d6c) 24%,transparent),transparent 70%),
+      radial-gradient(380px 220px at 0% 0%,rgba(255,93,108,.16),transparent 72%),
+      linear-gradient(180deg,rgba(35,13,24,.95),rgba(8,11,18,.97));box-shadow:0 24px 70px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,255,255,.045)}
+    .lq911HomeHub>*{position:relative;z-index:2}.lq911HomeHub:after{content:"";position:absolute;inset:auto -40px -80px -40px;height:160px;background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--sceneColor,#ff5d6c) 28%,transparent),transparent 70%);pointer-events:none}
+    .lq911Kicker{display:inline-flex;gap:7px;align-items:center;border:1px solid color-mix(in srgb,var(--sceneColor,#ff5d6c) 50%,rgba(255,255,255,.12));background:rgba(0,0,0,.28);border-radius:999px;padding:6px 10px;font-family:Orbitron;font-size:10px;font-weight:1000;letter-spacing:.85px;text-transform:uppercase;color:var(--sceneColor,#ff5d6c)}
+    .lq911QuestTitle{font-family:Orbitron;font-size:28px;line-height:1.05;margin:16px 0 5px;color:#fff}.lq911QuestTask{font-size:18px;font-weight:1000;color:#fff;margin-bottom:12px}.lq911QuestWhy{font-size:14px;font-weight:850;color:#ecf2ff;line-height:1.32;margin:0 0 14px}.lq911RewardPreview{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 14px}.lq911RewardPreview span{border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:5px 9px;background:rgba(0,0,0,.25);font-size:11px;font-weight:950;color:#dfe8ff}
+    .lq911HeroRail{display:grid;grid-template-columns:84px 1fr;gap:12px;align-items:center;margin:8px 0 16px}.lq911HeroPortrait{width:84px;height:84px;border-radius:20px;overflow:hidden;border:2px solid rgba(255,255,255,.16);background:linear-gradient(160deg,var(--sceneColor,#8bd0ff),#050811);display:grid;place-items:center;box-shadow:0 18px 38px rgba(0,0,0,.46)}.lq911HeroPortrait img{width:100%;height:100%;object-fit:cover}.lq911HeroPortrait span{font-family:Orbitron;font-size:24px;font-weight:1000;color:#fff}.lq911HeroName{font-family:Orbitron;font-size:16px;font-weight:1000;color:#fff;line-height:1.1}.lq911HeroMeta{font-size:12px;color:var(--muted);font-weight:900;margin-top:4px;line-height:1.2}.lq911HomeActions{display:grid;grid-template-columns:1.35fr .9fr;gap:10px}.lq911HomeActions button{border-radius:16px;min-height:58px;font-family:Orbitron;font-weight:1000}.lq911HomeActions .primary{background:linear-gradient(135deg,#ff5d6c,#3a7bd5);color:white;border:0}.lq911HomeActions .secondary{background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);color:#dfe8ff}
+    @media(max-width:430px){.lq911HomeHub{padding:16px}.lq911QuestTitle{font-size:25px}.lq911HomeActions{grid-template-columns:1fr}.lq911HeroRail{grid-template-columns:78px 1fr}.lq911HeroPortrait{width:78px;height:78px}.lq911RewardPreview span{font-size:10.5px}}
+
+    /* HERO ROSTER: keep the useful info back, but only in predictable places. */
+    body[data-lq-view="heroes"] .v161Grid.grid,body[data-lq-view="heroes"] .v161Grid.cards{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:13px!important}
+    .v190RosterCard,.v161Card.v190RosterCard{min-height:226px!important;padding:9px!important;border-radius:18px!important;overflow:hidden!important}
+    .v190RosterCard .v161Lv{display:block!important;top:8px!important;left:8px!important;font-size:9px!important;padding:3px 7px!important;background:#050811d9!important;z-index:7!important}
+    .v190RosterCard .v161Portrait{margin:8px 8px 7px!important;border-radius:17px!important;aspect-ratio:1/1!important;min-height:0!important}.v190RosterCard .v161Portrait img{object-fit:cover!important}.v190RosterCard .v161Name{font-size:14px!important;min-height:28px!important;line-height:1.05!important}.v190RosterCard .v161Meta{gap:4px!important;max-height:48px!important;overflow:hidden!important}.v190RosterCard .v161Meta span{font-size:8.5px!important;padding:3px 6px!important}.v190RosterCard .v161Stats{grid-template-columns:1fr!important;padding:7px 8px 6px!important}.v190RosterCard .v161Stats div{padding:6px!important}.v190RosterCard .v161Stats b{font-size:15px!important}.v190RosterCard .v161Stats span{font-size:9px!important}.v190RosterCard .v161Ready{max-width:70px!important;overflow:hidden!important;text-overflow:ellipsis!important}.v190RosterCard .v161TopRight button{width:30px!important;height:30px!important}
+
+    /* HERO SHEET: roomier chamber, bigger gear nodes, no bottom-only Save dependency. */
+    .lq911AutoSaveBar{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(125,255,176,.18);background:linear-gradient(135deg,rgba(125,255,176,.10),rgba(139,208,255,.06));border-radius:14px;padding:9px 10px;margin:0 0 10px;font-weight:900;color:#dfe8ff}.lq911AutoSaveBar span{font-size:12px;color:var(--muted);font-weight:900}.lq911AutoSaveBar button{border:1px solid rgba(255,255,255,.12);border-radius:11px;background:rgba(0,0,0,.24);color:#fff;font-family:Orbitron;font-weight:1000;padding:8px 11px}
+    .heroChamberStageV159{min-height:448px!important}.heroPortraitRingV159{width:218px!important;height:218px!important}.heroPortraitRingV159 img{object-fit:cover!important}.heroChamberGearV159 .gearNodeV141{width:84px!important;height:84px!important;border-radius:20px!important}.heroChamberGearV159 .gearNodeV141.weapon{left:18px!important;top:126px!important}.heroChamberGearV159 .gearNodeV141.armor{right:18px!important;top:126px!important}.heroChamberGearV159 .gearNodeV141.boots{left:18px!important;top:264px!important}.heroChamberGearV159 .gearNodeV141.relic{right:18px!important;top:264px!important}.heroGearHintV159{bottom:88px!important}.heroStatsBandV159{bottom:16px!important}
+    #h_save{display:none!important}.heroChamberPanelV159 p{font-size:12.5px!important}.v190HeroKitTiles{grid-template-columns:1fr 1fr!important}
+    @media(max-width:430px){.sheet{max-height:86dvh!important}.heroChamberStageV159{min-height:438px!important}.heroPortraitRingV159{top:124px!important;width:190px!important;height:190px!important}.heroChamberGearV159 .gearNodeV141{width:72px!important;height:72px!important}.heroChamberGearV159 .gearNodeV141.weapon{left:10px!important;top:132px!important}.heroChamberGearV159 .gearNodeV141.armor{right:10px!important;top:132px!important}.heroChamberGearV159 .gearNodeV141.boots{left:10px!important;top:266px!important}.heroChamberGearV159 .gearNodeV141.relic{right:10px!important;top:266px!important}.heroChamberTopbarV159{padding:14px 14px 0!important}.heroChamberTitleV159 h3{font-size:23px!important}.v190HeroLockBadge{font-size:9px!important;max-width:170px!important;line-height:1.2}.v190HeroKitTiles{grid-template-columns:1fr!important}}
+
+    /* BATTLES: one compact mode hub, battle board first, no duplicate campaign road card. */
+    .lq911BattleHub{border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line));border-radius:20px;background:linear-gradient(180deg,rgba(13,22,40,.92),rgba(6,10,18,.90));padding:12px;margin:0 0 12px;box-shadow:0 18px 42px rgba(0,0,0,.26)}.lq911BattleTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}.lq911BattleTitle{font-family:Orbitron;font-size:15px;font-weight:1000;color:#fff}.lq911BattleSub{font-size:11px;font-weight:900;color:var(--muted);margin-top:2px}.lq911BattleTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.lq911BattleTabs button{text-align:left;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(0,0,0,.20);padding:9px;color:#dfe8ff}.lq911BattleTabs button.on{border-color:color-mix(in srgb,var(--modeColor,#8bd0ff) 55%,var(--line));box-shadow:0 0 18px color-mix(in srgb,var(--modeColor,#8bd0ff) 18%,transparent)}.lq911BattleTabs b{display:block;font-family:Orbitron;font-size:10px;color:var(--modeColor,#8bd0ff)}.lq911BattleTabs span{display:block;font-size:10px;color:var(--muted);font-weight:850;margin-top:2px;line-height:1.2}.lq911BattleProgress{height:8px;border-radius:999px;background:#0008;border:1px solid rgba(255,255,255,.12);overflow:hidden;margin-top:6px}.lq911BattleProgress i{display:block;height:100%;background:linear-gradient(90deg,var(--modeColor,#8bd0ff),var(--accent2));width:0%}
+    body[data-lq-view="battles"] .battleHub:not(.lq911BattleHub),body[data-lq-view="battles"] .battleHubHero,body[data-lq-view="battles"] .battleHubGrid,body[data-lq-view="battles"] .v160CampaignMap,body[data-lq-view="battles"] .v158QuietOld,body[data-lq-view="battles"] .v158QuietOldForm,body[data-lq-view="battles"] .v158OldFight{display:none!important}.v191Brief .v177Risk{display:none!important}.v191Brief .v177Top{padding:10px 12px!important}.v191Brief .v177Problem{font-size:14px!important}.v191BriefLine{padding:0 10px 8px!important}details.v191StrategyDetails{margin:0 10px 10px!important}
+    body[data-lq-view="battles"] .v158FormationStage{margin-top:8px!important;padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}.v158Portrait{width:62px!important;height:62px!important;border-radius:16px!important}.v158Portrait img,.v158Mini .pic img{width:100%!important;height:100%!important;object-fit:cover!important}.v158Mini{width:72px!important;min-width:72px!important}.v158Mini .pic{width:66px!important;height:66px!important;border-radius:16px!important}.v158Mini .n{max-width:72px!important}
+    @media(max-width:430px){.lq911BattleTabs{grid-template-columns:1fr}.lq911BattleTabs button{display:grid;grid-template-columns:56px 1fr;column-gap:8px;align-items:center}.lq911BattleProgress{grid-column:1/-1}.v158Battlefield{grid-template-columns:1fr 32px 1fr!important}.v158Side{grid-template-rows:repeat(3,94px)!important}.v158Unit{min-height:94px!important}.v158Portrait{width:58px!important;height:58px!important}.v158TrayScroller{gap:8px!important}.v158Mini{width:72px!important;min-width:72px!important}.v158Mini .pic{width:66px!important;height:66px!important}}
+  `;
+  document.head.appendChild(st);
+}
+function lq911CleanHeroPortrait(h){ try{ if(h&&h.img) return '<img src="'+h.img+'" alt="">'; return '<span>'+esc(initials(h&&h.name||'?'))+'</span>'; }catch(e){ return '<span>?</span>'; } }
+function lq911RewardChips(task){ try{ return (task?String(v162RewardPreview(task)||rewardPreview(task)||'XP · charge · reward'):'Rest · review · protect the win').split(' · ').slice(0,3).map(x=>'<span>'+esc(x)+'</span>').join(''); }catch(e){ return '<span>XP</span><span>Reward</span>'; } }
+const __lq911_renderHome=typeof renderHome==='function'?renderHome:null;
+renderHome=function(v){
+  try{
+    lq911InjectStyles(); v.classList.add('lq911Home'); document.body.setAttribute('data-lq-view','home');
+    if(typeof v162HomeSnapshot!=='function') return __lq911_renderHome?__lq911_renderHome(v):undefined;
+    const s=v162HomeSnapshot(), next=s.next, title=next?(next.title||'Next Action'):'All clear', domain=next?(domainOf(next)||'discipline'):'discipline', meta=(DKEY[domain]||DKEY.discipline||{}), why=next?(typeof v162Why==='function'?v162Why(next):'One real action moves the day forward.'):'Protect the win and review later.', fh=(S.focus?S.heroes.find(h=>h.id===S.focus&&h.owned):null)||readyUpgradeHero()?.h||squadHeroes('campaign')[0]||S.heroes.find(h=>h.owned);
+    const hero=fh?'<div class="lq911HeroRail"><div class="lq911HeroPortrait">'+lq911CleanHeroPortrait(fh)+'</div><div><div class="lq911HeroName">'+esc(fh.name)+'</div><div class="lq911HeroMeta">'+esc(fh.ip||'Hero')+' · Lv '+(fh.level||1)+' · '+esc((typeof v182KitLabel==='function'?v182KitLabel(fh):fh.role)||fh.role)+'</div></div></div>':'';
+    const journey='<div class="v190JourneyStrip"><div class="top"><b>TODAY\'S JOURNEY</b><span>'+s.done.length+'/'+s.dailies.length+' · '+s.pct+'%</span></div><div class="dummybar" style="height:11px;margin:10px 0 2px"><i style="width:'+s.pct+'%;background:linear-gradient(90deg,#37d67a,#36e0e6,#ffd95a)"></i></div>'+(typeof v190HomeDomainDots==='function'?v190HomeDomainDots(s.touched):'')+'<div style="font-size:11px;color:var(--muted);font-weight:800;margin-top:8px;text-align:center">Day resets in '+dayEndsIn()+' · '+s.touched.size+'/'+DOMAINS.length+' life areas touched</div></div>';
+    v.innerHTML='<div class="lq911HomeHub" style="--sceneColor:'+(typeof v190DomainColor==='function'?v190DomainColor(domain):(meta.color||'#ff5d6c'))+'"><div class="lq911Kicker">'+((meta&&meta.icon)||'✦')+' Living World · '+esc((meta&&meta.label)||domain)+'</div><div class="lq911QuestTitle">Today\'s Quest</div><div class="lq911QuestTask">'+esc(title)+'</div><p class="lq911QuestWhy">'+esc(why)+'</p><div class="lq911RewardPreview">'+lq911RewardChips(next)+'</div>'+hero+'<div class="lq911HomeActions"><button class="primary" id="lq911StartQuest">Start Quest</button><button class="secondary" id="lq911ReviewDay">Review</button></div></div>'+journey+'<details class="homeMgmt162"><summary>Manage rewards / deeper systems</summary><div class="homeMgmtGrid162"><button id="homeGoQuests162">✓ Quests</button><button id="homeGoHeroes162">🛡 Heroes</button><button id="homeGoBattles162">⚔ Battles</button><button id="homeGoGrowth162">🌱 Growth</button></div><div class="v162DevFieldTestLink">Field Test tools live in Settings.</div></details>';
+    document.getElementById('lq911StartQuest').onclick=()=>{ subtab='dailies'; navTo('quests'); };
+    document.getElementById('lq911ReviewDay').onclick=()=>{ if(typeof openDailyReview==='function') openDailyReview(); else navTo('quests'); };
+    const q=document.getElementById('homeGoQuests162'); if(q) q.onclick=()=>navTo('quests'); const h=document.getElementById('homeGoHeroes162'); if(h) h.onclick=()=>navTo('heroes'); const b=document.getElementById('homeGoBattles162'); if(b) b.onclick=()=>navTo('battles'); const g=document.getElementById('homeGoGrowth162'); if(g) g.onclick=()=>navTo('growth');
+  }catch(e){ console.warn('v1.91.1 Home fallback',e); return __lq911_renderHome?__lq911_renderHome(v):undefined; }
+};
+function lq911RosterCard(h,i,locked){
+  try{
+    const d=document.createElement('div'), fav=isFavorite&&isFavorite(h.id), wish=(S.wishlist||[]).includes(h.id), ready=!locked&&typeof heroReadyState==='function'?heroReadyState(h):''; d.className='v161Card v190RosterCard lq911RosterCard '+(locked?'locked':'')+' '+(fav?'favorite':'')+' '+(inAnySquad(h.id)?'inteam':''); d.dataset.id=h.id; d.dataset.locked=locked?'1':'0'; d.style.setProperty('--hcolor',h.color||'#8bd0ff'); d.style.animationDelay=(Math.min(i||0,20)*0.015)+'s';
+    if(locked){ d.innerHTML='<div class="v161TopRight"><button class="wish'+(wish?' on':'')+'" data-act="wish" data-id="'+h.id+'">'+(wish?'★':'☆')+'</button></div><div class="v161Lv">LOCK</div><div class="v161Portrait"><span class="v161Initials">'+initials(h.name)+'</span><div class="v161Stars">◆ '+UNLOCK_TARGET+'</div></div><div class="v161Name">'+esc(h.name)+'</div><div class="v161Meta"><span>'+esc(ipLabel(h.ip))+'</span><span>Locked</span></div><div class="v161Stats"><div><b>◆ '+UNLOCK_TARGET+'</b><span>Unlock</span></div></div>'; return d; }
+    const kit=(typeof v182KitLabel==='function'?v182KitLabel(h):(heroArchetype(h)||{}).label||h.role), role=roleLabel?roleLabel(h.role):h.role, sq=squadIcons?squadIcons(h.id):'', gear=gearScore(h);
+    d.innerHTML='<div class="v161TopRight"><button class="fav'+(fav?' on':'')+'" data-act="fav" data-id="'+h.id+'">'+(fav?'♥':'♡')+'</button></div><div class="v161Lv">Lv '+(h.level||1)+'</div>'+(ready?'<div class="v161Ready">'+esc(ready)+'</div>':'')+'<div class="v161Portrait">'+(typeof v161Face==='function'?v161Face(h):lq911CleanHeroPortrait(h))+'<div class="v161Stars">'+(typeof v161RankStars==='function'?v161RankStars(h):'★')+'</div></div><div class="v161Name">'+esc(h.name)+'</div><div class="v161Meta"><span>'+esc(ipLabel(h.ip))+'</span><span>'+esc(role)+' · ⚙ '+gear+'</span><span>'+esc(kit)+'</span>'+(sq?'<span>'+sq+'</span>':'')+'</div><div class="v161Stats"><div><b>'+powerOf(h)+'</b><span>Power</span></div></div>'; return d;
+  }catch(e){ return null; }
+}
+v161Card=function(h,i){ try{ return lq911RosterCard(h,i,!h.owned); }catch(e){ return (typeof __v190_v161Card==='function'?__v190_v161Card(h,i):document.createElement('div')); } };
+function lq911AutosaveHero(id){
+  try{
+    const h=S.heroes.find(x=>x.id===id), sheet=document.getElementById('sheet'); if(!h||!sheet||sheet.querySelector('.lq911AutoSaveBar')) return;
+    sheet.insertAdjacentHTML('afterbegin','<div class="lq911AutoSaveBar"><span>✓ Auto-saving hero changes</span><button id="lq911HeroDone">Done</button></div>');
+    const persist=()=>{ try{ const nm=document.getElementById('h_name'); if(nm) h.name=(nm.value.trim()||h.name); const rb=document.querySelector('#h_role button.on'); if(rb&&rb.dataset.r) h.role=rb.dataset.r; const cb=document.querySelector('#h_color button.on'); if(cb&&cb.dataset.c) h.color=cb.dataset.c; const img=document.querySelector('#hPrev img'); if(img&&img.getAttribute('src')) h.img=img.getAttribute('src'); renderHUD(); save(); }catch(e){} };
+    sheet.addEventListener('input',e=>{ if(e.target&&e.target.id==='h_name') persist(); },true);
+    sheet.addEventListener('click',e=>{ if(e.target.closest('#h_role button,#h_color button,#hRemoveImg,#hUpload,#hAdjust')) setTimeout(persist,180); },true);
+    const done=document.getElementById('lq911HeroDone'); if(done) done.onclick=()=>{ persist(); hideScrim(); render(); };
+  }catch(e){}
+}
+function lq911AutoSaveAndCloseSheet(){ try{ const scr=document.getElementById('scrim'); if(!scr||!scr.classList.contains('show')) return; const btn=document.getElementById('lq911HeroDone'); if(btn) btn.click(); else hideScrim(); }catch(e){ try{hideScrim();}catch(_){} } }
+const __lq911_openHeroSheet=typeof openHeroSheet==='function'?openHeroSheet:null;
+openHeroSheet=function(id){ const out=__lq911_openHeroSheet?__lq911_openHeroSheet.apply(this,arguments):undefined; setTimeout(()=>lq911AutosaveHero(id),0); return out; };
+function lq911BattleModeCompact(){
+  try{
+    const d=battleHubModeData(), cur=d[campSub]||d.campaign;
+    const tabs=['campaign','tower','raid'].map(k=>{ const x=d[k], on=(campSub===k); return '<button id="'+x.id+'" class="'+(on?'on':'')+'" style="--modeColor:'+x.color+'"><b>'+x.icon+' '+x.title+'</b><span>'+x.stat+' · '+x.pill+'</span><div class="lq911BattleProgress"><i style="width:'+Math.max(4,Math.min(100,x.pct||0))+'%"></i></div></button>'; }).join('');
+    return '<div class="lq911BattleHub"><div class="lq911BattleTop"><div><div class="lq911BattleTitle">'+cur.icon+' '+cur.title+'</div><div class="lq911BattleSub">'+cur.meta+' · '+cur.sub+'</div></div><div class="focusBadge">'+cur.stat+'</div></div><div class="lq911BattleTabs">'+tabs+'</div></div>';
+  }catch(e){ return ''; }
+}
+battleHubHTML=function(){ return lq911BattleModeCompact(); };
+function lq911CloseTransient(){ try{ document.querySelectorAll('.toast,.rewardpop,.taskburst').forEach(el=>{ el.classList.remove('show'); if(!String(el.textContent||'').trim()) el.style.display='none'; }); document.querySelectorAll('.passiveToast,.v188Telegraph,.v188Callout,.bossTelegraph,.v182UltFlash,.battle-logline').forEach(el=>el.remove()); }catch(e){} }
+const __lq911_navTo=typeof navTo==='function'?navTo:null;
+if(__lq911_navTo){ navTo=function(vw){ lq911AutoSaveAndCloseSheet(); lq911CloseTransient(); const out=__lq911_navTo.apply(this,arguments); setTimeout(()=>{lq911InjectStyles(); document.body.setAttribute('data-lq-view',view||'home');},0); return out; }; }
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('.nav button'); if(b){ lq911AutoSaveAndCloseSheet(); lq911CloseTransient(); } },true);
+const __lq911_render=typeof render==='function'?render:null;
+if(__lq911_render){ render=function(){ const out=__lq911_render.apply(this,arguments); setTimeout(()=>{ lq911InjectStyles(); document.body.setAttribute('data-lq-view',view||'home'); },0); return out; }; }
+function lq911Checks(){ const rows=[]; const add=(ok,title,msg,level)=>rows.push({ok:!!ok,title,msg,level:level||(!ok?'warn':'ok')}); try{ add(/^v1\.91\.1/.test(APP_BUILD),'Build label',APP_BUILD); add(typeof lq911AutosaveHero==='function','Hero autosave','Hero sheet changes save without scrolling'); add(typeof battleHubHTML==='function','Battle hub consolidated','Battle modes render as one compact hub'); add(typeof lq911RenderHome!=='undefined'||typeof renderHome==='function','Home repaired','Quest hub renderer active'); add(typeof v161Card==='function','Roster level/gear restored','Cards include Lv and gear score'); add((S.saveVersion===SAVE_VERSION),'Save version','Save '+(S.saveVersion||'?')+' / App '+SAVE_VERSION,(S.saveVersion===SAVE_VERSION)?'ok':'warn'); }catch(e){ add(false,'v1.91.1 check error',e.message||String(e),'bad'); } return rows; }
+v189RCChecks=function(){ return lq911Checks(); };
+v189RCReportText=function(){ const rows=lq911Checks(); return ['LIFE QUEST 2.0 RC MOBILE BUG FIXES','Build: '+APP_BUILD,'Generated: '+new Date().toLocaleString(),'','Phone bug-fix test loop:','1. Home: verify quest hub card no longer overlaps and hero face is clean','2. Heroes: verify Lv and gear score are visible on each card','3. Open hero detail: verify roomier layout, bigger gear, and auto-save bar','4. Change tabs while hero detail is open: sheet closes automatically','5. Battles: verify modes are consolidated and Strategy Details stays collapsed','6. Start a battle: verify portraits are larger and bottom nav does not cover Begin/Edit','7. Confirm no stuck toast/modal remains between tabs','','v1.91.1 checks:',...rows.map(r=>(r.ok?'✓ ':r.level==='bad'?'✕ ':'△ ')+r.title+' — '+r.msg)].join('\n'); };
+const __lq911_versionRowsHTML=typeof versionRowsHTML==='function'?versionRowsHTML:null;
+versionRowsHTML=function(){ return '<div class="versionRow"><b>v1.91.1</b><span>2.0 RC Mobile Bug Fixes: repaired Home crowding, restored roster level/gear readability, added hero sheet autosave and tab auto-close, consolidated battle hub cards, enlarged battle portraits and hero gear nodes.</span></div>'+(__lq911_versionRowsHTML?__lq911_versionRowsHTML():''); };
+(function(){ try{ lq911InjectStyles(); setTimeout(()=>{document.body.setAttribute('data-lq-view',view||'home');},0); }catch(e){} })();
+
+
+/* ===== v1.91.2 — 2.0 RC Battle + Gear Fixes =====
+   Fixes: stuck auto-equip toast, battle visibility, restored result stats, smarter gear fitting before salvage. */
+function lq912InjectStyles(){
+  if(document.getElementById('lq912Styles')) return;
+  const st=document.createElement('style'); st.id='lq912Styles'; st.textContent=`
+    /* Global transient cleanup: invisible toasts should not keep occupying space or block taps. */
+    #toast{display:none!important;max-width:min(340px,calc(100vw - 44px))!important;z-index:140!important;bottom:calc(88px + env(safe-area-inset-bottom))!important;pointer-events:none!important}
+    #toast.show{display:block!important;opacity:.96!important;transform:translateX(-50%) translateY(0)!important}
+    .passiveToast,.v188Telegraph,.v188Callout,.lq53ClashBanner,.lq53HeroMoment{pointer-events:none!important}
+
+    /* Active arena: compact enough to keep all 6 heroes visible on iPhone. */
+    .arena.show{padding:calc(8px + env(safe-area-inset-top)) 10px calc(18px + env(safe-area-inset-bottom))!important;overflow:hidden!important}
+    .arena.show .battle-controls{display:flex!important;justify-content:flex-end!important;gap:6px!important;margin:0 0 6px!important;flex:0 0 auto!important}
+    .arena.show .battle-controls button{min-height:38px!important;border-radius:12px!important;padding:7px 10px!important;font-size:11px!important;min-width:0!important}
+    .arena.show .vs-head{font-size:12px!important;line-height:1.15!important;margin:2px 0 3px!important;padding:5px 4px!important;max-height:30px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+    .arena.show .arena-sub{font-size:10px!important;line-height:1.25!important;margin:0 0 5px!important;max-height:26px!important;overflow:hidden!important}
+    .arena.show .vs-mid{font-size:22px!important;margin:3px 0!important;line-height:1!important;flex:0 0 auto!important}
+    .arena.show .battle-logline{display:none!important}
+    .arena.show .side{flex:0 0 auto!important;justify-content:start!important;gap:6px!important;min-height:0!important}
+    .arena.show #enemySide{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;max-height:158px!important;overflow:hidden!important;margin-bottom:2px!important}
+    .arena.show #playerSide{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;max-height:260px!important;overflow:hidden!important;margin-top:2px!important}
+    .arena.show .unit{min-height:56px!important;border-radius:13px!important;padding:5px 6px!important;gap:7px!important;background:linear-gradient(90deg,rgba(255,255,255,.055),rgba(255,255,255,.018))!important;align-items:center!important;overflow:hidden!important}
+    .arena.show .unit.enemy{flex-direction:row!important;text-align:left!important;background:linear-gradient(90deg,rgba(255,93,108,.075),rgba(255,255,255,.018))!important}
+    .arena.show .unit .face{width:42px!important;height:42px!important;border-radius:11px!important;font-size:14px!important;overflow:hidden!important;flex:0 0 42px!important}
+    .arena.show .unit.boss .face{width:48px!important;height:48px!important;flex-basis:48px!important;border-radius:13px!important}
+    .arena.show .unit .face img{object-fit:cover!important;width:100%!important;height:100%!important}
+    .arena.show .unit .info{min-width:0!important;overflow:hidden!important}
+    .arena.show .unit .nm{font-size:10.5px!important;line-height:1.05!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+    .arena.show .unit .enemyRoleChip{font-size:8px!important;padding:1px 5px!important;max-width:80px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+    .arena.show .unit .info>div:nth-child(2){font-size:8px!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+    .arena.show .unit .hpbar{height:6px!important;margin-top:3px!important}
+    .arena.show .result{z-index:150!important;width:min(460px,calc(100vw - 22px))!important;max-height:calc(100dvh - 110px)!important;overflow-y:auto!important;top:52%!important;padding:16px 14px!important;background:rgba(5,8,17,.985)!important;border-color:rgba(139,208,255,.32)!important}
+    .arena.show .result h2{font-size:24px!important}.arena.show .result p{font-size:12px!important;line-height:1.25!important}
+    .battle-result-head.lq912Stats{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}.battle-result-head.lq912Stats .mini{padding:7px 4px!important}.battle-result-head.lq912Stats .mini b{font-size:13px!important}.battle-result-head.lq912Stats .mini span{font-size:8px!important}
+
+    /* Less callout spam over the battle board. */
+    .v188Telegraph{top:14%!important;max-width:min(84vw,340px)!important;font-size:12px!important;padding:8px 12px!important;z-index:135!important}.v188Telegraph span{font-size:10px!important}
+    .v188Callout,.passiveToast,.lq53HeroMoment{max-width:min(80vw,320px)!important;font-size:10.5px!important;padding:8px 11px!important;z-index:134!important}.lq53HeroMoment{bottom:24%!important}
+
+    /* Hero sheet gear nodes: no tiny gear cards, less overlap around portrait. */
+    .heroChamberGearV159 .gearNodeV141{width:78px!important;height:78px!important;min-width:78px!important;min-height:78px!important}.heroChamberGearV159 .gearNodeV141 .gIcon,.gearNodeV141 .gIcon{font-size:24px!important}.heroChamberGearV159 .gearNodeV141 .gPw,.gearNodeV141 .gPw{font-size:10px!important}
+    @media(max-width:430px){
+      .arena.show #enemySide{max-height:142px!important}.arena.show #playerSide{max-height:234px!important}
+      .arena.show .unit{min-height:52px!important;padding:4px 5px!important}.arena.show .unit .face{width:38px!important;height:38px!important;flex-basis:38px!important}.arena.show .unit.boss .face{width:44px!important;height:44px!important;flex-basis:44px!important}
+      .battle-result-head.lq912Stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+      .heroChamberGearV159 .gearNodeV141{width:76px!important;height:76px!important}.heroChamberGearV159 .gearNodeV141.weapon{left:6px!important}.heroChamberGearV159 .gearNodeV141.armor{right:6px!important}.heroChamberGearV159 .gearNodeV141.boots{left:6px!important}.heroChamberGearV159 .gearNodeV141.relic{right:6px!important}
+    }
+  `;
+  document.head.appendChild(st);
+}
+function lq912ClearTransient(){
+  try{
+    clearTimeout(window.__lq912ToastTimer);
+    const t=document.getElementById('toast'); if(t){ t.classList.remove('show'); t.textContent=''; t.style.display='none'; }
+    document.querySelectorAll('.passiveToast,.v188Telegraph,.v188Callout,.lq53ClashBanner,.lq53HeroMoment,.dmg').forEach(el=>el.remove());
+  }catch(e){}
+}
+toast=function(m){
+  const t=document.getElementById('toast'); if(!t||!m) return;
+  clearTimeout(window.__lq912ToastTimer);
+  t.textContent=String(m); t.style.display='block'; t.classList.add('show');
+  window.__lq912ToastTimer=setTimeout(()=>{ try{ t.classList.remove('show'); t.textContent=''; t.style.display='none'; }catch(e){} }, (document.getElementById('arena')&&document.getElementById('arena').classList.contains('show'))?1050:1450);
+};
+const __lq912_passiveBanner=typeof passiveBanner==='function'?passiveBanner:null;
+if(__lq912_passiveBanner){ passiveBanner=function(text,color){
+  if(!text) return;
+  // Let only the most meaningful callouts breathe; remove older ones first to avoid stacks.
+  try{ document.querySelectorAll('.passiveToast,.lq53HeroMoment').forEach((el,i)=>{ if(i>0) el.remove(); }); }catch(e){}
+  return __lq912_passiveBanner.apply(this,arguments);
+}; }
+
+/* Smarter gear fitting: fill empty slots before any salvage, then assign by hero role/archetype/kit fit. */
+function lq912HeroGearPool(){
+  try{
+    const ids=[]; ['campaign','tower','raid'].forEach(m=>{ (squad(m)||[]).forEach(id=>{ if(id&&!ids.includes(id)) ids.push(id); }); });
+    if(S.focus&&!ids.includes(S.focus)) ids.push(S.focus);
+    (S.heroes||[]).filter(h=>h&&h.owned&&!ids.includes(h.id)).sort((a,b)=>powerOf(b)-powerOf(a)).slice(0,18).forEach(h=>ids.push(h.id));
+    return ids.map(id=>(S.heroes||[]).find(h=>h.id===id)).filter(Boolean);
+  }catch(e){ return (S.heroes||[]).filter(h=>h&&h.owned).slice(0,24); }
+}
+function lq912ModeForHero(h){ try{ return ['campaign','tower','raid'].find(m=>squad(m).includes(h.id))||campSub||'campaign'; }catch(e){ return 'campaign'; } }
+function lq912FitScore(h,g){
+  try{ if(typeof v175GearFitScore==='function') return v175GearFitScore(h,g,lq912ModeForHero(h)); }catch(e){}
+  try{ return gearCompareValue(g); }catch(e){ return gearPower(g)*1000; }
+}
+function lq912EquipItem(h,slot,g){
+  if(!h||!g||!slot) return false; if(!h.gear) h.gear={weapon:null,armor:null,boots:null,relic:null};
+  if(!Array.isArray(S.inventory)) S.inventory=[];
+  const cur=h.gear[slot]||null;
+  if(cur&&cur.id===g.id) return false;
+  if(cur) S.inventory.push(cur);
+  S.inventory=S.inventory.filter(x=>x&&x.id!==g.id);
+  h.gear[slot]=g; return true;
+}
+function lq912BestInventoryFor(h,slot,emptyFirst){
+  const cur=h.gear&&h.gear[slot]||null;
+  const items=(S.inventory||[]).filter(g=>g&&g.slot===slot);
+  if(!items.length) return null;
+  return items.map(g=>({g,score:lq912FitScore(h,g)+(emptyFirst&&!cur?200000:0),gain:lq912FitScore(h,g)-(cur?lq912FitScore(h,cur):0)})).sort((a,b)=>b.score-a.score)[0]||null;
+}
+function lq912AutoFitGearToRoster(silent){
+  if(!Array.isArray(S.inventory)) S.inventory=[]; if(typeof v175NormalizeAllGear==='function') v175NormalizeAllGear();
+  const heroes=lq912HeroGearPool(); let changed=0,gain=0, notes=[];
+  heroes.forEach(h=>{ if(!h.gear) h.gear={weapon:null,armor:null,boots:null,relic:null}; });
+  // Pass 1: fill empty slots first across active/top heroes.
+  heroes.forEach(h=>SLOTS.forEach(slot=>{
+    if(h.gear&&h.gear[slot]) return;
+    const best=lq912BestInventoryFor(h,slot,true); if(!best||!best.g) return;
+    const before=gearScore(h); if(lq912EquipItem(h,slot,best.g)){ changed++; gain+=Math.max(0,gearScore(h)-before); notes.push('Filled '+SLOTNAME[slot]+' on '+h.name); }
+  }));
+  // Pass 2: clear upgrades, but only when the fit actually improves for that hero.
+  heroes.forEach(h=>SLOTS.forEach(slot=>{
+    const cur=h.gear&&h.gear[slot]||null; const best=lq912BestInventoryFor(h,slot,false); if(!best||!best.g) return;
+    const curScore=cur?lq912FitScore(h,cur):0; const delta=best.score-curScore;
+    const rarityGain=cur?RARITY.indexOf(best.g.rarity)-RARITY.indexOf(cur.rarity):1;
+    if(!cur || delta>=180 || rarityGain>0){ const before=gearScore(h); if(lq912EquipItem(h,slot,best.g)){ changed++; gain+=Math.max(0,gearScore(h)-before); notes.push('Upgraded '+SLOTNAME[slot]+' on '+h.name); } }
+  }));
+  if(changed&&!silent){ toast('Auto-equipped '+changed+' gear slot'+(changed===1?'':'s')+' · +'+gain+' gear score'); }
+  return {changed,gain,notes};
+}
+function lq912KeepGearSet(){
+  const keep=new Set();
+  try{
+    const heroes=lq912HeroGearPool();
+    // Keep best candidates for each hero empty slot before trashing anything.
+    heroes.forEach(h=>{ if(!h.gear) h.gear={weapon:null,armor:null,boots:null,relic:null}; SLOTS.forEach(slot=>{ if(!h.gear[slot]){ const b=lq912BestInventoryFor(h,slot,true); if(b&&b.g) keep.add(b.g.id); } }); });
+    // Keep best by slot/flavor/trait so future archetype fits are preserved.
+    SLOTS.forEach(slot=>{
+      ['might','guard','spirit'].forEach(stat=>{ (S.inventory||[]).filter(g=>g&&g.slot===slot&&g.statFlavor===stat).sort((a,b)=>gearCompareValue(b)-gearCompareValue(a)).slice(0,3).forEach(g=>keep.add(g.id)); });
+      ['boss','antiHealer','protector','sustain','swarm','focus'].forEach(tr=>{ (S.inventory||[]).filter(g=>g&&g.slot===slot&&g.trait===tr).sort((a,b)=>gearCompareValue(b)-gearCompareValue(a)).slice(0,2).forEach(g=>keep.add(g.id)); });
+      (S.inventory||[]).filter(g=>g&&g.slot===slot).sort((a,b)=>gearCompareValue(b)-gearCompareValue(a)).slice(0,4).forEach(g=>keep.add(g.id));
+    });
+  }catch(e){}
+  return keep;
+}
+v166AutoEquipActiveClear=function(){ return lq912AutoFitGearToRoster(true); };
+v166AutoSalvageJunkGear=function(){
+  const auto=typeof v166EnsureAutomation==='function'?v166EnsureAutomation():{autoSalvageCommons:true}; if(!auto.autoSalvageCommons) return {count:0,dust:0};
+  if(!Array.isArray(S.inventory)) S.inventory=[]; if(typeof v175NormalizeAllGear==='function') v175NormalizeAllGear();
+  lq912AutoFitGearToRoster(true);
+  const keep=lq912KeepGearSet(); let dust=0,count=0;
+  S.inventory=S.inventory.filter(g=>{
+    if(!g) return false;
+    const r=RARITY.indexOf(g.rarity);
+    // Never auto-trash Epic+ in the RC. Trash only clearly obsolete Common/Rare after fit checks.
+    const obsolete=(g.rarity==='common'&&!keep.has(g.id)) || ((S.maxCleared||1)>=75&&g.rarity==='rare'&&!keep.has(g.id));
+    if(obsolete){ dust+=salvageValue(g); count++; return false; }
+    return true;
+  });
+  if(dust) S.dust=(S.dust||0)+dust; if(count) S.v166LastCleanup={at:Date.now(),count,dust}; return {count,dust};
+};
+v166SmartCleanup=function(silent){
+  const eq=lq912AutoFitGearToRoster(true); const sv=v166AutoSalvageJunkGear();
+  if(!silent){ const bits=[]; if(eq.changed) bits.push('equipped '+eq.changed+' slot'+(eq.changed===1?'':'s')); if(sv.count) bits.push('salvaged '+sv.count+' low-value item'+(sv.count===1?'':'s')+' for '+sv.dust+' dust'); toast(bits.length?'Smart cleanup: '+bits.join(' · '):'Nothing needed cleanup.'); }
+  return {equipped:eq.changed||0,gain:eq.gain||0,salvaged:sv.count||0,dust:sv.dust||0};
+};
+
+/* Results: restore actual damage/taken/healing/prevented stats at the top of the end screen. */
+battleResultMiniHTML=function(win){
+  if(!battleState) return '';
+  const p=battleState.players||[], m=(typeof v181FinalizeMetrics==='function'?v181FinalizeMetrics():battleState.v181)||{};
+  const dmg=m.totalPlayerDamage||p.reduce((n,u)=>n+(u.dealt||0),0);
+  const taken=m.totalEnemyDamage||p.reduce((n,u)=>n+(u.taken||0),0);
+  const healing=m.heals||p.reduce((n,u)=>n+(u.support||0),0);
+  const prevented=(m.shieldAbsorbed||0)+(m.shieldsApplied||0)+(m.backlineIntercepts||0)*25;
+  return '<div class="battle-result-head lq912Stats"><div class="mini"><b>'+Math.round(dmg)+'</b><span>Done</span></div><div class="mini"><b>'+Math.round(taken)+'</b><span>Taken</span></div><div class="mini"><b>'+Math.round(healing)+'</b><span>Healing</span></div><div class="mini"><b>'+Math.round(prevented)+'</b><span>Prevented</span></div></div>';
+};
+victoryFooter=function(label){
+  const nextLabel=battleMode==='tower'?'Next Floor':'Next Stage';
+  return '<div style="font-weight:700;color:var(--muted);margin:8px 0 2px">'+(autoAdvance?nextLabel+' in <span id="cdn">6</span>s':'Auto-advance is off')+'</div>'+ '<div class="resultActions"><button id="arenaNext" class="go">'+nextLabel+' ▶</button><button id="arenaReplay" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Replay ↻</button><button id="arenaLineup" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Change Lineup</button><button id="arenaHome" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Home</button></div>';
+};
+wireAuto=function(){
+  let n=6; const cd=document.getElementById('cdn');
+  if(autoAdvance){ autoNext=setInterval(()=>{ n--; if(cd)cd.textContent=n; if(n<=0) nextBattle(); },1000); } else if(cd){ cd.textContent='off'; }
+  const an=document.getElementById('arenaNext'); if(an) an.onclick=nextBattle;
+  const ar=document.getElementById('arenaReplay'); if(ar) ar.onclick=replayBattle;
+  const al=document.getElementById('arenaLineup'); if(al) al.onclick=battleChangeLineup;
+  const ah=document.getElementById('arenaHome'); if(ah) ah.onclick=closeArenaToHome;
+};
+const __lq912_startBattle=typeof startBattle==='function'?startBattle:null;
+if(__lq912_startBattle){ startBattle=function(){ lq912InjectStyles(); lq912ClearTransient(); return __lq912_startBattle.apply(this,arguments); }; }
+const __lq912_endBattle=typeof endBattle==='function'?endBattle:null;
+if(__lq912_endBattle){ endBattle=function(win){
+  lq912ClearTransient(); const out=__lq912_endBattle.apply(this,arguments);
+  try{ const r=document.getElementById('arenaResult'); if(r){ r.style.display='block'; r.classList.add('lq912Result'); r.scrollTop=0; } }catch(e){}
+  return out;
+}; }
+const __lq912_closeArena=typeof closeArena==='function'?closeArena:null;
+if(__lq912_closeArena){ closeArena=function(){ lq912ClearTransient(); return __lq912_closeArena.apply(this,arguments); }; }
+const __lq912_closeArenaToHome=typeof closeArenaToHome==='function'?closeArenaToHome:null;
+if(__lq912_closeArenaToHome){ closeArenaToHome=function(){ lq912ClearTransient(); return __lq912_closeArenaToHome.apply(this,arguments); }; }
+
+function lq912Checks(){ const rows=[]; const add=(ok,title,msg,level)=>rows.push({ok:!!ok,title,msg,level:level||(!ok?'warn':'ok')}); try{ add(/^v1\.91\.2/.test(APP_BUILD),'Build label',APP_BUILD); add(typeof lq912AutoFitGearToRoster==='function','Gear fit before trash','Auto-equips empty slots and archetype-fit upgrades before salvage'); add(typeof battleResultMiniHTML==='function','Battle result stats','End screen shows done/taken/healing/prevented'); add(typeof lq912ClearTransient==='function','Transient cleanup','Auto-equip toasts and battle callouts clear reliably'); add((S.saveVersion===SAVE_VERSION),'Save version','Save '+(S.saveVersion||'?')+' / App '+SAVE_VERSION,(S.saveVersion===SAVE_VERSION)?'ok':'warn'); }catch(e){ add(false,'v1.91.2 check error',e.message||String(e),'bad'); } return rows; }
+v189RCChecks=function(){ return lq912Checks(); };
+v189RCReportText=function(){ const rows=lq912Checks(); return ['LIFE QUEST 2.0 RC BATTLE + GEAR FIXES','Build: '+APP_BUILD,'Generated: '+new Date().toLocaleString(),'','Phone test loop:','1. Start one battle and confirm all 6 heroes are visible at once','2. Finish or Skip and confirm result screen shows Done / Taken / Healing / Prevented','3. Confirm auto-equipped toast disappears quickly and does not stick across tabs','4. Earn or grant gear and confirm empty hero gear slots fill before any auto-salvage','5. Open hero detail and confirm gear nodes are readable, not shrunken','6. Switch tabs and verify no battle/toast overlays remain','','v1.91.2 checks:',...rows.map(r=>(r.ok?'✓ ':r.level==='bad'?'✕ ':'△ ')+r.title+' — '+r.msg)].join('\n'); };
+const __lq912_versionRowsHTML=typeof versionRowsHTML==='function'?versionRowsHTML:null;
+versionRowsHTML=function(){ return '<div class="versionRow"><b>v1.91.2</b><span>2.0 RC Battle + Gear Fixes: smarter gear auto-fit before salvage, sticky toast cleanup, compact active battle layout showing all 6 heroes, restored battle result stats, and gear node sizing fixes.</span></div>'+(__lq912_versionRowsHTML?__lq912_versionRowsHTML():''); };
+(function(){ try{ lq912InjectStyles(); }catch(e){} })();
 
 </script>
 </body>
