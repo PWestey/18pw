@@ -3619,7 +3619,7 @@ function skipBattle(){
 }
 
 /* ===== BATTLE ENGINE ===== */
-let battleTimer=null, autoNext=null, battleMode='campaign', battleSpeed=1, battleState=null, autoAdvance=false, battleLastReplay=null, battleReplay=false;
+let battleTimer=null, autoNext=null, battleMode='campaign', battleSpeed=1, battleState=null, autoAdvance=true, battleLastReplay=null, battleReplay=false;
 function startBattle(mode,opts){
   opts=opts||{}; clearAuto();
   if(battleTimer){ clearInterval(battleTimer); battleTimer=null; }
@@ -3939,10 +3939,10 @@ function battleSummaryHTML(){
 }
 function victoryFooter(label){
   const nextLabel=battleMode==='tower'?'Next Floor':'Next Stage';
-  return '<div style="font-weight:700;color:var(--muted);margin:8px 0 2px">'+(autoAdvance?nextLabel+' in <span id="cdn">3</span>s':'Auto-advance is off')+'</div>'+
+  return '<div style="font-weight:700;color:var(--muted);margin:8px 0 2px">'+(autoAdvance?nextLabel+' in <span id="cdn">6</span>s':'Auto-advance is off')+'</div>'+
     '<div class="resultActions"><button id="arenaNext" class="go">'+nextLabel+' ▶</button><button id="arenaReplay" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Replay ↻</button><button id="arenaLineup" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Change Lineup</button><button id="arenaHome" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Home</button></div>';
 }
-function wireAuto(){ let n=3; const cd=document.getElementById('cdn');
+function wireAuto(){ let n=6; const cd=document.getElementById('cdn');
   if(autoAdvance){ autoNext=setInterval(()=>{ n--; if(cd)cd.textContent=n; if(n<=0) nextBattle(); },1000); } else if(cd){ cd.textContent='off'; }
   const an=document.getElementById('arenaNext'); if(an) an.onclick=nextBattle;
   const ar=document.getElementById('arenaReplay'); if(ar) ar.onclick=replayBattle;
@@ -4672,7 +4672,7 @@ function injectV139Styles(){
       linear-gradient(180deg, color-mix(in srgb,var(--bg) 96%, #000), #050811 88%) !important;}
     .nav{background:linear-gradient(180deg,color-mix(in srgb,var(--navbg) 92%, transparent),var(--navbg))!important;border-top-color:color-mix(in srgb,var(--accent) 18%, var(--line))!important}
     .sheet,.arena .result,#awayBox,#revealBox,.setupcard,.synergyPanel,.lifecard,.stagecard,.team-strip,.formrow,.pickSlot,.wallet,.lastActionCard,.tasktoast{box-shadow:0 14px 34px rgba(0,0,0,.24)}
-    .sheet,.arena .result,#awayBox,#revealBox,.setupcard,.synergyPanel,.lifecard,.stagecard,.team-strip,.formrow,.pickSlot{background:linear-gradient(180deg,color-mix(in srgb,var(--modalbg) 95%, transparent), color-mix(in srgb,var(--modalbg) 84%, #050811))!important;border-color:color-mix(in srgb,var(--accent) 14%, var(--line))!important;backdrop-filter:blur(12px)}
+    .sheet,.arena .result,#awayBox,#revealBox,.setupcard,.synergyPanel,.lifecard,.stagecard,.team-strip,.formrow,.pickSlot{background:linear-gradient(180deg,var(--modalbg), color-mix(in srgb,var(--modalbg) 88%, #050811))!important;border-color:color-mix(in srgb,var(--accent) 14%, var(--line))!important;backdrop-filter:blur(12px)}
     .wallet{background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 96%, transparent),color-mix(in srgb,var(--panel) 82%,#050811))!important;border-color:color-mix(in srgb,var(--accent2) 12%, var(--line))!important;position:relative!important;top:auto!important;z-index:1!important;backdrop-filter:none!important}
     .formationLegend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0 12px}
     .formationLegend .lg{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
@@ -6180,7 +6180,7 @@ function lq52InjectStyles(){
     .toast.show{animation:lqToastIn .36s cubic-bezier(.18,.8,.22,1) both}
     @keyframes lqToastIn{0%{opacity:0;transform:translateX(-50%) translateY(18px) scale(.97)}55%{opacity:1;transform:translateX(-50%) translateY(-1px) scale(1.01)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
     .undoBar.show,.taskburst.show{box-shadow:0 22px 54px rgba(0,0,0,.34),0 0 28px color-mix(in srgb,var(--accent) 12%,transparent)}
-    .arena .result{overflow:hidden;border-color:color-mix(in srgb,var(--accent) 18%,var(--line));background:linear-gradient(180deg,rgba(8,12,22,.96),rgba(10,16,28,.94));box-shadow:0 28px 66px rgba(0,0,0,.42),0 0 28px color-mix(in srgb,var(--accent) 11%,transparent)}
+    .arena .result{overflow:hidden;border-color:color-mix(in srgb,var(--accent) 18%,var(--line));background:linear-gradient(180deg,rgb(8,12,22),rgb(10,16,28));box-shadow:0 28px 66px rgba(0,0,0,.42),0 0 28px color-mix(in srgb,var(--accent) 11%,transparent)}
     .arena .result:before{content:"";position:absolute;inset:-32% auto auto -18%;width:130%;height:72%;background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 58%);pointer-events:none}
     .arena .result.win h2,.arena .result.lose h2{text-transform:uppercase;letter-spacing:1.2px}
     .arena .result button{box-shadow:0 12px 28px color-mix(in srgb,var(--accent) 20%,transparent)}
@@ -6942,7 +6942,9 @@ function v158HeroUnit(h,i){
   return '<div class="v158Unit hero '+row+'" style="--uColor:'+color+'"><span class="v158Lv">Lv '+(h.level||1)+'</span><span class="v158Role">'+(LQ_ROLE_ICON&&LQ_ROLE_ICON[h.role]?LQ_ROLE_ICON[h.role]:h.role[0])+'</span><div class="v158Portrait hero">'+face+'</div><div class="v158Name">'+esc(h.name)+'</div><div class="v158Sub">PWR '+powerOf(h)+' · '+(row==='front'?'Front':'Back')+'</div></div>';
 }
 function v158EnemyUnit(e,i){
-  const face=e.img?'<img src="'+e.img+'">':initials(e.name), color=e.color||'#ff9aa6', role=e.roleLabel||e.enemyRole||'Enemy';
+  const _art=(typeof ENEMY_ART==='object'&&e)?(ENEMY_ART[e.name]||ENEMY_ART[e.baseName]||ENEMY_ART[e.artFamily]):null;
+  const _src=e.img||_art;
+  const face=_src?'<img src="'+_src+'">':initials(e.name), color=e.color||'#ff9aa6', role=e.roleLabel||e.enemyRole||'Enemy';
   return '<div class="v158Unit enemy '+(e.boss?'boss':'')+'" style="--uColor:'+color+'"><span class="v158Lv">'+(e.boss?'BOSS':'E'+(i+1))+'</span><span class="v158Role">'+(e.boss?'👑':(e.roleIcon||'◇'))+'</span><div class="v158Portrait">'+face+'</div><div class="v158Name">'+esc((e.artFamily||e.name||'Enemy').replace(/^.* · /,''))+'</div><div class="v158Sub">'+esc(role)+' · '+Math.round(e.max||e.hp||0)+' HP</div></div>';
 }
 function v158MiniHero(h){
@@ -7881,13 +7883,14 @@ function v166AutoSalvageJunkGear(){
   return {count,dust};
 }
 function v166SmartCleanup(silent){
+  const fill=(typeof autoEquipAllOwned==='function')?autoEquipAllOwned():{totalChanged:0};
   const eq=v166AutoEquipActiveClear();
   const sv=v166AutoSalvageJunkGear();
   if(!silent){
-    const bits=[]; if(eq.changed) bits.push('equipped '+eq.changed+' clear upgrade'+(eq.changed===1?'':'s')); if(sv.count) bits.push('salvaged '+sv.count+' low-value item'+(sv.count===1?'':'s')+' for '+sv.dust+' dust');
+    const bits=[]; const equipped=(fill.totalChanged||0)+(eq.changed||0); if(equipped) bits.push('equipped '+equipped+' slot'+(equipped===1?'':'s')+' across owned heroes'); if(sv.count) bits.push('salvaged '+sv.count+' low-value item'+(sv.count===1?'':'s')+' for '+sv.dust+' dust');
     toast(bits.length?'Smart cleanup: '+bits.join(' · '):'Nothing needed cleanup. Do one real action next.');
   }
-  return {equipped:eq.changed||0,gain:eq.gain||0,salvaged:sv.count||0,dust:sv.dust||0};
+  return {equipped:(fill.totalChanged||0)+(eq.changed||0),gain:eq.gain||0,salvaged:sv.count||0,dust:sv.dust||0};
 }
 const __grantGear_v166=grantGear;
 grantGear=function(g){ __grantGear_v166.apply(this,arguments); setTimeout(()=>{try{v166SmartCleanup(true);}catch(e){}},0); };
