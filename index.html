@@ -740,6 +740,20 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
 @media (max-width:380px){.rgrid.compact{grid-template-columns:repeat(3,1fr)}}
 
 </style>
+<style id="mobileBattleFixV286">
+@media (max-width:600px){
+  /* Phase 1: battle must show/reach all 6 heroes (was clipped by fixed-height overflow:hidden) */
+  .arena{overflow-y:auto!important;overflow-x:hidden!important}
+  .arena .side{flex:0 0 auto!important;justify-content:flex-start!important}
+  .arena .vs-head{margin-bottom:8px}
+  .arena .side .unit{gap:8px}
+  /* result panel pinned to viewport center so it's visible even though the arena scrolls */
+  .arena .result{position:fixed!important}
+  /* when battle ends, become a clean result screen (hide fighters behind it) */
+  .arena.arenaEnded .side,.arena.arenaEnded #enemySide,.arena.arenaEnded #playerSide,.arena.arenaEnded .vs-mid,.arena.arenaEnded .vs-head{visibility:hidden!important}
+  .arena.arenaEnded .result{background:#0a0e16!important;box-shadow:0 0 0 100vmax #07090f!important}
+}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -2071,7 +2085,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=25;
-const APP_BUILD='v2.8.4';
+const APP_BUILD='v2.9.1';
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
@@ -2461,7 +2475,7 @@ function nextUnlockHero(){ const locked=lockedHeroes(); if(!locked.length) retur
 function featuredHero(){ const owned=S.heroes.filter(h=>h.owned); if(!owned.length) return null; if(S.focus){ const f=owned.find(h=>h.id===S.focus); if(f) return f; } return owned.slice().sort((a,b)=>powerOf(b)-powerOf(a))[0]; }
 function viewAlias(vw){ return ({tasks:'quests',roster:'heroes',campaign:'battles'}[vw]||vw||'home'); }
 function setNavActive(vw){ const cv=viewAlias(vw); document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',viewAlias(x.dataset.view)===cv)); }
-function navTo(vw){ view=viewAlias(vw); setNavActive(view); render(); }
+function navTo(vw){ clearTransientUI(); var _ar=document.getElementById('arena'); if(_ar && _ar.classList.contains('show')){ try{clearAuto();}catch(e){} if(battleTimer){clearInterval(battleTimer);battleTimer=null;} battleState=null; _ar.classList.remove('show','arenaEnded'); } view=viewAlias(vw); setNavActive(view); render(); }
 function renderQuests(v){ renderTasks(v); }
 function renderHeroes(v){ renderRoster(v); }
 function renderBattles(v){ renderCampaign(v); }
@@ -3634,7 +3648,7 @@ function skipBattle(){
 /* ===== BATTLE ENGINE ===== */
 let battleTimer=null, autoNext=null, battleMode='campaign', battleSpeed=1, battleState=null, autoAdvance=true, battleLastReplay=null, battleReplay=false;
 function startBattle(mode,opts){
-  opts=opts||{}; clearAuto();
+  opts=opts||{}; clearAuto(); clearTransientUI();
   if(battleTimer){ clearInterval(battleTimer); battleTimer=null; }
   battleMode = (mode==='tower')?'tower':'campaign';
   battleReplay=!!opts.replay;
@@ -3663,7 +3677,7 @@ function startBattle(mode,opts){
   }
   enemies.forEach((e,i)=>{ e.dealt=0; e.taken=0; e.crits=0; e.support=0; e.row=e.boss?'front':(i<Math.ceil(enemies.length/2)?'front':'back'); e.risk=e.boss?1.5:1; });
   if(battleReplay) head='REPLAY · '+head; applyBattleScene(battleMode,head,sub);
-  document.getElementById('arenaResult').style.display='none'; document.getElementById('arenaResult').className='result';
+  document.getElementById('arenaResult').style.display='none'; document.getElementById('arenaResult').className='result'; try{var _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded');}catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
   document.getElementById('arena').classList.add('show');
   wireBattleControls();
@@ -3964,7 +3978,7 @@ function wireAuto(){ let n=6; const cd=document.getElementById('cdn');
 }
 function endBattle(win){
   clearAuto();
-  const r=document.getElementById('arenaResult'); r.style.display='block'; r.className='result '+(win?'win':'lose');
+  const r=document.getElementById('arenaResult'); r.style.display='block'; r.className='result '+(win?'win':'lose'); try{var _ae=document.querySelector('.arena'); if(_ae) _ae.classList.add('arenaEnded');}catch(e){}
   if(battleReplay){
     document.querySelectorAll('#playerSide .unit:not(.dead)').forEach(u=>u.classList.toggle('cheer',!!win));
     r.innerHTML='<h2>'+(win?'REPLAY CLEAR':'REPLAY FAILED')+'</h2><p>No rewards spent or earned. This was a practice replay.</p>'+battleResultMiniHTML(win)+battleSummaryHTML()+victoryFooter('Continuing');
@@ -6323,10 +6337,7 @@ function lq53InjectBattleStyles(){
     .arena .result.win:after,.arena .result.lose:after{content:"";position:absolute;inset:-40%;pointer-events:none;background:conic-gradient(from 0deg,transparent,color-mix(in srgb,var(--accent) 14%,transparent),transparent,color-mix(in srgb,var(--accent2) 12%,transparent),transparent);animation:lq53ResultSpin 3.2s linear infinite;opacity:.55}.arena .result>*{position:relative;z-index:2}@keyframes lq53ResultSpin{to{transform:rotate(360deg)}}
     @media(prefers-reduced-motion:reduce){.arena.lq53Arena .vs-mid,.lq53ClashBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.unit.lq53Telegraph .face,.unit.lq53Heavy .face,.unit.lq53Support .face,.unit.lq53Tank .face,.arena .result.win:after,.arena .result.lose:after{animation:none!important}}
     @media (max-width:600px){
-      .lq53HeroMoment{bottom:9%;font-size:9px;padding:5px 10px;letter-spacing:.3px;max-width:72vw;box-shadow:0 8px 22px rgba(0,0,0,.5)}
-      .lq53ScreenFlash{opacity:.36}
-      .lq53ImpactRing{width:48px;height:48px}
-      .lq53ClashBanner{font-size:13px;padding:7px 12px}
+      .lq53HeroMoment,.lq53ClashBanner,.passiveToast,.lq53ScreenFlash,.lq53ImpactRing{display:none!important}
     }
   `;
   document.head.appendChild(st);
@@ -7784,13 +7795,26 @@ function v165InjectStyles(){
   `;
   document.head.appendChild(st);
 }
+function clearTransientUI(){
+  try{
+    var ub=document.getElementById('undoBar'); if(ub) ub.classList.remove('show');
+    try{ if(pendingTaskUndoTimer){ clearTimeout(pendingTaskUndoTimer); pendingTaskUndoTimer=null; } pendingTaskUndo=null; }catch(e){}
+    var rp=document.getElementById('rewardPop'); if(rp) rp.classList.remove('show');
+    try{ if(window.rewardPopT) clearTimeout(window.rewardPopT); }catch(e){}
+    var tb=document.getElementById('taskBurst'); if(tb){ tb.classList.remove('show'); tb.innerHTML=''; }
+    var wl=document.getElementById('v171WorldLayer'); if(wl) wl.classList.remove('show');
+    var ts=document.getElementById('toast'); if(ts) ts.classList.remove('show');
+    var n=document.getElementById('v165ActFirst'); if(n) n.remove();
+    document.querySelectorAll('.passiveToast,.lq53ClashBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.v171MeaningFlash,.v171WorldReward,.v171Orb,.battleFloat,.dmg,.critdmg,.shieldnum,.blocknum,.supportnum').forEach(function(e){ e.remove(); });
+  }catch(e){}
+}
 function v165ActFirstNudge(){
   try{
     if(!S||!document.body||S.reduceMotion) return;
     const bs=v165Ensure();
     const sinceTask=Date.now()-(bs.lastTaskAt||bs.startedAt||Date.now());
     const session=Date.now()-(bs.startedAt||Date.now());
-    if(session<9*60000 || sinceTask<6*60000 || document.getElementById('v165ActFirst')) return;
+    if(session<9*60000 || sinceTask<6*60000 || document.getElementById('v165ActFirst') || document.querySelector('.arena.show') || document.querySelector('.scrim.show')) return;
     const d=document.createElement('div'); d.id='v165ActFirst'; d.className='v165ActFirst';
     d.innerHTML='<b>Act first, manage later</b><span>You have been in Life Quest for a bit. Pick one real action, then come back for the rewards.</span><button>Got it</button>';
     document.body.appendChild(d); setTimeout(()=>d.classList.add('show'),20);
