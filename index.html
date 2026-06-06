@@ -881,8 +881,11 @@ const TUNE={
   liveTickMs:1500,                       // how often idle income ticks while open
   roleBase:{Tank:{hp:320,atk:18},DPS:{hp:150,atk:44},Support:{hp:200,atk:28}},
   heroScale:lvl=>1+0.18*(lvl-1),
-  enemyHpBase:120, enemyAtkBase:16, enemyGrowth:1.10,
-  towerHpBase:170, towerAtkBase:23, towerGrowth:1.13,
+  // v2.0 1000-stage rebalance: enemies now scale GENTLY so heroes + multiplier stack can keep pace
+  enemyHpBase:120, enemyAtkBase:16, enemyGrowth:1.013,
+  towerHpBase:170, towerAtkBase:23, towerGrowth:1.016,
+  accountPowerPer:0.003,                 // +0.3% team power per cleared stage (passive momentum)
+  gearStageScale:0.04,                   // gear power +4% per stage it was found on
   towerMiniEvery:10, towerMajorEvery:50,
   towerMiniHpMult:5, towerMiniAtkMult:2.6, towerMajorHpMult:9, towerMajorAtkMult:3.4,
   enemyCount:s=>s>=5?4:3,
@@ -1137,6 +1140,7 @@ function clFromCP(cp){ return Math.floor((-1+Math.sqrt(1+0.4*cp))/2); }
 function cpForLevel(L){ return 10*L*(L+1); }
 function recalcCollection(){ gCP=collectionPowerTotal(); gCL=clFromCP(gCP); }
 function collectionMult(){ return 1+0.01*gCL; }
+function accountMult(){ const per=(TUNE&&TUNE.accountPowerPer!=null)?TUNE.accountPowerPer:0.003; return 1+per*(S&&S.maxCleared?S.maxCleared:0); }
 function ownedCount(){ sanitizeHeroes(); return S.heroes.reduce((n,h)=>n+((h&&h.owned)?1:0),0); }
 function collGoldMult(){ return 1+0.01*Math.floor(gCL/5); }
 function collXpMult(){ return (1+0.01*Math.floor(gCL/10))*prestigeAccountXpMult(); }
@@ -2421,8 +2425,8 @@ function chargeCapText(){
 
 /* hero stats */
 function roleBaseOf(role){ return TUNE.roleBase[normalizeRole(role)] || TUNE.roleBase.DPS; }
-function hpOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.hp*TUNE.heroScale(h.level||1)+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)); }
-function atkOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.atk*TUNE.heroScale(h.level||1)+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)); }
+function hpOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.hp*TUNE.heroScale(h.level||1)+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()); }
+function atkOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.atk*TUNE.heroScale(h.level||1)+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()); }
 function powerOf(h){ if(!h) return 0; return Math.round(hpOf(h)/8+atkOf(h)*2); }
 const SQUADS=[['campaign','Campaign','⚔'],['tower','Tower','⛰'],['raid','Raid','☠']];
 function squad(mode){ if(!S.squads) S.squads={campaign:[],tower:[],raid:[]}; if(!Array.isArray(S.squads[mode])) S.squads[mode]=[]; return S.squads[mode]; }
@@ -4861,7 +4865,11 @@ function gearStageBand(stage){
   if(s<100) return {label:'Stages 75-99', next:100, weights:{common:.10,rare:.28,epic:.30,legendary:.21,mythic:.09,eternal:.02}, note:'Eternal becomes a real chase.'};
   if(s<150) return {label:'Stages 100-149', next:150, weights:{common:.06,rare:.22,epic:.31,legendary:.26,mythic:.12,eternal:.03}, note:'High-end becomes the main pool.'};
   if(s<200) return {label:'Stages 150-199', next:200, weights:{common:.03,rare:.16,epic:.30,legendary:.30,mythic:.15,eternal:.06}, note:'Endgame rarities dominate.'};
-  return {label:'Stages 200+', next:null, weights:{common:.02,rare:.12,epic:.27,legendary:.32,mythic:.18,eternal:.09}, note:'Endgame ladder: Mythic/Eternal main chase.'};
+  if(s<350) return {label:'Stages 200-349', next:350, weights:{common:.02,rare:.12,epic:.27,legendary:.32,mythic:.18,eternal:.09}, note:'Mythic/Eternal main chase.'};
+  if(s<550) return {label:'Stages 350-549', next:550, weights:{common:.01,rare:.08,epic:.22,legendary:.32,mythic:.23,eternal:.14}, note:'Eternal realistic on the deep road.'};
+  if(s<800) return {label:'Stages 550-799', next:800, weights:{common:0,rare:.04,epic:.16,legendary:.30,mythic:.28,eternal:.22}, note:'Eternal becomes the backbone.'};
+  if(s<1000) return {label:'Stages 800-999', next:1000, weights:{common:0,rare:.02,epic:.10,legendary:.26,mythic:.31,eternal:.31}, note:'Top-tier loot floods in.'};
+  return {label:'Stages 1000+', next:null, weights:{common:0,rare:0,epic:.06,legendary:.22,mythic:.34,eternal:.38}, note:'Apex ladder: Eternal-heavy endgame.'};
 }
 function gearLadder(stage){
   const b=gearStageBand(stage||1), w=b.weights;
@@ -4888,7 +4896,10 @@ function newGear(slot,rarity){
 }
 function gearPower(g){
   const rarityIndex=Math.max(0,RARITY.indexOf(g.rarity));
-  return Math.round(10*RARMULT[g.rarity]+g.level*5+rarityIndex*2);
+  const base=10*RARMULT[g.rarity]+g.level*5+rarityIndex*2;
+  const sc=(TUNE&&TUNE.gearStageScale!=null)?TUNE.gearStageScale:0.04;
+  const sf=Math.max(1,g.stageFound||1);
+  return Math.round(base*(1+sf*sc));
 }
 function gearCostOf(g){
   const m=RARMULT[g.rarity];
@@ -7736,12 +7747,15 @@ function v165Ensure(){
 function v165ApplyTuning(){
   try{
     // Light pacing adjustments only: make hard tasks matter, smooth early campaign, avoid runaway reward noise.
-    TUNE.expPerHour=13;
-    TUNE.stageRateBonus=0.28;
-    TUNE.enemyGrowth=1.205;
-    TUNE.bossHpMult=4.05;
-    TUNE.bossAtkMult=2.22;
-    TUNE.towerGrowth=1.255;
+    // v2.0 1000-stage rebalance (LIVE values — these are what actually apply)
+    TUNE.expPerHour=16;
+    TUNE.stageRateBonus=0.30;
+    TUNE.enemyGrowth=1.013;
+    TUNE.bossHpMult=4.0;
+    TUNE.bossAtkMult=2.2;
+    TUNE.towerGrowth=1.016;
+    if(TUNE.accountPowerPer==null) TUNE.accountPowerPer=0.003;
+    if(TUNE.gearStageScale==null) TUNE.gearStageScale=0.04;
     if(TASKREWARD.easy){ TASKREWARD.easy.g=12; TASKREWARD.easy.d=4; TASKREWARD.easy.drop=0.21; TASKREWARD.easy.cores=0; }
     if(TASKREWARD.med){ TASKREWARD.med.g=32; TASKREWARD.med.d=12; TASKREWARD.med.drop=0.33; TASKREWARD.med.cores=2; }
     if(TASKREWARD.hard){ TASKREWARD.hard.g=72; TASKREWARD.hard.d=26; TASKREWARD.hard.drop=0.51; TASKREWARD.hard.cores=4; }
