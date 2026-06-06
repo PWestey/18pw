@@ -848,7 +848,7 @@ const TUNE={
   liveTickMs:1500,                       // how often idle income ticks while open
   roleBase:{Tank:{hp:320,atk:18},DPS:{hp:150,atk:44},Support:{hp:200,atk:28}},
   heroScale:lvl=>1+0.18*(lvl-1),
-  enemyHpBase:120, enemyAtkBase:16, enemyGrowth:0.044,
+  enemyHpBase:120, enemyAtkBase:16, enemyGrowth:1.22,
   towerHpBase:170, towerAtkBase:23, towerGrowth:1.27,
   towerMiniEvery:10, towerMajorEvery:50,
   towerMiniHpMult:5, towerMiniAtkMult:2.6, towerMajorHpMult:9, towerMajorAtkMult:3.4,
@@ -2070,7 +2070,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=25;
-const APP_BUILD='v2.8.0';
+const APP_BUILD='v2.8.1';
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
@@ -2251,57 +2251,8 @@ function seed(){
     crystals:0, summonTickets:0, ticketShards:0, summonPity:0, wishlist:[], favorites:[], albumsClaimed:{starter_legacy:true}, didAutoStarterSquad:false,
     heroes:[],
     squads:{campaign:[],tower:[],raid:[]},
-    dailies:PUBLIC_STARTER_DAILIES_V1.map(spec=>makeStarterDaily(spec,null)),
-    habits: [
-    {id:uid(),title:'Wake Up at 5',domain:'fitness',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Make my bed',domain:'home',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Brush my teeth (morning)',domain:'fitness',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Feed Finn & Refill Water',domain:'home',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Sunlight in the morning',domain:'fitness',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Take Meds & Supplements',domain:'fitness',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Meditation',domain:'faith',diff:'med',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Gratitude',domain:'faith',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Affirmations & Values',domain:'faith',diff:'med',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Read the Bible',domain:'faith',diff:'med',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Pep Talk',domain:'discipline',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Pray Alone',domain:'faith',diff:'med',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Help in the morning',domain:'discipline',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Clear Mail',domain:'work',diff:'easy',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'Clear Emails',domain:'work',diff:'easy',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'Clear Texts & Messages',domain:'work',diff:'easy',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'Origin Market Recap',domain:'work',diff:'med',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'Message Parnell, Taylor, Taylor, Michael, etc',domain:'work',diff:'med',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'Clear To-Do List at Work',domain:'work',diff:'easy',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'Project Work',domain:'work',diff:'hard',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'Review Team\'s Queues',domain:'work',diff:'med',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'Review Tickets About to Breach in Standup',domain:'work',diff:'med',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'80% Healthy Foods',domain:'fitness',diff:'med',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Exercise',domain:'fitness',diff:'hard',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Mobility Workout',domain:'fitness',diff:'med',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'One load of laundry',domain:'home',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'10 Minutes Cleaning',domain:'home',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Pick Up Dog Poops',domain:'home',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Learn Something New',domain:'discipline',diff:'med',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Practice Photography',domain:'discipline',diff:'med',days:['mo'],freq:'weekly',up:true,down:false,count:0},
-    {id:uid(),title:'Engage with a random person',domain:'discipline',diff:'med',days:['mo'],freq:'weekly',up:true,down:false,count:0},
-    {id:uid(),title:'Read a self-help book',domain:'discipline',diff:'med',days:['mo'],freq:'weekly',up:true,down:false,count:0},
-    {id:uid(),title:'Review CSATs',domain:'work',diff:'med',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'Review Finances',domain:'work',diff:'med',days:['mo'],freq:'weekly',up:true,down:false,count:0},
-    {id:uid(),title:'Go through cards - am I doing my tasks consistently?',domain:'discipline',diff:'hard',days:['mo'],freq:'weekly',up:true,down:false,count:0},
-    {id:uid(),title:'Pick Two Recipes & Cook',domain:'home',diff:'hard',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Pray Before Dinner',domain:'faith',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'No Phone Around Girls',domain:'discipline',diff:'med',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Read',domain:'discipline',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Connection Questions',domain:'fatherhood',diff:'med',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Ten-Minute Miracle - Liv',domain:'fatherhood',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Ten-Minute Miracle - Emmy',domain:'fatherhood',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Emmy homework',domain:'fatherhood',diff:'med',days:['mo','tu','we','th','fr'],freq:'weekday',up:true,down:false,count:0},
-    {id:uid(),title:'Hug & Kiss Megan',domain:'fatherhood',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Note for Megan',domain:'fatherhood',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Say Thank You',domain:'faith',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-    {id:uid(),title:'Contact a Friend',domain:'faith',diff:'med',days:['mo'],freq:'weekly',up:true,down:false,count:0},
-    {id:uid(),title:'Make Out Before Bed',domain:'fatherhood',diff:'easy',days:['mo','tu','we','th','fr','sa','su'],freq:'daily',up:true,down:false,count:0},
-  ],
+    dailies:[{id:uid(),title:'Wake Up at 5',domain:'fitness',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Make my bed',domain:'home',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Brush my teeth (morning)',domain:'fitness',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Feed Finn & Refill Water',domain:'home',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Sunlight in the morning',domain:'fitness',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Take Meds & Supplements',domain:'fitness',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Meditation',domain:'faith',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Gratitude',domain:'faith',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Affirmations & Values',domain:'faith',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Read the Bible',domain:'faith',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Pep Talk',domain:'discipline',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Pray Alone',domain:'faith',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Help in the morning',domain:'discipline',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Clear Mail',domain:'work',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'Clear Emails',domain:'work',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'Clear Texts & Messages',domain:'work',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'Origin Market Recap',domain:'work',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'Message Parnell, Taylor, Taylor, Michael, etc',domain:'work',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'Clear To-Do List at Work',domain:'work',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'Project Work',domain:'work',diff:'hard',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'Review Team\'s Queues',domain:'work',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'Review Tickets About to Breach in Standup',domain:'work',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'80% Healthy Foods',domain:'fitness',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Exercise',domain:'fitness',diff:'hard',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Mobility Workout',domain:'fitness',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'One load of laundry',domain:'home',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'10 Minutes Cleaning',domain:'home',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Pick Up Dog Poops',domain:'home',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Learn Something New',domain:'discipline',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Practice Photography',domain:'discipline',diff:'med',done:false,at:null,days:['mo']},{id:uid(),title:'Engage with a random person',domain:'discipline',diff:'med',done:false,at:null,days:['mo']},{id:uid(),title:'Read a self-help book',domain:'discipline',diff:'med',done:false,at:null,days:['mo']},{id:uid(),title:'Review CSATs',domain:'work',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'Review Finances',domain:'work',diff:'med',done:false,at:null,days:['mo']},{id:uid(),title:'Go through cards - am I doing my tasks consistently?',domain:'discipline',diff:'hard',done:false,at:null,days:['mo']},{id:uid(),title:'Pick Two Recipes & Cook',domain:'home',diff:'hard',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Pray Before Dinner',domain:'faith',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'No Phone Around Girls',domain:'discipline',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Read',domain:'discipline',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Connection Questions',domain:'fatherhood',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Ten-Minute Miracle - Liv',domain:'fatherhood',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Ten-Minute Miracle - Emmy',domain:'fatherhood',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Emmy homework',domain:'fatherhood',diff:'med',done:false,at:null,days:['mo','tu','we','th','fr']},{id:uid(),title:'Hug & Kiss Megan',domain:'fatherhood',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Note for Megan',domain:'fatherhood',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Say Thank You',domain:'faith',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']},{id:uid(),title:'Contact a Friend',domain:'faith',diff:'med',done:false,at:null,days:['mo']},{id:uid(),title:'Make Out Before Bed',domain:'fatherhood',diff:'easy',done:false,at:null,days:['mo','tu','we','th','fr','sa','su']}].map(spec=>makeStarterDaily(spec,null)),
+    habits:[],
     todos:[
       {id:uid(),title:'Edit these into your real daily habits',diff:'easy',done:false},
       {id:uid(),title:'Add this app to your Home Screen',diff:'easy',done:false},
@@ -2311,14 +2262,23 @@ function seed(){
 }
 
 
-// Filter tasks by day of week
-function filterTasksByDay(tasks){
+function filterDailiesByDay(dailies){
   const today=new Date().getDay();
   const dayKeys=[['su'],['mo'],['tu'],['we'],['th'],['fr'],['sa']][today];
-  return tasks.filter(t=>{
-    if(!t.days) return true;
-    return t.days.some(d=>dayKeys.includes(d));
-  });
+  return dailies.filter(d=>{if(!d.days) return true; return d.days.some(dy=>dayKeys.includes(dy));});
+}
+
+
+// Show current currency balance
+function currencyWallet(){
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:13px;background:var(--panel);padding:8px;border-radius:6px;color:var(--muted)">'+
+    '<div>⦿ Gold: <b style="color:var(--gold)">'+S.gold+'</b></div>'+
+    '<div>◈ Cores: <b style="color:var(--cyan)">'+S.heroCores+'</b></div>'+
+    '<div>◆ Boss: <b style="color:var(--purple)">'+S.bossCores+'</b></div>'+
+    '<div>✦ Sparks: <b style="color:var(--spark)">'+S.sparks+'</b></div>'+
+    '<div>💎 Crystals: <b style="color:var(--crystal)">'+S.crystals+'</b></div>'+
+    '<div>🎟 Tickets: <b style="color:var(--ticket)">'+S.summonTickets+'</b></div>'+
+  '</div>';
 }
 
 let S=null, view='home', subtab='dailies', tick=null, ambient=null, awayReport=null, graceReport=null, lastUnlockAlbums=[], sheetPrevLoop=null;
@@ -2624,14 +2584,14 @@ function recordLastAction(item,kind,charged,gains,titles,extraMsgs){
   if(loot.raid&&loot.raid.rd) progress.push((h?h.name:'Your squad')+' struck '+(currentBoss()?currentBoss().name:'Weekly Boss')+' for '+rewardNumber(loot.raid.rd)+' damage'+(loot.raid.weak?' · WEAK':'')+'.');
   if(extraMsgs&&extraMsgs.length) progress.push(extraMsgs[0]);
   if(hm) progress.push(hm.hero+' '+hm.action+'.');
-  S.lastActionResult={title:item.title||'Task complete',kind:kind||'task',domain,domainLabel:dm?dm.label:'General',domainIcon:dm?dm.icon:'✓',diff:item.diff||'med',at:Date.now(),rewards,progress,next:nextGoalLine(),hero:h?h.name:null,heroMoment:hm};
+  S.lastActionResult={title:item.title||'Task complete',kind:kind||'task',domain,domainLabel:dm?dm.label:'General',domainIcon:dm?dm.icon:'✓',diff:item.diff||'med',at:Date.now(),rewards,progress,next:nextGoalLine(),hero:h?h.name:null,heroMoment:hm}; setTimeout(()=>{if(S.lastActionResult) S.lastActionResult=null; rerender();}, 6000);
 }
 function lastActionHTML(){
   const la=S.lastActionResult; if(!la) return '';
   const when=la.at?timeAgo(la.at):'recently';
   const reward=(la.rewards||[]).slice(0,5).join(' · ');
   const progress=(la.progress||[]).slice(0,2).join(' ');
-  return '<div class="lastActionCard" id="lastActionCard"><h3><span>✅ Last Action</span><span>'+esc(when)+'</span></h3><p class="lat">'+esc(la.domainIcon||'✓')+' '+esc(la.domainLabel||'Life')+' moved forward: '+esc(la.title)+'</p><p class="las">'+esc(progress||'You acted like the person you are becoming.')+'</p><div class="laNext">'+esc(la.next||nextGoalLine())+' · '+esc(reward||'light rewards gained')+'</div></div>';
+  return '<div class=\"lastActionCard\" id=\"lastActionCard\" style=\"position:relative\"><button style=\"position:absolute;top:4px;right:4px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;opacity:.6\" onclick=\"S.lastActionResult=null;rerender()\">×</button><h3><span>✅ Last Action</span><span>'+esc(when)+'</span></h3><p class="lat">'+esc(la.domainIcon||'✓')+' '+esc(la.domainLabel||'Life')+' moved forward: '+esc(la.title)+'</p><p class="las">'+esc(progress||'You acted like the person you are becoming.')+'</p><div class="laNext">'+esc(la.next||nextGoalLine())+' · '+esc(reward||'light rewards gained')+'</div></div>';
 }
 function closestDomainReward(){
   const stats=ensureDomainStats();
@@ -3659,7 +3619,7 @@ function skipBattle(){
 }
 
 /* ===== BATTLE ENGINE ===== */
-let battleTimer=null, autoNext=null, battleMode='campaign', battleSpeed=1, battleState=null, autoAdvance=true, battleLastReplay=null, battleReplay=false;
+let battleTimer=null, autoNext=null, battleMode='campaign', battleSpeed=1, battleState=null, autoAdvance=false, battleLastReplay=null, battleReplay=false;
 function startBattle(mode,opts){
   opts=opts||{}; clearAuto();
   if(battleTimer){ clearInterval(battleTimer); battleTimer=null; }
@@ -3667,7 +3627,13 @@ function startBattle(mode,opts){
   battleReplay=!!opts.replay;
   const replayStage=opts.stage||S.stage, replayFloor=opts.floor||S.tower;
   const sq=squad(battleMode);
-  if(!sq.length){ toast('Assign a '+battleMode+' squad first'); return; }
+  // Auto-fill squad to full size with strongest owned heroes not already assigned
+  if(battleMode!=='raid' && sq.length<(TUNE.teamSize||6)){
+    const inSq=new Set(sq);
+    const bench=(S.heroes||[]).filter(h=>h&&h.owned&&!inSq.has(h.id)).sort((a,b)=>powerOf(b)-powerOf(a));
+    while(sq.length<(TUNE.teamSize||6) && bench.length) sq.push(bench.shift().id);
+  }
+  if(!sq.length){ toast('Unlock or assign a '+battleMode+' squad first'); return; }
   const syn=synergyMultipliers(battleMode);
   const players=sq.map((id,i)=>{const h=S.heroes.find(x=>x.id===id), row=formationRow(i), fm=formationMultiplier(h,row); const hp=Math.round(hpOf(h)*fm.hp*syn.hp), atk=Math.round(atkOf(h)*fm.atk*syn.atk); return{id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row,pos:i,hp,max:hp,atk,side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk*syn.risk,supportMult:fm.support*syn.support,passive:passiveOf(h),archetype:heroArchetype(h)};});
   let enemies, head, sub;
@@ -3966,7 +3932,7 @@ function battleSummaryHTML(){
   return '<div class="battle-summary"><h4>Battle Summary'+(mvp?' · MVP: '+esc(mvp.name):'')+'</h4><div class="sumgrid">'+
     '<div class="sumblock"><div class="sumtitle">Damage Dealt</div>'+statRows(p,'dealt',4)+'</div>'+ 
     '<div class="sumblock"><div class="sumtitle">Damage Taken</div>'+statRows(p,'taken',4)+'</div>'+ 
-    (supports.length?'<div class="sumblock"><div class="sumtitle">Support Output</div>'+statRows(supports,'support',3)+'</div>':'')+
+    (supports.length?'<div class="sumblock"><div class="sumtitle">Healed / Prevented</div>'+statRows(supports,'support',3)+'</div>':'')+
     (crits.length?'<div class="sumblock"><div class="sumtitle">Crits</div>'+statRows(crits,'crits',3)+'</div>':'')+
     enemyRoleSummaryHTML()+battleEventRows()+
     '</div></div>';
@@ -4974,6 +4940,13 @@ function autoEquipBestGear(h){
   const after=gearScore(h);
   return {changed,before,after};
 }
+// Auto-equip best gear across ALL owned heroes (strongest first, so top heroes get top gear)
+function autoEquipAllOwned(){
+  const owned=(S.heroes||[]).filter(h=>h&&h.owned).slice().sort((a,b)=>powerOf(b)-powerOf(a));
+  let totalChanged=0, heroesImproved=0;
+  owned.forEach(h=>{ const r=autoEquipBestGear(h); if(r.changed){ totalChanged+=r.changed; heroesImproved++; } });
+  return {totalChanged,heroesImproved,count:owned.length};
+}
 function unequipAllGear(h){
   if(!h.gear) return 0;
   let n=0;
@@ -5075,7 +5048,7 @@ function openHeroSheet(id){
     '<div class="heroPanelV141"><h4>Progression <span>'+(atCap?'Rank up to grow':'Next level')+'</span></h4>'+ 
       '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:5px"><span>'+(atCap?'Max level for '+RANKS[rankIdx(h)].name:'EXP to Lv '+(h.level+1))+'</span><span>'+(atCap?'banked '+Math.floor(h.exp||0):Math.floor(h.exp||0)+' / '+cost)+'</span></div><div class="xpbar"><i style="width:'+xpPct+'%"></i></div>'+ 
       '<p style="margin-top:8px">'+(onTeam?'On a squad — leveling at full rate.':'Benched — catching up at '+Math.round(catchUpPct(h.level,hi)*100)+'% rate.')+(isFocus?' · ★ Focused (+100%)':'')+'</p></div>'+ 
-    '<div class="heroActionsV141"><button class="go" id="h_levelone"'+((!atCap&&(h.exp||0)>=cost)?'':' disabled style="filter:grayscale(.55);opacity:.75"')+'>Level Up</button><button class="go" id="h_levelmax" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Level to Max</button>'+ 
+    currencyWallet() + '<div class="heroActionsV141"><button class="go" id="h_levelone"'+((!atCap&&(h.exp||0)>=cost)?'':' disabled style="filter:grayscale(.55);opacity:.75"')+'>Level Up</button><button class="go" id="h_levelmax" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Level to Max</button>'+ 
       (rankIdx(h)>=RANKUP.length?'<button class="go wide" disabled style="filter:grayscale(.55);opacity:.75">Eternal Rank · MAX</button>':'<button class="go wide" id="h_rankup"'+(canRankUp(h)?' style="background:var(--gold);color:#1a1205"':' disabled style="filter:grayscale(.55);opacity:.75"')+'>Rank Up → '+RANKS[rankIdx(h)+1].name+' · '+rankReqText(RANKUP[rankIdx(h)])+'</button>')+ 
       '<button class="go wide" id="h_prestige"'+(canPrestige(h)?' style="background:linear-gradient(135deg,#ffb01f,#ff5d9e);color:#1a1205"':' disabled style="filter:grayscale(.55);opacity:.75"')+'>★ Begin New Cycle → ★'+(plv+1)+'</button></div>'+ 
     '<div class="heroPanelV141"><h4>Gear Loadout <span>score '+gearScore(h)+'</span></h4><p>Gear slots now live around the portrait. Use Auto-equip to quickly fit the best available pieces or Unequip all to transfer gear.</p><div class="heroUtilityV141" style="margin-top:10px"><button class="go" id="h_gear_auto" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">Auto-equip best</button><button class="go" id="h_gear_empty" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Unequip all</button></div><button class="go" id="h_gear" style="margin-top:8px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Open full gear manager</button></div>'+ 
@@ -5132,8 +5105,9 @@ function renderRoster(v){
       '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:12px;font-weight:800;font-family:Orbitron"><span style="color:#8bd0ff">◆ '+S.crystals+' crystals</span><span style="color:#f7c531">🎟 '+(S.summonTickets||0)+' tickets · '+(S.ticketShards||0)+'/10</span><span style="color:#ffd95a">⦿ '+S.gold+'</span><span style="color:#ffd95a">✦✦ '+S.sparks+'</span></div>'+
     '</div>'+
     '<div class="rosterstats"><span>♥ '+favN+' favorites</span><span>⬆ '+readyN+' ready</span><span>⚔ '+lineupN+' in lineups</span><span>★ '+wishN+' wishlist</span><span>✦ '+totalPrestigeStars()+' prestige</span></div>'+
-    '<button class="go" id="summonBtn" style="background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a;margin:0 0 8px">🎲 Summon a hero · '+randomCostText()+'</button>'+
+    '' + currencyWallet() + '<button class="go" id="summonBtn" style="background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a;margin:0 0 8px">🎲 Summon a hero · '+randomCostText()+'</button>'+
     '<button class="go" id="albumsBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin:0 0 13px">📚 Collection Albums · '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+'</button>'+
+    '<button class="go" id="autoEquipAllBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin:0 0 13px">⚙️ Auto-Equip ALL Heroes</button>'+
     rosterViewToggleHTML()+
     '<div class="rosterHint">Use <b>Cards</b> when browsing hero details. Use <b>Compact</b> when managing a large roster, checking upgrade badges, or moving fast.</div>'+
     '<input type="text" id="rosSearch" placeholder="🔎 Search name, archetype, passive, tag, domain…" value="'+esc(rosState.q)+'" style="width:100%;box-sizing:border-box;padding:11px 13px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;margin-bottom:10px">'+
@@ -5164,6 +5138,7 @@ function renderRoster(v){
   fillGrid();
   document.getElementById('summonBtn').onclick=()=>{ const h=randomUnlock(); if(h){ showReveal(h,{fromSummon:true}); } };
   document.getElementById('albumsBtn').onclick=openAlbumsSheet;
+  {const ae=document.getElementById('autoEquipAllBtn'); if(ae) ae.onclick=()=>{ const r=autoEquipAllOwned(); toast(r.totalChanged?('Auto-equipped '+r.totalChanged+' slot'+(r.totalChanged===1?'':'s')+' across '+r.heroesImproved+' hero'+(r.heroesImproved===1?'':'es')):('All '+r.count+' heroes already have their best gear')); rerender(); renderHUD(); recalcCollection(); save(); };}
   document.getElementById('rosterViewToggle').onclick=e=>{ const b=e.target.closest('button[data-mode]'); if(!b)return; rosterViewMode=b.dataset.mode; document.querySelectorAll('#rosterViewToggle button').forEach(x=>x.classList.toggle('on',x===b)); fillGrid(); };
   const sb=document.getElementById('rosSearch'); sb.oninput=()=>{ rosState.q=sb.value; fillGrid(); };
   document.getElementById('rosTabs').onclick=e=>{ const b=e.target.closest('button[data-t]'); if(!b)return; rosState.tab=b.dataset.t; renderRoster(v); };
@@ -7072,7 +7047,7 @@ openHeroSheet = function(id){
   const lcap=rankCap(h), atCap=h.level>=lcap, cost=TUNE.levelCost(h.level), xpPct=atCap?100:Math.min(100,(h.exp||0)/cost*100), plv=h.prestige||0, isFocus=S.focus===h.id;
   const a=heroArchetype(h), p=passiveOf(h), onTeam=inAnySquad(h.id), hi=Math.max(1,...S.heroes.map(x=>x.level||1));
   let html='<div class="heroChamberV159">'+v159HeroStage(h,img,name,color)+
-    '<div class="heroPrimaryActionsV159"><button class="go primaryBlue" id="h_levelone"'+((!atCap&&(h.exp||0)>=cost)?'':' disabled style="filter:grayscale(.55);opacity:.75"')+'>Level Up</button><button class="go" id="h_levelmax" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Level to Max</button>'+ 
+    currencyWallet() + '<div class="heroPrimaryActionsV159"><button class="go primaryBlue" id="h_levelone"'+((!atCap&&(h.exp||0)>=cost)?'':' disabled style="filter:grayscale(.55);opacity:.75"')+'>Level Up</button><button class="go" id="h_levelmax" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Level to Max</button>'+ 
       (rankIdx(h)>=RANKUP.length?'<button class="go wide" disabled style="filter:grayscale(.55);opacity:.75">Eternal Rank · MAX</button>':'<button class="go wide primaryGold" id="h_rankup"'+(canRankUp(h)?'':' disabled style="filter:grayscale(.55);opacity:.75"')+'>Rank Up → '+RANKS[rankIdx(h)+1].name+' · '+rankReqText(RANKUP[rankIdx(h)])+'</button>')+
       '<button class="go wide" id="h_prestige"'+(canPrestige(h)?' style="background:linear-gradient(135deg,#ffb01f,#ff5d9e);color:#1a1205"':' disabled style="filter:grayscale(.55);opacity:.75"')+'>★ Begin New Cycle → ★'+(plv+1)+'</button></div>'+ 
     '<div class="heroChamberPanelV159"><h4>Progress <span>'+(atCap?'Rank up to grow':'Next level')+'</span></h4><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:850;color:var(--muted);margin-bottom:6px"><span>'+(atCap?'Max level for '+RANKS[rankIdx(h)].name:'EXP to Lv '+(h.level+1))+'</span><span>'+(atCap?'banked '+Math.floor(h.exp||0):Math.floor(h.exp||0)+' / '+cost)+'</span></div><div class="xpbar"><i style="width:'+xpPct+'%"></i></div><p style="margin-top:8px">'+(onTeam?'On a squad — leveling at full rate.':'Benched — catching up at '+Math.round(catchUpPct(h.level,hi)*100)+'% rate.')+(isFocus?' · ★ Focused (+100%)':'')+'</p></div>'+ 
@@ -7295,7 +7270,7 @@ function v161RenderRoster(v){
   const ipOpts=['all'].concat(rosterIPs()), domainOpts=['all'].concat(DOMAINS.map(d=>d[0])), archOpts=['all'].concat(archetypeOptions());
   const opts=(arr,val,labeler)=>arr.map(x=>'<option value="'+esc(x)+'"'+(val===x?' selected':'')+'>'+(labeler?labeler(x):esc(x))+'</option>').join('');
   v.innerHTML=v161CollectionHeader(total,owned,readyN,lineupN,wishN,bonus,clPct,nextCP)+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px"><button class="go" id="summonBtn" style="background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a">🎲 Summon · '+randomCostText()+'</button><button class="go" id="albumsBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">📚 Albums · '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+'</button></div>'+    
+    '' + currencyWallet() + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px"><button class="go" id="summonBtn" style="background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a">🎲 Summon · '+randomCostText()+'</button><button class="go" id="albumsBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">📚 Albums · '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+'</button></div>'+    
     '<div class="v161FilterDock"><div class="v161Toolbar"><input type="text" id="rosSearch" placeholder="Search heroes, worlds, roles, domains…" value="'+esc(rosState.q)+'"><div class="v161ViewTog" id="v161ViewTog"><button data-v="grid" class="'+(rosState.view==='grid'?'on':'')+'">Grid</button><button data-v="cards" class="'+(rosState.view==='cards'?'on':'')+'">Cards</button><button data-v="list" class="'+(rosState.view==='list'?'on':'')+'">List</button></div></div>'+    
     '<div class="segs" id="rosTabs" style="margin-bottom:8px"><button data-t="owned" class="'+(rosState.tab==='owned'?'on':'')+'">Owned</button><button data-t="favorites" class="'+(rosState.tab==='favorites'?'on':'')+'">Favorites</button><button data-t="locked" class="'+(rosState.tab==='locked'?'on':'')+'">Locked</button><button data-t="all" class="'+(rosState.tab==='all'?'on':'')+'">All</button></div>'+    
     '<div class="v161Chips" id="rosQuick">'+[['all','All'],['favorites','♥ Faves'],['ready','⬆ Ready'],['lineup','⚔ Lineups'],['wishlist','★ Wishlist'],['recent','Recent'],['prestige','★ Prestige']].map(q=>'<button data-qk="'+q[0]+'" class="'+(rosState.quick===q[0]?'on':'')+'">'+q[1]+'</button>').join('')+'</div>'+    
