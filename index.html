@@ -2071,7 +2071,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=25;
-const APP_BUILD='v2.8.3';
+const APP_BUILD='v2.8.4';
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
@@ -6322,6 +6322,12 @@ function lq53InjectBattleStyles(){
     .arena .result.win{box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 46px rgba(55,214,122,.22)!important}.arena .result.lose{box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 46px rgba(255,93,108,.20)!important}
     .arena .result.win:after,.arena .result.lose:after{content:"";position:absolute;inset:-40%;pointer-events:none;background:conic-gradient(from 0deg,transparent,color-mix(in srgb,var(--accent) 14%,transparent),transparent,color-mix(in srgb,var(--accent2) 12%,transparent),transparent);animation:lq53ResultSpin 3.2s linear infinite;opacity:.55}.arena .result>*{position:relative;z-index:2}@keyframes lq53ResultSpin{to{transform:rotate(360deg)}}
     @media(prefers-reduced-motion:reduce){.arena.lq53Arena .vs-mid,.lq53ClashBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.unit.lq53Telegraph .face,.unit.lq53Heavy .face,.unit.lq53Support .face,.unit.lq53Tank .face,.arena .result.win:after,.arena .result.lose:after{animation:none!important}}
+    @media (max-width:600px){
+      .lq53HeroMoment{bottom:9%;font-size:9px;padding:5px 10px;letter-spacing:.3px;max-width:72vw;box-shadow:0 8px 22px rgba(0,0,0,.5)}
+      .lq53ScreenFlash{opacity:.36}
+      .lq53ImpactRing{width:48px;height:48px}
+      .lq53ClashBanner{font-size:13px;padding:7px 12px}
+    }
   `;
   document.head.appendChild(st);
 }
