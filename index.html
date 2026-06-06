@@ -2105,7 +2105,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=25;
-const APP_BUILD='v2.9.11';
+const APP_BUILD='v2.9.12';
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
@@ -4392,6 +4392,25 @@ function validateBackupData(data){
   if(!d.saveVersion) problems.push('Missing save version.');
   return {ok:!problems.length,problems,data:d};
 }
+function importDailiesFromFile(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json,.json';
+  inp.onchange=()=>{ const f=inp.files&&inp.files[0]; if(!f) return; const fr=new FileReader();
+    fr.onload=()=>{ try{
+      const parsed=JSON.parse(fr.result);
+      const list=Array.isArray(parsed)?parsed:(parsed&&Array.isArray(parsed.dailies)?parsed.dailies:null);
+      if(!list){ toast('That file has no dailies list'); return; }
+      if(!Array.isArray(S.dailies)) S.dailies=[];
+      const have=new Set(S.dailies.map(d=>String(d.title||'').toLowerCase().trim()));
+      let added=0;
+      list.forEach(spec=>{ if(!spec||!spec.title) return; const key=String(spec.title).toLowerCase().trim(); if(have.has(key)) return; S.dailies.push(makeStarterDaily({title:spec.title,freq:spec.freq||'daily',diff:spec.diff||'easy',domain:spec.domain||null},null)); have.add(key); added++; });
+      try{ if(typeof save==='function') save(); }catch(e){}
+      try{ if(typeof renderHUD==='function') renderHUD(); }catch(e){}
+      try{ if(typeof render==='function') render(); }catch(e){}
+      toast('Imported '+added+' dailies'+((list.length-added)>0?(' ('+(list.length-added)+' already present)'):''));
+    }catch(e){ toast('Could not read that dailies file'); } };
+    fr.readAsText(f); };
+  inp.click();
+}
 function importBackupFromFile(){
   const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json,.json';
   inp.onchange=()=>{ const f=inp.files[0]; if(!f)return; const fr=new FileReader();
@@ -4424,13 +4443,14 @@ async function showBackupCenter(){
   const auto=bak?new Date(bak.at).toLocaleString()+' · '+(bak.reason||'auto'):'No auto-backup yet';
   box.innerHTML='<div class="ico">🧰</div><h2>Backup Center</h2><p>Use this before GitHub releases, imports, major resets, and final V1 testing.</p>'+
     '<div class="backupBox"><div class="bh"><b>Current Save</b><span>'+bs.kb+' KB</span></div><div class="healthGrid"><div class="mini"><b style="color:#7dffb0">'+bs.owned+'</b><span>Owned</span></div><div class="mini"><b style="color:#8bd0ff">'+bs.dailies+'</b><span>Dailies</span></div><div class="mini"><b style="color:#ffd95a">'+bs.saveVersion+'</b><span>Save V</span></div></div><div class="healthRow ok"><div class="hs">✓</div><div><div class="ht">Last saved</div><div class="hm">'+fmtSaved(bs.lastSaved)+'</div></div></div><div class="healthRow '+(bak?'ok':'warn')+'"><div class="hs">'+(bak?'✓':'!')+'</div><div><div class="ht">Last auto-backup</div><div class="hm">'+esc(auto)+'</div></div></div></div>'+
-    '<div class="safetyGrid"><button id="bcDownload">⤓ Download full backup<br><span style="color:var(--muted);font-size:10px">Best before GitHub deploys</span></button><button id="bcCopy">⧉ Copy backup text<br><span style="color:var(--muted);font-size:10px">Emergency clipboard copy</span></button><button id="bcImport">⤒ Restore from file<br><span style="color:var(--muted);font-size:10px">Validates before import</span></button><button id="bcAuto">↩ Restore auto-backup<br><span style="color:var(--muted);font-size:10px">Undo recent reset/import</span></button><button id="bcHealth">🩺 Health check<br><span style="color:var(--muted);font-size:10px">Run diagnostics first</span></button><button id="bcClose">Close</button></div>';
+    '<div class="safetyGrid"><button id="bcDownload">⤓ Download full backup<br><span style="color:var(--muted);font-size:10px">Best before GitHub deploys</span></button><button id="bcCopy">⧉ Copy backup text<br><span style="color:var(--muted);font-size:10px">Emergency clipboard copy</span></button><button id="bcImport">⤒ Restore from file<br><span style="color:var(--muted);font-size:10px">Validates before import</span></button><button id="bcAuto">↩ Restore auto-backup<br><span style="color:var(--muted);font-size:10px">Undo recent reset/import</span></button><button id="bcHealth">🩺 Health check<br><span style="color:var(--muted);font-size:10px">Run diagnostics first</span></button><button id="bcImportDailies">⤤ Import dailies<br><span style="color:var(--muted);font-size:10px">Merge a dailies .json (keeps progress)</span></button><button id="bcClose">Close</button></div>';
   modal.classList.add('show');
   document.getElementById('bcDownload').onclick=()=>downloadBackupPackage('manual');
   document.getElementById('bcCopy').onclick=copyBackupText;
   document.getElementById('bcImport').onclick=importBackupFromFile;
   document.getElementById('bcAuto').onclick=restoreAutoBackup;
   document.getElementById('bcHealth').onclick=showHealthCheck;
+  document.getElementById('bcImportDailies').onclick=importDailiesFromFile;
   document.getElementById('bcClose').onclick=()=>modal.classList.remove('show');
 }
 function debugReportText(){
