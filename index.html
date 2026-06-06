@@ -36,15 +36,15 @@ button{font-family:'Rajdhani',sans-serif;cursor:pointer}
 /* HUD */
 .hud{position:sticky;top:0;z-index:20;margin:-14px -14px 8px;padding:16px 14px 10px;
   background:linear-gradient(180deg,var(--bg) 72%,transparent)}
-.hud-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hud-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .stage-badge{background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#000));
   border-radius:13px;padding:8px 12px;font-family:'Orbitron';font-weight:900;color:#fff;line-height:1;text-align:center;flex:0 0 auto}
 .stage-badge small{display:block;font-size:9px;font-weight:700;letter-spacing:2px;opacity:.85;margin-bottom:3px}
 .stage-badge b{font-size:20px}
-.res{display:flex;gap:6px;margin-bottom:8px}
-.res .r{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:6px 7px}
-.res .r .lab{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700}
-.res .r .val{font-family:'Orbitron';font-weight:700;font-size:15px;display:flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden}
+.res{display:flex;gap:6px;margin-bottom:6px}
+.res .r{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:4px 7px}
+.res .r .lab{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.res .r .val{font-family:'Orbitron';font-weight:700;font-size:14px;display:flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden}
 .res .charge .val{color:#5bd1ff}.res .exp .val{color:#b69bff}.res .gold .val{color:#ffcf5a}.res .dust .val{color:#5fe0c8}
 .gear{background:var(--panel);border:1px solid var(--line);color:var(--muted);width:40px;height:40px;border-radius:12px;font-size:18px;flex:0 0 auto}
 .rate{font-size:12px;color:var(--muted);font-weight:600;text-align:center;letter-spacing:.4px}
@@ -754,6 +754,24 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
   .arena.arenaEnded .result{background:#0a0e16!important;box-shadow:0 0 0 100vmax #07090f!important}
 }
 </style>
+<style id="overlaySafetyV292">
+  .toast:not(.show),.rewardpop:not(.show),.undoBar:not(.show){opacity:0!important;visibility:hidden!important;pointer-events:none!important;box-shadow:none!important}
+<style id="battleGridV299">
+/* ===== Portrait-forward battle grid: both teams + hp bars on one screen ===== */
+.arena.show{flex-direction:column!important;overflow:hidden!important}
+.arena .side{flex:0 1 auto!important;flex-direction:row!important;flex-wrap:wrap;justify-content:center;align-content:flex-start;gap:6px!important;padding:2px}
+.arena .side .unit,.arena .side.enemy .unit,.arena .side.player .unit{flex:0 0 auto!important;flex-direction:column!important;align-items:center!important;text-align:center!important;width:clamp(58px,20vw,88px);gap:4px!important}
+.arena .unit .face{width:clamp(52px,18vw,80px)!important;height:clamp(52px,18vw,80px)!important;border-radius:16px;font-size:24px}
+.arena .unit .info{flex:0 0 auto!important;width:100%;min-width:0}
+.arena .unit .nm{font-size:10.5px!important;line-height:1.1;font-weight:900;white-space:normal;max-height:2.2em;overflow:hidden}
+.arena .unit .info>div:nth-child(2){display:none!important}
+.arena .unit .enemyRoleChip{display:none!important}
+.arena .unit .hpbar{height:7px!important;margin-top:3px!important;width:100%}
+.arena .vs-mid{font-size:15px!important;margin:1px 0!important}
+.arena .vs-head{font-size:11px!important;margin-bottom:3px!important}
+.arena .arena-sub{margin:-3px 0 3px!important}
+.arena .battle-logline{margin-top:3px!important;min-height:14px}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -863,8 +881,8 @@ const TUNE={
   liveTickMs:1500,                       // how often idle income ticks while open
   roleBase:{Tank:{hp:320,atk:18},DPS:{hp:150,atk:44},Support:{hp:200,atk:28}},
   heroScale:lvl=>1+0.18*(lvl-1),
-  enemyHpBase:120, enemyAtkBase:16, enemyGrowth:1.22,
-  towerHpBase:170, towerAtkBase:23, towerGrowth:1.27,
+  enemyHpBase:120, enemyAtkBase:16, enemyGrowth:1.10,
+  towerHpBase:170, towerAtkBase:23, towerGrowth:1.13,
   towerMiniEvery:10, towerMajorEvery:50,
   towerMiniHpMult:5, towerMiniAtkMult:2.6, towerMajorHpMult:9, towerMajorAtkMult:3.4,
   enemyCount:s=>s>=5?4:3,
@@ -883,7 +901,8 @@ const SLOTICON={weapon:'⚔',armor:'🛡',boots:'🥾',relic:'🔮'};
 const SLOTNAME={weapon:'Weapon',armor:'Armor',boots:'Boots',relic:'Relic'};
 const TASKREWARD={easy:{g:5,d:2,drop:0.06,cores:0},med:{g:15,d:5,drop:0.10,cores:1},hard:{g:30,d:10,drop:0.15,cores:2}};
 const RANKS=[{name:'Recruit',cap:10},{name:'Veteran',cap:20},{name:'Elite',cap:30},{name:'Champion',cap:40},{name:'Mythic',cap:50},{name:'Ascended',cap:60},{name:'Legendary',cap:75},{name:'Eternal',cap:100}];
-const RANKUP=[{cores:10,gold:100},{cores:25,gold:250},{cores:50,gold:500},{cores:100,boss:1},{cores:150,boss:2},{cores:250,boss:3},{cores:400,boss:5,sparks:1}];
+const RANKUP=[{cores:8,gold:75},{cores:18,gold:175},{cores:35,gold:350},{cores:75,boss:1},{cores:150,boss:2},{cores:250,boss:3},{cores:400,boss:5,sparks:1}];
+function convertBossFrags(){ if(typeof S.bossFrags!=='number')S.bossFrags=0; while(S.bossFrags>=10){ S.bossFrags-=10; S.bossCores=(S.bossCores||0)+1; } }
 function rankIdx(h){ return h.rank||0; }
 function rankCap(h){ return RANKS[rankIdx(h)].cap; }
 function rankMult(h){ return 1+rankIdx(h)*0.08; }
@@ -899,6 +918,7 @@ function walletHTML(extra){ const l=typeof ensureChargeLedger==='function'?ensur
     ['🎟','Tickets',(S.summonTickets||0)+' · '+(S.ticketShards||0)+'/10','#f7c531'],
     ['◈','Hero Cores',S.heroCores||0,'#5fe0c8'],
     ['◆','Boss Cores',S.bossCores||0,'#c08bff'],
+    ['◆½','Boss Frags',(S.bossFrags||0)+'/10','#c8a0ff'],
     ['❖','Dust',S.dust||0,'#7ee787'],
     ['◇','Stones',S.stones||0,'#cdbcff'],
     ['✦✦','Sparks',S.sparks||0,'#ffd95a']
@@ -2085,7 +2105,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=25;
-const APP_BUILD='v2.9.1';
+const APP_BUILD='v2.9.11';
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
@@ -2136,6 +2156,8 @@ function migrate(){
   if(typeof S.dust!=='number') S.dust=0;
   if(typeof S.heroCores!=='number') S.heroCores=0;
   if(typeof S.bossCores!=='number') S.bossCores=0;
+  if(typeof S.bossFrags!=='number') S.bossFrags=0;
+  if(!S._catchupV2911){ ['marvel__vision','pokemon__entei','pokemon__lucario','a_court_of_thorns_and_roses__feyre_archeron'].forEach(function(id){ var hh=(S.heroes||[]).find(function(x){return x&&x.id===id;}); if(hh&&!hh.owned){ hh.owned=true; if(!hh.level)hh.level=1; } }); S._catchupV2911=true; }
   if(typeof S.sparks!=='number') S.sparks=0;
   if(typeof S.stones!=='number') S.stones=0;
   if(typeof S.tower!=='number') S.tower=1;
@@ -2483,11 +2505,11 @@ function growthCardHTML(icon,title,tag,body,summary,buttonId,buttonText){ return
 
 
 function nextChestInfo(){
-  const W=ensureWeek(), pct=W.done/weekPossible()*100;
+  const W=ensureWeek(), pct=(W.pts||0);
   const n=CHESTS.find(c=>pct<c.p && !W.claimed[c.p]);
   const claim=CHESTS.find(c=>pct>=c.p && !W.claimed[c.p]);
   if(claim) return {ready:true,name:claim.name,p:claim.p,need:0,pct};
-  if(n) return {ready:false,name:n.name,p:n.p,need:Math.max(1,Math.ceil((n.p/100)*weekPossible()-W.done)),pct};
+  if(n) return {ready:false,name:n.name,p:n.p,need:Math.max(1,(n.p)-(W.pts||0)),pct};
   return {ready:false,name:'Complete',p:100,need:0,pct};
 }
 function nextRaidInfo(){
@@ -2643,11 +2665,11 @@ function defeatDramaHTML(){
 
 /* ----- TASKS ----- */
 function renderTasks(v){
-  const W=ensureWeek(), poss=weekPossible(), wpct=Math.min(100,W.done/poss*100), nextC=CHESTS.find(c=>!W.claimed[c.p]), earned=CHESTS.filter(c=>W.claimed[c.p]).length;
+  const W=ensureWeek(), poss=weekPossible(), wpts=(W.pts||0), wpct=Math.min(100,wpts), nextC=CHESTS.find(c=>!W.claimed[c.p]), earned=CHESTS.filter(c=>W.claimed[c.p]).length;
   const chest='<div class="stagecard" style="border-color:#ffd95a55;margin-bottom:14px">'+
-    '<h3 style="display:flex;justify-content:space-between"><span>📦 Weekly Chest</span><span style="color:#ffd95a">'+wpct.toFixed(0)+'%</span></h3>'+
+    '<h3 style="display:flex;justify-content:space-between"><span>📦 Weekly Chest</span><span style="color:#ffd95a">'+wpts+' pts</span></h3>'+
     '<div class="dummybar" style="height:12px;margin:8px 0"><i style="width:'+wpct+'%;background:linear-gradient(90deg,#37c46e,#ffd95a)"></i></div>'+
-    '<p style="margin:0 0 7px">'+(nextC?'Next: '+nextC.name+' at '+nextC.p+'%':'All 5 chests earned!')+' · '+earned+'/5 · Week resets Monday 12:00 AM · '+weekEndsIn()+' left</p>'+
+    '<p style="margin:0 0 7px">'+(nextC?'Next: '+nextC.name+' at '+nextC.p+' pts':'All 5 chests earned!')+' · '+earned+'/5 · Week resets Monday 12:00 AM · '+weekEndsIn()+' left</p>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+CHESTS.map(c=>'<span style="font-size:11px;font-weight:800;font-family:Orbitron;color:'+(W.claimed[c.p]?'#ffd95a':'var(--muted)')+'">'+(W.claimed[c.p]?'◆':'◇')+c.p+'</span>').join('')+'</div>'+
     '</div>';
   v.innerHTML=
@@ -2771,7 +2793,7 @@ function onTaskClick(e){
       const pk=periodKey(d.freq), extraMsgs=[]; let bu=[], tu=[];
       if(d.lootedPk!==pk){
         msg+=taskLoot(d.diff,d.domain); trackLifeAction(d.domain,d.diff,'daily'); bu=gainBond(d.domain,BONDXP[d.diff]||0); tu=unlockTitles(d.domain,d.diff); gainBond._last=bu; gainBond._titles=tu; msg+=bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); d.lootedPk=pk;
-        if(d.freq==='daily'){ ensureWeek().done++; const cm=checkChests(); if(cm.length){ extraMsgs.push(...cm); msg+=' · '+cm.join(' · '); } }
+        if(d.freq==='daily'){ var _W=ensureWeek(); _W.done++; _W.pts=(_W.pts||0)+((d.diff==='hard')?3:((d.diff==='med')?2:1)); const cm=checkChests(); if(cm.length){ extraMsgs.push(...cm); msg+=' · '+cm.join(' · '); } }
       }
       msg+=checkStreakMilestone(d);
       const blocked=majorRewardBlocked(lastTaskLoot,extraMsgs);
@@ -3146,15 +3168,15 @@ function dealRaid(diff,domain){ const R=ensureRaid(); const boss=currentBoss(); 
 /* ===== WEEKLY CHEST (consistency) ===== */
 const CHESTS=[{p:25,name:'Small'},{p:50,name:'Medium'},{p:75,name:'Large'},{p:90,name:'Epic'},{p:100,name:'Legendary'}];
 function weekPossible(){ return Math.max(1,(S.dailies||[]).filter(d=>d.freq==='daily').length*7); }
-function ensureWeek(){ if(!S.week || S.week.wk!==periodKey('weekly')) S.week={wk:periodKey('weekly'),done:0,claimed:{}}; return S.week; }
+function ensureWeek(){ if(!S.week || S.week.wk!==periodKey('weekly')) S.week={wk:periodKey('weekly'),done:0,pts:0,claimed:{}}; if(typeof S.week.pts!=='number')S.week.pts=0; return S.week; }
 function grantChest(c){ const m=S.maxCleared||0, rs=()=>SLOTS[Math.floor(Math.random()*4)];
-  if(c.p===25){ const g=60+m*3; S.gold+=g; gainExp(150); S.dust+=40; S.crystals+=10; return 'Small Chest +10◆ +'+g+'⦿ +40❖'; }
-  if(c.p===50){ const g=120+m*4, hc=6+Math.floor(m/4); S.gold+=g; gainExp(250); S.dust+=80; S.heroCores+=hc; S.crystals+=20; return 'Medium Chest +20◆ +'+g+'⦿ +'+hc+'◈'; }
+  if(c.p===25){ const g=60+m*3; S.gold+=g; gainExp(150); S.dust+=40; S.crystals+=10; S.bossFrags=(S.bossFrags||0)+3; if(typeof convertBossFrags==='function')convertBossFrags(); return 'Small Chest +10◆ +'+g+'⦿ +40❖'; }
+  if(c.p===50){ const g=120+m*4, hc=6+Math.floor(m/4); S.gold+=g; gainExp(250); S.dust+=80; S.heroCores+=hc; S.crystals+=20; S.bossFrags=(S.bossFrags||0)+5; if(typeof convertBossFrags==='function')convertBossFrags(); return 'Medium Chest +20◆ +'+g+'⦿ +'+hc+'◈'; }
   if(c.p===75){ const hc=10+Math.floor(m/3); S.heroCores+=hc; S.crystals+=30; grantGear(newGear(rs(),rollRarity(m+12))); let s='Large Chest +30◆ +'+hc+'◈ +gear'; if(Math.random()<0.5){S.bossCores+=1;s+=' +1◆';} return s; }
   if(c.p===90){ S.bossCores+=1; S.crystals+=50; grantTicket(1); grantGear(newGear(rs(),'epic')); let s='Epic Chest +50◆ +1🎟 +Epic gear'; if(Math.random()<0.5){S.stones+=1;s+=' +1◇';} if(Math.random()<0.4){S.sparks+=1;s+=' +1✦✦';} return s; }
   if(c.p===100){ S.sparks+=1; S.stones+=1; S.crystals+=80; grantTicket(1); grantGear(newGear(rs(),'legendary')); return 'Legendary Chest +80◆ +1🎟 +1✦✦ +1◇ +Legendary gear'; }
   return ''; }
-function checkChests(){ const W=ensureWeek(), pct=W.done/weekPossible()*100, msgs=[];
+function checkChests(){ const W=ensureWeek(), pct=(W.pts||0), msgs=[];
   CHESTS.forEach(c=>{ if(pct>=c.p && !W.claimed[c.p]){ W.claimed[c.p]=true; msgs.push(grantChest(c)); } });
   return msgs; }
 
@@ -4568,6 +4590,7 @@ document.getElementById('importBackup').onclick=importBackupFromFile;
 
 /* ===== nav + helpers ===== */
 document.querySelector('.nav').onclick=e=>{const b=e.target.closest('button');if(!b)return;view=b.dataset.view;
+  try{if(typeof clearTransientUI==='function')clearTransientUI();}catch(_){}
   document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x===b)); render();};
 function segPick(elId,cb,attr){ attr=attr||'d'; const el=document.getElementById(elId); if(!el)return;
   el.onclick=e=>{const b=e.target.closest('button');if(!b)return;cb(b.dataset[attr]);el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));}; }
@@ -4811,16 +4834,14 @@ function ensureGearProgression(){
 }
 function gearStageBand(stage){
   const s=Math.max(1,Math.floor(stage||1));
-  if(s<15) return {label:'Stages 1-14', next:15, weights:{common:.70,rare:.30,epic:0,legendary:0,mythic:0,eternal:0}, note:'Starter gear: commons and rares so every slot can fill quickly.'};
-  if(s<25) return {label:'Stages 15-24', next:25, weights:{common:.60,rare:.38,epic:.02,legendary:0,mythic:0,eternal:0}, note:'Epic pieces begin very rarely.'};
-  if(s<50) return {label:'Stages 25-49', next:50, weights:{common:.48,rare:.42,epic:.10,legendary:0,mythic:0,eternal:0}, note:'Rares become common; Epics become realistic chase drops.'};
-  if(s<75) return {label:'Stages 50-74', next:75, weights:{common:.30,rare:.48,epic:.18,legendary:.04,mythic:0,eternal:0}, note:'Legendary gear enters the pool.'};
-  if(s<100) return {label:'Stages 75-99', next:100, weights:{common:.20,rare:.43,epic:.28,legendary:.09,mythic:0,eternal:0}, note:'Epic/Legendary rates improve.'};
-  if(s<125) return {label:'Stages 100-124', next:125, weights:{common:.12,rare:.36,epic:.34,legendary:.15,mythic:.03,eternal:0}, note:'Mythic gear enters the pool.'};
-  if(s<150) return {label:'Stages 125-149', next:150, weights:{common:.08,rare:.30,epic:.38,legendary:.21,mythic:.03,eternal:0}, note:'Mythic remains a rare 3% chase.'};
-  if(s<175) return {label:'Stages 150-174', next:175, weights:{common:.05,rare:.24,epic:.38,legendary:.26,mythic:.06,eternal:.01}, note:'Eternal gear enters very rarely.'};
-  if(s<200) return {label:'Stages 175-199', next:200, weights:{common:.03,rare:.20,epic:.36,legendary:.31,mythic:.085,eternal:.015}, note:'High-end drops become more realistic.'};
-  return {label:'Stages 200+', next:null, weights:{common:.02,rare:.16,epic:.34,legendary:.34,mythic:.11,eternal:.03}, note:'Endgame ladder: Legendary+ becomes the main chase.'};
+  if(s<10) return {label:'Stages 1-9', next:10, weights:{common:.55,rare:.36,epic:.08,legendary:.01,mythic:0,eternal:0}, note:'Epics common early; first Legendary glimmers.'};
+  if(s<25) return {label:'Stages 10-24', next:25, weights:{common:.38,rare:.40,epic:.16,legendary:.05,mythic:.01,eternal:0}, note:'Legendary realistic; Mythic glimmers.'};
+  if(s<50) return {label:'Stages 25-49', next:50, weights:{common:.24,rare:.38,epic:.24,legendary:.11,mythic:.03,eternal:0}, note:'Mythic enters the pool.'};
+  if(s<75) return {label:'Stages 50-74', next:75, weights:{common:.16,rare:.34,epic:.27,legendary:.16,mythic:.06,eternal:.01}, note:'Eternal glimmers; Mythic realistic.'};
+  if(s<100) return {label:'Stages 75-99', next:100, weights:{common:.10,rare:.28,epic:.30,legendary:.21,mythic:.09,eternal:.02}, note:'Eternal becomes a real chase.'};
+  if(s<150) return {label:'Stages 100-149', next:150, weights:{common:.06,rare:.22,epic:.31,legendary:.26,mythic:.12,eternal:.03}, note:'High-end becomes the main pool.'};
+  if(s<200) return {label:'Stages 150-199', next:200, weights:{common:.03,rare:.16,epic:.30,legendary:.30,mythic:.15,eternal:.06}, note:'Endgame rarities dominate.'};
+  return {label:'Stages 200+', next:null, weights:{common:.02,rare:.12,epic:.27,legendary:.32,mythic:.18,eternal:.09}, note:'Endgame ladder: Mythic/Eternal main chase.'};
 }
 function gearLadder(stage){
   const b=gearStageBand(stage||1), w=b.weights;
@@ -4931,7 +4952,7 @@ function gearProgressSummary(){
   return '<div class="safehint"><b>Gear Ladder</b><br>'+esc(gearLadderText(stage))+'<br><b>Drop feel:</b> '+esc(gearForecastText())+'<br><b>Coverage:</b> '+esc(gearCoverageText())+'<br><b>Pity:</b> Tasks '+(gp.taskNoDrop||0)+' dry · Campaign '+(gp.campaignNoDrop||0)+' dry.<br><b>Total drops:</b> '+(gp.totalDrops||0)+' · '+esc(counts)+'<br>'+esc(b.note)+'<br>'+esc(next)+'</div>';
 }
 function taskLoot(diff,domain){
-  const r=TASKREWARD[diff]||TASKREWARD.med; S.gold+=r.g; S.dust+=r.d; S.heroCores+=(r.cores||0); const cr=CRYSTALS[diff]||CRYSTALS.med; S.crystals+=cr;
+  const r=TASKREWARD[diff]||TASKREWARD.med; S.gold+=r.g; S.dust+=r.d; S.heroCores+=(r.cores||0); if(diff==='easy'&&Math.random()<0.30) S.heroCores+=1; S.bossFrags=(S.bossFrags||0)+(diff==='hard'?2:(diff==='med'?1:0)); if(typeof convertBossFrags==='function') convertBossFrags(); const cr=CRYSTALS[diff]||CRYSTALS.med; S.crystals+=cr;
   const sb=strategyLootBonus(domain,diff); if(sb.crystals){S.crystals+=sb.crystals;} if(sb.gold){S.gold+=sb.gold;} if(sb.dust){S.dust+=sb.dust;}
   lastTaskLoot={diff,domain,crystals:cr+(sb.crystals||0),gold:r.g+(sb.gold||0),dust:r.d+(sb.dust||0),cores:r.cores||0,gear:null,shard:false,raid:null,exp:TASKEXP[diff]||TASKEXP.med,msgs:[],strategy:sb};
   let s=' · +'+cr+'◆ +'+r.g+'⦿ +'+r.d+'❖'+(r.cores?' +'+r.cores+'◈':'')+(sb.labels&&sb.labels.length?' · Cards '+sb.labels.join(' · '):'');
@@ -5823,7 +5844,7 @@ function v1481InjectUiCleanup(){
     .sheet .go,.sheet .ghost,.battleHubCard,.growthModeCard{min-height:44px}
     .modeSub,.slotsub,.psub,.archline,.passline{overflow-wrap:anywhere}
     @media(max-width:430px){
-      .battleHubGrid,.growthModeGrid{grid-template-columns:1fr!important}
+      .battleHubGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px}.growthModeGrid{grid-template-columns:1fr!important}.battleHubCard{min-height:0;padding:8px 7px}.battleHubCard .modeTop{margin-bottom:5px;gap:4px}.battleHubCard .modeIcon{font-size:17px}.battleHubCard .modeTitle{font-size:11px;letter-spacing:.2px;line-height:1.1}.battleHubCard .modeMeta{font-size:8px;letter-spacing:.3px;line-height:1.1}.battleHubCard .modeStat{font-size:13px;margin-top:4px}.battleHubCard .modeSub{font-size:8.5px;min-height:22px;margin-top:2px;line-height:1.15}.battleHubCard .progressTiny{height:6px;margin-top:5px}.battleHubCard .modePill{font-size:7.5px;padding:3px 5px;margin-top:6px;letter-spacing:.15px;line-height:1.12;text-align:center;white-space:normal}
       .battleWorld{padding:12px!important;border-radius:16px!important}
       .pathNode{min-width:76px!important}
       .battleWorldStats .bws{padding:8px!important}
@@ -7249,13 +7270,13 @@ function v161InjectStyles(){
     .v161Meta{position:relative;z-index:2;padding:5px 8px 0;display:flex;justify-content:center;gap:4px;flex-wrap:wrap}.v161Meta span{font-size:8px;font-family:Orbitron;font-weight:950;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.055);border-radius:999px;padding:2px 5px;color:var(--muted);white-space:nowrap}
     .v161Stats{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:7px 8px 8px}.v161Stats div{background:rgba(4,8,17,.62);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:5px 4px;text-align:center;min-width:0}.v161Stats b{display:block;font-family:Orbitron;font-size:10px;color:#8bd0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v161Stats span{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.45px;color:var(--muted);font-weight:900;margin-top:1px}
     .v161Squads{position:absolute;left:8px;top:42px;z-index:6;font-size:13px;display:flex;flex-direction:column;gap:2px}.v161Prestige{position:absolute;right:8px;bottom:40px;z-index:6;background:#050811d8;border:1px solid #ffd95a55;border-radius:999px;padding:2px 6px;color:#ffd95a;font-family:Orbitron;font-size:8px;font-weight:1000}
-    .v161Grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.v161Grid.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.v161Grid.list{grid-template-columns:1fr}.v161Grid.list .v161RosterHero{min-height:112px;display:grid;grid-template-columns:92px 1fr;align-items:center}.v161Grid.list .v161Portrait{margin:9px;width:74px;height:74px}.v161Grid.list .v161Name{text-align:left;padding:0 9px}.v161Grid.list .v161Meta{justify-content:flex-start}.v161Grid.list .v161Stats{grid-template-columns:repeat(4,1fr);padding-right:10px}.v161Grid.list .v161TopRight{right:9px}.v161Grid.list .v161Stars{font-size:7px;left:6px;right:6px}
+    .v161Grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.v161Grid.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.v161Grid.list{grid-template-columns:1fr}.v161Grid.list .v161RosterHero{min-height:112px;display:grid;grid-template-columns:92px 1fr;align-items:center}.v161Grid.list .v161Portrait{margin:9px;width:74px;height:74px}.v161Grid.list .v161Name{text-align:left;padding:0 9px}.v161Grid.list .v161Meta{justify-content:flex-start}.v161Grid.list .v161Stats{grid-template-columns:repeat(4,1fr);padding-right:10px}.v161Grid.list .v161TopRight{right:9px}.v161Grid.list .v161Stars{font-size:7px;left:6px;right:6px}
     .v161CollectionHero{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent) 22%,var(--line));border-radius:18px;padding:14px;background:linear-gradient(135deg,color-mix(in srgb,var(--panel) 92%,#050811),color-mix(in srgb,var(--panel2) 88%,#050811));box-shadow:0 18px 42px rgba(0,0,0,.28);margin-bottom:12px}.v161CollectionHero:before{content:"";position:absolute;inset:-25%;background:radial-gradient(circle at 12% 15%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 34%),radial-gradient(circle at 90% 10%,color-mix(in srgb,var(--accent2) 14%,transparent),transparent 32%);pointer-events:none}.v161CollectionHero>*{position:relative;z-index:2}
     .v161CollectionTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.v161CollectionTop h2{margin:0;font-family:Orbitron;font-size:20px;letter-spacing:1px}.v161CollectionTop .owned{font-family:Orbitron;color:#8bd0ff;font-weight:1000;font-size:13px;white-space:nowrap}.v161CPRow{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0 0}.v161CPRow div{background:rgba(4,8,17,.58);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:8px;text-align:center}.v161CPRow b{display:block;font-family:Orbitron;color:#ffd95a;font-size:12px}.v161CPRow span{display:block;font-size:9px;text-transform:uppercase;color:var(--muted);font-weight:900;letter-spacing:.45px;margin-top:2px}
     .v161Toolbar{display:grid;grid-template-columns:1fr auto;gap:8px;margin:10px 0}.v161Toolbar input{width:100%;box-sizing:border-box;padding:11px 13px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:800}.v161ViewTog{display:flex;gap:5px}.v161ViewTog button{min-width:42px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-family:Orbitron;font-size:11px;font-weight:1000;padding:0 9px}.v161ViewTog button.on{color:#05131a;background:linear-gradient(135deg,#36e0e6,#8bd0ff);border-color:#8bd0ff}
     .v161FilterDock{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,var(--bg) 84%,transparent);padding:2px 0 8px;margin-bottom:4px;backdrop-filter:blur(10px)}.v161Chips{display:flex;gap:6px;overflow:auto;padding-bottom:4px}.v161Chips button{flex:0 0 auto;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-weight:950;font-size:11px;padding:7px 10px}.v161Chips button.on{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,var(--panel2)),color-mix(in srgb,var(--accent2) 18%,var(--panel2)));color:var(--ink);border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}.v161Selects{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:7px}.v161Selects select{min-width:0;padding:9px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800;font-size:12px}.v161Count{display:flex;justify-content:space-between;align-items:center;margin:8px 1px 10px;color:var(--muted);font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.45px}
     .v161AddHero{min-height:202px;border:1px dashed color-mix(in srgb,var(--accent) 32%,var(--line));border-radius:18px;display:grid;place-items:center;color:var(--muted);font-weight:950;text-align:center;background:rgba(255,255,255,.025)}.v161AddHero span{display:block;font-size:32px;color:var(--accent);margin-bottom:3px}
-    @media(max-width:430px){.v161Grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.v161RosterHero{min-height:178px;border-radius:15px}.v161Portrait{margin:7px 7px 5px;border-radius:13px}.v161Name{font-size:12px}.v161Meta{padding:4px 5px 0;gap:3px}.v161Meta span{font-size:7px;padding:2px 4px}.v161Stats{gap:4px;padding:6px}.v161Stats b{font-size:9px}.v161Stats span{font-size:7px}.v161CPRow{grid-template-columns:repeat(3,1fr)}.v161Selects{grid-template-columns:1fr 1fr}.v161Grid.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.v161Grid.list .v161Stats{grid-template-columns:1fr 1fr}}
+    @media(max-width:430px){.v161Grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.v161RosterHero{min-height:178px;border-radius:15px}.v161Portrait{margin:7px 7px 5px;border-radius:13px}.v161Name{font-size:12px}.v161Meta{padding:4px 5px 0;gap:3px}.v161Meta span{font-size:7px;padding:2px 4px}.v161Stats{gap:4px;padding:6px}.v161Stats b{font-size:9px}.v161Stats span{font-size:7px}.v161CPRow{grid-template-columns:repeat(3,1fr)}.v161Selects{grid-template-columns:1fr 1fr}.v161Grid.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.v161Grid.list .v161Stats{grid-template-columns:1fr 1fr}}
   `;
   document.head.appendChild(st);
 }
@@ -7504,7 +7525,7 @@ function v163InjectStyles(){
     .v163RoomTrialNudge h3{margin:0 0 6px;font-size:14px;display:flex;justify-content:space-between;gap:8px;align-items:baseline}.v163RoomTrialNudge h3 span:last-child{font-family:Orbitron;color:#ffd95a;font-size:10px;text-transform:uppercase;letter-spacing:.7px}
     .v163RoomTrialNudge p{margin:0;color:var(--muted);font-size:12px;font-weight:800;line-height:1.35}.v163RoomTrialNudge .lifeactions{margin-top:9px}
     .battleHub.v163 .battleHubGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
-    @media(max-width:520px){.battleHub.v163 .battleHubGrid{grid-template-columns:1fr}}
+    @media(max-width:520px){.battleHub.v163 .battleHubGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}}
     .v163QuietNote{border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:12px;padding:10px;color:var(--muted);font-size:12px;font-weight:850;line-height:1.35;margin:9px 0;text-align:left}.v163QuietNote b{color:var(--ink)}
   `;
   document.head.appendChild(st);
@@ -7701,9 +7722,9 @@ function v165ApplyTuning(){
     TUNE.bossHpMult=4.05;
     TUNE.bossAtkMult=2.22;
     TUNE.towerGrowth=1.255;
-    if(TASKREWARD.easy){ TASKREWARD.easy.g=6; TASKREWARD.easy.d=2; TASKREWARD.easy.drop=0.07; }
-    if(TASKREWARD.med){ TASKREWARD.med.g=16; TASKREWARD.med.d=6; TASKREWARD.med.drop=0.11; TASKREWARD.med.cores=1; }
-    if(TASKREWARD.hard){ TASKREWARD.hard.g=36; TASKREWARD.hard.d=13; TASKREWARD.hard.drop=0.17; TASKREWARD.hard.cores=3; }
+    if(TASKREWARD.easy){ TASKREWARD.easy.g=12; TASKREWARD.easy.d=4; TASKREWARD.easy.drop=0.21; TASKREWARD.easy.cores=0; }
+    if(TASKREWARD.med){ TASKREWARD.med.g=32; TASKREWARD.med.d=12; TASKREWARD.med.drop=0.33; TASKREWARD.med.cores=2; }
+    if(TASKREWARD.hard){ TASKREWARD.hard.g=72; TASKREWARD.hard.d=26; TASKREWARD.hard.drop=0.51; TASKREWARD.hard.cores=4; }
   }catch(e){}
 }
 function v165AllGearSlotsOwned(){
@@ -8474,7 +8495,7 @@ function v171InjectStyles(){
     .v171Orb{position:fixed;width:10px;height:10px;border-radius:99px;background:currentColor;color:var(--orbColor,#8bd0ff);box-shadow:0 0 16px currentColor;animation:v171Orb 1.15s ease-out forwards}.v171MeaningFlash{position:fixed;left:50%;bottom:118px;transform:translateX(-50%);z-index:122;width:min(340px,calc(100vw - 32px));text-align:center;color:#fff;font-size:13px;font-weight:900;text-shadow:0 2px 14px #000;background:rgba(0,0,0,.46);border:1px solid rgba(255,255,255,.13);border-radius:999px;padding:8px 12px;animation:v171Meaning 2.15s ease both;pointer-events:none}@keyframes v171Meaning{0%{opacity:0;translate:0 14px}18%,78%{opacity:1;translate:0 0}100%{opacity:0;translate:0 10px}}@keyframes v171Orb{0%{opacity:0;transform:translate(var(--x),var(--y)) scale(.4)}12%{opacity:1}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
     .rewardpop{opacity:.88}.rewardpop.show{transform:translateX(-50%) translateY(8px) scale(.98)}body.premium-focus .rewardpop.show{opacity:.38;filter:saturate(.8);bottom:104px}.toast{font-size:12px;max-width:min(320px,calc(100vw - 40px));opacity:.92}body.premium-focus .toast{opacity:.72;transform:translateX(-50%) translateY(8px) scale(.96)}
     .v171Settings{border:1px solid var(--line);background:var(--panel2);border-radius:14px;padding:11px;margin:10px 0}.v171Settings b{display:block;font-family:Orbitron;font-size:12px;margin-bottom:7px;color:var(--ink)}.v171Settings .row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}.v171Settings button{border-radius:12px;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:9px;font-weight:950}.v171Settings button.on{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent)}.v171Settings small{display:block;color:var(--muted);font-weight:750;line-height:1.35;margin-top:4px}
-    @media(max-width:430px){.v171LivingStage{min-height:430px}.v171QuestTask{font-size:24px;max-width:100%}.v171QuestLine{max-width:100%}.v171SquadStage{width:100%;max-width:none;right:0;bottom:112px;min-height:92px;opacity:.94}.v171HeroToken{width:58px}.v171HeroFace{width:50px;height:50px;border-radius:16px}.v171IdleHUD{left:12px;right:12px;bottom:142px;max-width:none}.v171EnergyRail{bottom:88px}.v171ActionDock{grid-template-columns:1fr;gap:7px}.v171ActionDock button{min-height:42px}.v171StagePad{padding-bottom:172px}.v171Settings .row{grid-template-columns:1fr}}
+    @media(max-width:430px){.v171LivingStage{min-height:430px}.v171QuestTask{font-size:24px;max-width:100%}.v171QuestLine{max-width:100%}.v171SquadStage{width:100%;max-width:none;right:0;bottom:112px;min-height:92px;opacity:.94}.v171HeroToken{width:58px}.v171HeroFace{width:50px;height:50px;border-radius:16px}.v171IdleHUD{display:none}.v171EnergyRail{bottom:88px}.v171ActionDock{grid-template-columns:1.5fr 1fr 1fr;gap:7px}.v171ActionDock button{min-height:46px;font-size:13px;padding:0 4px;white-space:nowrap}.v171StagePad{padding-bottom:172px}.v171Settings .row{grid-template-columns:1fr}}
     @media(prefers-reduced-motion:reduce){.v171HeroToken,.v171HeroPulse,.v171EnergyDot,.v171WorldReward,.v171Orb,.v171MeaningFlash{animation:none!important}.v171EnergyDot{display:none}}
   `;
   document.head.appendChild(st);
@@ -8601,6 +8622,22 @@ const openSettingsBtn_v171=document.getElementById('openSettings');
 if(openSettingsBtn_v171){ const old171=openSettingsBtn_v171.onclick; openSettingsBtn_v171.onclick=function(e){ if(old171) old171.call(this,e); setTimeout(v171InjectSettingsPanel,75); }; }
 document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,capture:true});
 (function(){ v171InjectStyles(); v171EnsureSettings(); })();
+
+/* ===== Phase 3: hero editor -> working Legacy (V141) default =====
+   The newest v159 "Hero Chamber" buried the portrait Upload/Replace/Adjust
+   controls. The V141 sheet (captured as openHeroSheetLegacy_v141) surfaces them
+   cleanly, so we route individual heroes there. The add-custom-hero / no-id path
+   stays on the current handler because V141's own null branch is self-recursive. */
+(function Phase3HeroEditorDefault(){
+  if(typeof openHeroSheet!=='function'||typeof openHeroSheetLegacy_v141!=='function') return;
+  var chamberV159 = openHeroSheet;            // newest view, kept reachable, not orphaned
+  var legacyV141  = openHeroSheetLegacy_v141; // working editor w/ visible portrait controls
+  window.__heroChamberV159 = chamberV159;
+  openHeroSheet = function(id){
+    if(!id) return chamberV159(id);           // add-hero / no-id -> existing handler
+    return legacyV141(id);                     // specific hero -> Legacy editor
+  };
+})();
 
 load();
 </script>
