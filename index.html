@@ -5624,9 +5624,9 @@ function rosterCard(h,i){
   }
   const ava=heroFaceHTML(h,{frameColor:rc});
   const xpW=h.level>=rankCap(h)?100:Math.min(100,(h.exp||0)/TUNE.levelCost(h.level)*100);
-  const ind=[]; if((h.prestige||0)>0) ind.push('<span class="pstar">★'+h.prestige+'</span>'); if(S.focus===h.id) ind.push('🎯'); const sq=squadIcons(h.id); if(sq) ind.push('<span style="font-size:11px">'+sq+'</span>');
+  const _el=effLevel(h), _fl=_el>(h.level||1); const ind=[]; if((h.prestige||0)>0) ind.push('<span class="pstar">★'+h.prestige+'</span>'); if(S.focus===h.id) ind.push('🎯'); const sq=squadIcons(h.id); if(sq) ind.push('<span style="font-size:11px">'+sq+'</span>');
   d.innerHTML='<button class="fav'+(fav?' on':'')+'" data-act="fav" data-id="'+h.id+'">'+(fav?'♥':'♡')+'</button>'+
-    '<div class="lv">Lv '+h.level+'</div>'+
+    '<div class="lv">Lv '+_el+(_fl?' <span style="color:#37d67a">↑</span>':'')+'</div>'+
     (ind.length?'<div class="inds" style="right:35px">'+ind.join('')+'</div>':'')+
     (ready?'<div class="lqReadyBadge">'+ready+'</div>':'')+
     ((h.prestige||0)>0?'<div class="lqPrestigeHalo"></div>':'')+
@@ -7128,7 +7128,7 @@ function v158Readiness(info,sq){
 function v158HeroUnit(h,i){
   if(!h) return '<div class="v158Unit empty"><div class="v158Portrait">'+(i+1)+'</div><div class="v158Name">Open Slot</div><div class="v158Sub">Tap Edit</div></div>';
   const face=h.img?'<img src="'+h.img+'">':initials(h.name), color=roleColor(h.role), row=formationRow(i);
-  return '<div class="v158Unit hero '+row+'" style="--uColor:'+color+'"><span class="v158Lv">Lv '+(h.level||1)+'</span><span class="v158Role">'+(LQ_ROLE_ICON&&LQ_ROLE_ICON[h.role]?LQ_ROLE_ICON[h.role]:h.role[0])+'</span><div class="v158Portrait hero">'+face+'</div><div class="v158Name">'+esc(h.name)+'</div><div class="v158Sub">PWR '+powerOf(h)+' · '+(row==='front'?'Front':'Back')+'</div></div>';
+  return '<div class="v158Unit hero '+row+'" style="--uColor:'+color+'"><span class="v158Lv">Lv '+effLevel(h)+'</span><span class="v158Role">'+(LQ_ROLE_ICON&&LQ_ROLE_ICON[h.role]?LQ_ROLE_ICON[h.role]:h.role[0])+'</span><div class="v158Portrait hero">'+face+'</div><div class="v158Name">'+esc(h.name)+'</div><div class="v158Sub">PWR '+powerOf(h)+' · '+(row==='front'?'Front':'Back')+'</div></div>';
 }
 function v158EnemyUnit(e,i){
   const _art=(typeof ENEMY_ART==='object'&&e)?(ENEMY_ART[e.name]||ENEMY_ART[e.baseName]||ENEMY_ART[e.artFamily]):null;
@@ -7219,7 +7219,7 @@ function v159HeroStage(h,img,name,color){
   const a=heroArchetype(h), p=passiveOf(h), plv=h.prestige||0;
   const portrait=img?'<img src="'+img+'">':(initials(name)||'?');
   return '<div class="heroChamberStageV159" style="--domain-color:'+(dom?dom.color:color)+';--hero-color:'+color+'">'+
-    '<div class="heroChamberTopbarV159"><div class="heroChamberTitleV159"><h3>'+esc(name)+'</h3><div class="sub"><span class="chip">'+esc(RANKS[rankIdx(h)].name)+(plv>0?' ★'+plv:'')+'</span><span class="chip">Lv '+h.level+'/'+rankCap(h)+'</span><span class="chip">'+esc(h.role)+'</span>'+(dom?'<span class="chip">'+dom.icon+' '+esc(dom.label)+'</span>':'')+'</div></div><div class="heroPowerV159">'+powerOf(h)+'<span>Power</span></div></div>'+
+    '<div class="heroChamberTopbarV159"><div class="heroChamberTitleV159"><h3>'+esc(name)+'</h3><div class="sub"><span class="chip">'+esc(RANKS[rankIdx(h)].name)+(plv>0?' ★'+plv:'')+'</span><span class="chip">Lv '+h.level+'/'+rankCap(h)+'</span>'+((effLevel(h)>(h.level||1))?'<span class="chip">⤴ Combat Lv '+effLevel(h)+'</span>':'')+'<span class="chip">'+esc(h.role)+'</span>'+(dom?'<span class="chip">'+dom.icon+' '+esc(dom.label)+'</span>':'')+'</div></div><div class="heroPowerV159">'+powerOf(h)+'<span>Power</span></div></div>'+
     '<div class="heroChamberGearV159">'+SLOTS.map(slot=>gearNodeV141(h,slot)).join('')+'</div>'+
     '<div class="heroPortraitRingV159 '+(img?'':'noimg')+'" id="hPrev">'+portrait+'<div class="rankHalo">'+v159RankStars(h)+'</div></div>'+ 
     '<div class="heroGearHintV159"><span><b>▲</b> better gear available</span><span>'+esc(a?a.label:'Specialist')+'</span>'+(p?'<span>'+esc(p.name)+'</span>':'')+'</div>'+ 
