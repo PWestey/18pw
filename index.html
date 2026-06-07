@@ -864,6 +864,9 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
       <div><label style="margin:0 0 3px">Stage EXP bonus</label><input id="dev_stageRateBonus" type="number" step="0.01" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></div>
       <div><label style="margin:0 0 3px">Prestige floor %</label><input id="dev_prestigeFloorPct" type="number" step="0.05" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></div>
       <div><label style="margin:0 0 3px">Prestige catch ×</label><input id="dev_prestigeCatchMult" type="number" step="0.5" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></div>
+      <div><label style="margin:0 0 3px">+Max lvl / prestige</label><input id="dev_prestigeLevelBonus" type="number" step="1" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></div>
+      <div><label style="margin:0 0 3px">Roster floor top-N (0=off)</label><input id="dev_resonanceTopN" type="number" step="1" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></div>
+      <div><label style="margin:0 0 3px">Gear drop ×</label><input id="dev_gearDropMult" type="number" step="0.1" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></div>
     </div>
     <button class="go" id="devTuneApply" style="background:linear-gradient(135deg,#ffb01f,#37d67a);color:#06170d;margin-top:10px">Apply tuning</button>
     <button class="go" id="devTuneReset" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">↺ Reset tuning to defaults</button>
@@ -919,9 +922,10 @@ const TUNE={
   streakBonusPer:3, streakBonusCap:3,  // +1h charge per 3-day streak, capped
   teamSize:6, habitChargeCap:3, dailyChargeCap:24, maxStoredCharge:48,  // heroes per battle team + charge safeguards
   prestigeFloorPct:0.4, prestigeCatchMult:3,  // prestige softening (dev-tunable): reset to 40% of cap, 3x catch-up EXP
+  prestigeLevelBonus:10, resonanceTopN:6, gearDropMult:1,  // +max level per prestige star · roster level floor (Nth-best leveled, 0=off) · gear drop multiplier
 };
 const TUNE_DEFAULTS={};
-['enemyGrowth','towerGrowth','enemyHpBase','enemyAtkBase','towerHpBase','towerAtkBase','expPerHour','stageRateBonus','bossEvery','bossRewardMult','prestigeFloorPct','prestigeCatchMult'].forEach(k=>{ if(typeof TUNE[k]==='number') TUNE_DEFAULTS[k]=TUNE[k]; });
+['enemyGrowth','towerGrowth','enemyHpBase','enemyAtkBase','towerHpBase','towerAtkBase','expPerHour','stageRateBonus','bossEvery','bossRewardMult','prestigeFloorPct','prestigeCatchMult','prestigeLevelBonus','resonanceTopN','gearDropMult'].forEach(k=>{ if(typeof TUNE[k]==='number') TUNE_DEFAULTS[k]=TUNE[k]; });
 function applyTuneOverrides(){ try{ if(S&&S.tuneOverrides){ Object.keys(S.tuneOverrides).forEach(k=>{ const v=S.tuneOverrides[k]; if(typeof v==='number'&&isFinite(v)&&typeof TUNE[k]==='number') TUNE[k]=v; }); } }catch(e){} }
 function devSetStage(n){ n=Math.max(1,Math.round(+n||1)); S.stage=n; if(n>(S.maxCleared||0)) S.maxCleared=n; save(); renderHUD(); render(); toast('Campaign set to Stage '+n); }
 function devSetTower(n){ n=Math.max(1,Math.round(+n||1)); S.tower=n; save(); renderHUD(); render(); toast('Tower set to Floor '+n); }
@@ -943,7 +947,7 @@ const RANKS=[{name:'Recruit',cap:10},{name:'Veteran',cap:20},{name:'Elite',cap:3
 const RANKUP=[{cores:8,gold:75},{cores:18,gold:175},{cores:35,gold:350},{cores:75,boss:1},{cores:150,boss:2},{cores:250,boss:3},{cores:400,boss:5,sparks:1}];
 function convertBossFrags(){ if(typeof S.bossFrags!=='number')S.bossFrags=0; while(S.bossFrags>=10){ S.bossFrags-=10; S.bossCores=(S.bossCores||0)+1; } }
 function rankIdx(h){ return h.rank||0; }
-function rankCap(h){ return RANKS[rankIdx(h)].cap; }
+function rankCap(h){ return RANKS[rankIdx(h)].cap + (h.prestige||0)*(TUNE.prestigeLevelBonus||0); }
 function rankMult(h){ return 1+rankIdx(h)*0.08; }
 function canRankUp(h){ const i=rankIdx(h); if(i>=RANKUP.length) return false; const r=RANKUP[i];
   return (S.heroCores||0)>=(r.cores||0) && (S.gold||0)>=(r.gold||0) && (S.bossCores||0)>=(r.boss||0) && (S.sparks||0)>=(r.sparks||0); }
@@ -1149,7 +1153,7 @@ function prestigeRoadmapHTML(h){
 const TASKEXP={easy:10,med:25,hard:50};
 function applyLevels(h){ let c; while(h.level<rankCap(h) && (h.exp||0)>=(c=TUNE.levelCost(h.level))){ h.exp-=c; h.level++; } }
 function catchUpPct(lvl,hi){ if(lvl>=hi) return 0; const r=lvl/hi; if(r<0.5) return 0.5; if(r<0.8) return 0.25; return 0.1; }
-function gainExp(amount){ if(!S.heroes.length || !(amount>0)) return;
+function gainExp(amount){ if(S&&S.expBank>0){ amount=(amount||0)+S.expBank; S.expBank=0; } if(!S.heroes.length || !(amount>0)) return;
   sanitizeHeroes(); amount*=collXpMult();
   const owned=S.heroes.filter(h=>h&&h.owned); if(!owned.length) return;
   const hi=Math.max(1,...owned.map(h=>h.level));
@@ -1174,7 +1178,10 @@ function checkAlbums(){ if(!S.albumsClaimed) S.albumsClaimed={}; const msgs=[];
   return msgs; }
 function clFromCP(cp){ return Math.floor((-1+Math.sqrt(1+0.4*cp))/2); }
 function cpForLevel(L){ return 10*L*(L+1); }
-function recalcCollection(){ gCP=collectionPowerTotal(); gCL=clFromCP(gCP); }
+let gResonanceFloor=0;
+function computeResonanceFloor(){ const n=(TUNE.resonanceTopN||0); if(!n){ gResonanceFloor=0; return; } const lv=(S&&S.heroes?S.heroes:[]).filter(h=>h&&h.owned).map(h=>h.level||1).sort((a,b)=>b-a); gResonanceFloor=lv.length?lv[Math.min(n,lv.length)-1]:0; }
+function effLevel(h){ if(!h) return 1; const base=h.level||1; if(!gResonanceFloor||prestigeCatchActive(h)) return base; return Math.max(base,gResonanceFloor); }
+function recalcCollection(){ gCP=collectionPowerTotal(); gCL=clFromCP(gCP); computeResonanceFloor(); }
 function collectionMult(){ return 1+0.01*gCL; }
 function accountMult(){ const per=(TUNE&&TUNE.accountPowerPer!=null)?TUNE.accountPowerPer:0.003; return 1+per*(S&&S.maxCleared?S.maxCleared:0); }
 function ownedCount(){ sanitizeHeroes(); return S.heroes.reduce((n,h)=>n+((h&&h.owned)?1:0),0); }
@@ -2090,6 +2097,8 @@ function randomUnlock(){ if(!canRandomUnlock()){toast('Need 1 🎟 ticket or '+U
 function targetedUnlock(id){ const h=S.heroes.find(x=>x.id===id); if(!h||h.owned) return false; if(S.crystals<UNLOCK_TARGET){toast('Need '+UNLOCK_TARGET+' ◆ crystals');return false;} S.crystals-=UNLOCK_TARGET; doUnlock(h); save(); return true; }
 function toggleWish(id){ if(S.wishlist.includes(id)) S.wishlist=S.wishlist.filter(x=>x!==id); else S.wishlist.push(id); save(); }
 function gearMaxLvl(g){ return RARMAX[g.rarity]; }
+function ensureGearLevels(h){ if(!h.gearLevels) h.gearLevels={weapon:0,armor:0,boots:0,relic:0}; return h.gearLevels; }
+function heroExpInvested(h){ let e=Math.max(0,h.exp||0); const lv=h.level||1; for(let l=1;l<lv;l++){ e+=TUNE.levelCost(l); } return Math.round(e); }
 function gearName(g){ const t={weapon:'Blade',armor:'Plate',boots:'Greaves',relic:'Relic'}; return cap(g.rarity)+' '+t[g.slot]; }
 function gearStat(g){ const p=gearPower(g);
   if(g.slot==='weapon') return {atk:p,hp:0};
@@ -2190,6 +2199,7 @@ function migrate(){
   if(S.doneMode===undefined) S.doneMode='bottom';
   S.appBuild=APP_BUILD;
   if(typeof S.lastSavedAt!=='number') S.lastSavedAt=null;
+  if(!S._gearTransferV1){ (S.heroes||[]).forEach(h=>{ if(!h) return; ensureGearLevels(h); if(h.gear) SLOTS.forEach(s=>{ if(h.gear[s]) h.gearLevels[s]=Math.max(h.gearLevels[s]||0, h.gear[s].level||0); }); }); S._gearTransferV1=true; }
   if(typeof S.onboarded!=='boolean') S.onboarded=false;
   ensureTitles();
   if(typeof S.gold!=='number') S.gold=0;
@@ -2479,8 +2489,8 @@ function chargeCapText(){
 
 /* hero stats */
 function roleBaseOf(role){ return TUNE.roleBase[normalizeRole(role)] || TUNE.roleBase.DPS; }
-function hpOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.hp*TUNE.heroScale(h.level||1)+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()); }
-function atkOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.atk*TUNE.heroScale(h.level||1)+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()); }
+function hpOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.hp*TUNE.heroScale(effLevel(h))+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()); }
+function atkOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.atk*TUNE.heroScale(effLevel(h))+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()); }
 function powerOf(h){ if(!h) return 0; return Math.round(hpOf(h)/8+atkOf(h)*2); }
 const SQUADS=[['campaign','Campaign','⚔'],['tower','Tower','⛰'],['raid','Raid','☠']];
 function squad(mode){ if(!S.squads) S.squads={campaign:[],tower:[],raid:[]}; if(!Array.isArray(S.squads[mode])) S.squads[mode]=[]; return S.squads[mode]; }
@@ -4276,7 +4286,7 @@ document.getElementById('openSettings').onclick=()=>{
   const dStage=document.getElementById('devStageInp'); if(dStage){ dStage.value=S.stage||1; const b=document.getElementById('devStageBtn'); if(b) b.onclick=()=>devSetStage(dStage.value); }
   const dTower=document.getElementById('devTowerInp'); if(dTower){ dTower.value=S.tower||1; const b=document.getElementById('devTowerBtn'); if(b) b.onclick=()=>devSetTower(dTower.value); }
   const dLA=document.getElementById('devLevelAll'); if(dLA) dLA.onclick=()=>{ if(confirm("Level all owned heroes to Lv 100 (capped by each hero's rank)?")) devLevelAll(100); };
-  const TKEYS=['enemyGrowth','towerGrowth','expPerHour','stageRateBonus','prestigeFloorPct','prestigeCatchMult'];
+  const TKEYS=['enemyGrowth','towerGrowth','expPerHour','stageRateBonus','prestigeFloorPct','prestigeCatchMult','prestigeLevelBonus','resonanceTopN','gearDropMult'];
   TKEYS.forEach(k=>{ const el=document.getElementById('dev_'+k); if(el) el.value=TUNE[k]; });
   const tA=document.getElementById('devTuneApply'); if(tA) tA.onclick=()=>{ TKEYS.forEach(k=>{ const el=document.getElementById('dev_'+k); if(el&&el.value!=='') devSetTune(k,el.value); }); save(); renderHUD(); render(); toast('Tuning applied'); };
   const tR=document.getElementById('devTuneReset'); if(tR) tR.onclick=()=>{ devResetTune(); TKEYS.forEach(k=>{ const el=document.getElementById('dev_'+k); if(el) el.value=TUNE[k]; }); renderHUD(); render(); toast('Tuning reset to defaults'); };
@@ -5025,7 +5035,7 @@ function gearDropChance(diff,stage,source){
   }
   // Early-game feel fix: fill the first full set quickly so gear becomes visible and useful.
   if(drops<4) chance=Math.min(.72,chance+.18);
-  return chance;
+  return Math.max(0,Math.min(1,chance*(TUNE.gearDropMult||1)));
 }
 function gearRollDrop(diff,stage,source){
   const gp=ensureGearProgression();
@@ -5150,10 +5160,10 @@ function heroPrestigeRefund(h){
 }
 function heroResetRefund(h){
   const a=heroRankRefund(h), b=heroPrestigeRefund(h);
-  return {cores:a.cores+b.cores,gold:a.gold+b.gold,boss:a.boss+b.boss,sparks:a.sparks+b.sparks};
+  return {cores:a.cores+b.cores,gold:a.gold+b.gold,boss:a.boss+b.boss,sparks:a.sparks+b.sparks,exp:heroExpInvested(h)};
 }
 function refundText(r){
-  const p=[]; if(r.cores)p.push(r.cores+' ◈'); if(r.gold)p.push(r.gold+' ⦿'); if(r.boss)p.push(r.boss+' ◆'); if(r.sparks)p.push(r.sparks+' ✦✦');
+  const p=[]; if(r.cores)p.push(r.cores+' ◈'); if(r.gold)p.push(r.gold+' ⦿'); if(r.boss)p.push(r.boss+' ◆'); if(r.sparks)p.push(r.sparks+' ✦✦'); if(r.exp)p.push(r.exp+' EXP');
   return p.length?p.join(' · '):'no materials';
 }
 function resetHeroInvestment(h){
@@ -5162,6 +5172,7 @@ function resetHeroInvestment(h){
   S.gold=(S.gold||0)+(r.gold||0);
   S.bossCores=(S.bossCores||0)+(r.boss||0);
   S.sparks=(S.sparks||0)+(r.sparks||0);
+  S.expBank=(S.expBank||0)+(r.exp||0);
   h.rank=0; h.level=1; h.exp=0; h.prestige=0; h.prestigeCatch=0;
   return r;
 }
@@ -5686,10 +5697,12 @@ function openGearSheet(heroId){
   let pickSlot=null;
   const sheet=document.getElementById('sheet');
   function invItemHTML(it){
-    const current=h.gear[pickSlot]||null, currentPower=current?gearPower(current):0, itemPower=gearPower(it), delta=itemPower-currentPower;
+    const current=h.gear[pickSlot]||null, currentPower=current?gearPower(current):0;
+    const _wm=(h.gearLevels&&h.gearLevels[pickSlot])||0, _eff=Math.min(gearMaxLvl(it),Math.max(it.level||0,_wm)), _xfer=_eff>(it.level||0);
+    const itemPower=gearPower(_xfer?Object.assign({},it,{level:_eff}):it), delta=itemPower-currentPower;
     const dCls=delta>0?'up':(delta<0?'down':'same'), rowCls=delta>0?'upgrade':(delta<0?'downgrade':'samegear'), dText=delta>0?'▲ +'+delta:(delta<0?'▼ '+delta:'=');
     const c=gearColorV146(it.rarity);
-    return '<div class="ginv v146 '+rowCls+'" style="--rar:'+c+'"><div class="gi" style="color:'+c+'">'+gearIconV146(it)+'</div><div class="gb"><div class="gname" style="color:'+c+'">'+gearName(it)+'<span class="gearDelta '+dCls+'">'+dText+'</span></div><div class="gsub">Lv '+it.level+' · ⚡'+itemPower+(current?' · current ⚡'+currentPower:' · empty slot')+' · Found Stage '+(it.stageFound||'?')+'</div></div><button class="pick" data-equip="'+it.id+'">Equip</button><button class="pick" data-salvage="'+it.id+'">♻'+salvageValue(it)+'</button></div>';
+    return '<div class="ginv v146 '+rowCls+'" style="--rar:'+c+'"><div class="gi" style="color:'+c+'">'+gearIconV146(it)+'</div><div class="gb"><div class="gname" style="color:'+c+'">'+gearName(it)+'<span class="gearDelta '+dCls+'">'+dText+'</span></div><div class="gsub">Lv '+_eff+(_xfer?' ↗ enhanced':'')+' · ⚡'+itemPower+(current?' · current ⚡'+currentPower:' · empty slot')+' · Found Stage '+(it.stageFound||'?')+'</div></div><button class="pick" data-equip="'+it.id+'">Equip</button><button class="pick" data-salvage="'+it.id+'">♻'+salvageValue(it)+'</button></div>';
   }
   function equippedSlotHTML(slot){
     const g=h.gear[slot];
@@ -5721,9 +5734,9 @@ function openGearSheet(heroId){
     const ab=document.getElementById('g_autobest'); if(ab) ab.onclick=()=>{ const r=autoEquipBestGear(h); toast(r.changed?('Auto-equipped '+r.changed+' slot'+(r.changed===1?'':'s')+' · +'+Math.max(0,r.after-r.before)+' gear score'):'Best gear already equipped'); renderHUD(); gearRender(); save(); };
     const ua=document.getElementById('g_unequipall'); if(ua) ua.onclick=()=>{ const n=unequipAllGear(h); toast(n?('Unequipped '+n+' item'+(n===1?'':'s')+' to inventory'):'No gear equipped'); renderHUD(); gearRender(); save(); };
     sheet.querySelectorAll('[data-pick]').forEach(el=>el.onclick=()=>{ pickSlot=el.dataset.pick; gearRender(); });
-    sheet.querySelectorAll('[data-up]').forEach(el=>el.onclick=()=>{ const slot=el.dataset.up,g=h.gear[slot],c=gearCostOf(g); if(g.level>=gearMaxLvl(g)){toast('Maxed — promote it');return;} if(S.gold<c.gold||S.dust<c.dust){toast('Not enough Gold/Dust');return;} S.gold-=c.gold; S.dust-=c.dust; g.level++; renderHUD(); gearRender(); save(); });
+    sheet.querySelectorAll('[data-up]').forEach(el=>el.onclick=()=>{ const slot=el.dataset.up,g=h.gear[slot],c=gearCostOf(g); if(g.level>=gearMaxLvl(g)){toast('Maxed — promote it');return;} if(S.gold<c.gold||S.dust<c.dust){toast('Not enough Gold/Dust');return;} S.gold-=c.gold; S.dust-=c.dust; g.level++; ensureGearLevels(h); h.gearLevels[slot]=Math.max(h.gearLevels[slot]||0,g.level); renderHUD(); gearRender(); save(); });
     sheet.querySelectorAll('[data-promo]').forEach(el=>el.onclick=()=>{ const slot=el.dataset.promo,g=h.gear[slot],p=PROMO[g.rarity]; if(!p){toast('Top rarity');return;} if(g.level<gearMaxLvl(g)){toast('Max the level first');return;} if(!canPromote(g)){toast('Need '+p.dust+'❖ '+p.stones+'◇ '+p.gold+'⦿');return;} S.dust-=p.dust; S.stones-=p.stones; S.gold-=p.gold; g.rarity=p.to; toast('Promoted to '+cap(p.to)+'!'); renderHUD(); gearRender(); save(); });
-    sheet.querySelectorAll('[data-equip]').forEach(el=>el.onclick=()=>{ const it=(S.inventory||[]).find(x=>x.id===el.dataset.equip); if(!it)return; if(h.gear[pickSlot]) S.inventory.push(h.gear[pickSlot]); S.inventory=S.inventory.filter(x=>x.id!==it.id); h.gear[pickSlot]=it; pickSlot=null; renderHUD(); gearRender(); save(); });
+    sheet.querySelectorAll('[data-equip]').forEach(el=>el.onclick=()=>{ const it=(S.inventory||[]).find(x=>x.id===el.dataset.equip); if(!it)return; if(h.gear[pickSlot]) S.inventory.push(h.gear[pickSlot]); S.inventory=S.inventory.filter(x=>x.id!==it.id); ensureGearLevels(h); const _wm=Math.max(h.gearLevels[pickSlot]||0,it.level||0); it.level=Math.min(gearMaxLvl(it),_wm); h.gearLevels[pickSlot]=Math.max(_wm,it.level); h.gear[pickSlot]=it; pickSlot=null; renderHUD(); gearRender(); save(); });
     sheet.querySelectorAll('[data-salvage]').forEach(el=>el.onclick=()=>{ const it=(S.inventory||[]).find(x=>x.id===el.dataset.salvage); if(!it)return; const v=salvageValue(it); if(RARITY.indexOf(it.rarity)>=2 && !confirm('Salvage '+gearName(it)+' for '+v+' dust? This is permanent.')) return; S.inventory=S.inventory.filter(x=>x.id!==it.id); S.dust+=v; toast('Salvaged · +'+v+'❖'); renderHUD(); gearRender(); save(); });
     const sc=document.getElementById('g_salvagecommon'); if(sc) sc.onclick=()=>{ const commons=(S.inventory||[]).filter(x=>x.slot===pickSlot&&x.rarity==='common'); if(!commons.length)return; const v=commons.reduce((a,b)=>a+salvageValue(b),0); S.inventory=S.inventory.filter(x=>!(x.slot===pickSlot&&x.rarity==='common')); S.dust+=v; toast('Salvaged '+commons.length+' Common · +'+v+'❖'); renderHUD(); gearRender(); save(); };
     const un=document.getElementById('g_unequip'); if(un) un.onclick=()=>{ if(h.gear[pickSlot]){S.inventory.push(h.gear[pickSlot]); h.gear[pickSlot]=null;} pickSlot=null; gearRender(); save(); };
