@@ -739,6 +739,7 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
 .rosterHint{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,transparent),color-mix(in srgb,var(--accent2) 10%,transparent));border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line));border-radius:13px;padding:10px;margin:0 0 10px;color:var(--muted);font-size:12px;font-weight:800;line-height:1.35}
 @media (max-width:380px){.rgrid.compact{grid-template-columns:repeat(3,1fr)}}
 
+.card.resting{opacity:.5;filter:grayscale(.4)}.chk.resting{background:transparent;border-color:transparent;cursor:default;box-shadow:none}.daypick button{min-width:34px;padding:7px 0}
 </style>
 <style id="mobileBattleFixV286">
 @media (max-width:600px){
@@ -852,7 +853,7 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
   <button data-view="quests"><span class="ic">📜</span>Quests</button>
   <button data-view="heroes"><span class="ic">⛨</span>Heroes</button>
   <button data-view="battles"><span class="ic">⚔</span>Battles</button>
-  <button data-view="growth"><span class="ic">🌱</span>Growth</button>
+  <button data-view="growth"><span class="ic">⚒️</span>Forge</button>
 </nav>
 
 <!-- battle arena -->
@@ -2211,6 +2212,12 @@ function prevPeriodDate(freq,d){ const x=new Date(d||new Date());
   return x;
 }
 const FREQS=['daily','weekly','monthly'];
+const TASK_FREQ_OF={dailies:'daily',weeklies:'weekly',monthlies:'monthly'};
+function taskIsRecurring(st){ return st==='dailies'||st==='weeklies'||st==='monthlies'; }
+function taskBaseArr(st){ return st==='todos'?S.todos:S.dailies; }
+function taskListFor(st){ if(st==='todos') return (S.todos||[]); const fr=TASK_FREQ_OF[st]||'daily'; return (S.dailies||[]).filter(d=>(d.freq||'daily')===fr); }
+function taskActiveOnDay(it,dow){ if(!it||!Array.isArray(it.activeDays)||!it.activeDays.length||it.activeDays.length>=7) return true; return it.activeDays.indexOf(dow)>=0; }
+function taskActiveToday(it){ return taskActiveOnDay(it,new Date().getDay()); }
 const DOMAINS=[
   ['faith','Faith','#b88af0','✝',['pray','prayer','bible','scripture','church','worship','devotion','reflect','meditat','gratitude','sermon','rosary']],
   ['marriage','Marriage','#ff5d9e','💞',['spouse','wife','husband','partner','date night','marriage','love note','anniversary']],
@@ -2314,7 +2321,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.12.11-clash-freezefix';
+const APP_BUILD='v2.12.13-clash-renderfix';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2630,7 +2637,8 @@ function rollover(){
   const now=new Date(); const wouldReset=[];
   S.dailies.forEach(d=>{ const cur=periodKey(d.freq,now);
     if(d.pk!==cur){ const prev=periodKey(d.freq,prevPeriodDate(d.freq,now));
-      const missed=!(d.done && d.pk===prev);
+      const prevActive=((d.freq||'daily')!=='daily')?true:taskActiveOnDay(d,prevPeriodDate(d.freq,now).getDay());
+      const missed=prevActive && !(d.done && d.pk===prev);
       if(missed && d.streak>0) wouldReset.push(d);
       d.done=false; d.pk=cur; } });
   if(wouldReset.length && (S.grace||0)>0){ S.grace--; graceReport={saved:wouldReset.length}; }
@@ -2910,29 +2918,30 @@ function renderTasks(v){
   v.innerHTML=
     questBoardHTML()+chest+
     '<div class="tabs" id="subtabs">'+
-      ['dailies','habits','todos'].map(t=>'<button data-s="'+t+'" class="'+(t===subtab?'on':'')+'">'+(t==='todos'?'Quests':t[0].toUpperCase()+t.slice(1))+'</button>').join('')+
+      ['dailies','weeklies','monthlies','todos'].map(t=>'<button data-s="'+t+'" class="'+(t===subtab?'on':'')+'">'+(t==='todos'?'Quests':t[0].toUpperCase()+t.slice(1))+'</button>').join('')+
     '</div>'+
-    '<div class="head"><h2>'+(subtab==='todos'?'Quests':subtab)+'</h2><button class="add" id="addTask">+ Add</button></div>'+
+    '<div class="head"><h2>'+(subtab==='todos'?'Quests':subtab[0].toUpperCase()+subtab.slice(1))+'</h2><button class="add" id="addTask">+ Add</button></div>'+
     '<div class="list" id="list"></div>';
   document.getElementById('subtabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;subtab=b.dataset.s;render();};
   document.getElementById('addTask').onclick=()=>openTaskSheet(null);
   const qb=document.getElementById('openQuestBoard'); if(qb) qb.onclick=showQuestBoard;
   const L=document.getElementById('list');
-  let items=S[subtab].slice();
-  if(subtab!=='habits' && S.doneMode!=='keep'){
+  let items=taskListFor(subtab).slice();
+  if(S.doneMode!=='keep'){
     if(S.doneMode==='hide') items=items.filter(it=>!it.done);
     else items.sort((a,b)=>(a.done?1:0)-(b.done?1:0));
   }
-  if(!items.length){ const msg=S[subtab].length?(subtab==='dailies'?'All visible dailies are done. Switch Done Mode in Settings if you want to review completed quests.':subtab==='todos'?'All visible quests are done. Add one small quest if you want another win.':'Nothing left to show right now.'):(subtab==='dailies'?'No dailies yet.<br>Add one anchor habit to start your day.':subtab==='habits'?'No habits yet.<br>Add a repeatable tracker like hydrate, steps, or game-free block.':'No quests yet.<br>Add one small one-off task to keep momentum.'); L.innerHTML='<div class="empty">'+msg+'</div>'; return; }
+  if(taskIsRecurring(subtab)) items.sort((a,b)=>(taskActiveToday(a)?0:1)-(taskActiveToday(b)?0:1));
+  if(!items.length){ const msg=taskListFor(subtab).length?(subtab==='dailies'?'All visible dailies are done. Switch Done Mode in Settings if you want to review completed quests.':subtab==='todos'?'All visible quests are done. Add one small quest if you want another win.':'Nothing left to show right now.'):(subtab==='dailies'?'No dailies yet.<br>Add one anchor habit to start your day.':subtab==='habits'?'No habits yet.<br>Add a repeatable tracker like hydrate, steps, or game-free block.':'No quests yet.<br>Add one small one-off task to keep momentum.'); L.innerHTML='<div class="empty">'+msg+'</div>'; return; }
   items.forEach((it,i)=>{
     const c=document.createElement('div');
-    c.className='card'+((subtab!=='habits'&&it.done)?' done':''); c.style.animationDelay=(i*0.03)+'s';
+    c.className='card'+(it.done?' done':'')+((taskIsRecurring(subtab)&&!taskActiveToday(it))?' resting':''); c.style.animationDelay=(i*0.03)+'s';
     let right='';
-    if(subtab==='dailies') right='<div class="chk '+(it.done?'on':'')+'" data-act="daily" data-id="'+it.id+'">'+(it.done?'✓':'')+'</div>';
+    if(taskIsRecurring(subtab)) right=(!taskActiveToday(it))?'<div class="chk resting" title="Rest day">💤</div>':'<div class="chk '+(it.done?'on':'')+'" data-act="daily" data-id="'+it.id+'">'+(it.done?'✓':'')+'</div>';
     else if(subtab==='habits') right='<div class="btnset">'+(it.down?'<button class="sq minus" data-act="hminus" data-id="'+it.id+'">−</button>':'')+(it.up?'<button class="sq plus" data-act="hplus" data-id="'+it.id+'">+</button>':'')+'</div>';
     else right='<div class="chk '+(it.done?'on':'')+'" data-act="todo" data-id="'+it.id+'">'+(it.done?'✓':'')+'</div>';
     let meta;
-    if(subtab==='dailies'){ const cr=CRYSTALS[it.diff]||CRYSTALS.med, nm=nextStreakMs(it.streak); meta=cap(it.freq)+' · 🔥 '+it.streak+(nm?'→'+nm:'')+' · +'+cr+'◆ +Momentum'; }
+    if(taskIsRecurring(subtab)){ const cr=CRYSTALS[it.diff]||CRYSTALS.med, nm=nextStreakMs(it.streak); meta=(taskActiveToday(it)?'':'💤 Rest day · ')+cap(it.freq)+' · 🔥 '+it.streak+(nm?'→'+nm:'')+' · +'+cr+'◆ +Momentum'; }
     else if(subtab==='habits') meta=cap(it.freq)+' · '+(it.up?'+'+(it.diff==='hard'?40:(it.diff==='med'?20:8))+'⦿ ':'')+(it.down?'slip ':'')+'· '+(it.count>=0?'+':'')+it.count;
     else meta=it.diff+' · +'+(CRYSTALS[it.diff]||CRYSTALS.med)+'◆ +'+(it.diff==='hard'?5:(it.diff==='med'?3:1))+'◈';
     c.innerHTML='<div class="diff '+it.diff+'"></div><div class="body" data-act="edit" data-id="'+it.id+'"><div class="t">'+esc(it.title)+'</div><div class="meta">'+domainChip(it)+meta+'</div></div>'+right;
@@ -4288,31 +4297,32 @@ function endBattle(win){
 
 /* ===== task sheet ===== */
 function openTaskSheet(id){
-  const item=id?S[subtab].find(x=>x.id===id):null;
+  const item=id?taskBaseArr(subtab).find(x=>x.id===id):null;
   let diff=item?item.diff:'med';
   let dir=item?(item.up&&item.down?'both':item.down?'down':'up'):'up';
-  let freq=item&&item.freq?item.freq:'daily';
+  let freq=item&&item.freq?item.freq:(TASK_FREQ_OF[subtab]||'daily');
+  let activeDays=item&&Array.isArray(item.activeDays)&&item.activeDays.length?item.activeDays.slice():[0,1,2,3,4,5,6];
   let domain=item?(item.domain||''):'';
-  const kind=subtab==='dailies'?'Daily':subtab==='habits'?'Habit':'Quest';
+  const kind=subtab==='dailies'?'Daily':subtab==='weeklies'?'Weekly':subtab==='monthlies'?'Monthly':'Quest';
   const s=document.getElementById('sheet');
   let h='<h3>'+(id?'Edit ':'New ')+kind+'</h3><label>Title</label><input type="text" id="f_title" maxlength="60" value="'+(item?esc(item.title):'')+'">';
   h+='<label>Difficulty</label><div class="segs" id="f_diff">'+['easy','med','hard'].map(d=>'<button data-d="'+d+'" class="'+(d===diff?'on':'')+'">'+d+'</button>').join('')+'</div>';
-  if(subtab!=='todos') h+='<label>Repeats</label><div class="segs" id="f_freq">'+FREQS.map(fq=>'<button data-fq="'+fq+'" class="'+(fq===freq?'on':'')+'">'+cap(fq)+'</button>').join('')+'</div>';
-  if(subtab==='habits') h+='<label>Track</label><div class="segs" id="f_dir"><button data-x="up" class="'+(dir==='up'?'on':'')+'">Good +</button><button data-x="down" class="'+(dir==='down'?'on':'')+'">Bad −</button><button data-x="both" class="'+(dir==='both'?'on':'')+'">Both</button></div>';
+  if(taskIsRecurring(subtab)) h+='<label>Active days <span style="color:var(--muted);font-weight:600">(tap to skip)</span></label><div class="segs daypick" id="f_days">'+['Su','Mo','Tu','We','Th','Fr','Sa'].map((d,i)=>'<button data-day="'+i+'" class="'+(activeDays.indexOf(i)>=0?'on':'')+'">'+d+'</button>').join('')+'</div>';
+  /* habits removed */
   h+='<label>Life domain</label><select id="f_domain" style="width:100%;box-sizing:border-box;padding:11px 13px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600">'+
     '<option value="">— None —</option>'+DOMAINS.map(d=>'<option value="'+d[0]+'"'+(domain===d[0]?' selected':'')+'>'+d[3]+' '+d[1]+'</option>').join('')+'</select>';
   h+='<button class="go" id="f_save">'+(id?'Save':'Add')+'</button>'+(id?'<button class="ghost" id="f_del">Delete</button>':'');
   s.innerHTML=h; showScrim('scrim');
-  segPick('f_diff',d=>diff=d); if(subtab!=='todos') segPick('f_freq',f=>freq=f,'fq'); if(subtab==='habits') segPick('f_dir',d=>dir=d,'x');
+  segPick('f_diff',d=>diff=d); { const dEl=document.getElementById('f_days'); if(dEl) dEl.onclick=ev=>{ const b=ev.target.closest('button'); if(!b) return; const n=+b.dataset.day; const k=activeDays.indexOf(n); if(k>=0){ if(activeDays.length>1){ activeDays.splice(k,1); b.classList.remove('on'); } } else { activeDays.push(n); b.classList.add('on'); } }; }
   document.getElementById('f_save').onclick=()=>{
     const title=document.getElementById('f_title').value.trim(); if(!title)return;
     const dom=document.getElementById('f_domain').value||null;
-    if(subtab==='dailies'){ if(item){item.title=title;item.diff=diff;item.domain=dom; if(item.freq!==freq){item.freq=freq;item.pk=periodKey(freq);item.done=false;}} else S.dailies.push({id:uid(),title,diff,freq,domain:dom,streak:0,done:false,pk:periodKey(freq)}); }
-    else if(subtab==='habits'){ const up=dir!=='down',down=dir!=='up'; if(item){item.title=title;item.diff=diff;item.up=up;item.down=down;item.domain=dom; if(item.freq!==freq){item.freq=freq;item.pk=periodKey(freq);item.count=0;}} else S.habits.push({id:uid(),title,diff,freq,up,down,domain:dom,count:0,pk:periodKey(freq)}); }
+    if(taskIsRecurring(subtab)){ const fr=TASK_FREQ_OF[subtab]||'daily'; const ad=(activeDays.length>=7)?null:activeDays.slice().sort((a,b)=>a-b); if(item){ item.title=title; item.diff=diff; item.domain=dom; item.activeDays=ad; if(item.freq!==fr){ item.freq=fr; item.pk=periodKey(fr); item.done=false; } } else S.dailies.push({id:uid(),title,diff,freq:fr,domain:dom,streak:0,done:false,pk:periodKey(fr),activeDays:ad}); }
+    else if(false){}
     else { if(item){item.title=title;item.diff=diff;item.domain=dom;} else S.todos.push({id:uid(),title,diff,domain:dom,done:false}); }
     hideScrim(); render(); save();
   };
-  const del=document.getElementById('f_del'); if(del) del.onclick=()=>{ S[subtab]=S[subtab].filter(x=>x.id!==id); hideScrim(); render(); save(); };
+  const del=document.getElementById('f_del'); if(del) del.onclick=()=>{ const base=taskBaseArr(subtab); const i=base.findIndex(x=>x.id===id); if(i>=0) base.splice(i,1); hideScrim(); render(); save(); };
 }
 
 /* ===== hero sheet (add/edit/level/team) ===== */
@@ -6101,7 +6111,7 @@ function growthQuickActionsV148(){
 }
 function renderGrowth(v){
   injectGrowthHubStyles(); injectLifeBaseVisualStylesV148();
-  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">sanctuary map</span></div>'+growthHeroV148()+domainFocusV148()+sanctuaryMapV148()+growthModesHTML().replace('growthModeGrid','growthModeGrid v148')+growthQuickActionsV148();
+  v.innerHTML='<div class="head"><h2>Forge</h2><span style="color:var(--muted);font-weight:700;font-size:13px">sanctuary map</span></div>'+growthHeroV148()+domainFocusV148()+sanctuaryMapV148()+growthModesHTML().replace('growthModeGrid','growthModeGrid v148')+growthQuickActionsV148();
   bindLifeCards();
   const bind=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
   bind('gh_domains',showDomainLevels); bind('gh_base',showSanctuary); bind('gh_strategy',showStrategyModal); bind('gh_weekly',showWeeklyReview); bind('gh_monthly',showMonthlyReview); bind('gh_recovery',showRecoveryModal);
@@ -8660,7 +8670,7 @@ renderGrowth = function(v){
   const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain();
   const sm=DKEY[strong.k], lm=DKEY[light.k];
   v.innerHTML=
-    '<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">who I am becoming</span></div>'+ 
+    '<div class="head"><h2>Forge</h2><span style="color:var(--muted);font-weight:700;font-size:13px">who I am becoming</span></div>'+ 
     monthlySummaryHTML()+
     '<div class="identityFocus"><b style="color:var(--ink)">Focus:</b> Meaning first. The app handles strategy quietly so you can act.</div>'+ 
     '<div class="lifesys-grid">'+
@@ -8742,7 +8752,7 @@ function v170RenderHome(v){
   v.className='v170GameShell v170Home';
   v.innerHTML=setup+
     '<section class="v170Stage" style="--sceneColor:'+d.color+';--sceneArt:url('+v170SceneArt(k)+')"><div class="v170StagePad"><span class="v170Kicker">'+d.icon+' Today\'s Quest · '+esc(d.label)+'</span><div class="v170QuestTitle">Scene-first daily hub</div><div class="v170QuestTask">'+esc(title)+'</div><p class="v170QuestWhy">'+esc(why)+'</p><div class="v170RewardLine">'+(win.icon||'◆')+' '+esc(win.title||'Closest win')+' · '+esc(win.tag||'READY')+'</div></div><div class="v170HeroAnchor">'+v170HeroHTML(h)+'</div><div class="v170ActionDock"><button id="v170StartQuest" class="v170PrimaryAction">Start Quest</button><button id="v170Quests" class="v170SecondaryAction">Quests</button><button id="v170Review" class="v170SecondaryAction">Review</button></div></section>'+v170TodayPathHTML(doneN,totN)+
-    '<details class="v170Manage"><summary>Manage rewards / deeper systems</summary><div class="v170ManageGrid"><button id="v170GoHeroes">Heroes</button><button id="v170GoBattles">Battles</button><button id="v170GoGrowth">Growth</button><button id="v170Settings">Settings</button></div></details>'+v170LastActionSimple()+v170DailyReviewEntry(pct);
+    '<details class="v170Manage"><summary>Manage rewards / deeper systems</summary><div class="v170ManageGrid"><button id="v170GoHeroes">Heroes</button><button id="v170GoBattles">Battles</button><button id="v170GoGrowth">Forge</button><button id="v170Settings">Settings</button></div></details>'+v170LastActionSimple()+v170DailyReviewEntry(pct);
   const start=document.getElementById('v170StartQuest'); if(start) start.onclick=()=> next?v170GoToTask(next):navTo('quests');
   const q=document.getElementById('v170Quests'); if(q) q.onclick=()=>navTo('quests');
   const r=document.getElementById('v170Review'); if(r) r.onclick=()=>{ if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); };
@@ -8761,7 +8771,7 @@ function v170LastActionSimple(){
 }
 function v170DailyReviewEntry(pct){
   const show=(pct>=60)||(new Date().getHours()>=18);
-  return '<div class="v170SceneBanner" style="--sceneColor:#ffd95a;--sceneArt:url('+v170SceneArt('faith')+')"><span class="v170Kicker">'+(show?'Review ready':'Later today')+'</span><h2>Close the loop</h2><p>'+(show?'A short review turns effort into identity.':'Do one more real action first; review when the day has shape.')+'</p><div class="v170BannerActions"><button id="v170Review2">Review Day</button><button id="v170Growth2">Growth</button></div></div>';
+  return '<div class="v170SceneBanner" style="--sceneColor:#ffd95a;--sceneArt:url('+v170SceneArt('faith')+')"><span class="v170Kicker">'+(show?'Review ready':'Later today')+'</span><h2>Close the loop</h2><p>'+(show?'A short review turns effort into identity.':'Do one more real action first; review when the day has shape.')+'</p><div class="v170BannerActions"><button id="v170Review2">Review Day</button><button id="v170Growth2">Forge</button></div></div>';
 }
 const __v170_renderHome = renderHome;
 renderHome = function(v){ try{ v170RenderHome(v); setTimeout(()=>{ const a=document.getElementById('v170Review2'); if(a) a.onclick=()=>{ if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); }; const g=document.getElementById('v170Growth2'); if(g) g.onclick=()=>navTo('growth'); },0); }catch(e){ console.error('v1.70 home failed',e); __v170_renderHome(v); } };
@@ -8903,7 +8913,7 @@ function v171RenderHome(v){
   const hs=v171HomeHeroes();
   const exp=typeof expRate==='function'?expRate():0, charge=typeof chargeDisplay==='function'?chargeDisplay():String(Math.round(S.charge||0));
   v.className='v170GameShell v171GameShell v171Home';
-  v.innerHTML='<section class="v171LivingStage" style="--sceneColor:'+d.color+';--sceneArt:url('+v170SceneArt(k)+')"><div class="v171StagePad"><span class="v171Kicker">'+d.icon+' Living World · '+esc(d.label)+'</span><div class="v171QuestName">Today\'s Quest</div><div class="v171QuestTask">'+esc(title)+'</div><p class="v171QuestLine">'+esc(why)+'</p><div class="v170RewardLine" style="margin-top:12px">'+(win.icon||'◆')+' '+esc(win.title||'Closest win')+' · '+esc(win.tag||'READY')+'</div></div><div class="v171SquadStage"><div class="v171Ground"></div>'+hs.map(v171HeroTokenHTML).join('')+'</div><div class="v171IdleHUD"><span class="v171IdleChip">⚡ Charge <b>'+esc(charge)+'</b></span><span class="v171IdleChip">✦ EXP Flow <b>+'+esc(String(exp))+'/hr</b></span><span class="v171IdleChip">'+doneN+'/'+totN+' Quests</span></div><div class="v171EnergyRail"><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i></div><div class="v171ActionDock"><button id="v171StartQuest" class="v171PrimaryAction">Start Quest</button><button id="v171Quests" class="v171SecondaryAction">Quests</button><button id="v171Review" class="v171SecondaryAction">Review</button></div></section>'+v170TodayPathHTML(doneN,totN)+'<details class="v170Manage"><summary>Manage rewards / deeper systems</summary><div class="v170ManageGrid"><button id="v171GoHeroes">Heroes</button><button id="v171GoBattles">Battles</button><button id="v171GoGrowth">Growth</button><button id="v171Settings">Settings</button></div></details>'+v170LastActionSimple()+v170DailyReviewEntry(pct);
+  v.innerHTML='<section class="v171LivingStage" style="--sceneColor:'+d.color+';--sceneArt:url('+v170SceneArt(k)+')"><div class="v171StagePad"><span class="v171Kicker">'+d.icon+' Living World · '+esc(d.label)+'</span><div class="v171QuestName">Today\'s Quest</div><div class="v171QuestTask">'+esc(title)+'</div><p class="v171QuestLine">'+esc(why)+'</p><div class="v170RewardLine" style="margin-top:12px">'+(win.icon||'◆')+' '+esc(win.title||'Closest win')+' · '+esc(win.tag||'READY')+'</div></div><div class="v171SquadStage"><div class="v171Ground"></div>'+hs.map(v171HeroTokenHTML).join('')+'</div><div class="v171IdleHUD"><span class="v171IdleChip">⚡ Charge <b>'+esc(charge)+'</b></span><span class="v171IdleChip">✦ EXP Flow <b>+'+esc(String(exp))+'/hr</b></span><span class="v171IdleChip">'+doneN+'/'+totN+' Quests</span></div><div class="v171EnergyRail"><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i></div><div class="v171ActionDock"><button id="v171StartQuest" class="v171PrimaryAction">Start Quest</button><button id="v171Quests" class="v171SecondaryAction">Quests</button><button id="v171Review" class="v171SecondaryAction">Review</button></div></section>'+v170TodayPathHTML(doneN,totN)+'<details class="v170Manage"><summary>Manage rewards / deeper systems</summary><div class="v170ManageGrid"><button id="v171GoHeroes">Heroes</button><button id="v171GoBattles">Battles</button><button id="v171GoGrowth">Forge</button><button id="v171Settings">Settings</button></div></details>'+v170LastActionSimple()+v170DailyReviewEntry(pct);
   const start=document.getElementById('v171StartQuest'); if(start) start.onclick=()=>{ v171Feedback('tap'); next?v170GoToTask(next):navTo('quests'); };
   const q=document.getElementById('v171Quests'); if(q) q.onclick=()=>{ v171Feedback('tap'); navTo('quests'); };
   const r=document.getElementById('v171Review'); if(r) r.onclick=()=>{ v171Feedback('tap'); if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); };
@@ -9523,7 +9533,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     const cells=[];
     for(let i=0;i<need;i++){
       const slot=c7SlotMeta(i,ch), h=(S.heroes||[]).find(x=>x.id===ids[i]), laneType=slot.basic?null:(pattern[slot.typeKey||slot.lane]||null), m=h?c7Match(h.elementType,laneType):'neutral';
-      cells.push('<button class="clashSlot c7 '+m+' '+(slot.basic?'basic':'')+'" onclick="openClashSquadEditor('+i+')"><div class="csRow">'+esc7(slot.laneLabel)+' · '+cap7(slot.row)+'</div><div class="csFace" style="background:'+(h?h.color:'#111827')+'">'+(h?(h.img?'<img src="'+h.img+'" alt="">':esc7(h.name.slice(0,2).toUpperCase())):'—')+'</div><div class="csMeta">'+(h?c7ElementBadge(h.elementType,true)+' '+esc7(h.clashRole||'Role'):'Empty')+'</div></button>');
+      cells.push('<button class="clashSlot c7 '+m+' '+(slot.basic?'basic':'')+'" onclick="openClashSquadEditor('+i+')"><div class="csRow">'+esc7(slot.laneLabel)+' · '+cap7(slot.row)+'</div><div class="csFace" style="background:'+(h?h.color:'#111827')+'">'+(h?(h.img?'<img src="'+h.img+'" alt="">':esc7(String(h.name||'?').slice(0,2).toUpperCase())):'—')+'</div><div class="csMeta">'+(h?c7ElementBadge(h.elementType,true)+' '+esc7(h.clashRole||'Role'):'Empty')+'</div></button>');
     }
     return '<div class="clashFormation c7 '+(lanes.length===5?'five':'three')+'">'+cells.join('')+'</div>';
   };
@@ -9695,7 +9705,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       if(!aliveNow&&allSpawned&&battle7.enemies.length===0){ c7Resolve(false,'wipe'); return; }
       if(aliveNow&&allSpawned&&battle7.kind==='normal'&&battle7.enemies.length<=1&&(battle7.timeLeft||0)<=2){ c7Resolve(true,'cleanup'); return; }
       if((battle7.timeLeft||0)<=0){ c7Resolve(aliveNow&&allSpawned&&battle7.enemies.length===0,'timeout'); return; }
-      { let _ehp=0,_hhp=0; battle7.enemies.forEach(e=>_ehp+=Math.max(0,e.hp||0)); battle7.heroes.forEach(h=>_hhp+=Math.max(0,h.hp||0)); const _sig=battle7.enemies.length+'|'+(battle7.spawned||0)+'|'+(battle7.defeated||0)+'|'+(battle7.leaks||0)+'|'+Math.round(_ehp)+'|'+Math.round(_hhp); if(_sig!==battle7._sig){ battle7._sig=_sig; battle7._stall=0; } else { battle7._stall=(battle7._stall||0)+1; if(battle7._stall>250){ c7Resolve(aliveNow&&battle7.defeated>=battle7.totalEnemies,'stall'); return; } } }
+      { let _ehp=0; battle7.enemies.forEach(e=>_ehp+=Math.max(0,e.hp||0)); const _sig=battle7.enemies.length+'|'+(battle7.defeated||0)+'|'+(battle7.leaks||0)+'|'+Math.round(_ehp); if(_sig!==battle7._sig){ battle7._sig=_sig; battle7._stall=0; } else { battle7._stall=(battle7._stall||0)+1; if(battle7._stall>160){ c7Resolve(aliveNow&&battle7.defeated>=battle7.totalEnemies,'stall'); return; } } }
       if(!c7FastForward) c7RenderBattle();
     }catch(e){
       console.error('Clash tick failed',e);
@@ -9718,12 +9728,12 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7FlashNode(el,cls){ if(!el||c7FastForward) return; el.classList.add(cls); setTimeout(()=>{ try{ el.classList.remove(cls); }catch(e){} },220); }
   function c7SpawnImpact(el,type,heal){ if(!el||c7FastForward) return; const r=el.getBoundingClientRect(), meta=c7FxMeta(type), fx=document.createElement('div'); fx.className='clashImpact '+meta.cls+(heal?' heal':''); fx.style.left=(r.left+r.width/2)+'px'; fx.style.top=(r.top+r.height/2)+'px'; fx.style.setProperty('--shot',meta.shot); fx.style.setProperty('--shot2',meta.shot2); document.body.appendChild(fx); setTimeout(()=>fx.remove(),430); }
   function c7SpawnShot(fromEl,toEl,type,kind){ if(!fromEl||!toEl||c7FastForward) return; const a=fromEl.getBoundingClientRect(), t=toEl.getBoundingClientRect(), meta=c7FxMeta(type), p=document.createElement('div'); p.className='clashShot '+meta.cls+(kind==='support'?' support':'')+(kind==='heal'?' heal':''); p.style.left=(a.left+a.width/2-8)+'px'; p.style.top=(a.top+a.height/2-8)+'px'; p.style.setProperty('--shot',meta.shot); p.style.setProperty('--shot2',meta.shot2); document.body.appendChild(p); const dx=(t.left+t.width/2)-(a.left+a.width/2), dy=(t.top+t.height/2)-(a.top+a.height/2), ang=Math.atan2(dy,dx)*180/Math.PI; requestAnimationFrame(()=>{ p.style.transform='translate('+dx+'px,'+dy+'px) rotate('+ang+'deg)'; }); setTimeout(()=>{ c7SpawnImpact(toEl,type,kind==='heal'); c7FlashNode(toEl,'fxHit'); },250); setTimeout(()=>p.remove(),380); c7FlashNode(fromEl,'fxFire'); }
-  function c7LaneEnemyHTML(lane){ return battle7.enemies.filter(e=>e.hp>0&&c7EnemyLanes(e).includes(lane)).map(e=>{ const meta=e.type?(ELEMENT_META[e.type]||ELEMENT_META.Flame):{color:'#9ca3af'}, top=Math.min(94,Math.max(5,e.y*.78)), face=e.img?'<img src="'+e.img+'" alt="">':(e.boss?'☠':(!e.type?'◇':'◆')); return '<div class="clashEnemyToken '+(e.boss?'boss':'')+' '+(!e.type?'basic':'')+'" data-eid="'+esc7(e.id)+'" data-lane="'+esc7(lane)+'" title="'+esc7(e.name)+'" style="top:'+top+'%;--el:'+(e.color||meta.color)+'"><div class="enemyFace">'+face+'</div><div class="enemyHp"><i style="width:'+Math.max(0,Math.round(e.hp/e.maxHp*100))+'%"></i></div><div class="enemyType">'+c7ElementBadge(e.type,true)+'</div></div>'; }).join(''); }
-  function c7HeroCellHTML(lane,row){ const h=battle7.heroes.find(x=>x.lane===lane&&x.row===row); if(!h) return '<div class="clashHeroCell empty"></div>'; const meta=ELEMENT_META[h.type]||ELEMENT_META.Flame, hpPct=Math.max(0,Math.round(h.hp/h.maxHp*100)), real=c7HeroById(h.id)||h, heroImg=c7HeroPortraitImg(real)||h.img; return '<div class="clashHeroCell '+(h.hp<=0?'dead ':'')+(h.acted?'acting ':'')+'" data-heroid="'+esc7(h.id)+'" data-lane="'+esc7(lane)+'" data-row="'+esc7(row)+'" style="--el:'+meta.color+'"><div class="heroTile" style="background:'+h.color+'">'+(heroImg?'<img src="'+heroImg+'" alt="">':esc7(h.name.slice(0,2).toUpperCase()))+'</div><div class="heroHp"><i style="width:'+hpPct+'%"></i></div><div class="heroTags">'+c7ElementBadge(h.type,true)+'<span>'+esc7((h.role||'').replace(' DPS',''))+'</span></div></div>'; }
+  function c7LaneEnemyHTML(lane){ return battle7.enemies.filter(e=>e.hp>0&&c7EnemyLanes(e).includes(lane)).map(e=>{ const meta=e.type?(ELEMENT_META[e.type]||ELEMENT_META.Flame):{color:'#9ca3af'}, top=Math.min(94,Math.max(5,e.y*.78)), face=e.img?'<img src="'+e.img+'" alt="">':(e.boss?'☠':(!e.type?'◇':'◆')); return '<div class="clashEnemyToken '+(e.boss?'boss':'')+' '+(!e.type?'basic':'')+'" data-eid="'+esc7(e.id)+'" data-lane="'+esc7(lane)+'" title="'+esc7(e.name||'Enemy')+'" style="top:'+top+'%;--el:'+(e.color||meta.color)+'"><div class="enemyFace">'+face+'</div><div class="enemyHp"><i style="width:'+Math.max(0,Math.round(e.hp/(e.maxHp||1)*100))+'%"></i></div><div class="enemyType">'+c7ElementBadge(e.type,true)+'</div></div>'; }).join(''); }
+  function c7HeroCellHTML(lane,row){ const h=battle7.heroes.find(x=>x.lane===lane&&x.row===row); if(!h) return '<div class="clashHeroCell empty"></div>'; const meta=ELEMENT_META[h.type]||ELEMENT_META.Flame, hpPct=Math.max(0,Math.round(h.hp/(h.maxHp||1)*100)), real=c7HeroById(h.id)||h, heroImg=c7HeroPortraitImg(real)||h.img; return '<div class="clashHeroCell '+(h.hp<=0?'dead ':'')+(h.acted?'acting ':'')+'" data-heroid="'+esc7(h.id)+'" data-lane="'+esc7(lane)+'" data-row="'+esc7(row)+'" style="--el:'+meta.color+'"><div class="heroTile" style="background:'+(h.color||'#444')+'">'+(heroImg?'<img src="'+heroImg+'" alt="">':esc7(String(h.name||'?').slice(0,2).toUpperCase()))+'</div><div class="heroHp"><i style="width:'+hpPct+'%"></i></div><div class="heroTags">'+c7ElementBadge(h.type,true)+'<span>'+esc7((h.role||'').replace(' DPS',''))+'</span></div></div>'; }
   function c7WeakLane(){ let best=battle7.lanes[0].key, worst=999; battle7.lanes.forEach(l=>{ const alive=battle7.heroes.filter(h=>h.lane===l.key&&h.hp>0).length, hp=battle7.heroes.filter(h=>h.lane===l.key).reduce((s,h)=>s+(h.hp/h.maxHp),0), score=alive*2+hp; if(score<worst){ worst=score; best=l.key; } }); return best; }
   function c7RenderResult(){ const r=battle7.result||{}, rw=r.reward||{}, timeUsed=c7FmtTime(Math.max(0,(battle7.totalTime||0)-(battle7.timeLeft||0))); if(r.win){ const autoLine=(S.clash&&S.clash.autoBattle&&!r.autoStop)?'<p>Auto battle: next stage starts in 3 seconds.</p>':(r.autoStop?'<p>Auto stopped: '+esc7(r.autoStop)+'.</p>':''); return '<div class="clashResult win"><h2>VICTORY</h2><p>'+(r.first?'First clear secured.':'Replay clear secured.')+'</p>'+autoLine+'<div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+timeUsed+'</b><span>Time Used</span></div></div><div class="clashRewardLine">'+esc7(c7RewardLine(rw))+'</div><button onclick="closeClashBattle()">Continue</button></div>'; } const weak=c7WeakLane(), laneCfg=battle7.lanes.find(l=>l.key===weak), laneType=c7LaneType(laneCfg,battle7.chapter,battle7.stage,battle7.pattern), why=r.reason==='timeout'?'Time expired before the swarm was fully cleared.':(r.reason==='leaks'?'Too many enemies slipped to the bottom.':'Your line broke before the swarm ended.'); return '<div class="clashResult lose"><h2>DEFEAT</h2><p>'+esc7(why)+'</p><div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+c7FmtTime(battle7.timeLeft||0)+'</b><span>Time Left</span></div></div><div class="clashCoach"><b>Weak Lane: '+esc7((laneCfg&&laneCfg.label)||cap7(weak))+'</b><span>'+(laneType?c7ElementBadge(laneType,false)+' lane · counter with '+c7CounterBadge(laneType,false):'Basic lane · add sturdier heroes or more raw power')+'</span><span>Try Optimize Squad, keep Tanks front, and use Melee DPS for close-range splash.</span></div><div class="clashResultActions"><button onclick="clashAutoOptimize(true);closeClashBattle();setTimeout(startClashBattle,250)">Optimize & Retry</button><button onclick="closeClashBattle();setTimeout(function(){openClashSquadEditor(0)},100)">Edit Squad</button><button onclick="closeClashBattle()">Leave</button></div></div>'; }
   function c7SpeedValue(){ return battle7&&battle7.speed>=3?3:(battle7&&battle7.speed===2?2:1); }
-  function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['rear','back','mid','front']; battle7.heroes.forEach(h=>h.acted=0); const lanePills=battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<span>'+esc7(l.label)+' '+c7ElementBadge(t,true)+(t?' → '+c7CounterBadge(t,true):' · Basic')+'</span>'; }).join(''); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; o.innerHTML='<div class="clashBattlePanel c7 '+(battle7.lanes.length===5?'five':'three')+'"><div class="clashBattleHead"><div><b>⚡ Clash Trials</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">Auto '+((S.clash&&S.clash.autoBattle)?'On':'Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Skip</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashBattlePattern">'+lanePills+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
+  function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; try{ const rows=['front','mid','back','rear']; battle7.heroes.forEach(h=>h.acted=0); const lanePills=battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<span>'+esc7(l.label)+' '+c7ElementBadge(t,true)+(t?' → '+c7CounterBadge(t,true):' · Basic')+'</span>'; }).join(''); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; o.innerHTML='<div class="clashBattlePanel c7 '+(battle7.lanes.length===5?'five':'three')+'"><div class="clashBattleHead"><div><b>⚡ Clash Trials</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">Auto '+((S.clash&&S.clash.autoBattle)?'On':'Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Skip</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashBattlePattern">'+lanePills+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }catch(err){ try{ o.innerHTML='<div class="clashBattlePanel c7"><div class="clashBattleHead"><div><b>⚡ Clash Trials</b><span>Chapter '+(battle7.chapter||1)+' · Stage '+(battle7.stage||1)+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="skipClashBattle()">Skip</button><button onclick="closeClashBattle()">✕</button></div></div><div class="clashBattlePattern"><span>Spawned '+(battle7.spawned||0)+'/'+(battle7.totalEnemies||0)+'</span><span>Defeated '+(battle7.defeated||0)+'/'+(battle7.totalEnemies||0)+'</span><span>Leaks '+(battle7.leaks||0)+'/'+(battle7.leakLimit||0)+'</span></div><div class="clashBattleLog">'+esc7(battle7.log||'')+(battle7.ended?(' · '+((battle7.result&&battle7.result.win)?"VICTORY":"DEFEAT")):'')+'</div>'+(battle7.ended?'<button onclick="closeClashBattle()">Continue</button>':'')+'</div>'; }catch(_e){} } }
   window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
   window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; c7FastForward=true; battle7.resolving=true; let guard=0; while(battle7&&!battle7.ended&&guard++<5000){ battle7.resolving=false; c7Tick(); if(!battle7||battle7.ended) break; battle7.resolving=true; } if(battle7&&!battle7.ended){ battle7.resolving=false; c7Resolve(false); } c7FastForward=false; try{ c7RenderBattle(); }catch(e){} };
   window.closeClashBattle=function(){ if(battle7&&battle7.timer) clearInterval(battle7.timer); if(battle7&&battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7=null; const o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); try{ if(typeof render==='function') render(); }catch(e){} };
