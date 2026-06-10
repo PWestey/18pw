@@ -739,7 +739,6 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
 .rosterHint{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,transparent),color-mix(in srgb,var(--accent2) 10%,transparent));border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line));border-radius:13px;padding:10px;margin:0 0 10px;color:var(--muted);font-size:12px;font-weight:800;line-height:1.35}
 @media (max-width:380px){.rgrid.compact{grid-template-columns:repeat(3,1fr)}}
 
-.card.resting{opacity:.5;filter:grayscale(.4)}.chk.resting{background:transparent;border-color:transparent;cursor:default;box-shadow:none}.daypick button{min-width:34px;padding:7px 0}
 </style>
 <style id="mobileBattleFixV286">
 @media (max-width:600px){
@@ -853,7 +852,7 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
   <button data-view="quests"><span class="ic">📜</span>Quests</button>
   <button data-view="heroes"><span class="ic">⛨</span>Heroes</button>
   <button data-view="battles"><span class="ic">⚔</span>Battles</button>
-  <button data-view="growth"><span class="ic">⚒️</span>Forge</button>
+  <button data-view="growth"><span class="ic">🌱</span>Growth</button>
 </nav>
 
 <!-- battle arena -->
@@ -894,7 +893,7 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
   <button class="go" id="dlBackup" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-bottom:8px">⤓ Download backup file</button>
   <button class="go" id="importBackup" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">⤒ Restore from file</button>
   <button class="go" id="restoreAuto" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">↩ Restore last auto-backup</button>
-  <button class="go" onclick="showStorageDiagnostic()" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🔍 Check Storage & Portraits</button>
+  <button class="go" onclick="checkPortraitStorage()" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🔍 Check Portraits</button>
   <button class="go" id="backupCenter" style="background:linear-gradient(135deg,#37d67a,#36e0e6);color:#06170d;margin-top:8px">🧰 Open Backup Center</button>
   <button class="go" id="devToolsToggle" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">🛠 Show Developer Tools</button>
   <div id="devToolsWrap" style="display:none">
@@ -1751,7 +1750,7 @@ function weeklyRecapText(){
   const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain(), boss=ensureRaid(), bpct=Math.min(100,Math.round(boss.dmg/boss.max*100));
   const lines=[];
   lines.push('OATHFORGE — WEEKLY RECAP');
-  lines.push('<span onclick="showStorageDiagnostic()" style="cursor:pointer;text-decoration:underline">Build: '+APP_BUILD+'</span>');
+  lines.push('Build: '+APP_BUILD);
   lines.push('');
   lines.push('Actions logged: '+(W.completed||0));
   lines.push('Domains touched: '+touchedDomainsThisWeek().length+'/8');
@@ -1776,7 +1775,7 @@ function monthlyRecapText(){
   const lines=[];
   lines.push('OATHFORGE — MONTHLY RECAP');
   lines.push('Month: '+periodKey('monthly').replace('M',''));
-  lines.push('<span onclick="showStorageDiagnostic()" style="cursor:pointer;text-decoration:underline">Build: '+APP_BUILD+'</span>');
+  lines.push('Build: '+APP_BUILD);
   lines.push('');
   lines.push('Actions completed: '+(M.completed||0));
   lines.push('Domains touched: '+touchedDomainsThisMonth().length+'/8');
@@ -2138,68 +2137,21 @@ function setHeroPortraitOverride(heroId,img){
   if(!S.heroPortraits||typeof S.heroPortraits!=='object') S.heroPortraits={};
   const h=(S.heroes||[]).find(x=>x&&x.id===heroId);
   if(img){ S.heroPortraits[heroId]=img; if(h) h.img=img; }
-  else { delete S.heroPortraits[heroId]; if(h) h.img=null; } _portraitsDirty=true;
+  else { delete S.heroPortraits[heroId]; if(h) h.img=null; }
 }
 const REMOVED_HERO_IDS_V1=new Set(["marvel__wong","marvel__shuri_black_panther","marvel__maria_hill","marvel__valkyrie","marvel__silver_surfer","marvel__thanos","marvel__kang_the_conqueror","marvel__galactus","marvel__sersi","marvel__ikaris","marvel__thena","marvel__kingo","marvel__makkari","marvel__druig","marvel__phastos","marvel__gilgamesh","marvel__blade","marvel__werewolf_by_night","marvel__man_thing","marvel__h_e_r_b_i_e","marvel__bishop","marvel__x_23_laura_kinney","marvel__negasonic_teenage_warhead","marvel__juggernaut","marvel__sabretooth","marvel__toad","marvel__lady_deathstrike","marvel__apocalypse","marvel__cassandra_nova","marvel__pyro","marvel__angel_archangel","marvel__havok","marvel__banshee","marvel__darwin","marvel__cannonball","marvel__wolfsbane","marvel__sunspot","marvel__venom","marvel__carnage","marvel__kingpin","marvel__bullseye","marvel__killmonger","marvel__red_skull","marvel__ultron","marvel__green_goblin","marvel__doctor_octopus","marvel__mysterio","marvel__vulture","marvel__hela","marvel__abomination","marvel__taskmaster","marvel__baron_zemo","marvel__gorr_the_god_butcher","marvel__high_evolutionary","star_wars__darth_vader","star_wars__cal_kestis","star_wars__kylo_ren","star_wars__darth_maul","star_wars__darth_revan","star_wars__darth_sidious","star_wars__count_dooku","star_wars__boba_fett","star_wars__jango_fett","star_wars__captain_rex","star_wars__commander_cody","star_wars__grand_admiral_thrawn","star_wars__baylan_skoll","star_wars__shin_hati","star_wars__asajj_ventress","star_wars__general_grievous","harry_potter__ginny_weasley","harry_potter__fred_weasley","harry_potter__george_weasley","harry_potter__cedric_diggory","harry_potter__mad_eye_moody","pokemon__mewtwo","pokemon__espeon","pokemon__sylveon","pokemon__tyranitar","pokemon__metagross","pokemon__salamence","pokemon__lugia","pokemon__ho_oh","pokemon__suicune","pokemon__entei","pokemon__raikou","pokemon__zapdos","pokemon__articuno","pokemon__moltres","pokemon__machamp","world_of_warcraft__bolvar_fordragon","world_of_warcraft__medivh","world_of_warcraft__garrosh_hellscream","world_of_warcraft__voljin","world_of_warcraft__cairne_bloodhoof","world_of_warcraft__baine_bloodhoof","world_of_warcraft__rexxar","world_of_warcraft__turalyon","world_of_warcraft__kaelthas_sunstrider","world_of_warcraft__lorthemar_theron","world_of_warcraft__maiev_shadowsong","world_of_warcraft__sargeras","red_rising__ephraim_ti_horn","red_rising__lyria","red_rising__aja_au_grimmus","red_rising__nero_au_augustus","red_rising__octavia_au_lune","red_rising__lysander_au_lune","red_rising__apollonius_au_valii_rath","red_rising__atlas_au_raa","stormlight_archive__wyndle","stormlight_archive__rlain","stormlight_archive__nightblood","stormlight_archive__eshonai","stormlight_archive__venli","stormlight_archive__moash","stormlight_archive__taravangian","game_of_thrones__brienne_of_tarth","disney_pixar__wasabi","disney_pixar__honey_lemon","disney_pixar__fred","disney_pixar__tadashi_hamada","disney_pixar__yokai","disney_pixar__jack_jack","disney_pixar__edna_mode","disney_pixar__syndrome","disney_pixar__randall_boggs","disney_pixar__roz","disney_pixar__mr_waternoose","disney_pixar__bullseye","disney_pixar__rex","disney_pixar__hamm","disney_pixar__slinky_dog","disney_pixar__bo_peep","disney_pixar__laurel_lightfoot","disney_pixar__wilden_lightfoot","disney_pixar__the_manticore_corey","disney_pixar__officer_colt_bronco","disney_pixar__blazey","disney_pixar__carl_fredricksen","disney_pixar__russell","disney_pixar__kevin","disney_pixar__sadness","disney_pixar__anger","disney_pixar__fear","disney_pixar__disgust","disney_pixar__anxiety","disney_pixar__miguel","disney_pixar__hector","disney_pixar__mama_imelda","disney_pixar__ernesto_de_la_cruz","disney_pixar__te_ka","disney_pixar__king_candy","fourth_wing__sloane_mairi","fourth_wing__catriona_cordella","fourth_wing__aaric_graycastle","fourth_wing__jesinia_neilwart","fourth_wing__jack_barlowe","fourth_wing__lilith_sorrengail","fourth_wing__general_melgren","a_court_of_thorns_and_roses__varian","a_court_of_thorns_and_roses__tarquin","a_court_of_thorns_and_roses__kallias","a_court_of_thorns_and_roses__viviane","a_court_of_thorns_and_roses__jurian","a_court_of_thorns_and_roses__vassa","a_court_of_thorns_and_roses__amarantha","a_court_of_thorns_and_roses__king_of_hybern","a_court_of_thorns_and_roses__bryaxis"]);
 function trimRemovedHeroesV1(){ if(!Array.isArray(S.heroes)) return; const ownedRemoved=S.heroes.filter(h=>h&&REMOVED_HERO_IDS_V1.has(h.id)&&h.owned).length; S.heroes=S.heroes.filter(h=>h&&!REMOVED_HERO_IDS_V1.has(h.id)); if(Array.isArray(S.wishlist)) S.wishlist=S.wishlist.filter(x=>!REMOVED_HERO_IDS_V1.has(x)); if(!S._rosterTrimV1){ if(ownedRemoved>0){ S.summonTickets=(S.summonTickets||0)+ownedRemoved; S._removedTicketGrant=ownedRemoved; } S._rosterTrimV1=true; } }
-function showStorageDiagnostic(){
-  const KEY='lifequest_afk_v1', PKEY=KEY+'__portraits';
-  const out=[];
-  
-  // Check localStorage
-  const lsRaw=localStorage.getItem(KEY);
-  const lsData=lsRaw?JSON.parse(lsRaw):{};
-  out.push('=== LOCALSTORAGE ===');
-  out.push('Main save: '+(!!lsRaw?'✓':'✗'));
-  if(lsRaw){
-    out.push('S.heroPortraits: '+(Object.keys(lsData.heroPortraits||{}).length)+' keys');
-    out.push('Heroes with .img: '+(lsData.heroes||[]).filter(h=>h&&h.img).length);
-  }
-  
-  // Try IndexedDB
-  out.push('');
-  out.push('=== INDEXEDDB ===');
+function checkPortraitStorage(){
+  const KEY='lifequest_afk_v1';
+  const raw=localStorage.getItem(KEY);
+  if(!raw){ toast('No save found'); return; }
   try{
-    const req=indexedDB.open('claude-artifacts')||indexedDB.open('default')||indexedDB.open('oathforge');
-    if(req&&req.onsuccess){
-      req.onsuccess=()=>{
-        const db=req.result;
-        try{
-          const stName=Array.from(db.objectStoreNames)[0]||'data';
-          const tx=db.transaction(stName);
-          const st=tx.objectStore(stName);
-          const mainReq=st.get(KEY);
-          mainReq.onsuccess=()=>{
-            const idbMain=mainReq.result?JSON.parse(mainReq.result):{};
-            out.push('Main in IDB: '+(!!mainReq.result?'✓':'✗'));
-            if(mainReq.result){
-              out.push('S.heroPortraits: '+(Object.keys(idbMain.heroPortraits||{}).length)+' keys');
-              out.push('Heroes with .img: '+(idbMain.heroes||[]).filter(h=>h&&h.img).length);
-            }
-            const portraitReq=st.get(PKEY);
-            portraitReq.onsuccess=()=>{
-              const idbPort=portraitReq.result?JSON.parse(portraitReq.result):{};
-              out.push('Separate portrait store: '+(!!portraitReq.result?'✓':'✗'));
-              if(portraitReq.result) out.push('Portrait keys: '+Object.keys(idbPort).length);
-              showModal('<div style="max-height:80vh;overflow:auto;white-space:pre;font-size:12px;font-family:monospace">'+out.map(x=>esc(x)).join('<br>')+'</div>', 'Storage Diagnostic');
-            };
-          };
-        }catch(e){
-          out.push('Error: '+e.message);
-          showModal('<div style="white-space:pre">'+out.join('<br>')+'</div>', 'Storage Diagnostic');
-        }
-      };
-      req.onerror=()=>{
-        out.push('IDB access failed');
-        showModal('<div style="white-space:pre">'+out.join('<br>')+'</div>', 'Storage Diagnostic');
-      };
-    } else {
-      out.push('IndexedDB unavailable');
-      showModal('<div style="white-space:pre">'+out.join('<br>')+'</div>', 'Storage Diagnostic');
-    }
+    const data=JSON.parse(raw);
+    const portCount=Object.keys(data.heroPortraits||{}).length;
+    const imgCount=(data.heroes||[]).filter(h=>h&&h.img).length;
+    toast('Portraits: '+portCount+' in vault, '+imgCount+' on heroes');
   }catch(e){
-    out.push('Error: '+e.message);
-    showModal('<div style="white-space:pre">'+out.join('<br>')+'</div>', 'Storage Diagnostic');
+    toast('Error: '+e.message);
   }
 }
 
@@ -2274,12 +2226,6 @@ function prevPeriodDate(freq,d){ const x=new Date(d||new Date());
   return x;
 }
 const FREQS=['daily','weekly','monthly'];
-const TASK_FREQ_OF={dailies:'daily',weeklies:'weekly',monthlies:'monthly'};
-function taskIsRecurring(st){ return st==='dailies'||st==='weeklies'||st==='monthlies'; }
-function taskBaseArr(st){ return st==='todos'?S.todos:S.dailies; }
-function taskListFor(st){ if(st==='todos') return (S.todos||[]); const fr=TASK_FREQ_OF[st]||'daily'; return (S.dailies||[]).filter(d=>(d.freq||'daily')===fr); }
-function taskActiveOnDay(it,dow){ if(!it||!Array.isArray(it.activeDays)||!it.activeDays.length||it.activeDays.length>=7) return true; return it.activeDays.indexOf(dow)>=0; }
-function taskActiveToday(it){ return taskActiveOnDay(it,new Date().getDay()); }
 const DOMAINS=[
   ['faith','Faith','#b88af0','✝',['pray','prayer','bible','scripture','church','worship','devotion','reflect','meditat','gratitude','sermon','rosary']],
   ['marriage','Marriage','#ff5d9e','💞',['spouse','wife','husband','partner','date night','marriage','love note','anniversary']],
@@ -2383,7 +2329,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.12.15-portrait-store';
+const APP_BUILD='v2.12.10-clash-clean4l-speed-stability';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2621,7 +2567,8 @@ let S=null, view='home', subtab='dailies', tick=null, ambient=null, awayReport=n
 
 async function load(){
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
-  let raw=null; try{ raw=await IDB.get(KEY); }catch(e){ raw=null; } if(!raw){ try{ raw=await Store.get(KEY); }catch(e){} } S=raw?JSON.parse(raw):seed(); try{ const _pRaw=await IDB.get(PKEY); const _pSep=_pRaw?JSON.parse(_pRaw):null; if(_pSep||(S&&S.heroPortraits)){ S.heroPortraits=Object.assign({}, _pSep||{}, (S&&S.heroPortraits)||{}); if(S.heroPortraits&&Object.keys(S.heroPortraits).length) _portraitsDirty=true; } }catch(e){}
+  const raw=await Store.get(KEY);
+  S=raw?JSON.parse(raw):seed();
   migrate();
   applyTuneOverrides();
   recalcCollection();
@@ -2631,8 +2578,7 @@ async function load(){
   if(graceReport){ const g=graceReport; graceReport=null; setTimeout(()=>toast('🕊️ Grace Day used — your streak'+(g.saved>1?'s are':' is')+' safe. Welcome back.'), awayReport?1800:900); }
   if(albumMsgs&&albumMsgs.length) setTimeout(()=>toast(albumMsgs.join(' · ')), awayReport?1200:600);
 }
-async function save(){ if(S){ try{ ensureHeroPortraitVault(); }catch(e){} S.lastSavedAt=Date.now(); S.appBuild=APP_BUILD; } const _data=JSON.stringify(S,(k,v)=>(k==='heroPortraits'||k==='img')?undefined:v); let _ok=false; try{ await IDB.put(KEY,_data); _ok=true; }catch(e){} if(_data.length<2000000){ try{ await Store.set(KEY,_data); }catch(e){} } if(!_ok){ try{ localStorage.setItem(KEY,_data); _ok=true; }catch(e){} } if(_portraitsDirty && S){ try{ await IDB.put(PKEY,JSON.stringify(S.heroPortraits||{})); _portraitsDirty=false; }catch(e){} } if(!_ok && typeof toast==='function'){ try{ toast('⚠️ Save failed — device storage full. Recent changes may not persist.'); }catch(e){} } return _ok; }
-const PKEY=KEY+'__portraits'; let _portraitsDirty=false;
+async function save(){ if(S){ try{ ensureHeroPortraitVault(); }catch(e){} S.lastSavedAt=Date.now(); S.appBuild=APP_BUILD; } await Store.set(KEY,JSON.stringify(S)); }
 const BAKKEY=KEY+'__autobak';
 async function autoBackup(reason){ try{ const cur=await Store.get(KEY); if(cur) await Store.set(BAKKEY,JSON.stringify({reason:reason||'',at:Date.now(),data:cur})); }catch(e){} }
 async function readAutoBackup(){ try{ const raw=await Store.get(BAKKEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
@@ -2699,8 +2645,7 @@ function rollover(){
   const now=new Date(); const wouldReset=[];
   S.dailies.forEach(d=>{ const cur=periodKey(d.freq,now);
     if(d.pk!==cur){ const prev=periodKey(d.freq,prevPeriodDate(d.freq,now));
-      const prevActive=((d.freq||'daily')!=='daily')?true:taskActiveOnDay(d,prevPeriodDate(d.freq,now).getDay());
-      const missed=prevActive && !(d.done && d.pk===prev);
+      const missed=!(d.done && d.pk===prev);
       if(missed && d.streak>0) wouldReset.push(d);
       d.done=false; d.pk=cur; } });
   if(wouldReset.length && (S.grace||0)>0){ S.grace--; graceReport={saved:wouldReset.length}; }
@@ -2980,30 +2925,29 @@ function renderTasks(v){
   v.innerHTML=
     questBoardHTML()+chest+
     '<div class="tabs" id="subtabs">'+
-      ['dailies','weeklies','monthlies','todos'].map(t=>'<button data-s="'+t+'" class="'+(t===subtab?'on':'')+'">'+(t==='todos'?'Quests':t[0].toUpperCase()+t.slice(1))+'</button>').join('')+
+      ['dailies','habits','todos'].map(t=>'<button data-s="'+t+'" class="'+(t===subtab?'on':'')+'">'+(t==='todos'?'Quests':t[0].toUpperCase()+t.slice(1))+'</button>').join('')+
     '</div>'+
-    '<div class="head"><h2>'+(subtab==='todos'?'Quests':subtab[0].toUpperCase()+subtab.slice(1))+'</h2><button class="add" id="addTask">+ Add</button></div>'+
+    '<div class="head"><h2>'+(subtab==='todos'?'Quests':subtab)+'</h2><button class="add" id="addTask">+ Add</button></div>'+
     '<div class="list" id="list"></div>';
   document.getElementById('subtabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;subtab=b.dataset.s;render();};
   document.getElementById('addTask').onclick=()=>openTaskSheet(null);
   const qb=document.getElementById('openQuestBoard'); if(qb) qb.onclick=showQuestBoard;
   const L=document.getElementById('list');
-  let items=taskListFor(subtab).slice();
-  if(S.doneMode!=='keep'){
+  let items=S[subtab].slice();
+  if(subtab!=='habits' && S.doneMode!=='keep'){
     if(S.doneMode==='hide') items=items.filter(it=>!it.done);
     else items.sort((a,b)=>(a.done?1:0)-(b.done?1:0));
   }
-  if(taskIsRecurring(subtab)) items.sort((a,b)=>(taskActiveToday(a)?0:1)-(taskActiveToday(b)?0:1));
-  if(!items.length){ const msg=taskListFor(subtab).length?(subtab==='dailies'?'All visible dailies are done. Switch Done Mode in Settings if you want to review completed quests.':subtab==='todos'?'All visible quests are done. Add one small quest if you want another win.':'Nothing left to show right now.'):(subtab==='dailies'?'No dailies yet.<br>Add one anchor habit to start your day.':subtab==='habits'?'No habits yet.<br>Add a repeatable tracker like hydrate, steps, or game-free block.':'No quests yet.<br>Add one small one-off task to keep momentum.'); L.innerHTML='<div class="empty">'+msg+'</div>'; return; }
+  if(!items.length){ const msg=S[subtab].length?(subtab==='dailies'?'All visible dailies are done. Switch Done Mode in Settings if you want to review completed quests.':subtab==='todos'?'All visible quests are done. Add one small quest if you want another win.':'Nothing left to show right now.'):(subtab==='dailies'?'No dailies yet.<br>Add one anchor habit to start your day.':subtab==='habits'?'No habits yet.<br>Add a repeatable tracker like hydrate, steps, or game-free block.':'No quests yet.<br>Add one small one-off task to keep momentum.'); L.innerHTML='<div class="empty">'+msg+'</div>'; return; }
   items.forEach((it,i)=>{
     const c=document.createElement('div');
-    c.className='card'+(it.done?' done':'')+((taskIsRecurring(subtab)&&!taskActiveToday(it))?' resting':''); c.style.animationDelay=(i*0.03)+'s';
+    c.className='card'+((subtab!=='habits'&&it.done)?' done':''); c.style.animationDelay=(i*0.03)+'s';
     let right='';
-    if(taskIsRecurring(subtab)) right=(!taskActiveToday(it))?'<div class="chk resting" title="Rest day">💤</div>':'<div class="chk '+(it.done?'on':'')+'" data-act="daily" data-id="'+it.id+'">'+(it.done?'✓':'')+'</div>';
+    if(subtab==='dailies') right='<div class="chk '+(it.done?'on':'')+'" data-act="daily" data-id="'+it.id+'">'+(it.done?'✓':'')+'</div>';
     else if(subtab==='habits') right='<div class="btnset">'+(it.down?'<button class="sq minus" data-act="hminus" data-id="'+it.id+'">−</button>':'')+(it.up?'<button class="sq plus" data-act="hplus" data-id="'+it.id+'">+</button>':'')+'</div>';
     else right='<div class="chk '+(it.done?'on':'')+'" data-act="todo" data-id="'+it.id+'">'+(it.done?'✓':'')+'</div>';
     let meta;
-    if(taskIsRecurring(subtab)){ const cr=CRYSTALS[it.diff]||CRYSTALS.med, nm=nextStreakMs(it.streak); meta=(taskActiveToday(it)?'':'💤 Rest day · ')+cap(it.freq)+' · 🔥 '+it.streak+(nm?'→'+nm:'')+' · +'+cr+'◆ +Momentum'; }
+    if(subtab==='dailies'){ const cr=CRYSTALS[it.diff]||CRYSTALS.med, nm=nextStreakMs(it.streak); meta=cap(it.freq)+' · 🔥 '+it.streak+(nm?'→'+nm:'')+' · +'+cr+'◆ +Momentum'; }
     else if(subtab==='habits') meta=cap(it.freq)+' · '+(it.up?'+'+(it.diff==='hard'?40:(it.diff==='med'?20:8))+'⦿ ':'')+(it.down?'slip ':'')+'· '+(it.count>=0?'+':'')+it.count;
     else meta=it.diff+' · +'+(CRYSTALS[it.diff]||CRYSTALS.med)+'◆ +'+(it.diff==='hard'?5:(it.diff==='med'?3:1))+'◈';
     c.innerHTML='<div class="diff '+it.diff+'"></div><div class="body" data-act="edit" data-id="'+it.id+'"><div class="t">'+esc(it.title)+'</div><div class="meta">'+domainChip(it)+meta+'</div></div>'+right;
@@ -4359,32 +4303,31 @@ function endBattle(win){
 
 /* ===== task sheet ===== */
 function openTaskSheet(id){
-  const item=id?taskBaseArr(subtab).find(x=>x.id===id):null;
+  const item=id?S[subtab].find(x=>x.id===id):null;
   let diff=item?item.diff:'med';
   let dir=item?(item.up&&item.down?'both':item.down?'down':'up'):'up';
-  let freq=item&&item.freq?item.freq:(TASK_FREQ_OF[subtab]||'daily');
-  let activeDays=item&&Array.isArray(item.activeDays)&&item.activeDays.length?item.activeDays.slice():[0,1,2,3,4,5,6];
+  let freq=item&&item.freq?item.freq:'daily';
   let domain=item?(item.domain||''):'';
-  const kind=subtab==='dailies'?'Daily':subtab==='weeklies'?'Weekly':subtab==='monthlies'?'Monthly':'Quest';
+  const kind=subtab==='dailies'?'Daily':subtab==='habits'?'Habit':'Quest';
   const s=document.getElementById('sheet');
   let h='<h3>'+(id?'Edit ':'New ')+kind+'</h3><label>Title</label><input type="text" id="f_title" maxlength="60" value="'+(item?esc(item.title):'')+'">';
   h+='<label>Difficulty</label><div class="segs" id="f_diff">'+['easy','med','hard'].map(d=>'<button data-d="'+d+'" class="'+(d===diff?'on':'')+'">'+d+'</button>').join('')+'</div>';
-  if(taskIsRecurring(subtab)) h+='<label>Active days <span style="color:var(--muted);font-weight:600">(tap to skip)</span></label><div class="segs daypick" id="f_days">'+['Su','Mo','Tu','We','Th','Fr','Sa'].map((d,i)=>'<button data-day="'+i+'" class="'+(activeDays.indexOf(i)>=0?'on':'')+'">'+d+'</button>').join('')+'</div>';
-  /* habits removed */
+  if(subtab!=='todos') h+='<label>Repeats</label><div class="segs" id="f_freq">'+FREQS.map(fq=>'<button data-fq="'+fq+'" class="'+(fq===freq?'on':'')+'">'+cap(fq)+'</button>').join('')+'</div>';
+  if(subtab==='habits') h+='<label>Track</label><div class="segs" id="f_dir"><button data-x="up" class="'+(dir==='up'?'on':'')+'">Good +</button><button data-x="down" class="'+(dir==='down'?'on':'')+'">Bad −</button><button data-x="both" class="'+(dir==='both'?'on':'')+'">Both</button></div>';
   h+='<label>Life domain</label><select id="f_domain" style="width:100%;box-sizing:border-box;padding:11px 13px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600">'+
     '<option value="">— None —</option>'+DOMAINS.map(d=>'<option value="'+d[0]+'"'+(domain===d[0]?' selected':'')+'>'+d[3]+' '+d[1]+'</option>').join('')+'</select>';
   h+='<button class="go" id="f_save">'+(id?'Save':'Add')+'</button>'+(id?'<button class="ghost" id="f_del">Delete</button>':'');
   s.innerHTML=h; showScrim('scrim');
-  segPick('f_diff',d=>diff=d); { const dEl=document.getElementById('f_days'); if(dEl) dEl.onclick=ev=>{ const b=ev.target.closest('button'); if(!b) return; const n=+b.dataset.day; const k=activeDays.indexOf(n); if(k>=0){ if(activeDays.length>1){ activeDays.splice(k,1); b.classList.remove('on'); } } else { activeDays.push(n); b.classList.add('on'); } }; }
+  segPick('f_diff',d=>diff=d); if(subtab!=='todos') segPick('f_freq',f=>freq=f,'fq'); if(subtab==='habits') segPick('f_dir',d=>dir=d,'x');
   document.getElementById('f_save').onclick=()=>{
     const title=document.getElementById('f_title').value.trim(); if(!title)return;
     const dom=document.getElementById('f_domain').value||null;
-    if(taskIsRecurring(subtab)){ const fr=TASK_FREQ_OF[subtab]||'daily'; const ad=(activeDays.length>=7)?null:activeDays.slice().sort((a,b)=>a-b); if(item){ item.title=title; item.diff=diff; item.domain=dom; item.activeDays=ad; if(item.freq!==fr){ item.freq=fr; item.pk=periodKey(fr); item.done=false; } } else S.dailies.push({id:uid(),title,diff,freq:fr,domain:dom,streak:0,done:false,pk:periodKey(fr),activeDays:ad}); }
-    else if(false){}
+    if(subtab==='dailies'){ if(item){item.title=title;item.diff=diff;item.domain=dom; if(item.freq!==freq){item.freq=freq;item.pk=periodKey(freq);item.done=false;}} else S.dailies.push({id:uid(),title,diff,freq,domain:dom,streak:0,done:false,pk:periodKey(freq)}); }
+    else if(subtab==='habits'){ const up=dir!=='down',down=dir!=='up'; if(item){item.title=title;item.diff=diff;item.up=up;item.down=down;item.domain=dom; if(item.freq!==freq){item.freq=freq;item.pk=periodKey(freq);item.count=0;}} else S.habits.push({id:uid(),title,diff,freq,up,down,domain:dom,count:0,pk:periodKey(freq)}); }
     else { if(item){item.title=title;item.diff=diff;item.domain=dom;} else S.todos.push({id:uid(),title,diff,domain:dom,done:false}); }
     hideScrim(); render(); save();
   };
-  const del=document.getElementById('f_del'); if(del) del.onclick=()=>{ const base=taskBaseArr(subtab); const i=base.findIndex(x=>x.id===id); if(i>=0) base.splice(i,1); hideScrim(); render(); save(); };
+  const del=document.getElementById('f_del'); if(del) del.onclick=()=>{ S[subtab]=S[subtab].filter(x=>x.id!==id); hideScrim(); render(); save(); };
 }
 
 /* ===== hero sheet (add/edit/level/team) ===== */
@@ -4439,7 +4382,7 @@ function openPortraitCrop(src,cb){
     wrap.querySelector('#cropCancel').onclick=()=>wrap.remove();
     wrap.querySelector('#cropReset').onclick=()=>{z.value=1;x.value=0;y.value=0;draw();};
     wrap.querySelector('#cropSave').onclick=()=>{ const out=document.createElement('canvas'); out.width=192; out.height=192; const o=out.getContext('2d');
-      const scale=out.width/cv.width; o.scale(scale,scale); o.drawImage(cv,0,0); const data=(function(){ try{ const w=out.toDataURL('image/webp',0.92); if(w&&w.indexOf('data:image/webp')===0) return w; }catch(e){} try{ const j=out.toDataURL('image/jpeg',0.92); if(j&&j.indexOf('data:image/jpeg')===0) return j; }catch(e){} return out.toDataURL('image/png'); })(); wrap.remove(); cb(data); };
+      const scale=out.width/cv.width; o.scale(scale,scale); o.drawImage(cv,0,0); const data=out.toDataURL('image/png'); wrap.remove(); cb(data); };
   };
   im.src=src;
 }
@@ -6173,7 +6116,7 @@ function growthQuickActionsV148(){
 }
 function renderGrowth(v){
   injectGrowthHubStyles(); injectLifeBaseVisualStylesV148();
-  v.innerHTML='<div class="head"><h2>Forge</h2><span style="color:var(--muted);font-weight:700;font-size:13px">sanctuary map</span></div>'+growthHeroV148()+domainFocusV148()+sanctuaryMapV148()+growthModesHTML().replace('growthModeGrid','growthModeGrid v148')+growthQuickActionsV148();
+  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">sanctuary map</span></div>'+growthHeroV148()+domainFocusV148()+sanctuaryMapV148()+growthModesHTML().replace('growthModeGrid','growthModeGrid v148')+growthQuickActionsV148();
   bindLifeCards();
   const bind=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
   bind('gh_domains',showDomainLevels); bind('gh_base',showSanctuary); bind('gh_strategy',showStrategyModal); bind('gh_weekly',showWeeklyReview); bind('gh_monthly',showMonthlyReview); bind('gh_recovery',showRecoveryModal);
@@ -6455,7 +6398,7 @@ function ftRecordError(kind,msg){
 function ftExportText(){
   const ft=ensureFieldTest(), days=Object.values(ft.days||{}).sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,14);
   const lines=[];
-  lines.push('Oathforge Field Test'); lines.push('<span onclick="showStorageDiagnostic()" style="cursor:pointer;text-decoration:underline">Build: '+APP_BUILD+'</span>'); lines.push('Exported: '+new Date().toLocaleString()); lines.push('');
+  lines.push('Oathforge Field Test'); lines.push('Build: '+APP_BUILD); lines.push('Exported: '+new Date().toLocaleString()); lines.push('');
   lines.push('Recent days');
   days.forEach(d=>{ lines.push('- '+d.date+' | start '+(d.startedAt?timeAgo(d.startedAt):'—')+' | end '+(d.endedAt?timeAgo(d.endedAt):'—')+' | rating '+(d.rating||'—')+' | screens '+(d.screens||[]).join(', ')); });
   lines.push(''); lines.push('Notes');
@@ -8732,7 +8675,7 @@ renderGrowth = function(v){
   const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain();
   const sm=DKEY[strong.k], lm=DKEY[light.k];
   v.innerHTML=
-    '<div class="head"><h2>Forge</h2><span style="color:var(--muted);font-weight:700;font-size:13px">who I am becoming</span></div>'+ 
+    '<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">who I am becoming</span></div>'+ 
     monthlySummaryHTML()+
     '<div class="identityFocus"><b style="color:var(--ink)">Focus:</b> Meaning first. The app handles strategy quietly so you can act.</div>'+ 
     '<div class="lifesys-grid">'+
@@ -8814,7 +8757,7 @@ function v170RenderHome(v){
   v.className='v170GameShell v170Home';
   v.innerHTML=setup+
     '<section class="v170Stage" style="--sceneColor:'+d.color+';--sceneArt:url('+v170SceneArt(k)+')"><div class="v170StagePad"><span class="v170Kicker">'+d.icon+' Today\'s Quest · '+esc(d.label)+'</span><div class="v170QuestTitle">Scene-first daily hub</div><div class="v170QuestTask">'+esc(title)+'</div><p class="v170QuestWhy">'+esc(why)+'</p><div class="v170RewardLine">'+(win.icon||'◆')+' '+esc(win.title||'Closest win')+' · '+esc(win.tag||'READY')+'</div></div><div class="v170HeroAnchor">'+v170HeroHTML(h)+'</div><div class="v170ActionDock"><button id="v170StartQuest" class="v170PrimaryAction">Start Quest</button><button id="v170Quests" class="v170SecondaryAction">Quests</button><button id="v170Review" class="v170SecondaryAction">Review</button></div></section>'+v170TodayPathHTML(doneN,totN)+
-    '<details class="v170Manage"><summary>Manage rewards / deeper systems</summary><div class="v170ManageGrid"><button id="v170GoHeroes">Heroes</button><button id="v170GoBattles">Battles</button><button id="v170GoGrowth">Forge</button><button id="v170Settings">Settings</button></div></details>'+v170LastActionSimple()+v170DailyReviewEntry(pct);
+    '<details class="v170Manage"><summary>Manage rewards / deeper systems</summary><div class="v170ManageGrid"><button id="v170GoHeroes">Heroes</button><button id="v170GoBattles">Battles</button><button id="v170GoGrowth">Growth</button><button id="v170Settings">Settings</button></div></details>'+v170LastActionSimple()+v170DailyReviewEntry(pct);
   const start=document.getElementById('v170StartQuest'); if(start) start.onclick=()=> next?v170GoToTask(next):navTo('quests');
   const q=document.getElementById('v170Quests'); if(q) q.onclick=()=>navTo('quests');
   const r=document.getElementById('v170Review'); if(r) r.onclick=()=>{ if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); };
@@ -8833,7 +8776,7 @@ function v170LastActionSimple(){
 }
 function v170DailyReviewEntry(pct){
   const show=(pct>=60)||(new Date().getHours()>=18);
-  return '<div class="v170SceneBanner" style="--sceneColor:#ffd95a;--sceneArt:url('+v170SceneArt('faith')+')"><span class="v170Kicker">'+(show?'Review ready':'Later today')+'</span><h2>Close the loop</h2><p>'+(show?'A short review turns effort into identity.':'Do one more real action first; review when the day has shape.')+'</p><div class="v170BannerActions"><button id="v170Review2">Review Day</button><button id="v170Growth2">Forge</button></div></div>';
+  return '<div class="v170SceneBanner" style="--sceneColor:#ffd95a;--sceneArt:url('+v170SceneArt('faith')+')"><span class="v170Kicker">'+(show?'Review ready':'Later today')+'</span><h2>Close the loop</h2><p>'+(show?'A short review turns effort into identity.':'Do one more real action first; review when the day has shape.')+'</p><div class="v170BannerActions"><button id="v170Review2">Review Day</button><button id="v170Growth2">Growth</button></div></div>';
 }
 const __v170_renderHome = renderHome;
 renderHome = function(v){ try{ v170RenderHome(v); setTimeout(()=>{ const a=document.getElementById('v170Review2'); if(a) a.onclick=()=>{ if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); }; const g=document.getElementById('v170Growth2'); if(g) g.onclick=()=>navTo('growth'); },0); }catch(e){ console.error('v1.70 home failed',e); __v170_renderHome(v); } };
@@ -8975,7 +8918,7 @@ function v171RenderHome(v){
   const hs=v171HomeHeroes();
   const exp=typeof expRate==='function'?expRate():0, charge=typeof chargeDisplay==='function'?chargeDisplay():String(Math.round(S.charge||0));
   v.className='v170GameShell v171GameShell v171Home';
-  v.innerHTML='<section class="v171LivingStage" style="--sceneColor:'+d.color+';--sceneArt:url('+v170SceneArt(k)+')"><div class="v171StagePad"><span class="v171Kicker">'+d.icon+' Living World · '+esc(d.label)+'</span><div class="v171QuestName">Today\'s Quest</div><div class="v171QuestTask">'+esc(title)+'</div><p class="v171QuestLine">'+esc(why)+'</p><div class="v170RewardLine" style="margin-top:12px">'+(win.icon||'◆')+' '+esc(win.title||'Closest win')+' · '+esc(win.tag||'READY')+'</div></div><div class="v171SquadStage"><div class="v171Ground"></div>'+hs.map(v171HeroTokenHTML).join('')+'</div><div class="v171IdleHUD"><span class="v171IdleChip">⚡ Charge <b>'+esc(charge)+'</b></span><span class="v171IdleChip">✦ EXP Flow <b>+'+esc(String(exp))+'/hr</b></span><span class="v171IdleChip">'+doneN+'/'+totN+' Quests</span></div><div class="v171EnergyRail"><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i></div><div class="v171ActionDock"><button id="v171StartQuest" class="v171PrimaryAction">Start Quest</button><button id="v171Quests" class="v171SecondaryAction">Quests</button><button id="v171Review" class="v171SecondaryAction">Review</button></div></section>'+v170TodayPathHTML(doneN,totN)+'<details class="v170Manage"><summary>Manage rewards / deeper systems</summary><div class="v170ManageGrid"><button id="v171GoHeroes">Heroes</button><button id="v171GoBattles">Battles</button><button id="v171GoGrowth">Forge</button><button id="v171Settings">Settings</button></div></details>'+v170LastActionSimple()+v170DailyReviewEntry(pct);
+  v.innerHTML='<section class="v171LivingStage" style="--sceneColor:'+d.color+';--sceneArt:url('+v170SceneArt(k)+')"><div class="v171StagePad"><span class="v171Kicker">'+d.icon+' Living World · '+esc(d.label)+'</span><div class="v171QuestName">Today\'s Quest</div><div class="v171QuestTask">'+esc(title)+'</div><p class="v171QuestLine">'+esc(why)+'</p><div class="v170RewardLine" style="margin-top:12px">'+(win.icon||'◆')+' '+esc(win.title||'Closest win')+' · '+esc(win.tag||'READY')+'</div></div><div class="v171SquadStage"><div class="v171Ground"></div>'+hs.map(v171HeroTokenHTML).join('')+'</div><div class="v171IdleHUD"><span class="v171IdleChip">⚡ Charge <b>'+esc(charge)+'</b></span><span class="v171IdleChip">✦ EXP Flow <b>+'+esc(String(exp))+'/hr</b></span><span class="v171IdleChip">'+doneN+'/'+totN+' Quests</span></div><div class="v171EnergyRail"><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i><i class="v171EnergyDot"></i></div><div class="v171ActionDock"><button id="v171StartQuest" class="v171PrimaryAction">Start Quest</button><button id="v171Quests" class="v171SecondaryAction">Quests</button><button id="v171Review" class="v171SecondaryAction">Review</button></div></section>'+v170TodayPathHTML(doneN,totN)+'<details class="v170Manage"><summary>Manage rewards / deeper systems</summary><div class="v170ManageGrid"><button id="v171GoHeroes">Heroes</button><button id="v171GoBattles">Battles</button><button id="v171GoGrowth">Growth</button><button id="v171Settings">Settings</button></div></details>'+v170LastActionSimple()+v170DailyReviewEntry(pct);
   const start=document.getElementById('v171StartQuest'); if(start) start.onclick=()=>{ v171Feedback('tap'); next?v170GoToTask(next):navTo('quests'); };
   const q=document.getElementById('v171Quests'); if(q) q.onclick=()=>{ v171Feedback('tap'); navTo('quests'); };
   const r=document.getElementById('v171Review'); if(r) r.onclick=()=>{ v171Feedback('tap'); if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); };
@@ -9595,7 +9538,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     const cells=[];
     for(let i=0;i<need;i++){
       const slot=c7SlotMeta(i,ch), h=(S.heroes||[]).find(x=>x.id===ids[i]), laneType=slot.basic?null:(pattern[slot.typeKey||slot.lane]||null), m=h?c7Match(h.elementType,laneType):'neutral';
-      cells.push('<button class="clashSlot c7 '+m+' '+(slot.basic?'basic':'')+'" onclick="openClashSquadEditor('+i+')"><div class="csRow">'+esc7(slot.laneLabel)+' · '+cap7(slot.row)+'</div><div class="csFace" style="background:'+(h?h.color:'#111827')+'">'+(h?(h.img?'<img src="'+h.img+'" alt="">':esc7(String(h.name||'?').slice(0,2).toUpperCase())):'—')+'</div><div class="csMeta">'+(h?c7ElementBadge(h.elementType,true)+' '+esc7(h.clashRole||'Role'):'Empty')+'</div></button>');
+      cells.push('<button class="clashSlot c7 '+m+' '+(slot.basic?'basic':'')+'" onclick="openClashSquadEditor('+i+')"><div class="csRow">'+esc7(slot.laneLabel)+' · '+cap7(slot.row)+'</div><div class="csFace" style="background:'+(h?h.color:'#111827')+'">'+(h?(h.img?'<img src="'+h.img+'" alt="">':esc7(h.name.slice(0,2).toUpperCase())):'—')+'</div><div class="csMeta">'+(h?c7ElementBadge(h.elementType,true)+' '+esc7(h.clashRole||'Role'):'Empty')+'</div></button>');
     }
     return '<div class="clashFormation c7 '+(lanes.length===5?'five':'three')+'">'+cells.join('')+'</div>';
   };
@@ -9745,7 +9688,6 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     else e.y=Math.max(e.y,engageLine);
     if(e.y>=leakLine){ e.leaked=true; e.hp=0; battle7.leaks=(battle7.leaks||0)+1; battle7.log=e.name+' broke through '+target.name+'!'; }
   }
-  let c7FastForward=false;
   function c7Tick(){
     if(!battle7||battle7.ended||battle7.resolving) return;
     if(battle7._ticking) return;
@@ -9767,8 +9709,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       if(!aliveNow&&allSpawned&&battle7.enemies.length===0){ c7Resolve(false,'wipe'); return; }
       if(aliveNow&&allSpawned&&battle7.kind==='normal'&&battle7.enemies.length<=1&&(battle7.timeLeft||0)<=2){ c7Resolve(true,'cleanup'); return; }
       if((battle7.timeLeft||0)<=0){ c7Resolve(aliveNow&&allSpawned&&battle7.enemies.length===0,'timeout'); return; }
-      { let _ehp=0; battle7.enemies.forEach(e=>_ehp+=Math.max(0,e.hp||0)); const _sig=battle7.enemies.length+'|'+(battle7.defeated||0)+'|'+(battle7.leaks||0)+'|'+Math.round(_ehp); if(_sig!==battle7._sig){ battle7._sig=_sig; battle7._stall=0; } else { battle7._stall=(battle7._stall||0)+1; if(battle7._stall>160){ c7Resolve(aliveNow&&battle7.defeated>=battle7.totalEnemies,'stall'); return; } } }
-      if(!c7FastForward) c7RenderBattle();
+      c7RenderBattle();
     }catch(e){
       console.error('Clash tick failed',e);
       battle7.log='Clash recovered from a battle tick error.';
@@ -9781,26 +9722,26 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7AutoStopReason(prevCh,prevStage,nextCh,nextStage){ if(!S||!S.clash||!S.clash.autoBattle) return 'Auto off'; const nextKind=c7Kind(nextStage); if(nextKind==='boss'||nextKind==='chapterBoss') return 'Boss setup ahead'; try{ if(getClashPatternIndexForStage(prevStage)!==getClashPatternIndexForStage(nextStage)||prevCh!==nextCh) return 'New type setup'; }catch(e){} return ''; }
   function c7ScheduleAutoNext(){ if(!battle7||!battle7.result||!battle7.result.win||!S.clash||!S.clash.autoBattle||battle7.result.autoStop) return; battle7.log='Auto battle: next stage starts in 3 seconds.'; c7RenderBattle(); battle7.autoTimer=setTimeout(function(){ try{ if(battle7&&battle7.result&&battle7.result.win&&S.clash&&S.clash.autoBattle) startClashBattle(); }catch(e){ console.error('Clash auto battle failed',e); } },3000); }
   function c7Resolve(win,reason){ if(!battle7||battle7.ended) return; const prevCh=battle7.chapter, prevStage=battle7.stage; battle7.resolving=true; battle7.ended=true; if(battle7.timer) clearInterval(battle7.timer); if(battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7.timer=null; battle7.autoTimer=null; const result=c7ApplyRewards(win); if(win) c7AdvanceStage(); let autoStop=''; if(win){ autoStop=c7AutoStopReason(prevCh,prevStage,c7Chapter(),c7Stage()); if(autoStop&&S.clash) S.clash.autoBattle=false; } else if(S.clash) { S.clash.autoBattle=false; autoStop='Defeat'; } battle7.result={win,first:result.first,reward:result.reward,reason:reason||'',autoStop}; try{ if(typeof save==='function') save(); if(typeof renderHUD==='function') renderHUD(); }catch(e){} c7RenderBattle(); c7ScheduleAutoNext(); }
-  function c7StartData(){ if(typeof ensureClashState==='function') ensureClashState(); const ch=c7Chapter(), st=c7Stage(), pattern=c7Pattern(ch,st), kind=c7Kind(st), bossInfo=c7Boss(ch,st), ids=c7EnsureSquad(ch), lanes=c7Lanes(ch); const heroes=ids.map((id,i)=>{ const h=c7OwnedHero(id); return h?c7HeroStats(h,c7SlotMeta(i,ch),pattern):null; }).filter(Boolean); const built=c7BuildSpawnPlan(ch,st,kind,pattern,bossInfo,lanes); battle7={chapter:ch,stage:st,kind,pattern,bossInfo,lanes,heroes,enemies:[],wave:0,maxWaves:built.waves,spawnPlan:built.plan,spawned:0,totalEnemies:built.totalEnemies,leaks:0,leakLimit:built.cfg.leakLimit,maxLaneActive:built.cfg.maxLaneActive,totalTime:built.cfg.totalTicks,timeLeft:built.cfg.totalTicks,tickCount:0,damage:0,taken:0,healing:0,blocked:0,advHits:0,badHits:0,defeated:0,log:'Finite enemy swarm incoming.',speed:(S.clash&&S.clash.speed)||1,resolving:false,ended:false,timer:null,autoTimer:null,result:null}; }
+  function c7StartData(){ if(typeof ensureClashState==='function') ensureClashState(); const ch=c7Chapter(), st=c7Stage(), pattern=c7Pattern(ch,st), kind=c7Kind(st), bossInfo=c7Boss(ch,st), ids=c7EnsureSquad(ch), lanes=c7Lanes(ch); const heroes=ids.map((id,i)=>{ const h=c7OwnedHero(id); return h?c7HeroStats(h,c7SlotMeta(i,ch),pattern):null; }).filter(Boolean); const built=c7BuildSpawnPlan(ch,st,kind,pattern,bossInfo,lanes); battle7={chapter:ch,stage:st,kind,pattern,bossInfo,lanes,heroes,enemies:[],wave:0,maxWaves:built.waves,spawnPlan:built.plan,spawned:0,totalEnemies:built.totalEnemies,leaks:0,leakLimit:built.cfg.leakLimit,maxLaneActive:built.cfg.maxLaneActive,totalTime:built.cfg.totalTicks,timeLeft:built.cfg.totalTicks,tickCount:0,damage:0,taken:0,healing:0,blocked:0,advHits:0,badHits:0,defeated:0,log:'Finite enemy swarm incoming.',speed:1,resolving:false,ended:false,timer:null,autoTimer:null,result:null}; }
   function c7OpenBattle(){ let o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); o=document.createElement('div'); o.id='clashBattleOverlay'; o.className='clashBattleOverlay c7'; document.body.appendChild(o); }
   function c7FxMeta(type){ const map={Flame:{cls:'flame',shot:'#ff6b4a',shot2:'#ffb347'},Tide:{cls:'tide',shot:'#48cfff',shot2:'#a9efff'},Grove:{cls:'grove',shot:'#6fe26a',shot2:'#c8ff8b'},Stone:{cls:'stone',shot:'#caa46a',shot2:'#f0dfbf'},Storm:{cls:'storm',shot:'#ffd94a',shot2:'#fff19a'}}; return map[type]||map.Flame; }
   function c7HeroNode(h){ return h?document.querySelector('#clashBattleOverlay .clashHeroCell[data-heroid="'+h.id+'"]'):null; }
   function c7EnemyNode(e){ return e?document.querySelector('#clashBattleOverlay .clashEnemyToken[data-eid="'+e.id+'"]'):null; }
   function c7LaneLeadEnemy(lane){ const list=(battle7&&battle7.enemies?battle7.enemies:[]).filter(e=>e.hp>0&&c7EnemyLanes(e).includes(lane)).sort((a,b)=>(b.y-a.y)||((b.boss?1:0)-(a.boss?1:0))); return list[0]||null; }
-  function c7FlashNode(el,cls){ if(!el||c7FastForward) return; el.classList.add(cls); setTimeout(()=>{ try{ el.classList.remove(cls); }catch(e){} },220); }
-  function c7SpawnImpact(el,type,heal){ if(!el||c7FastForward) return; const r=el.getBoundingClientRect(), meta=c7FxMeta(type), fx=document.createElement('div'); fx.className='clashImpact '+meta.cls+(heal?' heal':''); fx.style.left=(r.left+r.width/2)+'px'; fx.style.top=(r.top+r.height/2)+'px'; fx.style.setProperty('--shot',meta.shot); fx.style.setProperty('--shot2',meta.shot2); document.body.appendChild(fx); setTimeout(()=>fx.remove(),430); }
-  function c7SpawnShot(fromEl,toEl,type,kind){ if(!fromEl||!toEl||c7FastForward) return; const a=fromEl.getBoundingClientRect(), t=toEl.getBoundingClientRect(), meta=c7FxMeta(type), p=document.createElement('div'); p.className='clashShot '+meta.cls+(kind==='support'?' support':'')+(kind==='heal'?' heal':''); p.style.left=(a.left+a.width/2-8)+'px'; p.style.top=(a.top+a.height/2-8)+'px'; p.style.setProperty('--shot',meta.shot); p.style.setProperty('--shot2',meta.shot2); document.body.appendChild(p); const dx=(t.left+t.width/2)-(a.left+a.width/2), dy=(t.top+t.height/2)-(a.top+a.height/2), ang=Math.atan2(dy,dx)*180/Math.PI; requestAnimationFrame(()=>{ p.style.transform='translate('+dx+'px,'+dy+'px) rotate('+ang+'deg)'; }); setTimeout(()=>{ c7SpawnImpact(toEl,type,kind==='heal'); c7FlashNode(toEl,'fxHit'); },250); setTimeout(()=>p.remove(),380); c7FlashNode(fromEl,'fxFire'); }
-  function c7LaneEnemyHTML(lane){ return battle7.enemies.filter(e=>e.hp>0&&c7EnemyLanes(e).includes(lane)).map(e=>{ const meta=e.type?(ELEMENT_META[e.type]||ELEMENT_META.Flame):{color:'#9ca3af'}, top=Math.min(94,Math.max(5,e.y*.78)), face=e.img?'<img src="'+e.img+'" alt="">':(e.boss?'☠':(!e.type?'◇':'◆')); return '<div class="clashEnemyToken '+(e.boss?'boss':'')+' '+(!e.type?'basic':'')+'" data-eid="'+esc7(e.id)+'" data-lane="'+esc7(lane)+'" title="'+esc7(e.name||'Enemy')+'" style="top:'+top+'%;--el:'+(e.color||meta.color)+'"><div class="enemyFace">'+face+'</div><div class="enemyHp"><i style="width:'+Math.max(0,Math.round(e.hp/(e.maxHp||1)*100))+'%"></i></div><div class="enemyType">'+c7ElementBadge(e.type,true)+'</div></div>'; }).join(''); }
-  function c7HeroCellHTML(lane,row){ const h=battle7.heroes.find(x=>x.lane===lane&&x.row===row); if(!h) return '<div class="clashHeroCell empty"></div>'; const meta=ELEMENT_META[h.type]||ELEMENT_META.Flame, hpPct=Math.max(0,Math.round(h.hp/(h.maxHp||1)*100)), real=c7HeroById(h.id)||h, heroImg=c7HeroPortraitImg(real)||h.img; return '<div class="clashHeroCell '+(h.hp<=0?'dead ':'')+(h.acted?'acting ':'')+'" data-heroid="'+esc7(h.id)+'" data-lane="'+esc7(lane)+'" data-row="'+esc7(row)+'" style="--el:'+meta.color+'"><div class="heroTile" style="background:'+(h.color||'#444')+'">'+(heroImg?'<img src="'+heroImg+'" alt="">':esc7(String(h.name||'?').slice(0,2).toUpperCase()))+'</div><div class="heroHp"><i style="width:'+hpPct+'%"></i></div><div class="heroTags">'+c7ElementBadge(h.type,true)+'<span>'+esc7((h.role||'').replace(' DPS',''))+'</span></div></div>'; }
+  function c7FlashNode(el,cls){ if(!el) return; el.classList.add(cls); setTimeout(()=>{ try{ el.classList.remove(cls); }catch(e){} },220); }
+  function c7SpawnImpact(el,type,heal){ if(!el) return; const r=el.getBoundingClientRect(), meta=c7FxMeta(type), fx=document.createElement('div'); fx.className='clashImpact '+meta.cls+(heal?' heal':''); fx.style.left=(r.left+r.width/2)+'px'; fx.style.top=(r.top+r.height/2)+'px'; fx.style.setProperty('--shot',meta.shot); fx.style.setProperty('--shot2',meta.shot2); document.body.appendChild(fx); setTimeout(()=>fx.remove(),430); }
+  function c7SpawnShot(fromEl,toEl,type,kind){ if(!fromEl||!toEl) return; const a=fromEl.getBoundingClientRect(), t=toEl.getBoundingClientRect(), meta=c7FxMeta(type), p=document.createElement('div'); p.className='clashShot '+meta.cls+(kind==='support'?' support':'')+(kind==='heal'?' heal':''); p.style.left=(a.left+a.width/2-8)+'px'; p.style.top=(a.top+a.height/2-8)+'px'; p.style.setProperty('--shot',meta.shot); p.style.setProperty('--shot2',meta.shot2); document.body.appendChild(p); const dx=(t.left+t.width/2)-(a.left+a.width/2), dy=(t.top+t.height/2)-(a.top+a.height/2), ang=Math.atan2(dy,dx)*180/Math.PI; requestAnimationFrame(()=>{ p.style.transform='translate('+dx+'px,'+dy+'px) rotate('+ang+'deg)'; }); setTimeout(()=>{ c7SpawnImpact(toEl,type,kind==='heal'); c7FlashNode(toEl,'fxHit'); },250); setTimeout(()=>p.remove(),380); c7FlashNode(fromEl,'fxFire'); }
+  function c7LaneEnemyHTML(lane){ return battle7.enemies.filter(e=>e.hp>0&&c7EnemyLanes(e).includes(lane)).map(e=>{ const meta=e.type?(ELEMENT_META[e.type]||ELEMENT_META.Flame):{color:'#9ca3af'}, top=Math.min(94,Math.max(5,e.y*.78)), face=e.img?'<img src="'+e.img+'" alt="">':(e.boss?'☠':(!e.type?'◇':'◆')); return '<div class="clashEnemyToken '+(e.boss?'boss':'')+' '+(!e.type?'basic':'')+'" data-eid="'+esc7(e.id)+'" data-lane="'+esc7(lane)+'" title="'+esc7(e.name)+'" style="top:'+top+'%;--el:'+(e.color||meta.color)+'"><div class="enemyFace">'+face+'</div><div class="enemyHp"><i style="width:'+Math.max(0,Math.round(e.hp/e.maxHp*100))+'%"></i></div><div class="enemyType">'+c7ElementBadge(e.type,true)+'</div></div>'; }).join(''); }
+  function c7HeroCellHTML(lane,row){ const h=battle7.heroes.find(x=>x.lane===lane&&x.row===row); if(!h) return '<div class="clashHeroCell empty"></div>'; const meta=ELEMENT_META[h.type]||ELEMENT_META.Flame, hpPct=Math.max(0,Math.round(h.hp/h.maxHp*100)), real=c7HeroById(h.id)||h, heroImg=c7HeroPortraitImg(real)||h.img; return '<div class="clashHeroCell '+(h.hp<=0?'dead ':'')+(h.acted?'acting ':'')+'" data-heroid="'+esc7(h.id)+'" data-lane="'+esc7(lane)+'" data-row="'+esc7(row)+'" style="--el:'+meta.color+'"><div class="heroTile" style="background:'+h.color+'">'+(heroImg?'<img src="'+heroImg+'" alt="">':esc7(h.name.slice(0,2).toUpperCase()))+'</div><div class="heroHp"><i style="width:'+hpPct+'%"></i></div><div class="heroTags">'+c7ElementBadge(h.type,true)+'<span>'+esc7((h.role||'').replace(' DPS',''))+'</span></div></div>'; }
   function c7WeakLane(){ let best=battle7.lanes[0].key, worst=999; battle7.lanes.forEach(l=>{ const alive=battle7.heroes.filter(h=>h.lane===l.key&&h.hp>0).length, hp=battle7.heroes.filter(h=>h.lane===l.key).reduce((s,h)=>s+(h.hp/h.maxHp),0), score=alive*2+hp; if(score<worst){ worst=score; best=l.key; } }); return best; }
   function c7RenderResult(){ const r=battle7.result||{}, rw=r.reward||{}, timeUsed=c7FmtTime(Math.max(0,(battle7.totalTime||0)-(battle7.timeLeft||0))); if(r.win){ const autoLine=(S.clash&&S.clash.autoBattle&&!r.autoStop)?'<p>Auto battle: next stage starts in 3 seconds.</p>':(r.autoStop?'<p>Auto stopped: '+esc7(r.autoStop)+'.</p>':''); return '<div class="clashResult win"><h2>VICTORY</h2><p>'+(r.first?'First clear secured.':'Replay clear secured.')+'</p>'+autoLine+'<div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+timeUsed+'</b><span>Time Used</span></div></div><div class="clashRewardLine">'+esc7(c7RewardLine(rw))+'</div><button onclick="closeClashBattle()">Continue</button></div>'; } const weak=c7WeakLane(), laneCfg=battle7.lanes.find(l=>l.key===weak), laneType=c7LaneType(laneCfg,battle7.chapter,battle7.stage,battle7.pattern), why=r.reason==='timeout'?'Time expired before the swarm was fully cleared.':(r.reason==='leaks'?'Too many enemies slipped to the bottom.':'Your line broke before the swarm ended.'); return '<div class="clashResult lose"><h2>DEFEAT</h2><p>'+esc7(why)+'</p><div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+c7FmtTime(battle7.timeLeft||0)+'</b><span>Time Left</span></div></div><div class="clashCoach"><b>Weak Lane: '+esc7((laneCfg&&laneCfg.label)||cap7(weak))+'</b><span>'+(laneType?c7ElementBadge(laneType,false)+' lane · counter with '+c7CounterBadge(laneType,false):'Basic lane · add sturdier heroes or more raw power')+'</span><span>Try Optimize Squad, keep Tanks front, and use Melee DPS for close-range splash.</span></div><div class="clashResultActions"><button onclick="clashAutoOptimize(true);closeClashBattle();setTimeout(startClashBattle,250)">Optimize & Retry</button><button onclick="closeClashBattle();setTimeout(function(){openClashSquadEditor(0)},100)">Edit Squad</button><button onclick="closeClashBattle()">Leave</button></div></div>'; }
   function c7SpeedValue(){ return battle7&&battle7.speed>=3?3:(battle7&&battle7.speed===2?2:1); }
-  function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; try{ const rows=['front','mid','back','rear']; battle7.heroes.forEach(h=>h.acted=0); const lanePills=battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<span>'+esc7(l.label)+' '+c7ElementBadge(t,true)+(t?' → '+c7CounterBadge(t,true):' · Basic')+'</span>'; }).join(''); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; o.innerHTML='<div class="clashBattlePanel c7 '+(battle7.lanes.length===5?'five':'three')+'"><div class="clashBattleHead"><div><b>⚡ Clash Trials</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">Auto '+((S.clash&&S.clash.autoBattle)?'On':'Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Skip</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashBattlePattern">'+lanePills+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }catch(err){ try{ o.innerHTML='<div class="clashBattlePanel c7"><div class="clashBattleHead"><div><b>⚡ Clash Trials</b><span>Chapter '+(battle7.chapter||1)+' · Stage '+(battle7.stage||1)+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="skipClashBattle()">Skip</button><button onclick="closeClashBattle()">✕</button></div></div><div class="clashBattlePattern"><span>Spawned '+(battle7.spawned||0)+'/'+(battle7.totalEnemies||0)+'</span><span>Defeated '+(battle7.defeated||0)+'/'+(battle7.totalEnemies||0)+'</span><span>Leaks '+(battle7.leaks||0)+'/'+(battle7.leakLimit||0)+'</span></div><div class="clashBattleLog">'+esc7(battle7.log||'')+(battle7.ended?(' · '+((battle7.result&&battle7.result.win)?"VICTORY":"DEFEAT")):'')+'</div>'+(battle7.ended?'<button onclick="closeClashBattle()">Continue</button>':'')+'</div>'; }catch(_e){} } }
+  function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['rear','back','mid','front']; battle7.heroes.forEach(h=>h.acted=0); const lanePills=battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<span>'+esc7(l.label)+' '+c7ElementBadge(t,true)+(t?' → '+c7CounterBadge(t,true):' · Basic')+'</span>'; }).join(''); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; o.innerHTML='<div class="clashBattlePanel c7 '+(battle7.lanes.length===5?'five':'three')+'"><div class="clashBattleHead"><div><b>⚡ Clash Trials</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">Auto '+((S.clash&&S.clash.autoBattle)?'On':'Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Skip</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashBattlePattern">'+lanePills+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
   window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
-  window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; c7FastForward=true; battle7.resolving=true; let guard=0; while(battle7&&!battle7.ended&&guard++<5000){ battle7.resolving=false; c7Tick(); if(!battle7||battle7.ended) break; battle7.resolving=true; } if(battle7&&!battle7.ended){ battle7.resolving=false; c7Resolve(false); } c7FastForward=false; try{ c7RenderBattle(); }catch(e){} };
+  window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; battle7.resolving=true; let guard=0; while(battle7&&!battle7.ended&&guard++<900){ battle7.resolving=false; c7Tick(); if(!battle7||battle7.ended) break; battle7.resolving=true; } if(battle7&&!battle7.ended){ battle7.resolving=false; c7Resolve(false); } };
   window.closeClashBattle=function(){ if(battle7&&battle7.timer) clearInterval(battle7.timer); if(battle7&&battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7=null; const o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); try{ if(typeof render==='function') render(); }catch(e){} };
   window.c7BattleInterval=function(){ const sp=c7SpeedValue(); return sp===3?220:(sp===2?300:C7.tickMs); };
-  window.setClashSpeed=function(){ if(!battle7||battle7.ended) return; const cur=c7SpeedValue(); battle7.speed=cur===1?2:cur===2?3:1; if(S.clash) S.clash.speed=battle7.speed; if(battle7.timer) clearInterval(battle7.timer); battle7.timer=setInterval(c7Tick,c7BattleInterval()); c7RenderBattle(); };
+  window.setClashSpeed=function(){ if(!battle7||battle7.ended) return; const cur=c7SpeedValue(); battle7.speed=cur===1?2:cur===2?3:1; if(battle7.timer) clearInterval(battle7.timer); battle7.timer=setInterval(c7Tick,c7BattleInterval()); c7RenderBattle(); };
   window.toggleClashAutoBattle=function(){ if(!S.clash) ensureClashState(); S.clash.autoBattle=!S.clash.autoBattle; if(typeof save==='function') save(); safeToast7(S.clash.autoBattle?'Clash auto battle on. Stops at bosses/new type setups.':'Clash auto battle off.'); c7RenderBattle(); };
   const oldBMD7=(typeof battleHubModeData==='function')?battleHubModeData:null; if(oldBMD7 && !window.__clashPass7WrappedBMD){ window.__clashPass7WrappedBMD=true; battleHubModeData=function(){ const d=oldBMD7.apply(this,arguments); try{ if(d&&d.clash){ const ch=c7Chapter(); d.clash.pill=c7IsFive(ch)?'5-lane active':'Warm-up'; d.clash.sub=c7IsFive(ch)?'20 heroes · outer basic lanes':'12 heroes · 3 typed lanes'; d.clash.meta='Chapter '+ch+' Clash'; d.clash.stat='C'+ch+' · S'+c7Stage(); } }catch(e){} return d; }; }
   function inject7(){ if(document.getElementById('clashPass7Styles')) return; const st=document.createElement('style'); st.id='clashPass7Styles'; st.textContent=`
