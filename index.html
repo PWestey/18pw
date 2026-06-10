@@ -1750,7 +1750,7 @@ function weeklyRecapText(){
   const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain(), boss=ensureRaid(), bpct=Math.min(100,Math.round(boss.dmg/boss.max*100));
   const lines=[];
   lines.push('OATHFORGE — WEEKLY RECAP');
-  lines.push('Build: '+APP_BUILD);
+  lines.push('<span onclick="showStorageDiagnostic()" style="cursor:pointer;text-decoration:underline">Build: '+APP_BUILD+'</span>');
   lines.push('');
   lines.push('Actions logged: '+(W.completed||0));
   lines.push('Domains touched: '+touchedDomainsThisWeek().length+'/8');
@@ -1775,7 +1775,7 @@ function monthlyRecapText(){
   const lines=[];
   lines.push('OATHFORGE — MONTHLY RECAP');
   lines.push('Month: '+periodKey('monthly').replace('M',''));
-  lines.push('Build: '+APP_BUILD);
+  lines.push('<span onclick="showStorageDiagnostic()" style="cursor:pointer;text-decoration:underline">Build: '+APP_BUILD+'</span>');
   lines.push('');
   lines.push('Actions completed: '+(M.completed||0));
   lines.push('Domains touched: '+touchedDomainsThisMonth().length+'/8');
@@ -2141,6 +2141,67 @@ function setHeroPortraitOverride(heroId,img){
 }
 const REMOVED_HERO_IDS_V1=new Set(["marvel__wong","marvel__shuri_black_panther","marvel__maria_hill","marvel__valkyrie","marvel__silver_surfer","marvel__thanos","marvel__kang_the_conqueror","marvel__galactus","marvel__sersi","marvel__ikaris","marvel__thena","marvel__kingo","marvel__makkari","marvel__druig","marvel__phastos","marvel__gilgamesh","marvel__blade","marvel__werewolf_by_night","marvel__man_thing","marvel__h_e_r_b_i_e","marvel__bishop","marvel__x_23_laura_kinney","marvel__negasonic_teenage_warhead","marvel__juggernaut","marvel__sabretooth","marvel__toad","marvel__lady_deathstrike","marvel__apocalypse","marvel__cassandra_nova","marvel__pyro","marvel__angel_archangel","marvel__havok","marvel__banshee","marvel__darwin","marvel__cannonball","marvel__wolfsbane","marvel__sunspot","marvel__venom","marvel__carnage","marvel__kingpin","marvel__bullseye","marvel__killmonger","marvel__red_skull","marvel__ultron","marvel__green_goblin","marvel__doctor_octopus","marvel__mysterio","marvel__vulture","marvel__hela","marvel__abomination","marvel__taskmaster","marvel__baron_zemo","marvel__gorr_the_god_butcher","marvel__high_evolutionary","star_wars__darth_vader","star_wars__cal_kestis","star_wars__kylo_ren","star_wars__darth_maul","star_wars__darth_revan","star_wars__darth_sidious","star_wars__count_dooku","star_wars__boba_fett","star_wars__jango_fett","star_wars__captain_rex","star_wars__commander_cody","star_wars__grand_admiral_thrawn","star_wars__baylan_skoll","star_wars__shin_hati","star_wars__asajj_ventress","star_wars__general_grievous","harry_potter__ginny_weasley","harry_potter__fred_weasley","harry_potter__george_weasley","harry_potter__cedric_diggory","harry_potter__mad_eye_moody","pokemon__mewtwo","pokemon__espeon","pokemon__sylveon","pokemon__tyranitar","pokemon__metagross","pokemon__salamence","pokemon__lugia","pokemon__ho_oh","pokemon__suicune","pokemon__entei","pokemon__raikou","pokemon__zapdos","pokemon__articuno","pokemon__moltres","pokemon__machamp","world_of_warcraft__bolvar_fordragon","world_of_warcraft__medivh","world_of_warcraft__garrosh_hellscream","world_of_warcraft__voljin","world_of_warcraft__cairne_bloodhoof","world_of_warcraft__baine_bloodhoof","world_of_warcraft__rexxar","world_of_warcraft__turalyon","world_of_warcraft__kaelthas_sunstrider","world_of_warcraft__lorthemar_theron","world_of_warcraft__maiev_shadowsong","world_of_warcraft__sargeras","red_rising__ephraim_ti_horn","red_rising__lyria","red_rising__aja_au_grimmus","red_rising__nero_au_augustus","red_rising__octavia_au_lune","red_rising__lysander_au_lune","red_rising__apollonius_au_valii_rath","red_rising__atlas_au_raa","stormlight_archive__wyndle","stormlight_archive__rlain","stormlight_archive__nightblood","stormlight_archive__eshonai","stormlight_archive__venli","stormlight_archive__moash","stormlight_archive__taravangian","game_of_thrones__brienne_of_tarth","disney_pixar__wasabi","disney_pixar__honey_lemon","disney_pixar__fred","disney_pixar__tadashi_hamada","disney_pixar__yokai","disney_pixar__jack_jack","disney_pixar__edna_mode","disney_pixar__syndrome","disney_pixar__randall_boggs","disney_pixar__roz","disney_pixar__mr_waternoose","disney_pixar__bullseye","disney_pixar__rex","disney_pixar__hamm","disney_pixar__slinky_dog","disney_pixar__bo_peep","disney_pixar__laurel_lightfoot","disney_pixar__wilden_lightfoot","disney_pixar__the_manticore_corey","disney_pixar__officer_colt_bronco","disney_pixar__blazey","disney_pixar__carl_fredricksen","disney_pixar__russell","disney_pixar__kevin","disney_pixar__sadness","disney_pixar__anger","disney_pixar__fear","disney_pixar__disgust","disney_pixar__anxiety","disney_pixar__miguel","disney_pixar__hector","disney_pixar__mama_imelda","disney_pixar__ernesto_de_la_cruz","disney_pixar__te_ka","disney_pixar__king_candy","fourth_wing__sloane_mairi","fourth_wing__catriona_cordella","fourth_wing__aaric_graycastle","fourth_wing__jesinia_neilwart","fourth_wing__jack_barlowe","fourth_wing__lilith_sorrengail","fourth_wing__general_melgren","a_court_of_thorns_and_roses__varian","a_court_of_thorns_and_roses__tarquin","a_court_of_thorns_and_roses__kallias","a_court_of_thorns_and_roses__viviane","a_court_of_thorns_and_roses__jurian","a_court_of_thorns_and_roses__vassa","a_court_of_thorns_and_roses__amarantha","a_court_of_thorns_and_roses__king_of_hybern","a_court_of_thorns_and_roses__bryaxis"]);
 function trimRemovedHeroesV1(){ if(!Array.isArray(S.heroes)) return; const ownedRemoved=S.heroes.filter(h=>h&&REMOVED_HERO_IDS_V1.has(h.id)&&h.owned).length; S.heroes=S.heroes.filter(h=>h&&!REMOVED_HERO_IDS_V1.has(h.id)); if(Array.isArray(S.wishlist)) S.wishlist=S.wishlist.filter(x=>!REMOVED_HERO_IDS_V1.has(x)); if(!S._rosterTrimV1){ if(ownedRemoved>0){ S.summonTickets=(S.summonTickets||0)+ownedRemoved; S._removedTicketGrant=ownedRemoved; } S._rosterTrimV1=true; } }
+function showStorageDiagnostic(){
+  const KEY='lifequest_afk_v1', PKEY=KEY+'__portraits';
+  const out=[];
+  
+  // Check localStorage
+  const lsRaw=localStorage.getItem(KEY);
+  const lsData=lsRaw?JSON.parse(lsRaw):{};
+  out.push('=== LOCALSTORAGE ===');
+  out.push('Main save: '+(!!lsRaw?'✓':'✗'));
+  if(lsRaw){
+    out.push('S.heroPortraits: '+(Object.keys(lsData.heroPortraits||{}).length)+' keys');
+    out.push('Heroes with .img: '+(lsData.heroes||[]).filter(h=>h&&h.img).length);
+  }
+  
+  // Try IndexedDB
+  out.push('');
+  out.push('=== INDEXEDDB ===');
+  try{
+    const req=indexedDB.open('claude-artifacts')||indexedDB.open('default')||indexedDB.open('oathforge');
+    if(req&&req.onsuccess){
+      req.onsuccess=()=>{
+        const db=req.result;
+        try{
+          const stName=Array.from(db.objectStoreNames)[0]||'data';
+          const tx=db.transaction(stName);
+          const st=tx.objectStore(stName);
+          const mainReq=st.get(KEY);
+          mainReq.onsuccess=()=>{
+            const idbMain=mainReq.result?JSON.parse(mainReq.result):{};
+            out.push('Main in IDB: '+(!!mainReq.result?'✓':'✗'));
+            if(mainReq.result){
+              out.push('S.heroPortraits: '+(Object.keys(idbMain.heroPortraits||{}).length)+' keys');
+              out.push('Heroes with .img: '+(idbMain.heroes||[]).filter(h=>h&&h.img).length);
+            }
+            const portraitReq=st.get(PKEY);
+            portraitReq.onsuccess=()=>{
+              const idbPort=portraitReq.result?JSON.parse(portraitReq.result):{};
+              out.push('Separate portrait store: '+(!!portraitReq.result?'✓':'✗'));
+              if(portraitReq.result) out.push('Portrait keys: '+Object.keys(idbPort).length);
+              showModal('<div style="max-height:80vh;overflow:auto;white-space:pre;font-size:12px;font-family:monospace">'+out.map(x=>esc(x)).join('<br>')+'</div>', 'Storage Diagnostic');
+            };
+          };
+        }catch(e){
+          out.push('Error: '+e.message);
+          showModal('<div style="white-space:pre">'+out.join('<br>')+'</div>', 'Storage Diagnostic');
+        }
+      };
+      req.onerror=()=>{
+        out.push('IDB access failed');
+        showModal('<div style="white-space:pre">'+out.join('<br>')+'</div>', 'Storage Diagnostic');
+      };
+    } else {
+      out.push('IndexedDB unavailable');
+      showModal('<div style="white-space:pre">'+out.join('<br>')+'</div>', 'Storage Diagnostic');
+    }
+  }catch(e){
+    out.push('Error: '+e.message);
+    showModal('<div style="white-space:pre">'+out.join('<br>')+'</div>', 'Storage Diagnostic');
+  }
+}
+
 function seedRoster(){ sanitizeHeroes(); const have=new Set(S.heroes.map(h=>h.id));
   ROSTER.forEach(r=>{
     const existing=S.heroes.find(h=>h.id===r.id);
@@ -6393,7 +6454,7 @@ function ftRecordError(kind,msg){
 function ftExportText(){
   const ft=ensureFieldTest(), days=Object.values(ft.days||{}).sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,14);
   const lines=[];
-  lines.push('Oathforge Field Test'); lines.push('Build: '+APP_BUILD); lines.push('Exported: '+new Date().toLocaleString()); lines.push('');
+  lines.push('Oathforge Field Test'); lines.push('<span onclick="showStorageDiagnostic()" style="cursor:pointer;text-decoration:underline">Build: '+APP_BUILD+'</span>'); lines.push('Exported: '+new Date().toLocaleString()); lines.push('');
   lines.push('Recent days');
   days.forEach(d=>{ lines.push('- '+d.date+' | start '+(d.startedAt?timeAgo(d.startedAt):'—')+' | end '+(d.endedAt?timeAgo(d.endedAt):'—')+' | rating '+(d.rating||'—')+' | screens '+(d.screens||[]).join(', ')); });
   lines.push(''); lines.push('Notes');
