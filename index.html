@@ -74,6 +74,8 @@ button{font-family:'Rajdhani',sans-serif;cursor:pointer}
 .sq{width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);font-size:20px;font-weight:800;display:grid;place-items:center;color:var(--ink)}
 .sq.plus{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,var(--line))}
 .sq.minus{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+
+.daysRow{display:flex;gap:4px}.daysRow button{flex:1;padding:8px 2px;font-size:12px;min-width:0}.chk.resting{opacity:.55;cursor:default}
 .chk{width:30px;height:30px;border-radius:9px;border:2px solid var(--line);flex:0 0 auto;display:grid;place-items:center;font-size:18px;color:var(--good)}
 .chk.on{background:color-mix(in srgb,var(--good) 22%,transparent);border-color:var(--good)}
 .empty{color:var(--muted);text-align:center;padding:24px 12px;font-size:15px;font-weight:600;border:1px dashed var(--line);border-radius:14px;line-height:1.5}
@@ -155,6 +157,14 @@ button{font-family:'Rajdhani',sans-serif;cursor:pointer}
 .unit.front .face{box-shadow:0 0 0 1px #5bd1ff44,0 10px 28px #0006}
 .unit.back .face{box-shadow:0 0 0 1px #37d67a44,0 10px 28px #0006}
 .unit.shielded .face{box-shadow:0 0 0 2px #5bd1ff,0 0 24px #5bd1ff99!important}
+.clashStartRow{display:flex;gap:8px}.clashStartRow .fight{margin:0}.fightOpt{flex:0 0 38%;background:rgba(0,0,0,.45)!important;color:var(--ink)!important;box-shadow:none!important;border:1px solid rgba(255,255,255,.16)!important;font-size:14px!important}
+.clashDetailsFold{margin:0 0 10px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);overflow:hidden}
+.clashDetailsFold>summary{list-style:none;cursor:pointer;padding:11px 14px;font-weight:800;font-size:13px;color:var(--ink);display:flex;align-items:center;justify-content:space-between}
+.clashDetailsFold>summary::-webkit-details-marker{display:none}
+.clashDetailsFold>summary::after{content:"\25be";color:var(--muted);transition:transform .2s}
+.clashDetailsFold[open]>summary::after{transform:rotate(180deg)}
+.clashDetailsFold>*:not(summary){margin:10px 10px 0}
+.clashDetailsFold>*:last-child{margin-bottom:10px}
 .fight{width:100%;background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 50%,#000));color:#fff;border:none;border-radius:14px;padding:16px;font-family:'Orbitron';font-weight:900;font-size:17px;letter-spacing:1px;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 40%,transparent)}
 .fight:disabled{filter:grayscale(.7) brightness(.7)}
 .stagecard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;text-align:center}
@@ -165,6 +175,7 @@ button{font-family:'Rajdhani',sans-serif;cursor:pointer}
   radial-gradient(700px 380px at 50% 0%, color-mix(in srgb,var(--accent) 22%,transparent), transparent 65%), #07090f;
   display:none;flex-direction:column;padding:18px 14px calc(18px + env(safe-area-inset-bottom))}
 .arena.show{display:flex;animation:fade .25s}
+body:has(#arena.show) .wrap,body:has(#arena.show) .nav{visibility:hidden!important}
 .arena .vs-head{text-align:center;font-family:'Orbitron';font-weight:900;letter-spacing:2px;color:var(--muted);font-size:13px;margin-bottom:14px}
 .side{flex:1;display:flex;flex-direction:column;justify-content:center;gap:9px}
 .side.enemy .unit{flex-direction:row-reverse;text-align:right}
@@ -815,6 +826,7 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
 
 /* ===== C7 Clash battle overlay/layout hotfix ===== */
 .clashBattleOverlay.c7{position:fixed;inset:0;z-index:120;background:radial-gradient(760px 420px at 50% -8%,rgba(205,188,255,.18),transparent 62%),#070a12;color:var(--ink);display:flex;align-items:stretch;justify-content:center;padding:8px;overflow:hidden;font-family:'Rajdhani',system-ui,sans-serif}
+.clashBattlePanel.c7.hasArt{background:linear-gradient(180deg,rgba(10,15,28,.58),rgba(8,11,20,.80) 42%,rgba(7,10,18,.93)),var(--clashArt) center/cover !important}
 .clashBattlePanel.c7{position:relative;width:min(560px,100%);height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);display:flex;flex-direction:column;gap:6px;background:linear-gradient(180deg,#101725,#070a12);border:1px solid #cdbcff55;border-radius:18px;padding:9px;box-shadow:0 24px 70px #000d;overflow:hidden}
 .clashBattleHead{display:flex!important;align-items:flex-start;justify-content:space-between;gap:8px;flex:0 0 auto;min-width:0}
 .clashBattleHead b{display:block;font-family:Orbitron;font-weight:1000;font-size:13px;line-height:1.15;color:#f1f5ff;letter-spacing:.2px;margin-bottom:2px}
@@ -2252,6 +2264,12 @@ function prevPeriodDate(freq,d){ const x=new Date(d||new Date());
   return x;
 }
 const FREQS=['daily','weekly','monthly'];
+const TASK_FREQ_OF={dailies:'daily',weeklies:'weekly',monthlies:'monthly'};
+function taskIsRecurring(st){ return st==='dailies'||st==='weeklies'||st==='monthlies'; }
+function taskBaseArr(st){ return taskIsRecurring(st)?(S.dailies||[]):(S[st]||[]); }
+function taskListFor(st){ if(taskIsRecurring(st)){ const fr=TASK_FREQ_OF[st]; return (S.dailies||[]).filter(d=>(d.freq||'daily')===fr); } return (S[st]||[]).slice(); }
+function taskActiveOnDay(d,dow){ if(!d) return true; if((d.freq||'daily')!=='daily') return true; const ad=d.activeDays; if(!Array.isArray(ad)||!ad.length) return true; return ad.indexOf(dow)>=0; }
+function taskActiveToday(d){ return taskActiveOnDay(d,new Date().getDay()); }
 const DOMAINS=[
   ['faith','Faith','#b88af0','✝',['pray','prayer','bible','scripture','church','worship','devotion','reflect','meditat','gratitude','sermon','rosary']],
   ['marriage','Marriage','#ff5d9e','💞',['spouse','wife','husband','partner','date night','marriage','love note','anniversary']],
@@ -2356,7 +2374,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.12.25-clash-real-enemies';
+const APP_BUILD='v2.12.32-battle-shell-hide';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2699,7 +2717,8 @@ function rollover(){
   const now=new Date(); const wouldReset=[];
   S.dailies.forEach(d=>{ const cur=periodKey(d.freq,now);
     if(d.pk!==cur){ const prev=periodKey(d.freq,prevPeriodDate(d.freq,now));
-      const missed=!(d.done && d.pk===prev);
+      const prevActive=taskActiveOnDay(d, prevPeriodDate(d.freq,now).getDay());
+      const missed=prevActive && !(d.done && d.pk===prev);
       if(missed && d.streak>0) wouldReset.push(d);
       d.done=false; d.pk=cur; } });
   if(wouldReset.length && (S.grace||0)>0){ S.grace--; graceReport={saved:wouldReset.length}; }
@@ -2731,6 +2750,7 @@ function atkOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleB
 function powerOf(h){ if(!h) return 0; return Math.round(hpOf(h)/8+atkOf(h)*2); }
 const SQUADS=[['campaign','Campaign','⚔'],['tower','Tower','⛰'],['raid','Raid','☠']];
 function squad(mode){ if(!S.squads) S.squads={campaign:[],tower:[],raid:[]}; if(!Array.isArray(S.squads[mode])) S.squads[mode]=[]; return S.squads[mode]; }
+function optimizeSquad(mode){ mode=mode||'campaign'; if(!S.squads) S.squads={campaign:[],tower:[],raid:[]}; const size=TUNE.teamSize||8; const owned=(S.heroes||[]).filter(h=>h&&h.owned).sort((a,b)=>((typeof rankIdx==='function'?rankIdx(b):(b.rank||0))-(typeof rankIdx==='function'?rankIdx(a):(a.rank||0)))||(powerOf(b)-powerOf(a))); if(!owned.length){ toast('No owned heroes to optimize yet.'); return; } S.squads[mode]=owned.slice(0,size).map(h=>h.id); if(typeof save==='function') save(); if(typeof renderHUD==='function') renderHUD(); if(typeof render==='function') render(); toast(cap(mode)+' squad optimized — strongest in front.'); }
 function inSquad(mode,id){ return squad(mode).includes(id); }
 function inAnySquad(id){ return SQUADS.some(s=>inSquad(s[0],id)); }
 function squadIcons(id){ return SQUADS.filter(s=>inSquad(s[0],id)).map(s=>s[2]).join(''); }
@@ -2980,7 +3000,7 @@ function renderTasks(v){
   v.innerHTML=
     questBoardHTML()+chest+
     '<div class="tabs" id="subtabs">'+
-      ['dailies','habits','todos'].map(t=>'<button data-s="'+t+'" class="'+(t===subtab?'on':'')+'">'+(t==='todos'?'Quests':t[0].toUpperCase()+t.slice(1))+'</button>').join('')+
+      ['dailies','weeklies','monthlies','todos'].map(t=>'<button data-s="'+t+'" class="'+(t===subtab?'on':'')+'">'+(t==='todos'?'Quests':t[0].toUpperCase()+t.slice(1))+'</button>').join('')+
     '</div>'+
     '<div class="head"><h2>'+(subtab==='todos'?'Quests':subtab)+'</h2><button class="add" id="addTask">+ Add</button></div>'+
     '<div class="list" id="list"></div>';
@@ -2988,21 +3008,21 @@ function renderTasks(v){
   document.getElementById('addTask').onclick=()=>openTaskSheet(null);
   const qb=document.getElementById('openQuestBoard'); if(qb) qb.onclick=showQuestBoard;
   const L=document.getElementById('list');
-  let items=S[subtab].slice();
-  if(subtab!=='habits' && S.doneMode!=='keep'){
+  let items=taskListFor(subtab).slice();
+  if(S.doneMode!=='keep'){
     if(S.doneMode==='hide') items=items.filter(it=>!it.done);
     else items.sort((a,b)=>(a.done?1:0)-(b.done?1:0));
   }
-  if(!items.length){ const msg=S[subtab].length?(subtab==='dailies'?'All visible dailies are done. Switch Done Mode in Settings if you want to review completed quests.':subtab==='todos'?'All visible quests are done. Add one small quest if you want another win.':'Nothing left to show right now.'):(subtab==='dailies'?'No dailies yet.<br>Add one anchor habit to start your day.':subtab==='habits'?'No habits yet.<br>Add a repeatable tracker like hydrate, steps, or game-free block.':'No quests yet.<br>Add one small one-off task to keep momentum.'); L.innerHTML='<div class="empty">'+msg+'</div>'; return; }
+  if(!items.length){ if(taskIsRecurring(subtab)) items.sort((a,b)=>(taskActiveToday(a)?0:1)-(taskActiveToday(b)?0:1)); const msg=taskListFor(subtab).length?(subtab==='todos'?'All visible quests are done. Add one small quest if you want another win.':'All visible '+subtab+' are done. Switch Done Mode in Settings to review completed ones.'):(subtab==='todos'?'No quests yet.<br>Add one small one-off task to keep momentum.':'No '+subtab+' yet.<br>Add one to start.'); L.innerHTML='<div class="empty">'+msg+'</div>'; return; }
   items.forEach((it,i)=>{
     const c=document.createElement('div');
-    c.className='card'+((subtab!=='habits'&&it.done)?' done':''); c.style.animationDelay=(i*0.03)+'s';
+    c.className='card'+(it.done?' done':'')+((taskIsRecurring(subtab)&&!taskActiveToday(it))?' resting':''); c.style.animationDelay=(i*0.03)+'s';
     let right='';
-    if(subtab==='dailies') right='<div class="chk '+(it.done?'on':'')+'" data-act="daily" data-id="'+it.id+'">'+(it.done?'✓':'')+'</div>';
+    if(taskIsRecurring(subtab)) right=(!taskActiveToday(it))?'<div class="chk resting" title="Rest day">💤</div>':'<div class="chk '+(it.done?'on':'')+'" data-act="daily" data-id="'+it.id+'">'+(it.done?'✓':'')+'</div>';
     else if(subtab==='habits') right='<div class="btnset">'+(it.down?'<button class="sq minus" data-act="hminus" data-id="'+it.id+'">−</button>':'')+(it.up?'<button class="sq plus" data-act="hplus" data-id="'+it.id+'">+</button>':'')+'</div>';
     else right='<div class="chk '+(it.done?'on':'')+'" data-act="todo" data-id="'+it.id+'">'+(it.done?'✓':'')+'</div>';
     let meta;
-    if(subtab==='dailies'){ const cr=CRYSTALS[it.diff]||CRYSTALS.med, nm=nextStreakMs(it.streak); meta=cap(it.freq)+' · 🔥 '+it.streak+(nm?'→'+nm:'')+' · +'+cr+'◆ +Momentum'; }
+    if(taskIsRecurring(subtab)){ const cr=CRYSTALS[it.diff]||CRYSTALS.med, nm=nextStreakMs(it.streak); meta=(taskActiveToday(it)?'':'💤 Rest day · ')+cap(it.freq)+' · 🔥 '+it.streak+(nm?'→'+nm:'')+' · +'+cr+'◆ +Momentum'; }
     else if(subtab==='habits') meta=cap(it.freq)+' · '+(it.up?'+'+(it.diff==='hard'?40:(it.diff==='med'?20:8))+'⦿ ':'')+(it.down?'slip ':'')+'· '+(it.count>=0?'+':'')+it.count;
     else meta=it.diff+' · +'+(CRYSTALS[it.diff]||CRYSTALS.med)+'◆ +'+(it.diff==='hard'?5:(it.diff==='med'?3:1))+'◈';
     c.innerHTML='<div class="diff '+it.diff+'"></div><div class="body" data-act="edit" data-id="'+it.id+'"><div class="t">'+esc(it.title)+'</div><div class="meta">'+domainChip(it)+meta+'</div></div>'+right;
@@ -3456,8 +3476,8 @@ const BOSSES=[
 ];
 function currentBoss(){ return BOSSES[weekHash()%BOSSES.length]; }
 function raidBase(diff){ return ({easy:10,med:25,hard:60})[diff]||25; }
-function newRaidBoss(){ const tp=teamPower('raid'); return {wk:periodKey('weekly'), max:Math.max(3000,Math.round(4000*(1+(S.maxCleared||0)*0.08)*(1+tp/1500))), dmg:0, claimed:{}, over:0}; }
-function ensureRaid(){ if(!S.raid || S.raid.wk!==periodKey('weekly')) S.raid=newRaidBoss(); return S.raid; }
+function newRaidBoss(){ const tp=teamPower('raid'); const perHit=raidBase('med')*(1+tp/1000)*WEAK_MULT; const HITS_TO_CLEAR=90; /* ~a committed week of dailies; raise=harder, lower=easier */ return {wk:periodKey('weekly'), max:Math.max(3000,Math.round(perHit*HITS_TO_CLEAR)), dmg:0, claimed:{}, over:0}; }
+function ensureRaid(){ if(!S.raid || S.raid.wk!==periodKey('weekly')) S.raid=newRaidBoss(); if(S.raid && !S._raidRescaleV1){ S._raidRescaleV1=true; try{ const __fresh=newRaidBoss(); if(S.raid.wk===__fresh.wk && S.raid.max>__fresh.max){ S.raid.max=__fresh.max; } }catch(e){} } return S.raid; }
 function weekHash(){ const s=ensureRaid().wk; let h=0; for(let i=0;i<s.length;i++) h=(h+s.charCodeAt(i))|0; return Math.abs(h); }
 function weekEndsIn(){ const now=new Date(), x=new Date(now); const dow=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-dow+7); const ms=x-now; return Math.floor(ms/86400000)+'d '+Math.floor((ms%86400000)/3600000)+'h'; }
 function dayEndsIn(){ const now=new Date(), m=new Date(now); m.setHours(24,0,0,0); const ms=m-now; return Math.floor(ms/3600000)+'h '+Math.floor((ms%3600000)/60000)+'m'; }
@@ -4373,26 +4393,27 @@ function endBattle(win){
 
 /* ===== task sheet ===== */
 function openTaskSheet(id){
-  const item=id?S[subtab].find(x=>x.id===id):null;
+  const item=id?taskBaseArr(subtab).find(x=>x.id===id):null;
   let diff=item?item.diff:'med';
   let dir=item?(item.up&&item.down?'both':item.down?'down':'up'):'up';
-  let freq=item&&item.freq?item.freq:'daily';
+  let freq=item&&item.freq?item.freq:(TASK_FREQ_OF[subtab]||'daily');
+  let activeDays=item&&Array.isArray(item.activeDays)&&item.activeDays.length?item.activeDays.slice():[0,1,2,3,4,5,6];
   let domain=item?(item.domain||''):'';
-  const kind=subtab==='dailies'?'Daily':subtab==='habits'?'Habit':'Quest';
+  const kind=subtab==='dailies'?'Daily':subtab==='weeklies'?'Weekly':subtab==='monthlies'?'Monthly':'Quest';
   const s=document.getElementById('sheet');
   let h='<h3>'+(id?'Edit ':'New ')+kind+'</h3><label>Title</label><input type="text" id="f_title" maxlength="60" value="'+(item?esc(item.title):'')+'">';
   h+='<label>Difficulty</label><div class="segs" id="f_diff">'+['easy','med','hard'].map(d=>'<button data-d="'+d+'" class="'+(d===diff?'on':'')+'">'+d+'</button>').join('')+'</div>';
-  if(subtab!=='todos') h+='<label>Repeats</label><div class="segs" id="f_freq">'+FREQS.map(fq=>'<button data-fq="'+fq+'" class="'+(fq===freq?'on':'')+'">'+cap(fq)+'</button>').join('')+'</div>';
+  if(subtab==='dailies'){ const DOW=['Su','Mo','Tu','We','Th','Fr','Sa']; h+='<label>Active days <span style="color:var(--muted);font-weight:700">(tap to skip)</span></label><div class="segs daysRow" id="f_days">'+DOW.map((dn,di)=>'<button data-day="'+di+'" class="'+(activeDays.indexOf(di)>=0?'on':'')+'">'+dn+'</button>').join('')+'</div>'; }
   if(subtab==='habits') h+='<label>Track</label><div class="segs" id="f_dir"><button data-x="up" class="'+(dir==='up'?'on':'')+'">Good +</button><button data-x="down" class="'+(dir==='down'?'on':'')+'">Bad −</button><button data-x="both" class="'+(dir==='both'?'on':'')+'">Both</button></div>';
   h+='<label>Life domain</label><select id="f_domain" style="width:100%;box-sizing:border-box;padding:11px 13px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600">'+
     '<option value="">— None —</option>'+DOMAINS.map(d=>'<option value="'+d[0]+'"'+(domain===d[0]?' selected':'')+'>'+d[3]+' '+d[1]+'</option>').join('')+'</select>';
   h+='<button class="go" id="f_save">'+(id?'Save':'Add')+'</button>'+(id?'<button class="ghost" id="f_del">Delete</button>':'');
   s.innerHTML=h; showScrim('scrim');
-  segPick('f_diff',d=>diff=d); if(subtab!=='todos') segPick('f_freq',f=>freq=f,'fq'); if(subtab==='habits') segPick('f_dir',d=>dir=d,'x');
+  segPick('f_diff',d=>diff=d); if(subtab==='habits') segPick('f_dir',d=>dir=d,'x'); if(subtab==='dailies'){ const dr=document.getElementById('f_days'); if(dr) dr.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const di=+b.dataset.day, k=activeDays.indexOf(di); if(k>=0){ if(activeDays.length>1) activeDays.splice(k,1); } else activeDays.push(di); b.classList.toggle('on',activeDays.indexOf(di)>=0); }); }
   document.getElementById('f_save').onclick=()=>{
     const title=document.getElementById('f_title').value.trim(); if(!title)return;
     const dom=document.getElementById('f_domain').value||null;
-    if(subtab==='dailies'){ if(item){item.title=title;item.diff=diff;item.domain=dom; if(item.freq!==freq){item.freq=freq;item.pk=periodKey(freq);item.done=false;}} else S.dailies.push({id:uid(),title,diff,freq,domain:dom,streak:0,done:false,pk:periodKey(freq)}); }
+    if(taskIsRecurring(subtab)){ const fr=TASK_FREQ_OF[subtab]||'daily', ad=(subtab==='dailies')?activeDays.slice():null; if(item){item.title=title;item.diff=diff;item.domain=dom;item.activeDays=ad; if(item.freq!==fr){item.freq=fr;item.pk=periodKey(fr);item.done=false;}} else S.dailies.push({id:uid(),title,diff,freq:fr,domain:dom,streak:0,done:false,pk:periodKey(fr),activeDays:ad}); }
     else if(subtab==='habits'){ const up=dir!=='down',down=dir!=='up'; if(item){item.title=title;item.diff=diff;item.up=up;item.down=down;item.domain=dom; if(item.freq!==freq){item.freq=freq;item.pk=periodKey(freq);item.count=0;}} else S.habits.push({id:uid(),title,diff,freq,up,down,domain:dom,count:0,pk:periodKey(freq)}); }
     else { if(item){item.title=title;item.diff=diff;item.domain=dom;} else S.todos.push({id:uid(),title,diff,domain:dom,done:false}); }
     hideScrim(); render(); save();
@@ -5536,7 +5557,7 @@ function openHeroSheet(id){
     return '<div class="heroPanelV141"><h4>Ability & Identity <span id="archLabelSpan">'+esc(h.role)+' · '+esc(curKey&&ARCHETYPE_DEFS[curKey]?ARCHETYPE_DEFS[curKey].label:'Specialist')+'</span></h4><p id="archDescP" style="margin-bottom:8px">'+esc(curKey&&ARCHETYPE_DEFS[curKey]?ARCHETYPE_DEFS[curKey].desc:'Flexible combat identity.')+'</p><div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">'+chips+resetChip+'</div>'+(p?'<div class="passivebox" style="margin-top:6px"><div class="pt">Passive · '+esc(p.name)+'</div><div class="pd">'+esc(p.desc)+'</div></div>':'')+'<div style="margin-top:8px">'+(metaChips(h)||'')+'</div></div>';
   })()+ 
     '<div class="heroPanelV141"><h4>Bond & Domains <span>Bond Lv '+bondLevel(h)+'</span></h4><div>'+affChips(h.aff)+'</div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:var(--muted);margin:9px 2px 4px"><span>+'+(bondLevel(h)*2)+'% power</span><span>'+((h.bondXp||0)-bondCum(bondLevel(h)))+' / '+(bondCum(bondLevel(h)+1)-bondCum(bondLevel(h)))+'</span></div><div class="xpbar"><i style="width:'+Math.min(100,((h.bondXp||0)-bondCum(bondLevel(h)))/(bondCum(bondLevel(h)+1)-bondCum(bondLevel(h)))*100)+'%;background:linear-gradient(90deg,#ff5d9e,#ffb01f)"></i></div><button class="go" id="h_bond" style="margin-top:10px;background:linear-gradient(135deg,#ff5d9e,#ffb01f);color:#1a0714">Open Bond Journal</button></div>'+ 
-    '<div class="heroPanelV141"><h4>Squads <span>assignments</span></h4><div class="segs" id="h_squads">'+SQUADS.map(sd=>{ const on=inSquad(sd[0],h.id), full=!on&&squad(sd[0]).length>=TUNE.teamSize; return '<button data-sq="'+sd[0]+'"'+(full?' disabled':'')+' class="'+(on?'on':'')+'"'+(full?' style="opacity:.4"':'')+'>'+sd[2]+' '+sd[1]+(on?' ✓':'')+'</button>'; }).join('')+'</div><p>A hero can serve in multiple squads. Team members level at full rate.</p></div>'+ 
+    ''+ 
     '<div class="heroPanelV141"><h4>Edit Hero <span>portrait / metadata</span></h4><div class="heroEditGridV141"><button type="button" class="go" id="hUpload" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+(img?'Replace image':'Upload image')+'</button><button type="button" class="go" id="hAdjust" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);display:'+(img?'block':'none')+'">Adjust crop / zoom</button><button type="button" class="go" id="hRemoveImg" style="background:rgba(255,93,108,.12);color:#ff9ea8;border:1px solid rgba(255,93,108,.35);display:'+(img?'block':'none')+'">Remove image</button><label>Name</label><input type="text" id="h_name" maxlength="22" value="'+esc(name)+'"><label>Role</label><div class="segs" id="h_role">'+ROLES.map(r=>'<button data-r="'+r+'" class="'+(r===role?'on':'')+'">'+r+'</button>').join('')+'</div></div></div>'+ 
     '<div class="heroUtilityV141"><button class="go" id="h_focus" style="background:'+(isFocus?'#36e0e6;color:#04222a':'var(--panel2);color:var(--ink);border:1px solid var(--line)')+'">'+(isFocus?'★ Featured':'☆ Set Featured')+'</button><button class="go" id="h_favorite" style="background:'+(isFavorite(h.id)?'#ff9bd7;color:#1a0714':'var(--panel2);color:var(--ink);border:1px solid var(--line)')+'">'+(isFavorite(h.id)?'♥ Favorite':'♡ Favorite')+'</button><button class="go" id="h_legacy" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Advanced editor</button><button class="go" id="h_reset" style="background:rgba(255,93,108,.12);color:#ff9ea8;border:1px solid rgba(255,93,108,.35)">Reset hero</button></div>'+ 
     '<button class="ghost" id="h_save" style="color:var(--ink)">Save changes</button><button class="ghost" id="h_del">Delete hero</button></div>';
@@ -5576,7 +5597,7 @@ function openHeroSheet(id){
   document.getElementById('h_gear_auto').onclick=()=>{ const r=autoEquipBestGear(h); toast(r.changed?('Auto-equipped '+r.changed+' slot'+(r.changed===1?'':'s')+' · +'+Math.max(0,r.after-r.before)+' gear score'):'Best gear already equipped'); rerender(); renderHUD(); save(); };
   document.getElementById('h_gear_empty').onclick=()=>{ const n=unequipAllGear(h); toast(n?('Unequipped '+n+' item'+(n===1?'':'s')+' to inventory'):'No gear equipped'); rerender(); renderHUD(); save(); };
   document.getElementById('h_bond').onclick=()=>showBondJournal(h.id);
-  document.getElementById('h_squads').onclick=e=>{ const b=e.target.closest('button[data-sq]'); if(!b||b.disabled) return; toggleSquad(b.dataset.sq,h.id); rerender(); renderHUD(); save(); };
+  { const __hsq=document.getElementById('h_squads'); if(__hsq) __hsq.onclick=e=>{ const b=e.target.closest('button[data-sq]'); if(!b||b.disabled) return; toggleSquad(b.dataset.sq,h.id); rerender(); renderHUD(); save(); }; }
   document.getElementById('h_focus').onclick=()=>{ S.focus=(S.focus===h.id?null:h.id); toast(S.focus===h.id?'★ '+h.name+' is now featured':'Featured cleared'); rerender(); save(); };
   document.getElementById('h_favorite').onclick=()=>{ toggleFavorite(h.id); toast(isFavorite(h.id)?'♥ '+h.name+' added to favorites':h.name+' removed from favorites'); rerender(); save(); };
   document.getElementById('h_legacy').onclick=()=>openHeroSheetLegacy_v141(h.id);
@@ -6241,7 +6262,7 @@ function growthQuickActionsV148(){
 }
 function renderGrowth(v){
   injectGrowthHubStyles(); injectLifeBaseVisualStylesV148();
-  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">sanctuary map</span></div>'+growthHeroV148()+domainFocusV148()+sanctuaryMapV148()+growthModesHTML().replace('growthModeGrid','growthModeGrid v148')+growthQuickActionsV148();
+  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">sanctuary map</span></div>'+growthHeroV148()+domainFocusV148()+sanctuaryMapV148()+growthQuickActionsV148();
   bindLifeCards();
   const bind=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
   bind('gh_domains',showDomainLevels); bind('gh_base',showSanctuary); bind('gh_strategy',showStrategyModal); bind('gh_weekly',showWeeklyReview); bind('gh_monthly',showMonthlyReview); bind('gh_recovery',showRecoveryModal);
@@ -6776,7 +6797,7 @@ function lq53InjectBattleStyles(){
   if(document.getElementById('lq53BattleStyles')) return;
   const st=document.createElement('style'); st.id='lq53BattleStyles';
   st.textContent=`
-    .arena.lq53Arena{background:var(--battle-bg,#07090f)!important;overflow:hidden;perspective:800px}
+    .arena.lq53Arena{background:var(--battle-bg,#07090f),#07090f!important;overflow:hidden;perspective:800px}
     .arena.lq53Arena:before{content:"";position:absolute;inset:0;pointer-events:none;background:
       linear-gradient(180deg,rgba(255,255,255,.035),transparent 22%,rgba(0,0,0,.20) 70%,rgba(0,0,0,.52)),
       radial-gradient(600px 230px at 50% 64%,rgba(255,255,255,.07),transparent 70%);z-index:0}
@@ -7418,7 +7439,7 @@ function v158InjectStyles(){
     .v158CenterLine{display:grid;gap:8px;place-items:center}.v158CenterLine .line{width:3px;height:84px;border-radius:99px;background:linear-gradient(180deg,transparent,#ffd95a,transparent);box-shadow:0 0 18px rgba(255,176,31,.35)}.v158CenterLine b{font-family:Orbitron;font-size:18px;color:#ff5d6c;text-shadow:0 0 18px rgba(255,93,108,.36)}
     .v158Tray{border-top:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.36));padding:10px 12px 12px}.v158TrayHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.v158TrayHead b{font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-family:Orbitron;color:#dfe8ff}.v158TrayHead span{font-size:10px;color:var(--muted);font-weight:900}
     .v158MiniRow{display:flex;gap:7px;overflow:auto;padding-bottom:3px}.v158Mini{width:48px;min-width:48px;text-align:center}.v158Mini .pic{width:46px;height:46px;border-radius:12px;overflow:hidden;display:grid;place-items:center;border:2px solid var(--uColor,#8bd0ff);background:linear-gradient(160deg,var(--uColor,#8bd0ff),#050811);font-family:Orbitron;font-size:14px;font-weight:1000;color:#fff}.v158Mini .pic img{width:100%;height:100%;object-fit:contain}.v158Mini .n{font-size:8px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
-    .v158ActionRow{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:8px;padding:0 12px 13px}.v158ActionRow button{min-height:48px;border-radius:14px;font-family:Orbitron;font-weight:1000}.v158Begin{background:linear-gradient(135deg,#36e0e6,#8bd0ff)!important;color:#06121f!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:0 0 28px rgba(54,224,230,.22),0 12px 28px rgba(0,0,0,.28)}.v158Begin[disabled]{filter:grayscale(.7);opacity:.55}.v158Edit,.v158Secondary{background:rgba(0,0,0,.42)!important;border:1px solid rgba(255,255,255,.14)!important;color:var(--ink)!important}
+    .v158ActionRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 13px}.v158ActionRow button{min-height:48px;border-radius:14px;font-family:Orbitron;font-weight:1000}.v158Begin{background:linear-gradient(135deg,#36e0e6,#8bd0ff)!important;color:#06121f!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:0 0 28px rgba(54,224,230,.22),0 12px 28px rgba(0,0,0,.28)}.v158Begin[disabled]{filter:grayscale(.7);opacity:.55}.v158Edit,.v158Secondary{background:rgba(0,0,0,.42)!important;border:1px solid rgba(255,255,255,.14)!important;color:var(--ink)!important}
     .v158QuietOld,.v158QuietOldForm,.v158OldFight{display:none!important}.v158StageMeta{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 12px}.v158StageMeta span{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);border-radius:999px;padding:4px 8px;font-size:10px;color:#dfe8ff;font-weight:900}
     .v158Raid .v158Battlefield{min-height:210px}.v158Raid .v158Side.enemies{grid-template-columns:1fr;grid-template-rows:1fr}.v158Raid .v158Unit.boss{min-height:145px}
     @media(max-width:520px){.v158Battlefield{grid-template-columns:1fr 38px 1fr;gap:5px;padding:10px}.v158Side{grid-template-rows:repeat(4,98px);grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.v158Unit{min-height:98px;border-radius:13px}.v158Portrait{border-radius:0;font-size:18px}.v158Name{font-size:8.5px}.v158Sub{font-size:7px}.v158CenterLine .line{height:66px}.v158CenterLine b{font-size:15px}.v158ActionRow{grid-template-columns:1fr;gap:7px}.v158PowerBand{grid-template-columns:1fr auto 1fr}.v158PowerBox .v{font-size:14px}.v158VS{font-size:18px}}
@@ -7478,7 +7499,7 @@ function v158StageHTML(mode){
     '<div class="v158StageMeta">'+info.chips.map(c=>'<span>'+esc(c)+'</span>').join('')+'<span>'+esc(info.sub)+'</span></div>'+ 
     '<div class="v158Battlefield"><div class="v158Side heroes">'+heroSlots.join('')+'</div><div class="v158CenterLine"><div class="line"></div><b>VS</b><div class="line"></div></div><div class="v158Side enemies">'+enemyHTML+'</div></div>'+
     '<div class="v158Tray"><div class="v158TrayHead"><b>Selected Squad</b><span>'+hs.length+'/'+TUNE.teamSize+' assigned · Front slots 1-3, back slots 4-6</span></div><div class="v158MiniRow">'+(hs.length?hs.map(v158MiniHero).join(''):'<span style="color:var(--muted);font-weight:900;font-size:12px">No heroes assigned yet.</span>')+'</div></div>'+
-    '<div class="v158ActionRow"><button class="v158Edit" id="v158EditLineup">Edit Lineup</button>'+startButton+'<button class="v158Secondary" id="v158UpgradeBtn">Upgrade Heroes</button></div>'+ 
+    '<div class="v158ActionRow"><button class="v158Edit" id="v158OptimizeSquad">⚙ Optimize</button>'+startButton+'<button class="v158Edit" id="v158EditLineup">Edit Lineup</button><button class="v158Secondary" id="v158UpgradeBtn">Upgrade Heroes</button></div>'+ 
   '</div>';
 }
 const __v158_renderCampaign = renderCampaign;
@@ -7499,6 +7520,7 @@ renderCampaign = function(v){
     }
     const edit=document.getElementById('v158EditLineup'); if(edit) edit.onclick=()=>openSquadPicker(campSub==='raid'?'raid':campSub==='tower'?'tower':'campaign');
     const begin=document.getElementById('v158BeginBattle'); if(begin) begin.onclick=()=>startBattle(campSub==='tower'?'tower':'campaign');
+    { const opt=document.getElementById('v158OptimizeSquad'); if(opt) opt.onclick=()=>optimizeSquad(campSub==='tower'?'tower':campSub==='raid'?'raid':'campaign'); }
     const q=document.getElementById('v158QuestBtn'); if(q) q.onclick=()=>{ view='quests'; renderHUD(); render(); };
     const up=document.getElementById('v158UpgradeBtn'); if(up) up.onclick=()=>{ const r=readyUpgradeHero(); if(r&&r.h) openHeroSheet(r.h.id); else { view='heroes'; renderHUD(); render(); toast('Review heroes, gear, and upgrades.'); } };
   }catch(e){ console.warn('v1.58 battle formation warning',e); }
@@ -7571,7 +7593,7 @@ openHeroSheet = function(id){
     '<div class="heroChamberTwoV159"><div class="heroChamberPanelV159"><h4>Gear Loadout <span>score '+gearScore(h)+'</span></h4><p>Gear surrounds the hero. Use Auto-equip for quick power or Unequip all to transfer gear.</p><div class="heroChamberToolsV159" style="margin-top:10px"><button class="go" id="h_gear_auto" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">Auto-equip best</button><button class="go" id="h_gear_empty" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Unequip all</button></div><button class="go" id="h_gear" style="margin-top:8px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Open full gear manager</button></div>'+ 
     '<div class="heroChamberPanelV159"><h4>Ability <span>'+esc(h.role)+' · '+esc(a?a.label:'Specialist')+'</span></h4><p>'+esc(a?a.desc:'Flexible combat identity.')+'</p>'+(p?'<div class="passivebox" style="margin-top:10px"><div class="pt">Passive · '+esc(p.name)+'</div><div class="pd">'+esc(p.desc)+'</div></div>':'')+'<div style="margin-top:10px">'+(metaChips(h)||'')+'</div></div></div>'+ 
     '<div class="heroChamberPanelV159"><h4>Bond & Domains <span>Bond Lv '+bondLevel(h)+'</span></h4><div>'+affChips(h.aff)+'</div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:850;color:var(--muted);margin:9px 2px 4px"><span>+'+(bondLevel(h)*2)+'% power</span><span>'+((h.bondXp||0)-bondCum(bondLevel(h)))+' / '+(bondCum(bondLevel(h)+1)-bondCum(bondLevel(h)))+'</span></div><div class="xpbar"><i style="width:'+Math.min(100,((h.bondXp||0)-bondCum(bondLevel(h)))/(bondCum(bondLevel(h)+1)-bondCum(bondLevel(h)))*100)+'%;background:linear-gradient(90deg,#ff5d9e,#ffb01f)"></i></div><button class="go" id="h_bond" style="margin-top:10px;background:linear-gradient(135deg,#ff5d9e,#ffb01f);color:#1a0714">Open Bond Journal</button></div>'+ 
-    '<div class="heroChamberPanelV159"><h4>Squads <span>assignments</span></h4><div class="segs" id="h_squads">'+SQUADS.map(sd=>{ const on=inSquad(sd[0],h.id), full=!on&&squad(sd[0]).length>=TUNE.teamSize; return '<button data-sq="'+sd[0]+'"'+(full?' disabled':'')+' class="'+(on?'on':'')+'"'+(full?' style="opacity:.4"':'')+'>'+sd[2]+' '+sd[1]+(on?' ✓':'')+'</button>'; }).join('')+'</div><p>A hero can serve in multiple squads. Team members level at full rate.</p></div>'+ 
+    ''+ 
     '<button class="go heroAdvancedToggleV159" id="h_adv_toggle">Show advanced edit tools</button><div class="heroAdvancedBlockV159" id="h_adv_block"><div class="heroChamberPanelV159"><h4>Edit Hero <span>portrait / metadata</span></h4><div class="heroEditGridV141"><button type="button" class="go" id="hUpload" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+(img?'Replace image':'Upload image')+'</button><button type="button" class="go" id="hAdjust" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);display:'+(img?'block':'none')+'">Adjust crop / zoom</button><button type="button" class="go" id="hRemoveImg" style="background:rgba(255,93,108,.12);color:#ff9ea8;border:1px solid rgba(255,93,108,.35);display:'+(img?'block':'none')+'">Remove image</button><label>Name</label><input type="text" id="h_name" maxlength="22" value="'+esc(name)+'"><label>Role</label><div class="segs" id="h_role">'+ROLES.map(r=>'<button data-r="'+r+'" class="'+(r===role?'on':'')+'">'+r+'</button>').join('')+'</div></div></div></div>'+ 
     '<div class="heroChamberToolsV159"><button class="go" id="h_focus" style="background:'+(isFocus?'#36e0e6;color:#04222a':'var(--panel2);color:var(--ink);border:1px solid var(--line)')+'">'+(isFocus?'★ Featured':'☆ Set Featured')+'</button><button class="go" id="h_favorite" style="background:'+(isFavorite(h.id)?'#ff9bd7;color:#1a0714':'var(--panel2);color:var(--ink);border:1px solid var(--line)')+'">'+(isFavorite(h.id)?'♥ Favorite':'♡ Favorite')+'</button><button class="go" id="h_legacy" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Legacy editor</button><button class="go" id="h_reset" style="background:rgba(255,93,108,.12);color:#ff9ea8;border:1px solid rgba(255,93,108,.35)">Reset hero</button></div>'+ 
     '<button class="ghost" id="h_save" style="color:var(--ink)">Save changes</button><button class="ghost" id="h_del">Delete hero</button></div>';
@@ -7590,7 +7612,7 @@ openHeroSheet = function(id){
   document.getElementById('h_gear_auto').onclick=()=>{ const r=autoEquipBestGear(h); toast(r.changed?('Auto-equipped '+r.changed+' slot'+(r.changed===1?'':'s')+' · +'+Math.max(0,r.after-r.before)+' gear score'):'Best gear already equipped'); rerender(); renderHUD(); save(); };
   document.getElementById('h_gear_empty').onclick=()=>{ const n=unequipAllGear(h); toast(n?('Unequipped '+n+' item'+(n===1?'':'s')+' to inventory'):'No gear equipped'); rerender(); renderHUD(); save(); };
   document.getElementById('h_bond').onclick=()=>showBondJournal(h.id);
-  document.getElementById('h_squads').onclick=e=>{ const b=e.target.closest('button[data-sq]'); if(!b||b.disabled) return; toggleSquad(b.dataset.sq,h.id); rerender(); renderHUD(); save(); };
+  { const __hsq=document.getElementById('h_squads'); if(__hsq) __hsq.onclick=e=>{ const b=e.target.closest('button[data-sq]'); if(!b||b.disabled) return; toggleSquad(b.dataset.sq,h.id); rerender(); renderHUD(); save(); }; }
   document.getElementById('h_focus').onclick=()=>{ S.focus=(S.focus===h.id?null:h.id); toast(S.focus===h.id?'★ '+h.name+' is now featured':'Featured cleared'); rerender(); save(); };
   document.getElementById('h_favorite').onclick=()=>{ toggleFavorite(h.id); toast(isFavorite(h.id)?'♥ '+h.name+' added to favorites':h.name+' removed from favorites'); rerender(); save(); };
   document.getElementById('h_legacy').onclick=()=>openHeroSheet_v159_prev(h.id);
@@ -7691,7 +7713,7 @@ function v160CampaignMapHTML(){
     '<div class="v160Road"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path class="pathBase" d="M5,80 C18,55 26,76 37,45 S55,62 66,36 S80,45 94,22"/><path class="pathGlow" d="M5,80 C18,55 26,76 37,45 S55,62 66,36 S80,45 94,22"/></svg>'+v160CampaignNodes()+'</div>'+
     '<div class="v160Legend"><span><b>✓</b> cleared</span><span><b>▶</b> current</span><span><b>👑</b> boss</span><span><b>🎁</b> chest</span><span><b>⚙</b> gear spike</span></div>'+
     '<div class="v160RewardRail">'+v160NextMilestones()+'</div>'+
-    '<div class="v160ActionDock"><button class="secondary" id="v160MapEdit">Edit Lineup</button><button class="primary" id="v160MapBegin">⚔ Begin Stage '+S.stage+'</button><button class="secondary" id="v160MapUpgrade">Upgrade</button></div>'+
+    '<div class="v160ActionDock"><button class="secondary" id="v160MapEdit">Edit Lineup</button><button class="secondary" id="v160MapOptimize">⚙ Optimize</button><button class="primary" id="v160MapBegin">⚔ Begin Stage '+S.stage+'</button><button class="secondary" id="v160MapUpgrade">Upgrade</button></div>'+
   '</div>';
 }
 const __v160_renderCampaign = renderCampaign;
@@ -7705,6 +7727,7 @@ renderCampaign = function(v){
     if(hub) hub.insertAdjacentHTML('afterend',html); else v.insertAdjacentHTML('afterbegin',html);
     const old=v.querySelector('.v158FormationStage'); if(old) old.style.marginTop='10px';
     const begin=document.getElementById('v160MapBegin'); if(begin) begin.onclick=()=>startBattle('campaign');
+    { const o160=document.getElementById('v160MapOptimize'); if(o160) o160.onclick=()=>optimizeSquad('campaign'); }
     const edit=document.getElementById('v160MapEdit'); if(edit) edit.onclick=()=>openSquadPicker('campaign');
     const up=document.getElementById('v160MapUpgrade'); if(up) up.onclick=()=>{ const r=readyUpgradeHero(); if(r&&r.h) openHeroSheet(r.h.id); else { view='heroes'; renderHUD(); render(); toast('Review heroes, gear, and upgrades.'); } };
     v.querySelectorAll('[data-v160-stage]').forEach(btn=>btn.onclick=()=>{ const st=Number(btn.dataset.v160Stage); if(st<S.stage) startBattle('campaign',{replay:true,stage:st}); else if(st===S.stage) startBattle('campaign'); else toast('Reach Stage '+st+' by clearing the current road.'); });
@@ -7803,8 +7826,8 @@ function v161Card(h,i){
     return d;
   }
   d.innerHTML=(rankIdx(h)>=6?'<div class="v161RaritySheen"></div>':'')+'<div class="v161TopRight">'+v161EmblemBadge(h)+'</div>'+    
-    '<div class="v161Lv">Lv '+effLevel(h)+(effLevel(h)>(h.level||1)?' <span style="color:#37d67a">↑</span>':'')+'</div>'+(squad?'<div class="v161Squads">'+squad+'</div>':'')+    
-    '<div class="v161Portrait">'+v161Face(h)+(ready?'<div class="v161Ready">\u2b06 '+esc(ready)+'</div>':'')+'</div>'+((h.prestige||0)>0?'<div class="v161Prestige">★'+h.prestige+'</div>':'')+    
+    '<div class="v161Lv">Lv '+effLevel(h)+(effLevel(h)>(h.level||1)?' <span style="color:#37d67a">↑</span>':'')+'</div>'+''+    
+    '<div class="v161Portrait">'+v161Face(h)+((ready==='Rank'||ready==='Prestige')?'<div class="v161Ready">\u2b06 '+esc(ready)+'</div>':'')+'</div>'+((h.prestige||0)>0?'<div class="v161Prestige">★'+h.prestige+'</div>':'')+    
     '<div class="v161Name">'+esc(h.name)+'</div>'+    
     '<div class="v161Meta"><span>'+esc(ipLabel(h.ip))+'</span><span>'+v161RoleIcon(h.role)+' '+esc(roleLabel(h.role))+'</span><span>'+v161ArchIcon(h)+' '+esc(a?a.label:'Hero')+'</span>'+(dm?'<span>'+dm.icon+' '+esc(dm.label.split(' ')[0])+'</span>':'')+'</div>'+    
     '<div class="v161Stats"><div><b>'+powerOf(h)+'</b><span>Power</span></div><div><b>⚙ '+gearScore(h)+'</b><span>Gear</span></div><div><b>'+RANKS[rankIdx(h)].name+'</b><span>Rank</span></div><div><b>✦ '+heroCP(h)+'</b><span>CP</span></div></div>';
@@ -8951,7 +8974,7 @@ const __v170_renderHome = renderHome;
 renderHome = function(v){ try{ v170RenderHome(v); setTimeout(()=>{ const a=document.getElementById('v170Review2'); if(a) a.onclick=()=>{ if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); }; const g=document.getElementById('v170Growth2'); if(g) g.onclick=()=>navTo('growth'); },0); }catch(e){ console.error('v1.70 home failed',e); __v170_renderHome(v); } };
 const __v170_renderQuests = renderQuests;
 renderQuests = function(v){
-  try{ __v170_renderQuests(v); v170InjectStyles(); v.classList.add('v170GameShell','v170Quests'); const next=suggestNext(), k=(next&&domainOf(next))||'discipline', d=DKEY[k]||DKEY.discipline; if(!v.querySelector('.v170MissionScene')) v.insertAdjacentHTML('afterbegin','<section class="v170MissionScene" style="--sceneArt:url('+v170SceneArt(k)+')"><span class="v170Kicker">'+d.icon+' Mission Board</span><h2>'+esc(next?next.title:'Quest board clear')+'</h2><p>'+esc(next?whyForTask(next):'No urgent quest is waiting. Add one small action or protect the win.')+'</p><div class="v170MissionActions"><button id="v170MissionStart" class="v170PrimaryAction">Start Highlighted Quest</button><button id="v170MissionAdd" class="v170SecondaryAction">Add Quest</button></div></section>'); const s=document.getElementById('v170MissionStart'); if(s) s.onclick=()=>next?v170GoToTask(next):toast('No highlighted quest right now.'); const add=document.getElementById('v170MissionAdd'); if(add) add.onclick=()=>openTaskSheet(null); }catch(e){ console.error('v1.70 quests shell failed',e); }
+  try{ __v170_renderQuests(v); v170InjectStyles(); v.classList.add('v170GameShell','v170Quests'); const next=suggestNext(), k=(next&&domainOf(next))||'discipline', d=DKEY[k]||DKEY.discipline; /* Quests Mission Board removed */ const s=document.getElementById('v170MissionStart'); if(s) s.onclick=()=>next?v170GoToTask(next):toast('No highlighted quest right now.'); const add=document.getElementById('v170MissionAdd'); if(add) add.onclick=()=>openTaskSheet(null); }catch(e){ console.error('v1.70 quests shell failed',e); }
 };
 function v170AddSceneBanner(v,type){
   if(!v||v.querySelector('.v170SceneBanner.v170Top')) return;
@@ -9702,7 +9725,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     const st=c7LaneStats();
     const rows=st.lanes.map(l=>{ const x=st.byLane[l.key], type=x.type; return '<div class="clashFitLane '+(st.weak===l.key?'weak':'')+' '+(x.basic?'basic':'')+'"><div><b>'+esc7(l.label)+' Lane</b><span>'+c7ElementBadge(type,true)+(x.basic?' · Basic pressure':' → '+c7CounterBadge(type,true))+'</span></div><div class="fitNums"><b>'+x.adv+'</b><span>adv</span><b>'+x.dis+'</b><span>bad</span></div></div>'; }).join('');
     const sub=c7IsFive(st.chapter)?'Chapter 2+ unlocks 5 lanes: outer lanes are Basic pressure, middle 3 lanes keep type counters.':'Chapter 1 warm-up uses 3 typed lanes.';
-    return '<div class="clashFitBox c7"><div class="clashBoxHead"><b>⚙ Squad Fit</b><span>'+st.coverage+'/'+st.typedSlots+' typed advantage</span></div><div class="clashFitSummary">'+sub+' Weakest lane: <b>'+esc7((st.lanes.find(l=>l.key===st.weak)||{}).label||cap7(st.weak))+'</b>.</div>'+rows+'<div class="clashActions"><button onclick="clashAutoOptimize(true)">⚙ Optimize Squad</button><button onclick="openClashSquadEditor(0)">✏️ Edit Squad</button></div></div>';
+    return '<div class="clashFitBox c7"><div class="clashBoxHead"><b>⚙ Squad Fit</b><span>'+st.coverage+'/'+st.typedSlots+' typed advantage</span></div><div class="clashFitSummary">'+sub+' Weakest lane: <b>'+esc7((st.lanes.find(l=>l.key===st.weak)||{}).label||cap7(st.weak))+'</b>.</div>'+rows+'</div>';
   };
   window.clashFormationPreviewHTML=function(){
     const ch=c7Chapter(), ids=c7EnsureSquad(ch), pattern=c7Pattern(ch,c7Stage()), lanes=c7Lanes(ch), need=c7SlotCount(ch);
@@ -9734,11 +9757,11 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     const c=S.clash, ch=c.chapter||1, stage=c.stage||1, cd=getClashChapterData(ch), idx=getClashPatternIndexForStage(stage), pattern=cd.patterns[idx], kind=getClashStageKind(stage), progress=Math.round(((stage-1)/80)*100), tp=clashTeamPower(), slots=c7SlotCount(ch);
     const title=(kind==='boss'||kind==='chapterBoss')?'New Threat Pattern':'Current Threat Pattern';
     const unlock=c7IsFive(ch)?'5 lanes · 20 heroes · outer lanes are Basic':'3 lanes · 12 heroes · Chapter 1 warm-up';
-    return '<div class="stagecard" style="border-color:#cdbcff66"><h3>⚡ Clash Trials</h3><p>Chapter '+ch+' · Stage '+stage+'/80 · '+cap7(kind)+' · '+unlock+'</p></div>'+clashElementWheelHTML()+
+    return '<div class="stagecard" style="border-color:#cdbcff66"><h3>⚡ Clash Trials</h3><p>Chapter '+ch+' · Stage '+stage+'/80 · '+cap7(kind)+' · '+unlock+'</p></div>'+'<details class="clashDetailsFold"><summary>⚡ Battle details · patterns, rewards & map</summary>'+clashElementWheelHTML()+
       '<div class="clashPatternBox"><div class="clashBoxHead"><b>'+title+'</b><span>Pattern '+(idx+1)+' / 8</span></div>'+c7LanePreviewHTML(pattern,ch)+c7BossPreviewHTML(cd,stage,ch)+'<div class="clashPatternFoot"><span>Typed distribution this chapter: '+c7PatternSummary(cd)+'</span></div></div>'+c7RewardPreviewHTML(ch,stage,kind)+
-      '<div class="battleWorld" style="--worldColor:#cdbcff"><div class="bwHead"><b>⚡ Procedural Chapter Track</b><span>'+(c7IsFive(ch)?'5-lane formation active':'3-lane warm-up')+'</span></div>'+c7ChapterPathHTML(cd,stage,ch)+'<div class="battleWorldStats"><div class="bws"><b>C'+ch+'</b><span>chapter</span></div><div class="bws"><b>'+stage+'</b><span>stage</span></div><div class="bws"><b>'+progress+'%</b><span>chapter</span></div></div></div>'+clashSquadFitHTML()+
+      '<div class="battleWorld" style="--worldColor:#cdbcff"><div class="bwHead"><b>🗺 Battle Map</b><span>'+(c7IsFive(ch)?'5-lane formation active':'3-lane warm-up')+'</span></div>'+c7ChapterPathHTML(cd,stage,ch)+'<div class="battleWorldStats"><div class="bws"><b>C'+ch+'</b><span>chapter</span></div><div class="bws"><b>'+stage+'</b><span>stage</span></div><div class="bws"><b>'+progress+'%</b><span>chapter</span></div></div></div>'+'</details>'+clashSquadFitHTML()+
       '<div class="team-strip"><div class="lab"><span>Clash Squad · '+slots+' slots</span><b>PWR '+tp+'</b></div>'+clashFormationPreviewHTML()+'<div class="clashNote">Chapter 1 is a 3-lane warm-up. Chapter 2+ expands to 5 lanes with 4 heroes per lane; outer lanes are Basic pressure lanes with no type counter.</div></div>'+ 
-      '<button class="fight" onclick="startClashBattle()">BEGIN CLASH BATTLE</button>';
+      '<div class="clashStartRow"><button class="fight fightOpt" onclick="clashAutoOptimize(true)">⚙ Optimize</button><button class="fight" onclick="startClashBattle()">Begin Battle</button></div>';
   };
   function c7HeroTile(hero,index,selected){ const ch=c7Chapter(), slot=c7SlotMeta(index,ch), pattern=c7Pattern(ch,c7Stage()), laneType=slot.basic?null:(pattern[slot.typeKey||slot.lane]||null), m=hero?c7Match(hero.elementType,laneType):'neutral'; return '<button class="clashEditSlot '+(selected===index?'selected ':'')+m+' '+(slot.basic?'basic':'')+'" onclick="openClashSquadEditor('+index+')"><div class="cesTop"><b>'+esc7(slot.laneLabel)+'</b><span>'+cap7(slot.row)+'</span></div><div class="cesFace" style="background:'+(hero?hero.color:'#111827')+'">'+(hero?(hero.img?'<img src="'+hero.img+'" alt="">':esc7(hero.name.slice(0,2).toUpperCase())):'—')+'</div><div class="cesName">'+(hero?esc7(hero.name):'Empty')+'</div><div class="cesSub">'+(hero?c7ElementBadge(hero.elementType,true)+' '+esc7(hero.clashRole||'Role'):'No hero')+'</div></button>'; }
   function c7CandidateRow(hero,slotIndex){ const ch=c7Chapter(), ids=c7EnsureSquad(ch), assigned=ids.indexOf(hero.id), slot=c7SlotMeta(slotIndex,ch), pattern=c7Pattern(ch,c7Stage()), laneType=slot.basic?null:(pattern[slot.typeKey||slot.lane]||null), matchup=c7Match(hero.elementType,laneType), score=Math.round(c7HeroScore(hero,slot,pattern,c7Boss(ch,c7Stage()))), tag=slot.basic?'Basic lane':(matchup==='advantage'?'Advantage':matchup==='disadvantage'?'Bad Match':'Neutral'); return '<button class="clashCandidate '+matchup+' '+(assigned>=0?'assigned':'')+'" onclick="clashAssignSlot('+slotIndex+',\''+esc7(hero.id)+'\')"><div class="ccFace" style="background:'+hero.color+'">'+(hero.img?'<img src="'+hero.img+'" alt="">':esc7(hero.name.slice(0,2).toUpperCase()))+'</div><div class="ccMeta"><div class="ccName">'+esc7(hero.name)+'</div><div class="ccSub">'+c7ElementBadge(hero.elementType,true)+' '+esc7(hero.clashRole||'Role')+' · PWR '+powerOf(hero)+' · '+tag+(assigned>=0?' · in '+c7SlotMeta(assigned,ch).label:'')+'</div></div><div class="ccScore">'+score+'</div></button>'; }
@@ -9872,6 +9895,24 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     else e.y=Math.max(e.y,engageLine);
     if(e.y>=leakLine){ e.leaked=true; e.hp=0; battle7.leaks=(battle7.leaks||0)+1; battle7.log=e.name+' broke through '+target.name+'!'; }
   }
+  function c7Watchdog(){
+    if(!battle7||battle7.ended) return;
+    if(!battle7._wd) battle7._wd={t:battle7.tickCount||0,at:Date.now()};
+    const now=Date.now();
+    if(battle7.tickCount!==battle7._wd.t){ battle7._wd={t:battle7.tickCount,at:now}; return; }
+    if(now-battle7._wd.at<1400) return;
+    console.warn('Clash watchdog: tick stalled, attempting recovery');
+    battle7.resolving=false; battle7._ticking=false;
+    if(!battle7.timer){ try{ battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); }catch(e){} }
+    try{ c7Tick(); }catch(e){ console.error('Clash watchdog tick failed',e); }
+    if(battle7&&!battle7.ended&&battle7.tickCount===battle7._wd.t){
+      console.error('Clash watchdog: still stalled, forcing resolve');
+      const aliveNow=battle7.heroes.some(h=>h.hp>0), allSpawned=!battle7.spawnPlan.length;
+      try{ c7Resolve(aliveNow&&allSpawned&&battle7.enemies.length===0,'recovered'); }
+      catch(e){ console.error('Clash watchdog resolve failed',e); try{ closeClashBattle(); }catch(_e){} }
+    }
+    if(battle7) battle7._wd={t:battle7.tickCount,at:Date.now()};
+  }
   function c7Tick(){
     if(!battle7||battle7.ended||battle7.resolving) return;
     if(battle7._ticking) return;
@@ -9905,7 +9946,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7AdvanceStage(){ if(S.clash.stage>=80){ S.clash.chapter=(S.clash.chapter||1)+1; S.clash.stage=1; } else S.clash.stage=(S.clash.stage||1)+1; }
   function c7AutoStopReason(prevCh,prevStage,nextCh,nextStage){ if(!S||!S.clash||!S.clash.autoBattle) return 'Auto off'; const nextKind=c7Kind(nextStage); if(nextKind==='boss'||nextKind==='chapterBoss') return 'Boss setup ahead'; try{ if(getClashPatternIndexForStage(prevStage)!==getClashPatternIndexForStage(nextStage)||prevCh!==nextCh) return 'New type setup'; }catch(e){} return ''; }
   function c7ScheduleAutoNext(){ if(!battle7||!battle7.result||!battle7.result.win||!S.clash||!S.clash.autoBattle||battle7.result.autoStop) return; battle7.log='Auto battle: next stage starts in 3 seconds.'; c7RenderBattle(); battle7.autoTimer=setTimeout(function(){ try{ if(battle7&&battle7.result&&battle7.result.win&&S.clash&&S.clash.autoBattle) startClashBattle(); }catch(e){ console.error('Clash auto battle failed',e); } },3000); }
-  function c7Resolve(win,reason){ if(!battle7||battle7.ended) return; const prevCh=battle7.chapter, prevStage=battle7.stage; battle7.resolving=true; battle7.ended=true; if(battle7.timer) clearInterval(battle7.timer); if(battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7.timer=null; battle7.autoTimer=null; const result=c7ApplyRewards(win); if(win) c7AdvanceStage(); let autoStop=''; if(win){ autoStop=c7AutoStopReason(prevCh,prevStage,c7Chapter(),c7Stage()); if(autoStop&&S.clash) S.clash.autoBattle=false; } else if(S.clash) { S.clash.autoBattle=false; autoStop='Defeat'; } battle7.result={win,first:result.first,reward:result.reward,reason:reason||'',autoStop}; try{ if(typeof save==='function') save(); if(typeof renderHUD==='function') renderHUD(); }catch(e){} c7RenderBattle(); c7ScheduleAutoNext(); }
+  function c7Resolve(win,reason){ if(!battle7||battle7.ended) return; const prevCh=battle7.chapter, prevStage=battle7.stage; battle7.resolving=true; battle7.ended=true; if(battle7.timer) clearInterval(battle7.timer); if(battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7.timer=null; battle7.autoTimer=null; if(battle7.watchdog){ clearInterval(battle7.watchdog); battle7.watchdog=null; } let result={first:false,reward:{gold:0,dust:0,bondXp:0,extra:[]}}, autoStop=''; try{ const __r=c7ApplyRewards(win); if(__r) result=__r; if(win) c7AdvanceStage(); if(win){ autoStop=c7AutoStopReason(prevCh,prevStage,c7Chapter(),c7Stage()); if(autoStop&&S.clash) S.clash.autoBattle=false; } else if(S.clash){ S.clash.autoBattle=false; autoStop='Defeat'; } }catch(e){ console.error('Clash resolve rewards failed',e); if(S.clash) S.clash.autoBattle=false; if(!win&&!autoStop) autoStop='Defeat'; } battle7.result={win,first:!!result.first,reward:result.reward||{gold:0,dust:0,bondXp:0,extra:[]},reason:reason||'',autoStop}; try{ if(typeof save==='function') save(); if(typeof renderHUD==='function') renderHUD(); }catch(e){} try{ c7RenderBattle(); }catch(e){ console.error('Clash result render failed',e); } try{ c7ScheduleAutoNext(); }catch(e){} }
   function c7StartData(){ if(typeof ensureClashState==='function') ensureClashState(); const ch=c7Chapter(), st=c7Stage(), pattern=c7Pattern(ch,st), kind=c7Kind(st), bossInfo=c7Boss(ch,st), ids=c7EnsureSquad(ch), lanes=c7Lanes(ch); const heroes=ids.map((id,i)=>{ const h=c7OwnedHero(id); return h?c7HeroStats(h,c7SlotMeta(i,ch),pattern):null; }).filter(Boolean); const built=c7BuildSpawnPlan(ch,st,kind,pattern,bossInfo,lanes); battle7={chapter:ch,stage:st,kind,pattern,bossInfo,lanes,heroes,enemies:[],wave:0,maxWaves:built.waves,spawnPlan:built.plan,spawned:0,totalEnemies:built.totalEnemies,leaks:0,leakLimit:built.cfg.leakLimit,maxLaneActive:built.cfg.maxLaneActive,totalTime:built.cfg.totalTicks,timeLeft:built.cfg.totalTicks,tickCount:0,damage:0,taken:0,healing:0,blocked:0,advHits:0,badHits:0,defeated:0,log:'Finite enemy swarm incoming.',speed:1,resolving:false,ended:false,timer:null,autoTimer:null,result:null}; }
   function c7OpenBattle(){ let o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); o=document.createElement('div'); o.id='clashBattleOverlay'; o.className='clashBattleOverlay c7'; document.body.appendChild(o); }
   function c7FxMeta(type){ const map={Flame:{cls:'flame',shot:'#ff6b4a',shot2:'#ffb347'},Tide:{cls:'tide',shot:'#48cfff',shot2:'#a9efff'},Grove:{cls:'grove',shot:'#6fe26a',shot2:'#c8ff8b'},Stone:{cls:'stone',shot:'#caa46a',shot2:'#f0dfbf'},Storm:{cls:'storm',shot:'#ffd94a',shot2:'#fff19a'}}; return map[type]||map.Flame; }
@@ -9920,10 +9961,10 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7WeakLane(){ let best=battle7.lanes[0].key, worst=999; battle7.lanes.forEach(l=>{ const alive=battle7.heroes.filter(h=>h.lane===l.key&&h.hp>0).length, hp=battle7.heroes.filter(h=>h.lane===l.key).reduce((s,h)=>s+(h.hp/h.maxHp),0), score=alive*2+hp; if(score<worst){ worst=score; best=l.key; } }); return best; }
   function c7RenderResult(){ const r=battle7.result||{}, rw=r.reward||{}, timeUsed=c7FmtTime(Math.max(0,(battle7.totalTime||0)-(battle7.timeLeft||0))); if(r.win){ const autoLine=(S.clash&&S.clash.autoBattle&&!r.autoStop)?'<p>Auto battle: next stage starts in 3 seconds.</p>':(r.autoStop?'<p>Auto stopped: '+esc7(r.autoStop)+'.</p>':''); return '<div class="clashResult win"><h2>VICTORY</h2><p>'+(r.first?'First clear secured.':'Replay clear secured.')+'</p>'+autoLine+'<div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+timeUsed+'</b><span>Time Used</span></div></div><div class="clashRewardLine">'+esc7(c7RewardLine(rw))+'</div><button onclick="closeClashBattle()">Continue</button></div>'; } const weak=c7WeakLane(), laneCfg=battle7.lanes.find(l=>l.key===weak), laneType=c7LaneType(laneCfg,battle7.chapter,battle7.stage,battle7.pattern), why=r.reason==='timeout'?'Time expired before the swarm was fully cleared.':(r.reason==='leaks'?'Too many enemies slipped to the bottom.':'Your line broke before the swarm ended.'); return '<div class="clashResult lose"><h2>DEFEAT</h2><p>'+esc7(why)+'</p><div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+c7FmtTime(battle7.timeLeft||0)+'</b><span>Time Left</span></div></div><div class="clashCoach"><b>Weak Lane: '+esc7((laneCfg&&laneCfg.label)||cap7(weak))+'</b><span>'+(laneType?c7ElementBadge(laneType,false)+' lane · counter with '+c7CounterBadge(laneType,false):'Basic lane · add sturdier heroes or more raw power')+'</span><span>Try Optimize Squad, keep Tanks front, and use Melee DPS for close-range splash.</span></div><div class="clashResultActions"><button onclick="clashAutoOptimize(true);closeClashBattle();setTimeout(startClashBattle,250)">Optimize & Retry</button><button onclick="closeClashBattle();setTimeout(function(){openClashSquadEditor(0)},100)">Edit Squad</button><button onclick="closeClashBattle()">Leave</button></div></div>'; }
   function c7SpeedValue(){ return battle7&&battle7.speed>=3?3:(battle7&&battle7.speed===2?2:1); }
-  function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['rear','back','mid','front']; battle7.heroes.forEach(h=>h.acted=0); const lanePills=battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<span>'+esc7(l.label)+' '+c7ElementBadge(t,true)+(t?' → '+c7CounterBadge(t,true):' · Basic')+'</span>'; }).join(''); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; o.innerHTML='<div class="clashBattlePanel c7 '+(battle7.lanes.length===5?'five':'three')+'"><div class="clashBattleHead"><div><b>⚡ Clash Trials</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">Auto '+((S.clash&&S.clash.autoBattle)?'On':'Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Skip</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashBattlePattern">'+lanePills+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
-  window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
+  function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['rear','back','mid','front']; battle7.heroes.forEach(h=>h.acted=0); const lanePills=battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<span>'+esc7(l.label)+' '+c7ElementBadge(t,true)+(t?' → '+c7CounterBadge(t,true):' · Basic')+'</span>'; }).join(''); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; const _cz=BATTLE_ZONES[(((battle7.chapter||1)-1)%BATTLE_ZONES.length+BATTLE_ZONES.length)%BATTLE_ZONES.length], _cbg=(typeof v156BgForClass==='function'&&_cz)?v156BgForClass(_cz.c):''; o.innerHTML='<div class="clashBattlePanel c7 hasArt '+(battle7.lanes.length===5?'five':'three')+'" style="--clashArt:url('+_cbg+')"><div class="clashBattleHead"><div><b>⚡ Clash Trials</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">Auto '+((S.clash&&S.clash.autoBattle)?'On':'Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Skip</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashBattlePattern">'+lanePills+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
+  window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); battle7._wd={t:battle7.tickCount||0,at:Date.now()}; if(battle7.watchdog) clearInterval(battle7.watchdog); battle7.watchdog=setInterval(c7Watchdog,1500); }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
   window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; battle7.resolving=true; let guard=0; while(battle7&&!battle7.ended&&guard++<900){ battle7.resolving=false; c7Tick(); if(!battle7||battle7.ended) break; battle7.resolving=true; } if(battle7&&!battle7.ended){ battle7.resolving=false; c7Resolve(false); } };
-  window.closeClashBattle=function(){ if(battle7&&battle7.timer) clearInterval(battle7.timer); if(battle7&&battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7=null; const o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); try{ if(typeof render==='function') render(); }catch(e){} };
+  window.closeClashBattle=function(){ if(battle7&&battle7.timer) clearInterval(battle7.timer); if(battle7&&battle7.autoTimer) clearTimeout(battle7.autoTimer); if(battle7&&battle7.watchdog) clearInterval(battle7.watchdog); battle7=null; const o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); try{ if(typeof render==='function') render(); }catch(e){} };
   window.c7BattleInterval=function(){ const sp=c7SpeedValue(); return sp===3?220:(sp===2?300:C7.tickMs); };
   window.setClashSpeed=function(){ if(!battle7||battle7.ended) return; const cur=c7SpeedValue(); battle7.speed=cur===1?2:cur===2?3:1; if(battle7.timer) clearInterval(battle7.timer); battle7.timer=setInterval(c7Tick,c7BattleInterval()); c7RenderBattle(); };
   window.toggleClashAutoBattle=function(){ if(!S.clash) ensureClashState(); S.clash.autoBattle=!S.clash.autoBattle; if(typeof save==='function') save(); safeToast7(S.clash.autoBattle?'Clash auto battle on. Stops at bosses/new type setups.':'Clash auto battle off.'); c7RenderBattle(); };
