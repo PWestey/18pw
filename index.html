@@ -2013,7 +2013,7 @@ function lifeSystemCardsHTML(){ const W=ensureLifeWeek(), strong=strongestDomain
       '<div class="lifecard"><h3><span>🃏 Strategy + Research</span><span style="color:#cdbcff">Cards</span></h3><p>Equip 3 light bonuses and buy permanent research upgrades from weekly reflection.</p>'+strategySummaryHTML()+'</div>'+
       '<div class="lifecard"><h3><span>★ Prestige Hall</span><span style="color:#ffd95a">Long-term</span></h3><p>Showcase favorite heroes who have begun New Cycles and track catch-up progress.</p>'+prestigeHallHTML()+'</div>'+
       '<div class="lifecard"><h3><span>📤 Recap Center</span><span style="color:#8bd0ff">Export</span></h3><p>Copy or download weekly/monthly recaps for longer-term reflection.</p>'+recapCenterHTML()+'</div>'+
-      '<div class="lifecard"><h3><span>🕊️ Grace & Recovery</span><span>'+((S.grace||0))+' tokens</span></h3><p>Recovery Day is for heavy days: one small anchor, no shame spiral. Grace Tokens protect streaks automatically when needed.</p><div class="lifeactions"><button class="primary" id="openRecovery">'+(rec&&rec.done?'Recovery done':'Start recovery anchor')+'</button><button id="openGrace">How grace works</button></div></div>'+
+      '<div class="lifecard"><h3><span>'+cicon('grace',16)+' Grace & Recovery</span><span>'+((S.grace||0))+' tokens</span></h3><p>Recovery Day is for heavy days: one small anchor, no shame spiral. Grace Tokens protect streaks automatically when needed.</p><div class="lifeactions"><button class="primary" id="openRecovery">'+(rec&&rec.done?'Recovery done':'Start recovery anchor')+'</button><button id="openGrace">How grace works</button></div></div>'+
       '<div class="lifecard"><h3><span>🧬 Hero Archetypes</span><span style="color:#cdbcff">Reference</span></h3><p>Every hero keeps Tank/DPS/Support plus a combat archetype for role identity and synergy.</p><div class="roadmapNote"><b style="color:var(--ink)">Archetypes:</b> Guardian, Bruiser, Striker, Assassin, Caster, Healer, Protector, Controller, Hunter, Specialist, and Leader.</div></div>'+
     '</div></details>';
   return '<div class="lifesys-grid">'+primary+more+'</div>'; }
@@ -2374,7 +2374,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.13.5-domain-dropdown';
+const APP_BUILD='v2.13.6-grace-import-notes';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2432,7 +2432,8 @@ function makeStarterDaily(spec, old){
     domain: spec.domain||guessDomain(spec.title)||null,
     streak: old&&typeof old.streak==='number' ? old.streak : 0,
     done: keepDone,
-    pk: curKey
+    pk: curKey,
+    notes: typeof spec.notes==='string'?spec.notes:''
   };
 }
 function seedStarterDailiesIfEmpty(){
@@ -4768,7 +4769,7 @@ function importDailiesFromFile(){
       if(!Array.isArray(S.dailies)) S.dailies=[];
       const have=new Set(S.dailies.map(d=>String(d.title||'').toLowerCase().trim()));
       let added=0;
-      list.forEach(spec=>{ if(!spec||!spec.title) return; const key=String(spec.title).toLowerCase().trim(); if(have.has(key)) return; S.dailies.push(makeStarterDaily({title:spec.title,freq:spec.freq||'daily',diff:spec.diff||'easy',domain:spec.domain||null},null)); have.add(key); added++; });
+      list.forEach(spec=>{ if(!spec||!spec.title) return; const key=String(spec.title).toLowerCase().trim(); if(have.has(key)) return; S.dailies.push(makeStarterDaily({title:spec.title,freq:spec.freq||'daily',diff:spec.diff||'easy',domain:spec.domain||null,notes:spec.notes},null)); have.add(key); added++; });
       try{ if(typeof save==='function') save(); }catch(e){}
       try{ if(typeof renderHUD==='function') renderHUD(); }catch(e){}
       try{ if(typeof render==='function') render(); }catch(e){}
