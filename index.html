@@ -1039,7 +1039,7 @@ const RARCOLOR={common:'#9aa6c2',rare:'#4a90ff',epic:'#a259ff',legendary:'#ffb01
 const SLOTS=['weapon','armor','boots','relic'];
 const SLOTICON={weapon:'⚔',armor:'🛡',boots:'🥾',relic:'🔮'};
 const SLOTNAME={weapon:'Weapon',armor:'Armor',boots:'Boots',relic:'Relic'};
-const TASKREWARD={easy:{g:5,d:2,drop:0.06,cores:0},med:{g:15,d:5,drop:0.10,cores:1},hard:{g:30,d:10,drop:0.15,cores:2}};
+const TASKREWARD={easy:{g:20,d:4,drop:0.06,cores:0},med:{g:52,d:12,drop:0.10,cores:1},hard:{g:120,d:26,drop:0.15,cores:2}};
 const RANKS=[{name:'Recruit',cap:10},{name:'Veteran',cap:20},{name:'Elite',cap:30},{name:'Champion',cap:40},{name:'Mythic',cap:50},{name:'Ascended',cap:60},{name:'Legendary',cap:75},{name:'Eternal',cap:100}];
 const RANKUP=[{cores:8,gold:75},{cores:18,gold:175},{cores:35,gold:350},{cores:75,boss:1},{cores:150,boss:2},{cores:250,boss:3},{cores:400,boss:5,sparks:1}];
 function convertBossFrags(){ if(typeof S.bossFrags!=='number')S.bossFrags=0; while(S.bossFrags>=10){ S.bossFrags-=10; S.bossCores=(S.bossCores||0)+1; } }
@@ -2378,7 +2378,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.14.1-season1-launch-fix';
+const APP_BUILD='v2.14.4-gear-curve';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -5250,7 +5250,7 @@ function suggestSquad(mode){
 function openSquadPicker(mode){
   mode=mode||campSub||'campaign'; const meta=SQUADS.find(s=>s[0]===mode)||SQUADS[0]; const arr=squad(mode); const allOwned=S.heroes.filter(h=>h.owned); const owned=squadPickerFiltered(allOwned); const s=document.getElementById('sheet');
   const selected=arr.map((id,i)=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return ''; const row=formationRow(i), face=h.img?'<img src="'+h.img+'">':initials(h.name), ev=formationEvaluationV139(h,row); return '<div class="pickSlot '+row+' themeframe"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="slotmeta"><span class="slotname">'+(i+1)+'. '+esc(h.name)+'</span><span class="slotsub">'+(row==='front'?'Front Row':'Back Row')+' · '+esc(ipLabel(h.ip||''))+' · '+h.role+' · PWR '+powerOf(h)+'</span><span class="slotnote">'+formationStatusChipV139(h,row)+' <span style="color:var(--muted)">'+esc(ev.summary)+'</span></span></span><span class="slotbtns"><button data-move="up" data-id="'+h.id+'">↑</button><button data-move="down" data-id="'+h.id+'">↓</button><button data-move="'+(row==='front'?'back':'front')+'" data-id="'+h.id+'">'+(row==='front'?'Back':'Front')+'</button><button data-remove="'+h.id+'">×</button></span></div>'; }).join('') || '<span class="pill warn">No heroes assigned</span>';
-  s.innerHTML='<div class="squadpicker"><h3>'+meta[2]+' Edit '+meta[1]+' Formation</h3>'+'<button data-suggest="1" style="width:100%;margin:2px 0 10px;background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a;border:none;font-weight:800">\u2728 Suggest Squad</button>'+walletHTML('Place durable heroes forward and fragile value heroes back for cleaner fights.')+'<div style="font-size:12px;color:var(--muted);font-weight:700;margin:8px 2px 10px">'+arr.length+'/'+TUNE.teamSize+' assigned · Slots 1-3 are Front Row, 4-6 are Back Row.</div>'+formationGuideHTMLV139()+formationLegendHTMLV139()+'<div class="pickSelected">'+selected+'</div>'+synergyPanelHTML(mode)+'<div class="formtip" style="margin-bottom:10px">Role bonuses stack with archetype row bonuses, so positioning matters more now.</div><div class="btnset" style="margin-bottom:8px"><button id="sqClear" class="ghost">Clear</button><button id="sqSaveTpl" class="ghost" style="flex:1">💾 Save</button><button id="sqDone" class="go">Done</button></div>'+((S.lineupTemplates&&S.lineupTemplates.length)?'<div style="display:flex;gap:6px;margin-bottom:8px"><select id="sqTplSel" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:12px"><option value="">Load template…</option>'+(S.lineupTemplates.map((t,i)=>'<option value="'+i+'">'+esc(t.name)+'</option>').join(''))+'</select><button id="sqLoadTpl" class="ghost" style="padding:8px 12px">Apply</button><button id="sqDelTpl" class="ghost" style="padding:8px 10px;color:#ff6b6b">✕</button></div>':'')+squadPickerToolsHTML(allOwned.length,owned.length)+'<div id="sqCandidateList">'+owned.map(h=>squadCandidateButtonHTML(h,mode)).join('')+'</div></div>';
+  s.innerHTML='<div class="squadpicker"><h3>'+meta[2]+' Edit '+meta[1]+' Formation</h3>'+'<button data-suggest="1" style="width:100%;margin:2px 0 10px;background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a;border:none;font-weight:800">\u2728 Suggest Squad</button>'+walletHTML('Place durable heroes forward and fragile value heroes back for cleaner fights.')+'<div style="font-size:12px;color:var(--muted);font-weight:700;margin:8px 2px 10px">'+arr.length+'/'+TUNE.teamSize+' assigned · Slots 1-3 are Front Row, 4-6 are Back Row.</div>'+formationGuideHTMLV139()+formationLegendHTMLV139()+'<div class="pickSelected">'+selected+'</div>'+synergyPanelHTML(mode)+'<div class="formtip" style="margin-bottom:10px">Role bonuses stack with archetype row bonuses, so positioning matters more now.</div><div class="btnset" style="margin-bottom:8px"><button id="sqClear" class="ghost">Clear</button><button id="sqSaveTpl" class="ghost" style="flex:1">💾 Template</button><button id="sqDone" class="go">✓ Save &amp; Close</button></div>'+((S.lineupTemplates&&S.lineupTemplates.length)?'<div style="display:flex;gap:6px;margin-bottom:8px"><select id="sqTplSel" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:12px"><option value="">Load template…</option>'+(S.lineupTemplates.map((t,i)=>'<option value="'+i+'">'+esc(t.name)+'</option>').join(''))+'</select><button id="sqLoadTpl" class="ghost" style="padding:8px 12px">Apply</button><button id="sqDelTpl" class="ghost" style="padding:8px 10px;color:#ff6b6b">✕</button></div>':'')+squadPickerToolsHTML(allOwned.length,owned.length)+'<div id="sqCandidateList">'+owned.map(h=>squadCandidateButtonHTML(h,mode)).join('')+'</div></div>';
   showScrim('scrim');
   document.getElementById('sqDone').onclick=()=>{ hideScrim(); renderHUD(); render(); save(); };
   document.getElementById('sqClear').onclick=()=>{ S.squads[mode]=[]; openSquadPicker(mode); renderHUD(); save(); };
@@ -5341,7 +5341,7 @@ function gearPower(g){
 }
 function gearCostOf(g){
   const m=RARMULT[g.rarity];
-  return {gold:Math.round(20*m*(g.level+1)), dust:Math.round(8*m*(g.level+1))};
+  return {gold:Math.round(5*m*(g.level+1)), dust:Math.round(1*m*(g.level+1))};
 }
 function salvageValue(g){
   return ({common:15,rare:45,epic:125,legendary:350,mythic:850,eternal:2200})[g.rarity]||15;
@@ -8294,9 +8294,9 @@ function v165ApplyTuning(){
     TUNE.towerGrowth=1.018;
     TUNE.accountPowerPer=0;                 // passive hero buff OFF
     TUNE.gearStageScale=0.012;              // softened stage-scaled gear
-    if(TASKREWARD.easy){ TASKREWARD.easy.g=12; TASKREWARD.easy.d=4; TASKREWARD.easy.drop=0.21; TASKREWARD.easy.cores=0; }
-    if(TASKREWARD.med){ TASKREWARD.med.g=32; TASKREWARD.med.d=12; TASKREWARD.med.drop=0.33; TASKREWARD.med.cores=2; }
-    if(TASKREWARD.hard){ TASKREWARD.hard.g=72; TASKREWARD.hard.d=26; TASKREWARD.hard.drop=0.51; TASKREWARD.hard.cores=4; }
+    if(TASKREWARD.easy){ TASKREWARD.easy.g=20; TASKREWARD.easy.d=4; TASKREWARD.easy.drop=0.21; TASKREWARD.easy.cores=0; }
+    if(TASKREWARD.med){ TASKREWARD.med.g=52; TASKREWARD.med.d=12; TASKREWARD.med.drop=0.33; TASKREWARD.med.cores=2; }
+    if(TASKREWARD.hard){ TASKREWARD.hard.g=120; TASKREWARD.hard.d=26; TASKREWARD.hard.drop=0.51; TASKREWARD.hard.cores=4; }
   }catch(e){}
 }
 function v165AllGearSlotsOwned(){
