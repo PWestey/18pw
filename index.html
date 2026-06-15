@@ -1481,7 +1481,7 @@ function domainLevelFromXp(xp){ xp=Math.max(0,xp||0); return 1+Math.floor(Math.s
 function domainXpForLevel(lv){ return Math.pow(Math.max(0,lv-1),2)*100; }
 function domainMeta(k){ const st=ensureDomainStats()[k]||{xp:0,actions:0}, lv=domainLevelFromXp(st.xp), cur=domainXpForLevel(lv), next=domainXpForLevel(lv+1), pct=Math.min(100,Math.max(0,(st.xp-cur)/(next-cur)*100)); return {k,xp:st.xp,actions:st.actions,lv,cur,next,pct}; }
 function domainXpValue(diff){ return DOMAIN_XP[diff]||DOMAIN_XP.med; }
-function addDomainXp(k,diff,kind){ if(!DKEY[k]) return null; const stats=ensureDomainStats(), st=stats[k], before=domainLevelFromXp(st.xp), xp=Math.max(1,Math.round(domainXpValue(diff)*strategyDomainXpMult(k)*assignmentMult(k))); st.xp+=xp; st.actions++; const after=domainLevelFromXp(st.xp); lastDomainGain={k,xp,lv:after,levelUp:after>before,kind:kind||''}; return lastDomainGain; }
+function addDomainXp(k,diff,kind){ if(!DKEY[k]) return null; const stats=ensureDomainStats(), st=stats[k], before=domainLevelFromXp(st.xp), xp=Math.max(1,Math.round(domainXpValue(diff)*strategyDomainXpMult(k)*assignmentMult(k))); st.xp+=xp; st.actions++; try{siegeLogDomain(k,xp);}catch(e){} try{ bondGainFromDomain(k,xp); }catch(e){} const after=domainLevelFromXp(st.xp); lastDomainGain={k,xp,lv:after,levelUp:after>before,kind:kind||''}; return lastDomainGain; }
 function ensureLifeWeek(){ const wk=periodKey('weekly'); if(!S.lifeWeek||S.lifeWeek.wk!==wk) S.lifeWeek={wk,domains:{},completed:0,reviewed:false,balanceClaimed:false,holdLine:0}; if(!S.lifeWeek.domains) S.lifeWeek.domains={}; if(S.lifeWeek.balanceClaimed===undefined) S.lifeWeek.balanceClaimed=false; if(typeof S.lifeWeek.holdLine!=='number') S.lifeWeek.holdLine=0; return S.lifeWeek; }
 function trackLifeAction(domain,diff,kind){ const W=ensureLifeWeek(); const k=(domain&&DKEY[domain])?domain:'general'; if(!W.domains[k]) W.domains[k]={count:0,easy:0,med:0,hard:0}; W.domains[k].count++; if(diff) W.domains[k][diff]=(W.domains[k][diff]||0)+1; W.completed=(W.completed||0)+1; W.last={domain:k,diff:diff||'',kind:kind||'',at:Date.now()}; trackDayQuestAction(k,diff,kind); trackMonthAction(k,diff,kind); const dg=DKEY[k]?addDomainXp(k,diff,kind):null; if(dg&&dg.levelUp) addWin('Domain Level Up',DKEY[k].label+' reached Lv '+dg.lv,k); if(S.resolve){ S.resolve.pct=Math.min(0.20,(S.resolve.pct||0)+0.01); } return lastDomainGain; }
 function domainCount(k){ const W=ensureLifeWeek(); return W.domains&&W.domains[k]?W.domains[k].count||0:0; }
@@ -2011,7 +2011,7 @@ function lifeSystemCardsHTML(){ const W=ensureLifeWeek(), strong=strongestDomain
   const primary =
     '<div class="lifecard"><h3><span>🌱 Domain Levels</span><span style="color:#8bd0ff">Identity XP</span></h3><p>Your real actions level the areas of life you care about most.</p><div class="domainGrid">'+domainTilesHTML(4)+'</div><div class="lifeactions"><button class="primary" id="openDomainsHome">View all domains</button></div>'+balanceChestHTML()+'</div>'+
     '<div class="lifecard"><h3><span>'+cicon('questboard',18)+' Quest Board</span><span style="color:#8bd0ff">One board</span></h3><p>Daily, weekly, chains, hard-day anchors, hero quests, and raid progress live here instead of competing for attention.</p>'+questBoardHTML()+'</div>'+
-    '<div class="lifecard"><h3><span>🧭 Weekly Review</span><span style="color:'+(W.reviewed?'var(--good)':'var(--muted)')+'">'+(W.reviewed?'Done':'Open')+'</span></h3><p>Strongest: '+(sm?sm.icon+' '+sm.label:'—')+' · Lightest: '+(lm?lm.icon+' '+lm.label:'—')+'</p><div class="domain-bars">'+bars+'</div><div class="lifeactions"><button class="primary" id="openReview">Open review</button></div></div>'+
+    '<div class="lifecard"><h3><span>Weekly Review</span><span style="color:'+(W.reviewed?'var(--good)':'var(--muted)')+'">'+(W.reviewed?'Done':'Open')+'</span></h3><p>Strongest: '+(sm?sm.icon+' '+sm.label:'—')+' · Lightest: '+(lm?lm.icon+' '+lm.label:'—')+'</p><div class="domain-bars">'+bars+'</div><div class="lifeactions"><button class="primary" id="openReview">Open review</button></div></div>'+
     '<div class="lifecard"><h3><span>🌱 Gentle Nudge</span><span style="color:'+(lm?lm.color:'var(--accent2)')+'">'+(lm?lm.icon:'')+'</span></h3><p>'+(lm?lm.label:'This area')+' has been quiet this week. Suggested quest: <b style="color:var(--ink)">'+esc(suggestedQuestForDomain(light.k))+'</b></p><div class="mini">encouragement, not guilt</div></div>';
   const more =
     '<details class="moreSystems"><summary><span>More Systems</span><span style="font-family:Inter;color:var(--muted);font-size:11px">Life Base · Trials · Strategy · Recaps</span></summary><div class="moregrid">'+
@@ -2382,7 +2382,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.22.1-clash-lane-targeting';
+const APP_BUILD='v2.42.0-icons-domains';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2809,6 +2809,818 @@ function inAnySquad(id){ return SQUADS.some(s=>inSquad(s[0],id)); }
 function squadIcons(id){ return SQUADS.filter(s=>inSquad(s[0],id)).map(s=>s[2]).join(''); }
 function activeIds(){ const set=new Set(); SQUADS.forEach(s=>squad(s[0]).forEach(id=>set.add(id))); return set; }
 function teamPower(mode){ sanitizeHeroes(); return squad(mode).reduce((s,id)=>{const h=S.heroes.find(x=>x.id===id);return s+(h?powerOf(h):0);},0); }
+
+/* ===== Siege of the Eight Fronts — engine core (v2.23.0) ===== */
+const SIEGE_TUNE={ waveEsc:1.13, domainSwing:0.25, anchorPct:0.20, baseAnchor:0.95, collectEdgeCap:0.20, affinityBonus:0.15, winThreshold:1.0, trailDays:7, pruneDays:14, teamSize:8 };
+function siegeDayStamp(d){ d=d||new Date(); return ''+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'); }
+function ensureDomainDaily(){ if(!S.domainDaily||typeof S.domainDaily!=='object') S.domainDaily={}; return S.domainDaily; }
+function siegePruneDaily(DD,k){ const keep={}; const now=new Date(); for(let i=0;i<SIEGE_TUNE.pruneDays;i++){ const d=new Date(now); d.setDate(d.getDate()-i); keep[siegeDayStamp(d)]=1; } Object.keys(DD[k]||{}).forEach(ds=>{ if(!keep[ds]) delete DD[k][ds]; }); }
+function siegeLogDomain(k,xp){ if(!DKEY[k]||!(xp>0)) return; const DD=ensureDomainDaily(); if(!DD[k]) DD[k]={}; const ds=siegeDayStamp(); DD[k][ds]=(DD[k][ds]||0)+xp; siegePruneDaily(DD,k); }
+function domainTrail7(k){ const DD=ensureDomainDaily(), m=DD[k]||{}, now=new Date(); let sum=0; for(let i=0;i<SIEGE_TUNE.trailDays;i++){ const d=new Date(now); d.setDate(d.getDate()-i); sum+=(m[siegeDayStamp(d)]||0); } return sum; }
+function siegeDomainMods(){ const vals=DOMAINS.map(d=>({k:d[0],t:domainTrail7(d[0])})); const tot=vals.reduce((a,v)=>a+v.t,0), avg=tot/Math.max(1,vals.length); const mods={}; if(avg<=0){ vals.forEach(v=>mods[v.k]=1); return mods; } vals.forEach(v=>{ const rel=v.t/avg; let m=1-SIEGE_TUNE.domainSwing*(rel-1); m=Math.max(1-SIEGE_TUNE.domainSwing,Math.min(1+SIEGE_TUNE.domainSwing,m)); mods[v.k]=m; }); return mods; }
+function siegeOwned(){ return S.heroes.filter(h=>h&&h.owned); }
+function siegeBuildTeams(pool){ const sorted=pool.slice().sort((a,b)=>powerOf(b)-powerOf(a)); const teams=[]; for(let i=0;i+SIEGE_TUNE.teamSize<=sorted.length;i+=SIEGE_TUNE.teamSize){ const grp=sorted.slice(i,i+SIEGE_TUNE.teamSize); teams.push({heroes:grp,power:grp.reduce((a,h)=>a+powerOf(h),0)}); } return teams; }
+function siegeMedianTeamPower(teams){ if(!teams.length) return 0; const ps=teams.map(t=>t.power).sort((a,b)=>a-b), m=Math.floor(ps.length/2); return ps.length%2?ps[m]:Math.round((ps[m-1]+ps[m])/2); }
+function siegeCollectionEdge(){ const teams=Math.floor(siegeOwned().length/SIEGE_TUNE.teamSize); return Math.min(SIEGE_TUNE.collectEdgeCap,Math.max(0,(teams-8)/120)); }
+function siegeMaxWaves(){ return Math.floor(siegeOwned().length/SIEGE_TUNE.teamSize)+5; }
+function siegeWavePower(base,waveIdx,mod){ return Math.round(base*Math.pow(SIEGE_TUNE.waveEsc,waveIdx-1)*(mod||1)); }
+function siegeAffMult(h,k){ return (h&&Array.isArray(h.aff)&&h.aff.includes(k))?(1+SIEGE_TUNE.affinityBonus):1; }
+function siegePercentileTeamPower(teams,p){ if(!teams.length) return 0; const ps=teams.map(t=>t.power).sort((a,b)=>a-b); const idx=Math.max(0,Math.min(ps.length-1,Math.floor(p*(ps.length-1)))); return ps[idx]; }
+function siegeFrontBase(){ const teams=siegeBuildTeams(siegeOwned()); return Math.max(1,Math.round(siegePercentileTeamPower(teams,SIEGE_TUNE.anchorPct)*SIEGE_TUNE.baseAnchor)); }
+function ensureSiege(){ const wk=periodKey('weekly'); const prev=S.siege; if(!prev||prev.wk!==wk){ S.siege={wk,tapped:{},fronts:{},totalWaves:0,base:0,earned:{gold:0,dust:0,exp:0,cry:0,sparks:0,cores:0},rewardClaimedAt:prev?(prev.rewardClaimedAt||0):0}; } const sg=S.siege; if(!sg.tapped)sg.tapped={}; if(!sg.fronts)sg.fronts={}; if(!sg.earned)sg.earned={gold:0,dust:0,exp:0,cry:0,sparks:0,cores:0}; if(!sg.base||sg.base<1) sg.base=siegeFrontBase(); DOMAINS.forEach(d=>{ if(!sg.fronts[d[0]]) sg.fronts[d[0]]={wavesCleared:0,bestRatio:0}; }); return sg; }
+function siegeTeamEff(heroes,k){ let base=0,aff=0; heroes.forEach(h=>{ const p=powerOf(h); base+=p; aff+=p*(siegeAffMult(h,k)-1); }); const syn=computeSynergy(heroes).bonus; const synMult=(syn.hp*0.34+syn.atk*0.66); return { eff:Math.round((base+aff)*(1+siegeCollectionEdge())*synMult), power:base, syn:syn }; }
+function siegeBestTeamFor(k){ const sg=ensureSiege(); const pool=siegeOwned().filter(h=>!sg.tapped[h.id]); const TS=SIEGE_TUNE.teamSize; if(pool.length<TS) return null;
+  const wsort=(arr)=>arr.slice().sort((a,b)=>(powerOf(b)*siegeAffMult(b,k))-(powerOf(a)*siegeAffMult(a,k)));
+  let best=null; const consider=(heroes)=>{ if(!heroes||heroes.length<TS) return; const hh=heroes.slice(0,TS); const e=siegeTeamEff(hh,k); if(!best||e.eff>best.eff){ best={heroes:hh,power:e.power,eff:e.eff,syn:e.syn,synLabel:teamSynLabel(hh)}; } };
+  consider(wsort(pool).slice(0,TS));
+  const byIp={}; pool.forEach(h=>{ const ip=h&&h.ip; if(ip){ (byIp[ip]=byIp[ip]||[]).push(h); } });
+  Object.keys(byIp).forEach(ip=>{ if(byIp[ip].length>=TS) consider(wsort(byIp[ip]).slice(0,TS)); });
+  return best; }
+function siegeDeployNext(k){ const sg=ensureSiege(); const F=sg.fronts[k]; if(!F) return {ok:false,reason:'nofront'}; const maxW=siegeMaxWaves(); if(F.wavesCleared>=maxW) return {ok:false,reason:'cleared'}; const team=siegeBestTeamFor(k); if(!team) return {ok:false,reason:'noteam'}; const mods=siegeDomainMods(); const wp=siegeWavePower(sg.base||siegeFrontBase(),F.wavesCleared+1,mods[k]); const ratio=team.eff/Math.max(1,wp); const win=ratio>=SIEGE_TUNE.winThreshold; team.heroes.forEach(h=>{ sg.tapped[h.id]=true; }); let reward=null, milestone=null; if(win){ F.wavesCleared++; sg.totalWaves=(sg.totalWaves||0)+1; F.bestRatio=Math.max(F.bestRatio||0,ratio); reward=siegeWaveReward(F.wavesCleared); siegeApplyReward(reward); siegeTally(sg,reward); milestone=siegeMilestoneReward(F.wavesCleared); if(milestone){ siegeApplyReward(milestone); siegeTally(sg,milestone); } } return {ok:true,win,ratio:Math.round(ratio*100)/100,wavePower:wp,teamPower:team.power,teamEff:team.eff,waveIdx:F.wavesCleared+(win?0:1),cleared:F.wavesCleared,maxWaves:maxW,reward:reward,milestone:milestone,heroIds:team.heroes.map(h=>h.id)}; }
+
+const SIEGE_REWARD={ gold0:780, goldSlope:0.55, dust0:360, dustSlope:0.55, exp0:1300, expSlope:0.7, cryPerWave:6, milestoneEvery:5 };
+function siegeWaveReward(waveIdx){ const w=Math.max(1,waveIdx); return { gold:Math.round(SIEGE_REWARD.gold0*(1+w*SIEGE_REWARD.goldSlope)), dust:Math.round(SIEGE_REWARD.dust0*(1+w*SIEGE_REWARD.dustSlope)), exp:Math.round(SIEGE_REWARD.exp0*(1+w*SIEGE_REWARD.expSlope)), cry:Math.round(w*SIEGE_REWARD.cryPerWave) }; }
+function siegeMilestoneReward(depth){ if(depth<=0||depth%SIEGE_REWARD.milestoneEvery!==0) return null; const tier=depth/SIEGE_REWARD.milestoneEvery; return { milestone:depth, tier:tier, sparks:Math.floor(tier/2), cores:tier*10, cry:tier*15 }; }
+function siegeApplyReward(r){ if(!r) return; if(r.gold) S.gold=(S.gold||0)+r.gold; if(r.dust) S.dust=(S.dust||0)+r.dust; if(r.cry) S.crystals=(S.crystals||0)+r.cry; if(r.sparks) S.sparks=(S.sparks||0)+r.sparks; if(r.cores) S.heroCores=(S.heroCores||0)+r.cores; if(r.exp){ try{gainExp(r.exp);}catch(e){} } }
+function siegeTally(sg,r){ if(!sg.earned) sg.earned={gold:0,dust:0,exp:0,cry:0,sparks:0,cores:0}; ['gold','dust','exp','cry','sparks','cores'].forEach(k=>{ if(r[k]) sg.earned[k]=(sg.earned[k]||0)+r[k]; }); }
+
+/* ===== Siege of the Eight Fronts — UI (v2.24.0) ===== */
+const SIEGE_FRONT_ART={ faith:['scene-moon','Iron Legionary'], marriage:['scene-forest','Wild Flamebeast'], fatherhood:['scene-city','Street Thug'], fitness:['scene-siege','Goblin Bomber'], work:['scene-starport','Void Trooper'], home:['scene-keep','Northern Raider'], discipline:['scene-library','Cursed Armor'], hobbies:['scene-arcade','Toy Box Gremlin'] };
+function siegeFrontBg(k){ const a=SIEGE_FRONT_ART[k], cls=a?a[0]:'scene-city'; return (typeof ZONE_BG!=='undefined'&&ZONE_BG[cls])?ZONE_BG[cls]:''; }
+function siegeFrontEnemy(k){ const a=SIEGE_FRONT_ART[k], nm=a?a[1]:null; return (nm&&typeof ENEMY_ART!=='undefined'&&ENEMY_ART[nm])?ENEMY_ART[nm]:''; }
+function siegeFrontsTouched(){ const sg=ensureSiege(); return DOMAINS.filter(d=>{const F=sg.fronts[d[0]];return F&&F.wavesCleared>0;}).length; }
+function siegeHaulChipsHTML(e){ e=e||{}; const chips=[]; if(e.gold) chips.push('<span class="hc">+'+v168Num(e.gold)+' ⦿ gold</span>'); if(e.dust) chips.push('<span class="hc">+'+v168Num(e.dust)+' ✺ dust</span>'); if(e.cry) chips.push('<span class="hc">+'+v168Num(e.cry)+' ◆</span>'); if(e.cores) chips.push('<span class="hc">+'+v168Num(e.cores)+' ◈</span>'); if(e.sparks) chips.push('<span class="hc">+'+e.sparks+' ✦</span>'); if(!chips.length) return '<div class="siegeHaul"><span class="hc" style="opacity:.6">No siege rewards banked yet this week</span></div>'; return '<div class="siegeHaul"><span class="hcLbl">This week:</span>'+chips.join('')+'</div>'; }
+function siegeFrontTileHTML(k,mods){
+  const dk=DKEY[k]||{label:k,icon:'•',color:'#8a8a8a'};
+  const sg=ensureSiege(), F=sg.fronts[k]||{wavesCleared:0};
+  const mod=mods[k]||1, pct=Math.round((mod-1)*100);
+  const easier=pct<0, pip=pct===0?'neutral':(easier?'easier':'harder');
+  const pipTxt=(pct>0?'+':'')+pct+'% '+(pct===0?'EVEN':(easier?'EASIER':'HARDER'));
+  const cleared=F.wavesCleared||0, every=SIEGE_REWARD.milestoneEvery;
+  const nextMs=(Math.floor(cleared/every)+1)*every, intoMs=cleared%every, msPct=Math.round(intoMs/every*100);
+  const team=siegeBestTeamFor(k);
+  const wp=siegeWavePower(sg.base||siegeFrontBase(),cleared+1,mod);
+  let btn;
+  if(!team){ btn='<button class="siegeDeploy out" disabled>No untapped teams left</button>'; }
+  else { const win=team.eff>=wp; const _sl=team.synLabel||''; btn='<button class="siegeDeploy '+(win?'win':'risk')+'" data-front="'+k+'">'+(win?'Deploy team — clears ✓':'Deploy team — may stall')+'<span class="sdPow">'+(_sl?'🎭 '+_sl+' · ':'')+'team '+v168Num(team.eff)+' vs wave '+v168Num(wp)+'</span></button>'; }
+  const bg=siegeFrontBg(k), enemy=siegeFrontEnemy(k);
+  const bgStyle=bg?('background-image:linear-gradient(180deg,rgba(10,12,20,.58),rgba(10,12,20,.88)),url('+bg+');background-size:cover;background-position:center;'):'';
+  const portrait=enemy?'<div class="sfPortrait"><img src="'+enemy+'" alt=""></div>':'<div class="sfPortrait" style="display:flex;align-items:center;justify-content:center;font-size:20px">'+dk.icon+'</div>';
+  return '<div class="siegeFront" style="--fc:'+dk.color+';'+bgStyle+'">'+
+    '<div class="sfTop">'+portrait+'<div class="sfInfo"><div class="sfTitle">'+dk.icon+' '+dk.label+'</div><div class="sfPip '+pip+'">'+pipTxt+'</div></div></div>'+
+    '<div class="sfWave"><b>Wave '+cleared+'</b><span>cleared</span></div>'+
+    '<div class="sfBar"><i style="width:'+Math.max(3,msPct)+'%"></i></div>'+
+    '<div class="sfMs">'+(every-intoMs)+' to Wave '+nextMs+' milestone</div>'+
+    btn+
+  '</div>';
+}
+function siegePanelHTML(){
+  const sg=ensureSiege(), mods=siegeDomainMods();
+  const usedHeroes=Object.keys(sg.tapped||{}).length, ownedHeroes=siegeOwned().length;
+  const tiles=DOMAINS.map(d=>siegeFrontTileHTML(d[0],mods)).join('');
+  return '<div class="siegeWrap">'+
+    '<div class="stagecard siegeHead" style="border-color:#b88af066">'+
+      '<h3>⚔️ Siege of the Eight Fronts</h3>'+
+      '<p>Each front is a Life Domain — your real-world week (trailing 7 days) sets its difficulty. Every hero deploys once; roster refreshes Monday · resets in '+weekEndsIn()+'.</p>'+
+      '<div class="siegeMeta"><div class="sm"><b>'+usedHeroes+'/'+ownedHeroes+'</b><span>heroes sent</span></div><div class="sm"><b>'+(sg.totalWaves||0)+'</b><span>waves cleared</span></div><div class="sm"><b>'+siegeFrontsTouched()+'/8</b><span>fronts engaged</span></div></div>'+
+      siegeHaulChipsHTML(sg.earned)+
+      '<button class="siegeAuto" data-auto="6">⚡ Auto-deploy ×6 — sends your best teams to the toughest winnable fronts</button>'+
+    '</div>'+
+    '<div class="siegeGrid">'+tiles+'</div>'+
+  '</div>';
+}
+function siegeWireButtons(v){
+  v.querySelectorAll('.siegeDeploy[data-front]').forEach(btn=>{ btn.onclick=()=>{
+    const k=btn.dataset.front; const team=siegeBestTeamFor(k);
+    if(!team){ try{toast('No untapped teams left this week');}catch(e){} return; }
+    startSiegeBattle(k,team);
+  }; });
+  v.querySelectorAll('.siegeAuto[data-auto]').forEach(btn=>{ btn.onclick=()=>{
+    const N=parseInt(btn.dataset.auto)||5; let did=0,won=0,ms=null,gold=0;
+    for(let i=0;i<N;i++){ const mods=siegeDomainMods(), sg=ensureSiege(), base=sg.base||siegeFrontBase(); let pick=null;
+      DOMAINS.forEach(d=>{ const k=d[0], F=sg.fronts[k]; const tm=siegeBestTeamFor(k); if(!tm) return; const wp=siegeWavePower(base,F.wavesCleared+1,mods[k]); if(tm.eff>=wp){ if(!pick||wp>pick.wp) pick={k:k,wp:wp}; } });
+      if(!pick) break; const res=siegeDeployNext(pick.k); did++; if(res.win){ won++; if(res.reward) gold+=res.reward.gold; if(res.milestone) ms=res.milestone; } }
+    if(did===0){ try{toast('No winnable fronts with teams remaining');}catch(e){} }
+    else if(ms){ try{ v175Detonate('Auto-deploy!','Pushed '+won+' waves · milestone hit','#b88af0'); }catch(e){} }
+    else { try{ v172Float(btn,'+'+v168Num(gold)+' ⦿ · '+won+' waves'); }catch(e){} }
+    try{renderHUD();}catch(e){} try{save();}catch(e){} render();
+  }; });
+}
+function injectSiegeStyles(){ if(document.getElementById('siegeStyles')) return; const st=document.createElement('style'); st.id='siegeStyles'; st.textContent=`
+  .siegeWrap{margin-top:4px}
+  .siegeHead h3{margin:0 0 4px;font-size:15px}
+  .siegeHead p{margin:0 0 10px;color:var(--muted);font-size:12px;font-weight:700;line-height:1.42}
+  .siegeMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:9px}
+  .siegeMeta .sm{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:11px;padding:8px 6px;text-align:center}
+  .siegeMeta .sm b{display:block;font-family:Orbitron;font-size:15px;color:var(--ink);line-height:1.1}
+  .siegeMeta .sm span{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+  .siegeHaul{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .siegeHaul .hcLbl{font-size:10px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .siegeHaul .hc{font-size:11px;font-weight:850;padding:3px 9px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--ink)}
+  .siegeAuto{margin-top:10px;width:100%;border:1px solid color-mix(in srgb,#b88af0 40%,var(--line));background:linear-gradient(135deg,rgba(184,138,240,.14),rgba(184,138,240,.05));border-radius:11px;padding:10px;font-weight:900;font-size:12px;color:var(--ink);cursor:pointer;line-height:1.3}
+  .siegeAuto:active{transform:scale(.99)}
+  .siegeGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+  @media(max-width:440px){.siegeGrid{grid-template-columns:1fr}}
+  .siegeFront{position:relative;border:1px solid color-mix(in srgb,var(--fc) 42%,var(--line));border-radius:15px;padding:11px;overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.24);min-height:178px;display:flex;flex-direction:column;background:#0c0e16}
+  .siegeFront::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,color-mix(in srgb,var(--fc) 18%,transparent));pointer-events:none;z-index:0}
+  .sfTop{display:flex;gap:9px;align-items:center;position:relative;z-index:1}
+  .sfPortrait{width:46px;height:46px;border-radius:11px;overflow:hidden;border:2px solid var(--fc);flex-shrink:0;background:#0c0e16;box-shadow:0 4px 10px rgba(0,0,0,.4)}
+  .sfPortrait img{width:100%;height:100%;object-fit:cover;object-position:top center}
+  .sfInfo{min-width:0;flex:1}
+  .sfTitle{font-weight:900;font-size:13px;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.8);line-height:1.12}
+  .sfPip{display:inline-block;margin-top:4px;font-size:10px;font-weight:900;padding:2px 8px;border-radius:8px;letter-spacing:.3px}
+  .sfPip.easier{background:rgba(55,214,122,.24);color:#7af0a8;border:1px solid rgba(55,214,122,.45)}
+  .sfPip.harder{background:rgba(255,93,108,.24);color:#ff96a1;border:1px solid rgba(255,93,108,.45)}
+  .sfPip.neutral{background:rgba(255,255,255,.14);color:#dfe5f0;border:1px solid rgba(255,255,255,.2)}
+  .sfWave{position:relative;z-index:1;margin-top:10px;display:flex;align-items:baseline;gap:5px}
+  .sfWave b{font-family:Orbitron;font-size:19px;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.8)}
+  .sfWave span{font-size:9px;color:#dfe5f0;text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+  .sfBar{position:relative;z-index:1;height:5px;border-radius:4px;background:rgba(255,255,255,.18);margin-top:6px;overflow:hidden}
+  .sfBar i{display:block;height:100%;background:var(--fc);border-radius:4px;box-shadow:0 0 8px var(--fc)}
+  .sfMs{position:relative;z-index:1;font-size:10px;color:#dfe5f0;font-weight:800;margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+  .siegeDeploy{position:relative;z-index:1;margin-top:auto;width:100%;border:none;border-radius:11px;padding:9px 8px;font-weight:900;font-size:12px;cursor:pointer;color:#0a0c12;background:var(--fc);display:flex;flex-direction:column;gap:1px;align-items:center;line-height:1.15}
+  .siegeDeploy:active{transform:scale(.98)}
+  .siegeDeploy.risk{background:rgba(20,22,32,.78);color:#fff;border:1px solid var(--fc)}
+  .siegeDeploy.out{background:rgba(255,255,255,.07);color:var(--muted);cursor:default}
+  .siegeDeploy .sdPow{font-size:9px;font-weight:800;opacity:.82;letter-spacing:.2px}
+  .siegeRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+  .siegeCell{text-align:left;border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:12px;padding:10px;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:2px;font-family:inherit}
+  .siegeCell.on{border-color:color-mix(in srgb,var(--mc) 55%,var(--line));background:color-mix(in srgb,var(--mc) 12%,transparent)}
+  .siegeCell .scTitle{font-weight:900;font-size:13px}
+  .siegeCell .scSub{font-size:11px;color:var(--muted);font-weight:700;line-height:1.25}
+  .siegeCell .scStat{font-size:11px;color:var(--mc);font-weight:850}
+  .siegeCell .scPill{margin-top:3px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:var(--mc)}
+  .siegeResChips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}.siegeResChips span{font-size:12px;font-weight:850;padding:3px 9px;border-radius:9px;background:rgba(255,255,255,.08);border:1px solid var(--line)}
+  .siegeResMs{margin-top:8px;font-weight:900;color:#ffd24a;font-size:13px}
+  .siegeMvp{display:flex;align-items:center;gap:10px;justify-content:center;margin:10px auto;padding:8px 12px;border:1px solid #ffd24a55;border-radius:13px;background:linear-gradient(135deg,rgba(255,210,74,.14),rgba(255,210,74,.04));max-width:300px}
+  .mvpPort{width:48px;height:48px;border-radius:11px;overflow:hidden;border:2px solid #ffd24a;flex-shrink:0;background:#0c0e16}.mvpPort img{width:100%;height:100%;object-fit:cover;object-position:top center}
+  .mvpInfo{text-align:left}.mvpTag{font-size:10px;font-weight:900;color:#ffd24a;letter-spacing:.5px}.mvpName{font-weight:900;font-size:14px;color:#fff}.mvpUlt{font-size:11px;font-weight:700;color:#cfd6e6}
+`; document.head.appendChild(st); }
+function v163ModeCell(m,on,openLabel){ return '<button id="'+m.id+'" class="siegeCell '+(on?'on':'')+'" style="--mc:'+m.color+'"><div class="scTitle">'+m.icon+' '+m.title+'</div><div class="scSub">'+m.sub+'</div><div class="scStat">'+m.stat+'</div><div class="scPill">'+(on?'Viewing':openLabel)+'</div></button>'; }
+/* ===== end Siege UI ===== */
+
+/* ===== Siege battle integration — reuses the real animated battle engine (v2.25.0) ===== */
+let battleSiege=null;
+function siegeZoneFor(k){ const cls=(SIEGE_FRONT_ART[k]||[])[0]||'scene-city'; return (typeof BATTLE_ZONES!=='undefined'?BATTLE_ZONES.find(z=>z.c===cls):null)||{c:cls,enemies:[['Raider','#8a8a8a','DPS'],['Marauder','#9e7cff','Tank'],['Skirmisher','#58d0ff','DPS']],bosses:[['Warlord','#ff5d6c','Tank']]}; }
+function siegeBuildWaveEnemies(k,wp,waveIdx){
+  const zone=siegeZoneFor(k), isBoss=(waveIdx%SIEGE_REWARD.milestoneEvery===0), out=[];
+  const mk=(sp,share,boss)=>enemyFromSpec(sp,Math.max(20,Math.round(share*4)),Math.max(5,Math.round(share*0.25)),boss);
+  const ens=zone.enemies&&zone.enemies.length?zone.enemies:[['Raider','#8a8a8a','DPS']];
+  const bss=zone.bosses&&zone.bosses.length?zone.bosses:[['Warlord','#ff5d6c','Tank']];
+  if(isBoss){ const bspec=bss[(((Math.floor(waveIdx/SIEGE_REWARD.milestoneEvery)-1)%bss.length)+bss.length)%bss.length];
+    out.push(mk(bspec,wp*0.46,true)); const n=3; for(let i=0;i<n;i++) out.push(mk(ens[i%ens.length],wp*0.54/n,false));
+  } else { const n=5; for(let i=0;i<n;i++) out.push(mk(ens[i%ens.length],wp/n,false)); }
+  return out;
+}
+function startSiegeBattle(k,team){
+  if(!team||!team.heroes||!team.heroes.length){ try{toast('No team to deploy');}catch(e){} return; }
+  try{ clearAuto(); }catch(e){}
+  try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  battleMode='campaign'; battleReplay=false;
+  const sg=ensureSiege(), F=sg.fronts[k]||(sg.fronts[k]={wavesCleared:0,bestRatio:0}), mods=siegeDomainMods();
+  const waveIdx=(F.wavesCleared||0)+1, wp=siegeWavePower(sg.base||siegeFrontBase(),waveIdx,mods[k]), edge=siegeCollectionEdge();
+  const syn=computeSynergy(team.heroes).bonus;
+  const players=team.heroes.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row), buff=(1+edge)*siegeAffMult(h,k);
+    return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:Math.round(hpOf(h)*fm.hp*buff*syn.hp),max:Math.round(hpOf(h)*fm.hp*buff*syn.hp),atk:Math.round(atkOf(h)*fm.atk*buff*syn.atk),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h)}; });
+  const enemies=siegeBuildWaveEnemies(k,wp,waveIdx);
+  battleSiege={front:k,heroIds:team.heroes.map(h=>h.id),waveIdx:waveIdx};
+  const dk=DKEY[k]||{label:'Siege'};
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=dk.label+' Front · Wave '+waveIdx+(waveIdx%SIEGE_REWARD.milestoneEvery===0?' · BOSS WAVE':''); }catch(e){}
+  try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
+  drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
+  document.getElementById('arena').classList.add('show');
+  try{ wireBattleControls(); }catch(e){}
+  battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
+  try{ passiveBanner(dk.label+' Front · Wave '+waveIdx,(dk.color||'#b88af0')); }catch(e){}
+  try{ const _sl=teamSynLabel(team.heroes); if(_sl) passiveBanner(_sl+' · Team Synergy','#ffd24a'); }catch(e){}
+  battleTimer=setInterval(battleStep,battleDelay());
+}
+function siegeKillFlash(att){ try{ ultimateMoment(att,'Finishing Blow',(att&&att.color)||'#ffd24a'); }catch(e){} }
+function fxLadder(){ return !!(battleGauntlet||battleArena||battleConquest); }
+function fxEnergyStart(){ return battleSiege?44:(fxLadder()?30:18); }
+function fxEnergyMult(){ return battleSiege?1.5:(fxLadder()?1.32:1.2); }
+function siegeEndBattle(win){
+  const bs=battleSiege; battleSiege=null;
+  try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  const sg=ensureSiege(), k=bs.front, dk=DKEY[k]||{label:'Front',color:'#b88af0'};
+  const F=sg.fronts[k]||(sg.fronts[k]={wavesCleared:0,bestRatio:0});
+  bs.heroIds.forEach(id=>{ sg.tapped[id]=true; });
+  let reward=null, ms=null;
+  if(win){ F.wavesCleared=(F.wavesCleared||0)+1; sg.totalWaves=(sg.totalWaves||0)+1; reward=siegeWaveReward(F.wavesCleared); siegeApplyReward(reward); siegeTally(sg,reward); ms=siegeMilestoneReward(F.wavesCleared); if(ms){ siegeApplyReward(ms); siegeTally(sg,ms); } }
+  try{ const r=document.getElementById('arenaResult'); if(r){ r.style.display='block'; r.className='result '+(win?'win':'lose'); try{document.querySelector('.arena').classList.add('arenaEnded');}catch(e){}
+    let chips=''; if(win&&reward){ chips='<div class="siegeResChips"><span>+'+v168Num(reward.gold)+' ⦿</span><span>+'+v168Num(reward.dust)+' ✺</span><span>+'+v168Num(reward.exp)+' EXP</span>'+(reward.cry?'<span>+'+reward.cry+' ◆</span>':'')+'</div>'; }
+    let msHtml=''; if(ms){ msHtml='<div class="siegeResMs">★ Wave '+ms.milestone+' milestone · +'+ms.cores+' ◈'+(ms.sparks?' · +'+ms.sparks+' ✦':'')+'</div>'; }
+    let mvpHtml=''; try{ const _ps=(battleState&&battleState.players)||[]; const _mvp=_ps.slice().sort((a,b)=>(b.dealt||0)-(a.dealt||0))[0]; if(_mvp&&(_mvp.dealt||0)>0){ const _un=ultimateName(_mvp); mvpHtml='<div class="siegeMvp"><div class="mvpPort">'+(_mvp.img?'<img src="'+_mvp.img+'">':'')+'</div><div class="mvpInfo"><div class="mvpTag">★ BATTLE MVP</div><div class="mvpName">'+_mvp.name+'</div><div class="mvpUlt">'+_un+' · '+v168Num(_mvp.dealt)+' dmg</div></div></div>'; } }catch(e){}
+    r.innerHTML='<h2 style="color:'+(win?'#7af0a8':'#ff8a96')+'">'+(win?'FRONT PUSHED':'FRONT HELD')+'</h2><p style="margin:4px 0">'+dk.label+' · Wave '+(win?F.wavesCleared:(F.wavesCleared+1))+(win?' cleared':' — team lost')+'</p>'+mvpHtml+chips+msHtml+'<button class="mini-btn primary" id="siegeContinueBtn" style="margin-top:12px">Continue</button>';
+    const cb=document.getElementById('siegeContinueBtn'); if(cb) cb.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} try{renderHUD();}catch(e){} try{save();}catch(e){} render(); };
+  } }catch(e){ console.error(e); }
+  if(win&&ms){ try{ v175Detonate('Wave '+ms.milestone+'!',dk.label+' milestone','#b88af0'); }catch(e){} }
+  try{renderHUD();}catch(e){} try{save();}catch(e){}
+}
+/* ===== end Siege battle integration ===== */
+
+/* ===== Expedition Board — idle dispatch mode engine (v2.28.0) ===== */
+const EXP_DUR=[['Short',3600,1.0],['Medium',14400,2.7],['Long',28800,5.2]];
+const EXP_THEMES=['Scout the Frontier','Escort the Caravan','Delve the Ruins','Patrol the Marches','Hunt the Beast','Recover the Relic','Chart the Wilds','Hold the Pass','Raid the Cache','Rescue Mission','Map the Deep Roads','Break the Siege Line'];
+const EXP_ELEMENTS=['Flame','Grove','Stone','Storm','Tide'];
+function expRng(seed){ let a=seed>>>0; return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function expHashStr(str){ let h=2166136261>>>0; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function expHeroElement(h){ return (h&&typeof ELEMENTS!=='undefined'&&ELEMENTS[h.id])||null; }
+function expOwned(){ return S.heroes.filter(h=>h&&h.owned); }
+function expMedianHeroPower(){ const ps=expOwned().map(h=>powerOf(h)).sort((a,b)=>a-b); if(!ps.length) return 100; return ps[Math.floor(ps.length/2)]||100; }
+function expReqCheck(req,heroes){ switch(req.kind){
+  case 'role': return heroes.filter(h=>h.role===req.role).length>=req.n;
+  case 'element': return heroes.filter(h=>expHeroElement(h)===req.element).length>=req.n;
+  case 'fandom': { const c={}; heroes.forEach(h=>{ if(h.ip){c[h.ip]=(c[h.ip]||0)+1;} }); return Object.keys(c).some(k=>c[k]>=req.n); }
+  case 'affinity': return heroes.filter(h=>Array.isArray(h.aff)&&h.aff.includes(req.domain)).length>=req.n;
+  case 'power': return heroes.reduce((s,h)=>s+powerOf(h),0)>=req.min;
+  default: return true; } }
+function expReqLabel(req){ switch(req.kind){
+  case 'role': return req.n+'+ '+req.role;
+  case 'element': return req.n+'+ '+req.element;
+  case 'fandom': return req.n+'+ same fandom';
+  case 'affinity': return req.n+'+ '+(DKEY[req.domain]?DKEY[req.domain].label:req.domain);
+  case 'power': return v168Num(req.min)+'+ power';
+  default: return 'Any'; } }
+function expGenReq(r,existing){ const kinds=['role','element','fandom','affinity','power']; const used=existing.map(x=>x.kind); let k,g=0; do{ k=kinds[Math.floor(r()*kinds.length)]; }while(used.indexOf(k)>=0 && g++<8);
+  if(k==='role') return {kind:'role',role:ROLES[Math.floor(r()*ROLES.length)],n:1+Math.floor(r()*2)};
+  if(k==='element') return {kind:'element',element:EXP_ELEMENTS[Math.floor(r()*EXP_ELEMENTS.length)],n:1+Math.floor(r()*2)};
+  if(k==='fandom') return {kind:'fandom',n:2+Math.floor(r()*2)};
+  if(k==='affinity') return {kind:'affinity',domain:DOMAINS[Math.floor(r()*DOMAINS.length)][0],n:1+Math.floor(r()*2)};
+  if(k==='power') return {kind:'power',min:Math.round(expMedianHeroPower()*3*(2+r()*2))};
+  return {kind:'role',role:'Tank',n:1}; }
+function expeditionGenOffers(day){ const rng=expRng(expHashStr('exp'+day)); const medPow=expMedianHeroPower(); const N=6, offers=[];
+  for(let i=0;i<N;i++){ const r=rng; const dt=EXP_DUR[Math.floor(r()*EXP_DUR.length)]; const size=4+Math.floor(r()*3); const reqs=[]; const nReq=r()<0.32?2:1; for(let q=0;q<nReq;q++) reqs.push(expGenReq(r,reqs));
+    const recPower=Math.round(size*medPow*(0.85+r()*0.55)); const dm=dt[2];
+    const baseReward={ gold:Math.round(1900*dm*(0.9+r()*0.3)), dust:Math.round(880*dm), exp:Math.round(2400*dm), cry:dt[0]==='Long'?Math.round(9*dm):0, cores:dt[0]==='Short'?0:Math.round(5*dm) };
+    offers.push({ id:'o'+day+'_'+i, title:EXP_THEMES[Math.floor(r()*EXP_THEMES.length)], tier:dt[0], duration:dt[1], size:size, reqs:reqs, recPower:recPower, baseReward:baseReward }); }
+  return offers; }
+function ensureExpeditions(){ if(!S.expeditions||typeof S.expeditions!=='object') S.expeditions={slots:3,active:[],offers:[],offersDay:'',lifetime:0}; const E=S.expeditions; if(!Array.isArray(E.active))E.active=[]; if(!Array.isArray(E.offers))E.offers=[]; if(!(E.slots>0))E.slots=3; if(typeof E.lifetime!=='number')E.lifetime=0; const day=siegeDayStamp(); if(E.offersDay!==day || !E.offers.length){ E.offers=expeditionGenOffers(day); E.offersDay=day; } return E; }
+function expeditionLockedSet(){ const E=ensureExpeditions(); const set=new Set(); E.active.forEach(a=>{ if(!a.collected) (a.heroIds||[]).forEach(id=>set.add(id)); }); return set; }
+function expeditionAutoFill(offer){ const locked=expeditionLockedSet(); const avail=expOwned().filter(h=>!locked.has(h.id)); if(avail.length<offer.size) return null;
+  const byPow=avail.slice().sort((a,b)=>powerOf(b)-powerOf(a)); const pick=new Set();
+  (offer.reqs||[]).forEach(req=>{ if(req.kind==='role'){ byPow.filter(h=>h.role===req.role&&!pick.has(h.id)).slice(0,req.n).forEach(h=>pick.add(h.id)); }
+    else if(req.kind==='element'){ byPow.filter(h=>expHeroElement(h)===req.element&&!pick.has(h.id)).slice(0,req.n).forEach(h=>pick.add(h.id)); }
+    else if(req.kind==='affinity'){ byPow.filter(h=>Array.isArray(h.aff)&&h.aff.includes(req.domain)&&!pick.has(h.id)).slice(0,req.n).forEach(h=>pick.add(h.id)); }
+    else if(req.kind==='fandom'){ const c={}; byPow.forEach(h=>{ if(h.ip&&!pick.has(h.id)){(c[h.ip]=c[h.ip]||[]).push(h);} }); let best=null; Object.keys(c).forEach(ip=>{ if(!best||c[ip].length>c[best].length) best=ip; }); if(best&&c[best].length>=req.n) c[best].slice(0,req.n).forEach(h=>pick.add(h.id)); } });
+  for(const h of byPow){ if(pick.size>=offer.size) break; if(!pick.has(h.id)) pick.add(h.id); }
+  const team=byPow.filter(h=>pick.has(h.id)).slice(0,offer.size);
+  const ok=team.length===offer.size && (offer.reqs||[]).every(req=>expReqCheck(req,team));
+  return ok? team : null; }
+function expeditionHabitBonus(){ try{ const done=(S.dailies||[]).filter(d=>d&&d.done).length; return 1+Math.min(0.5,done*0.07); }catch(e){ return 1; } }
+function expeditionDispatch(offerId,heroIds){ const E=ensureExpeditions(); const offer=(E.offers||[]).find(o=>o.id===offerId); if(!offer) return {ok:false,reason:'gone'};
+  if(E.active.filter(a=>!a.collected).length>=E.slots) return {ok:false,reason:'noslot'};
+  const heroes=(heroIds||[]).map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean); const locked=expeditionLockedSet();
+  if(heroes.some(h=>locked.has(h.id))) return {ok:false,reason:'locked'};
+  if(heroes.length!==offer.size || !(offer.reqs||[]).every(req=>expReqCheck(req,heroes))) return {ok:false,reason:'reqs'};
+  const tp=heroes.reduce((s,h)=>s+powerOf(h),0); const qual=Math.max(0.8,Math.min(1.6,tp/Math.max(1,offer.recPower)));
+  const exp={ id:'e'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36), title:offer.title, tier:offer.tier, startedAt:Date.now(), duration:offer.duration, heroIds:heroes.map(h=>h.id), base:offer.baseReward, qual:Math.round(qual*100)/100, recPower:offer.recPower, collected:false };
+  E.active.push(exp); E.offers=E.offers.filter(o=>o.id!==offerId); return {ok:true,exp:exp}; }
+function expeditionTimeLeft(exp){ return Math.max(0,(exp.startedAt+exp.duration*1000)-Date.now()); }
+function expeditionReady(exp){ return Date.now()>=exp.startedAt+exp.duration*1000; }
+function expeditionRewardFor(exp){ const m=exp.qual*expeditionHabitBonus(); const b=exp.base||{}; return { gold:Math.round((b.gold||0)*m), dust:Math.round((b.dust||0)*m), exp:Math.round((b.exp||0)*m), cry:Math.round((b.cry||0)*m), cores:Math.round((b.cores||0)*m) }; }
+function expeditionCollect(expId){ const E=ensureExpeditions(); const exp=E.active.find(a=>a.id===expId); if(!exp||exp.collected) return {ok:false,reason:'gone'}; if(!expeditionReady(exp)) return {ok:false,reason:'notready'}; const r=expeditionRewardFor(exp); try{siegeApplyReward(r);}catch(e){} exp.collected=true; E.lifetime=(E.lifetime||0)+1; E.active=E.active.filter(a=>a.id!==expId); return {ok:true,reward:r}; }
+function expeditionReadyCount(){ const E=ensureExpeditions(); return E.active.filter(a=>!a.collected&&expeditionReady(a)).length; }
+/* ===== end Expedition Board engine ===== */
+
+/* ===== Game Modes hub + Expedition Board UI (v2.29.0) ===== */
+let expTickInterval=null;
+function expFmtTime(ms){ if(ms<=0) return 'Ready'; const s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60; if(h>0) return h+'h '+m+'m'; if(m>0) return m+'m '+String(sec).padStart(2,'0')+'s'; return sec+'s'; }
+function injectExpStyles(){ if(document.getElementById('expStyles')) return; const st=document.createElement('style'); st.id='expStyles'; st.textContent=`
+  .modesWrap,.expWrap{margin-top:2px}
+  .modesIntro{color:var(--muted);font-size:13px;font-weight:700;margin:2px 0 12px}
+  .modeCard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:15px;padding:13px;margin-bottom:10px;cursor:pointer;color:var(--ink);font-family:inherit;transition:transform .08s}
+  .modeCard:active{transform:scale(.99)}
+  .modeCard.siege{border-color:#b88af055;background:linear-gradient(135deg,rgba(184,138,240,.12),rgba(184,138,240,.03))}
+  .modeCard.exp{border-color:#5bd9a055;background:linear-gradient(135deg,rgba(91,217,160,.12),rgba(91,217,160,.03))}
+  .modeCard.locked{opacity:.5;cursor:default}
+  .mcIcon{font-size:30px;flex-shrink:0;width:46px;text-align:center}
+  .mcBody{min-width:0;flex:1}
+  .mcTitle{font-weight:900;font-size:15px;color:#fff}
+  .mcTitle .soon{font-size:9px;font-weight:900;background:rgba(255,255,255,.12);color:var(--muted);padding:2px 6px;border-radius:6px;vertical-align:middle;letter-spacing:.5px}
+  .mcDesc{font-size:12px;color:var(--muted);font-weight:700;margin-top:2px}
+  .mcStatus{font-size:12px;color:var(--ink);font-weight:850;margin-top:4px;opacity:.92}
+  .expHead p{margin:0 0 10px;color:var(--muted);font-size:12px;font-weight:700;line-height:1.42}
+  .expMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .expMeta .sm{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:11px;padding:8px 6px;text-align:center}
+  .expMeta .sm b{display:block;font-family:Orbitron;font-size:15px;color:var(--ink);line-height:1.1}
+  .expMeta .sm span{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+  .expHint{margin-top:9px;font-size:11px;font-weight:800;color:var(--muted)}
+  .expHint.good{color:#5bd9a0}
+  .expSection{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:16px 0 9px}
+  .expCard{border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:14px;padding:12px;margin-bottom:10px}
+  .expCard.active.ready{border-color:#5bd9a0aa;background:linear-gradient(135deg,rgba(91,217,160,.14),rgba(91,217,160,.03));box-shadow:0 0 18px rgba(91,217,160,.18)}
+  .expEmpty{color:var(--muted);font-size:13px;font-weight:700;padding:14px;text-align:center;border:1px dashed var(--line);border-radius:13px}
+  .expTitle{font-weight:900;font-size:14px;color:#fff}
+  .expTier{font-size:10px;font-weight:900;color:var(--muted);background:rgba(255,255,255,.08);padding:2px 7px;border-radius:7px;margin-left:4px;letter-spacing:.3px}
+  .expPorts{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0}
+  .expPort{width:36px;height:36px;border-radius:9px;overflow:hidden;border:1px solid var(--line);background:#0c0e16;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;color:#cfd6e6}
+  .expPort img{width:100%;height:100%;object-fit:cover;object-position:top center}
+  .expReqs{font-size:12px;color:var(--ink);font-weight:700;margin:8px 0;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+  .reqChip{font-size:11px;font-weight:900;padding:3px 9px;border-radius:8px;background:rgba(91,154,255,.16);border:1px solid rgba(91,154,255,.34);color:#9ec3ff}
+  .expReward{font-size:11px;color:var(--muted);font-weight:750;margin-bottom:9px;line-height:1.4}
+  .expTimer{font-size:13px;font-weight:850;color:#cfd6e6;margin-top:4px}
+  .expCountdown{font-family:Orbitron;color:#fff;font-size:15px}
+  .expCollect{width:100%;border:none;border-radius:11px;padding:10px;font-weight:900;font-size:12px;cursor:pointer;color:#06140d;background:#5bd9a0}
+  .expCollect:active{transform:scale(.98)}
+  .expField{width:100%;border:none;border-radius:11px;padding:10px;font-weight:900;font-size:12px;cursor:pointer;color:#06140d;background:#5bd9a0}
+  .expField.out{background:rgba(255,255,255,.06);color:var(--muted);cursor:default;font-size:11px}
+  .backBtn{border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);border-radius:9px;padding:5px 11px;font-weight:800;font-size:12px;cursor:pointer}
+  .homeModesCard{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid #5bd9a044;background:linear-gradient(135deg,rgba(91,217,160,.1),rgba(184,138,240,.06));border-radius:14px;padding:11px 13px;margin:10px 0;cursor:pointer;color:var(--ink);font-family:inherit}
+  .homeModesCard:active{transform:scale(.99)}
+  .hmLeft{flex:1;min-width:0}
+  .hmTitle{font-weight:900;font-size:14px;color:#fff}
+  .hmHooks{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+  .hmHook{font-size:11px;font-weight:800;color:var(--muted)}
+  .hmHook.ready{color:#5bd9a0}
+  .hmGo{font-size:22px;color:var(--muted);font-weight:900}
+`; document.head.appendChild(st); }
+function expActiveCardHTML(a){ const ready=expeditionReady(a), left=expeditionTimeLeft(a);
+  const heroes=(a.heroIds||[]).map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
+  const ports=heroes.map(h=>'<div class="expPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('');
+  const rp=expeditionRewardFor(a);
+  const foot=ready
+    ? '<button class="expCollect" data-collect="'+a.id+'">Collect — +'+v168Num(rp.gold)+' ⦿ +'+v168Num(rp.dust)+' ✺'+(rp.cores?' +'+rp.cores+' ◈':'')+'</button>'
+    : '<div class="expTimer"><span class="expCountdown" data-end="'+(a.startedAt+a.duration*1000)+'">'+expFmtTime(left)+'</span> remaining</div>';
+  return '<div class="expCard active '+(ready?'ready':'')+'"><div class="expTitle">'+esc(a.title)+' <span class="expTier">'+a.tier+'</span></div><div class="expPorts">'+ports+'</div>'+foot+'</div>'; }
+function expOfferCardHTML(o){ const team=expeditionAutoFill(o), fieldable=!!team;
+  const reqChips=(o.reqs||[]).map(r=>'<span class="reqChip">'+esc(expReqLabel(r))+'</span>').join('');
+  const rew=o.baseReward; const E=ensureExpeditions(); const slotsFull=E.active.filter(a=>!a.collected).length>=E.slots;
+  let btn;
+  if(slotsFull) btn='<button class="expField out" disabled>All slots busy</button>';
+  else if(!fieldable) btn='<button class="expField out" disabled>Can\'t field — need '+esc((o.reqs||[]).map(expReqLabel).join(' + '))+'</button>';
+  else { const tp=team.reduce((s,h)=>s+powerOf(h),0); const q=Math.max(0.8,Math.min(1.6,tp/Math.max(1,o.recPower))); btn='<button class="expField" data-field="'+o.id+'">Field best team · x'+q.toFixed(2)+' quality</button>'; }
+  return '<div class="expCard offer"><div class="expTitle">'+esc(o.title)+' <span class="expTier">'+o.tier+' · '+(o.duration/3600)+'h</span></div>'+
+    '<div class="expReqs">'+o.size+' heroes · '+reqChips+'</div>'+
+    '<div class="expReward">Reward ≈ +'+v168Num(rew.gold)+' ⦿ +'+v168Num(rew.dust)+' ✺ +'+v168Num(rew.exp)+' EXP'+(rew.cores?' +'+rew.cores+' ◈':'')+(rew.cry?' +'+rew.cry+' ◆':'')+' · rec power '+v168Num(o.recPower)+'</div>'+btn+'</div>'; }
+function expStartTicker(){ if(expTickInterval){ clearInterval(expTickInterval); expTickInterval=null; }
+  expTickInterval=setInterval(()=>{ if(typeof view!=='undefined' && view!=='expeditions'){ clearInterval(expTickInterval); expTickInterval=null; return; }
+    let flip=false; document.querySelectorAll('.expCountdown').forEach(el=>{ const end=+el.dataset.end, left=end-Date.now(); el.textContent=expFmtTime(left); if(left<=0) flip=true; }); if(flip) render(); }, 1000); }
+function expWireButtons(v){
+  v.querySelectorAll('[data-field]').forEach(b=>{ b.onclick=()=>{ const id=b.dataset.field, E=ensureExpeditions(), o=E.offers.find(x=>x.id===id); if(!o) return; const team=expeditionAutoFill(o); if(!team){ try{toast('Can\'t field a valid team right now');}catch(e){} return; } const r=expeditionDispatch(id,team.map(h=>h.id)); if(!r.ok){ try{toast(r.reason==='noslot'?'All expedition slots are busy':'Could not dispatch');}catch(e){} return; } try{toast(team.length+' heroes sent on '+o.title);}catch(e){} try{save();}catch(e){} render(); }; });
+  v.querySelectorAll('[data-collect]').forEach(b=>{ b.onclick=()=>{ const id=b.dataset.collect, r=expeditionCollect(id); if(!r.ok){ try{toast('Not ready yet');}catch(e){} return; } try{ v172Float(b,'+'+v168Num(r.reward.gold)+' ⦿'); }catch(e){} try{ v175Detonate('Expedition complete!','+'+v168Num(r.reward.gold)+' gold · +'+v168Num(r.reward.exp)+' EXP','#5bd9a0'); }catch(e){} try{renderHUD();}catch(e){} try{save();}catch(e){} render(); }; });
+  const back=v.querySelector('#expBack'); if(back) back.onclick=()=>navTo('modes');
+}
+function renderExpeditions(v){ injectExpStyles(); const E=ensureExpeditions();
+  const activeN=E.active.filter(a=>!a.collected).length, ready=expeditionReadyCount(), hbPct=Math.round((expeditionHabitBonus()-1)*100);
+  const activeHtml=E.active.filter(a=>!a.collected).map(expActiveCardHTML).join('')||'<div class="expEmpty">No expeditions in the field. Send a team below.</div>';
+  const offersHtml=(E.offers||[]).map(expOfferCardHTML).join('')||'<div class="expEmpty">All expeditions dispatched. New ones arrive tomorrow.</div>';
+  v.innerHTML='<div class="expWrap">'+
+    '<div class="head"><h2>Expeditions</h2><button class="backBtn" id="expBack">‹ Modes</button></div>'+
+    '<div class="stagecard expHead"><p>Send teams into the field. They return over time with rewards — your heroes are away until they\'re back.</p>'+
+      '<div class="expMeta"><div class="sm"><b>'+activeN+'/'+E.slots+'</b><span>slots used</span></div><div class="sm"><b>'+ready+'</b><span>ready</span></div><div class="sm"><b>+'+hbPct+'%</b><span>daily boost</span></div></div>'+
+      (hbPct<35?'<div class="expHint">Complete more of today\'s dailies to boost expedition rewards (up to +50%).</div>':'<div class="expHint good">Daily boost active — your habits are paying off.</div>')+
+    '</div>'+
+    '<div class="expSection">In the Field</div>'+activeHtml+
+    '<div class="expSection">Available Expeditions</div>'+offersHtml+
+  '</div>';
+  expWireButtons(v); expStartTicker();
+}
+function renderModes(v){ injectExpStyles();
+  const sg=(typeof ensureSiege==='function')?ensureSiege():null; const E=ensureExpeditions();
+  const ready=expeditionReadyCount(), activeN=E.active.filter(a=>!a.collected).length;
+  const siegeStatus=sg?((sg.totalWaves||0)+' waves this week · resets '+weekEndsIn()):'Weekly roster siege';
+  const expStatus=activeN?(activeN+' running'+(ready?' · '+ready+' ready ✓':'')):'Field teams for idle rewards';
+  const card=(icon,title,desc,status,cls,id,locked)=>'<button class="modeCard '+cls+(locked?' locked':'')+'"'+(locked?' disabled':' data-mode="'+id+'"')+'><div class="mcIcon">'+icon+'</div><div class="mcBody"><div class="mcTitle">'+title+(locked?' <span class="soon">soon</span>':'')+'</div><div class="mcDesc">'+desc+'</div><div class="mcStatus">'+status+'</div></div></button>';
+  v.innerHTML='<div class="modesWrap"><div class="head"><h2>Game Modes</h2></div><p class="modesIntro">Modes that put your whole roster to work.</p>'+
+    card('⚔️','Siege of the Eight Fronts','Weekly · your real week sets the difficulty',siegeStatus,'siege','siege',false)+
+    card('⛰️','Expeditions','Idle · send teams, collect over time',expStatus,'exp','expeditions',false)+
+    card('👹','Conquest','Boss ladder · modifiers force variety',(ensureConquest().tier?'Conquered '+ensureConquest().tier+' · '+v168Num(ensureConquest().tokens||0)+' ⬡':'Modifier boss ladder'),'cq','conquest',false)+
+    card('🗼','Endless Gauntlet','Roguelike climb · draft boons',(ensureGauntlet().best?'Best depth '+ensureGauntlet().best+' · '+v168Num(ensureGauntlet().shards||0)+' ✷':'One run, climb as far as you can'),'gaunt','gauntlet',false)+
+    card('🏟️','Rival Arena','Climb vs themed hero teams',(ensureArena().rank?arenaTierName(ensureArena().rank)+' · Rank '+ensureArena().rank:'Climb the ladder of rivals'),'arena','arena',false)+
+    card('💞','Bonds','Relationships that grow with your habits',(bondStats().bonded?bondStats().bonded+' heroes bonded':'No combat — pure connection'),'bonds','bonds',false)+
+  '</div>';
+  v.querySelectorAll('[data-mode]').forEach(b=>{ b.onclick=()=>{ const m=b.dataset.mode; if(m==='siege'){ try{campSub='siege';}catch(e){} navTo('battles'); } else if(m==='expeditions'){ navTo('expeditions'); } else if(m==='gauntlet'){ navTo('gauntlet'); } else if(m==='arena'){ navTo('arena'); } else if(m==='conquest'){ navTo('conquest'); } else if(m==='bonds'){ navTo('bonds'); } }; });
+}
+function homeInjectModes(v){ try{ if(!v||v.querySelector('.homeModesCard')) return; injectExpStyles();
+  const E=ensureExpeditions(), ready=expeditionReadyCount(), activeN=E.active.filter(a=>!a.collected).length;
+  const sg=(typeof ensureSiege==='function')?ensureSiege():null; const hooks=[];
+  if(ready) hooks.push('<span class="hmHook ready">⛰️ '+ready+' expedition'+(ready>1?'s':'')+' ready ✓</span>');
+  else if(activeN) hooks.push('<span class="hmHook">⛰️ '+activeN+' in the field</span>');
+  if(sg) hooks.push('<span class="hmHook">⚔️ Siege resets '+weekEndsIn()+'</span>');
+  const card=document.createElement('button'); card.className='homeModesCard';
+  card.innerHTML='<div class="hmLeft"><div class="hmTitle">Game Modes</div><div class="hmHooks">'+(hooks.join('')||'<span class="hmHook">Put your whole roster to work</span>')+'</div></div><div class="hmGo">›</div>';
+  card.onclick=()=>navTo('modes');
+  const head=v.querySelector('.head'); if(head&&head.parentNode){ head.insertAdjacentElement('afterend',card); } else { v.insertAdjacentElement('afterbegin',card); }
+}catch(e){} }
+/* ===== end Game Modes hub + Expedition UI ===== */
+
+/* ===== Endless Gauntlet — roguelike climb engine (v2.30.0) ===== */
+let battleGauntlet=null;
+const GAUNTLET_TUNE={ esc:1.165, baseFactor:0.115, bossEvery:5, squadSize:6 };
+const GAUNTLET_BOONS=[
+  {key:'heal',name:'Field Medic',desc:'Heal living heroes 30% HP',icon:'✚'},
+  {key:'revive',name:'Second Wind',desc:'Revive a fallen hero at 45% HP',icon:'❂'},
+  {key:'power',name:'Battle Fury',desc:'+15% ATK for the rest of the run',icon:'⚔'},
+  {key:'bulwark',name:'Ironhide',desc:'+18% max HP and heal it',icon:'🛡'},
+  {key:'reinforce',name:'Reinforcements',desc:'Add your strongest fresh hero',icon:'➕'},
+  {key:'surge',name:'Adrenaline Surge',desc:'+25% ATK but -10% max HP',icon:'⚡'}
+];
+function ensureGauntlet(){ if(!S.gauntlet||typeof S.gauntlet!=='object') S.gauntlet={run:null,best:0,shards:0,runs:0}; const G=S.gauntlet; if(typeof G.best!=='number')G.best=0; if(typeof G.shards!=='number')G.shards=0; if(typeof G.runs!=='number')G.runs=0; return G; }
+function gauntletOwned(){ return S.heroes.filter(h=>h&&h.owned); }
+function gauntletDefaultSquad(){ return gauntletOwned().slice().sort((a,b)=>powerOf(b)-powerOf(a)).slice(0,GAUNTLET_TUNE.squadSize).map(h=>h.id); }
+function gauntletStartRun(squadIds){ const G=ensureGauntlet(); if(!squadIds||!squadIds.length) squadIds=gauntletDefaultSquad();
+  const heroes=squadIds.map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean); if(heroes.length<2) return {ok:false,reason:'noteam'};
+  const baseLine=heroes.reduce((s,h)=>s+powerOf(h),0);
+  const dailiesDone=(()=>{ try{ return (S.dailies||[]).filter(d=>d&&d.done).length; }catch(e){ return 0; } })();
+  G.run={ floor:1, squad:heroes.map(h=>h.id), hp:{}, dead:{}, atkMult:1+Math.min(0.30,dailiesDone*0.04), hpMult:1, baseLine:baseLine, alive:true, startedAt:Date.now(), pendingBoons:null, habitStart:dailiesDone };
+  G.runs=(G.runs||0)+1;
+  startGauntletBattle(); return {ok:true}; }
+function gauntletFloorBase(){ const R=S.gauntlet&&S.gauntlet.run; return Math.max(50,Math.round((R?R.baseLine:1000)*GAUNTLET_TUNE.baseFactor)); }
+function gauntletEnemies(floor){ const wp=Math.round(gauntletFloorBase()*Math.pow(GAUNTLET_TUNE.esc,floor-1));
+  const zone=(typeof BATTLE_ZONES!=='undefined'?BATTLE_ZONES[(floor-1)%BATTLE_ZONES.length]:null)||{enemies:[['Raider','#8a8a8a','DPS']],bosses:[['Warlord','#ff5d6c','Tank']]};
+  const ens=zone.enemies&&zone.enemies.length?zone.enemies:[['Raider','#8a8a8a','DPS']], bss=zone.bosses&&zone.bosses.length?zone.bosses:[['Warlord','#ff5d6c','Tank']];
+  const isBoss=floor%GAUNTLET_TUNE.bossEvery===0, out=[];
+  const mk=(sp,share,boss)=>enemyFromSpec(sp,Math.max(20,Math.round(share*4)),Math.max(5,Math.round(share*0.25)),boss);
+  if(isBoss){ out.push(mk(bss[(((Math.floor(floor/GAUNTLET_TUNE.bossEvery)-1)%bss.length)+bss.length)%bss.length],wp*0.5,true)); const n=2; for(let i=0;i<n;i++) out.push(mk(ens[i%ens.length],wp*0.5/n,false)); }
+  else { const n=5; for(let i=0;i<n;i++) out.push(mk(ens[i%ens.length],wp/n,false)); }
+  return out; }
+function startGauntletBattle(){ const R=S.gauntlet&&S.gauntlet.run; if(!R||!R.alive) return;
+  try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=true;
+  const living=R.squad.filter(id=>!R.dead[id]).map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
+  const players=living.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp*R.hpMult)); let hp=(R.hp[h.id]!=null)?Math.min(max,Math.round(R.hp[h.id])):max; if(hp<1)hp=1;
+    return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:hp,max:max,atk:Math.round(atkOf(h)*fm.atk*R.atkMult),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h)}; });
+  const enemies=gauntletEnemies(R.floor);
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent='Gauntlet · Floor '+R.floor+(R.floor%GAUNTLET_TUNE.bossEvery===0?' · BOSS':''); }catch(e){}
+  try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
+  drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
+  document.getElementById('arena').classList.add('show');
+  try{ wireBattleControls(); }catch(e){}
+  battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
+  try{ passiveBanner('Gauntlet · Floor '+R.floor,'#ff9f43'); }catch(e){}
+  battleTimer=setInterval(battleStep,battleDelay()); }
+function gauntletBoonOffer(){ const R=S.gauntlet.run; const pool=GAUNTLET_BOONS.filter(b=>{
+    if(b.key==='revive') return R.squad.some(id=>R.dead[id]);
+    if(b.key==='reinforce') return gauntletOwned().some(h=>R.squad.indexOf(h.id)<0);
+    return true; });
+  const out=[]; const p=pool.slice(); while(out.length<3 && p.length){ out.push(p.splice(Math.floor(Math.random()*p.length),1)[0]); }
+  while(out.length<3) out.push(GAUNTLET_BOONS[0]);
+  return out.map(b=>b.key); }
+function gauntletHeroMax(h,R){ const fm=formationMultiplier(h,formationRow(0)); return Math.max(1,Math.round(hpOf(h)*fm.hp*R.hpMult)); }
+function gauntletApplyBoon(key){ const G=ensureGauntlet(), R=G.run; if(!R||!R.alive) return {ok:false};
+  if(key==='heal'){ R.squad.filter(id=>!R.dead[id]).forEach(id=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return; const max=gauntletHeroMax(h,R); R.hp[id]=Math.min(max,(R.hp[id]!=null?R.hp[id]:max)+max*0.30); }); }
+  else if(key==='revive'){ const dead=R.squad.filter(id=>R.dead[id]); if(dead.length){ const id=dead.sort((a,b)=>{const ha=S.heroes.find(x=>x.id===a),hb=S.heroes.find(x=>x.id===b);return powerOf(hb)-powerOf(ha);})[0]; const h=S.heroes.find(x=>x.id===id); R.dead[id]=false; R.hp[id]=gauntletHeroMax(h,R)*0.45; } }
+  else if(key==='power'){ R.atkMult*=1.15; }
+  else if(key==='bulwark'){ R.hpMult*=1.18; R.squad.filter(id=>!R.dead[id]).forEach(id=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return; const max=gauntletHeroMax(h,R); R.hp[id]=Math.min(max,(R.hp[id]!=null?R.hp[id]:max)+max*0.18); }); }
+  else if(key==='surge'){ R.atkMult*=1.25; R.hpMult*=0.90; R.squad.filter(id=>!R.dead[id]).forEach(id=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return; const max=gauntletHeroMax(h,R); if(R.hp[id]!=null) R.hp[id]=Math.min(max,R.hp[id]); }); }
+  else if(key==='reinforce'){ const fresh=gauntletOwned().filter(h=>R.squad.indexOf(h.id)<0).sort((a,b)=>powerOf(b)-powerOf(a))[0]; if(fresh){ R.squad.push(fresh.id); R.hp[fresh.id]=gauntletHeroMax(fresh,R); } }
+  R.pendingBoons=null; startGauntletBattle(); return {ok:true}; }
+function gauntletMetaReward(floor){ return { gold:Math.round(150*floor*(1+floor*0.03)), dust:Math.round(60*floor), cores:Math.round(floor*0.4), cry:Math.round(floor*0.2) }; }
+function gauntletEndRun(){ const G=ensureGauntlet(), R=G.run; if(!R) return null; const floorReached=R.floor; R.alive=false;
+  G.best=Math.max(G.best||0,floorReached); const shards=floorReached; G.shards=(G.shards||0)+shards;
+  const reward=gauntletMetaReward(floorReached); try{ siegeApplyReward(reward); }catch(e){}
+  const summary={floor:floorReached,shards:shards,reward:reward,best:G.best}; G.lastRun=summary; G.run=null; return summary; }
+function gauntletEndBattle(win){ battleGauntlet=null; try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  const G=ensureGauntlet(), R=G.run; if(!R){ return; }
+  (battleState&&battleState.players||[]).forEach(u=>{ R.hp[u.id]=Math.max(0,u.hp); if(u.hp<=0||u.dead) R.dead[u.id]=true; });
+  const livingLeft=R.squad.filter(id=>!R.dead[id]).length;
+  if(win && livingLeft>0){ R.floor++; R.pendingBoons=gauntletBoonOffer(); try{ gauntletShowResult(true); }catch(e){ console.error(e); } }
+  else { const sum=gauntletEndRun(); try{ gauntletShowResult(false,sum); }catch(e){ console.error(e); } }
+  try{renderHUD();}catch(e){} try{save();}catch(e){} }
+/* ===== end Endless Gauntlet engine ===== */
+
+/* ===== Endless Gauntlet UI (v2.31.0) ===== */
+function injectGauntletStyles(){ if(document.getElementById('gauntStyles')) return; const st=document.createElement('style'); st.id='gauntStyles'; st.textContent=`
+  .gBoonHead{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#ffd27a;margin:12px 0 8px}
+  .gBoonRow{display:flex;flex-direction:column;gap:8px}
+  .gBoon{display:flex;align-items:center;gap:11px;text-align:left;border:1px solid #ff9f4355;background:linear-gradient(135deg,rgba(255,159,67,.12),rgba(255,159,67,.03));border-radius:13px;padding:11px;cursor:pointer;color:var(--ink);font-family:inherit;transition:transform .08s}
+  .gBoon:active{transform:scale(.98)}
+  .gbIcon{font-size:22px;width:34px;text-align:center;flex-shrink:0}
+  .gbName{font-weight:900;font-size:13px;color:#fff}
+  .gbDesc{font-size:11px;color:var(--muted);font-weight:700;margin-top:1px}
+  .gBoon .gbWrap{min-width:0}
+  .gRunBtns{display:flex;gap:8px;margin-top:12px;justify-content:center}
+  .siegeResChips span:last-child{color:#ffd27a}
+`; document.head.appendChild(st); }
+function gauntletShowResult(win, summary){ injectGauntletStyles();
+  const R=S.gauntlet&&S.gauntlet.run; const r=document.getElementById('arenaResult'); if(!r) return;
+  r.style.display='block'; r.className='result '+(win?'win':'lose'); try{document.querySelector('.arena').classList.add('arenaEnded');}catch(e){}
+  let mvpHtml=''; try{ const ps=(battleState&&battleState.players)||[]; const mvp=ps.slice().sort((a,b)=>(b.dealt||0)-(a.dealt||0))[0]; if(mvp&&(mvp.dealt||0)>0){ mvpHtml='<div class="siegeMvp"><div class="mvpPort">'+(mvp.img?'<img src="'+mvp.img+'">':'')+'</div><div class="mvpInfo"><div class="mvpTag">★ FLOOR MVP</div><div class="mvpName">'+esc(mvp.name)+'</div><div class="mvpUlt">'+v168Num(mvp.dealt)+' dmg</div></div></div>'; } }catch(e){}
+  if(win && R && R.pendingBoons){ const cleared=R.floor-1; const dead=R.squad.filter(id=>R.dead[id]).length, alive=R.squad.length-dead;
+    const boons=R.pendingBoons.map(k=>{ const b=GAUNTLET_BOONS.find(x=>x.key===k)||GAUNTLET_BOONS[0]; return '<button class="gBoon" data-boon="'+b.key+'"><div class="gbIcon">'+b.icon+'</div><div class="gbWrap"><div class="gbName">'+b.name+'</div><div class="gbDesc">'+b.desc+'</div></div></button>'; }).join('');
+    r.innerHTML='<h2 style="color:#7af0a8">FLOOR '+cleared+' CLEARED</h2><p style="margin:4px 0">'+alive+'/'+R.squad.length+' standing · Floor '+R.floor+' next</p>'+mvpHtml+'<div class="gBoonHead">Choose a boon</div><div class="gBoonRow">'+boons+'</div>';
+    r.querySelectorAll('[data-boon]').forEach(b=>{ b.onclick=()=>{ const k=b.dataset.boon; try{v172Float(b,b.querySelector('.gbName').textContent);}catch(e){} gauntletApplyBoon(k); }; });
+  } else { const sum=summary||(S.gauntlet&&S.gauntlet.lastRun)||{floor:'?',shards:0,reward:{},best:0}; const rw=sum.reward||{};
+    r.innerHTML='<h2 style="color:#ff8a96">RUN ENDED</h2><p style="margin:4px 0">Reached Floor '+sum.floor+' · Best '+sum.best+'</p>'+mvpHtml+'<div class="siegeResChips"><span>+'+v168Num(rw.gold||0)+' ⦿</span><span>+'+v168Num(rw.dust||0)+' ✺</span>'+(rw.cores?'<span>+'+rw.cores+' ◈</span>':'')+'<span>+'+(sum.shards||0)+' ✷</span></div><div class="gRunBtns"><button class="mini-btn primary" id="gAgain">Run again</button><button class="mini-btn" id="gLeave">Leave</button></div>';
+    const ag=document.getElementById('gAgain'); if(ag) ag.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} gauntletStartRun(gauntletDefaultSquad()); };
+    const lv=document.getElementById('gLeave'); if(lv) lv.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} navTo('gauntlet'); };
+  } }
+function renderGauntlet(v){ injectExpStyles(); injectGauntletStyles(); const G=ensureGauntlet();
+  const squad=gauntletDefaultSquad().map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
+  const ports=squad.map(h=>'<div class="expPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('')||'<span style="color:var(--muted);font-size:12px">No heroes owned yet.</span>';
+  const dailiesDone=(()=>{ try{return (S.dailies||[]).filter(d=>d&&d.done).length;}catch(e){return 0;} })(); const bonus=Math.round(Math.min(0.30,dailiesDone*0.04)*100);
+  const owned=gauntletOwned().length;
+  v.innerHTML='<div class="modesWrap"><div class="head"><h2>Endless Gauntlet</h2><button class="backBtn" id="gBack">‹ Modes</button></div>'+
+   '<div class="stagecard"><p style="color:var(--muted);font-size:12px;font-weight:700;line-height:1.45;margin:0 0 10px">Climb as far as you can in one run. Your squad carries its wounds between floors — no healing. Draft a boon after each win, and pull fresh heroes from your roster as others fall. Die, and you bank rewards by depth.</p>'+
+     '<div class="expMeta"><div class="sm"><b>'+G.best+'</b><span>best depth</span></div><div class="sm"><b>'+v168Num(G.shards||0)+'</b><span>✷ shards</span></div><div class="sm"><b>'+owned+'</b><span>reserves</span></div></div>'+
+     (bonus>0?'<div class="expHint good">Today\'s dailies grant +'+bonus+'% starting ATK.</div>':'<div class="expHint">Complete dailies today for a starting ATK boost (up to +30%).</div>')+
+   '</div><div class="expSection">Your lead squad ('+squad.length+')</div>'+
+   '<div class="stagecard"><div class="expPorts">'+ports+'</div><button class="expField" id="gStart" style="margin-top:10px">Start Run</button></div></div>';
+  const st=document.getElementById('gStart'); if(st) st.onclick=()=>{ const res=gauntletStartRun(gauntletDefaultSquad()); if(!res||!res.ok){ try{toast('Need at least 2 heroes to run');}catch(e){} } };
+  const bk=document.getElementById('gBack'); if(bk) bk.onclick=()=>navTo('modes');
+}
+/* ===== end Endless Gauntlet UI ===== */
+
+/* ===== Rival Arena — themed ladder engine (v2.32.0) ===== */
+let battleArena=null;
+const ARENA_TUNE={ growth:1.105, anchorFactor:0.45, tierSize:10, bossEvery:5, teamSize:6 };
+const ARENA_TEAM_NAMES={
+  "Marvel":"Earth's Mightiest","Star Wars":"The Jedi Order","Harry Potter":"The Order of the Phoenix",
+  "Pokemon":"The Elite Four","The Witcher":"The Wolf School","World of Warcraft":"Champions of Azeroth",
+  "Red Rising":"The Peerless Scarred","Stormlight Archive":"The Knights Radiant","Lord of the Rings":"The Fellowship",
+  "Critical Role":"Vox Machina","Game of Thrones":"Claimants of the Throne","Disney / Pixar":"The Magic Kingdom",
+  "Fourth Wing":"The Dragon Riders","A Court of Thorns and Roses":"The High Court","DC":"The Justice League",
+  "Mass Effect":"The Normandy Crew","Diablo":"The Nephalem","League of Legends":"The Champions",
+  "Baldur's Gate 3":"The Absolute's Chosen"
+};
+const ARENA_TIERS=['Bronze','Silver','Gold','Platinum','Diamond','Master','Grandmaster','Legend','Mythic'];
+function ensureArena(){ if(!S.arena||typeof S.arena!=='object') S.arena={rank:0,best:0,anchor:0,defense:[],wins:0}; const A=S.arena;
+  ['rank','best','anchor','wins'].forEach(k=>{ if(typeof A[k]!=='number') A[k]=0; }); if(!Array.isArray(A.defense)) A.defense=[];
+  if(!A.anchor){ const owned=S.heroes.filter(h=>h&&h.owned).sort((a,b)=>powerOf(b)-powerOf(a)).slice(0,ARENA_TUNE.teamSize); const bp=owned.reduce((s,h)=>s+powerOf(h),0); A.anchor=Math.max(200,Math.round(bp*ARENA_TUNE.anchorFactor)); }
+  return A; }
+function arenaTierName(rank){ if(rank<=0) return 'Unranked'; const i=Math.min(ARENA_TIERS.length-1,Math.floor((rank-1)/ARENA_TUNE.tierSize)); return ARENA_TIERS[i]; }
+function arenaThemes(){ const counts={}; S.heroes.forEach(h=>{ if(h&&h.ip) counts[h.ip]=(counts[h.ip]||0)+1; });
+  const order=Object.keys(ARENA_TEAM_NAMES); const out=[];
+  order.forEach(ip=>{ if((counts[ip]||0)>=3) out.push({key:ip,name:ARENA_TEAM_NAMES[ip]}); });
+  if(!out.length) out.push({key:'*',name:'The Challengers'}); return out; }
+function arenaRivalPower(rank){ const A=ensureArena(); return Math.max(60,Math.round(A.anchor*Math.pow(ARENA_TUNE.growth,Math.max(0,rank-1)))); }
+function arenaRival(rank){ const themes=arenaThemes(); const t=themes[(rank-1+themes.length*99)%themes.length];
+  let members=S.heroes.filter(h=>h&&(t.key==='*'||h.ip===t.key)).slice().sort((a,b)=>(a.id>b.id?1:-1)).slice(0,ARENA_TUNE.teamSize);
+  if(members.length<3){ const more=S.heroes.filter(h=>h&&members.indexOf(h)<0).sort((a,b)=>powerOf(b)-powerOf(a)).slice(0,ARENA_TUNE.teamSize-members.length); members=members.concat(more); }
+  return {rank:rank,name:t.name,key:t.key,members:members}; }
+function arenaEnemyFromHero(h,hp,atk,boss){ return {name:h.name,img:h.img||null,keepArt:true,color:h.color||'#8a8a8a',role:h.role||'DPS',elementType:(typeof inferEnemyElementType==='function'?inferEnemyElementType(h.name,boss):null),hp:hp,max:hp,atk:atk,side:'e',dead:false,boss:!!boss,archetype:(typeof heroArchetype==='function'?heroArchetype(h):null)}; }
+function arenaBuildEnemies(rank){ const rv=arenaRival(rank), total=arenaRivalPower(rank), n=rv.members.length||1, isBoss=rank%ARENA_TUNE.bossEvery===0;
+  return rv.members.map((h,i)=>{ let share; if(isBoss){ share=(i===0)? total*0.34 : total*0.66/Math.max(1,n-1); } else { share=total/n; }
+    const hp=Math.max(40,Math.round(share*4)), atk=Math.max(8,Math.round(share*0.255));
+    return arenaEnemyFromHero(h,hp,atk,isBoss&&i===0); }); }
+function arenaPlayerTeam(){ return S.heroes.filter(h=>h&&h.owned).sort((a,b)=>powerOf(b)-powerOf(a)).slice(0,(typeof teamSize!=='undefined'?teamSize:8)); }
+function arenaDailyBuff(){ try{ const d=(S.dailies||[]).filter(x=>x&&x.done).length; return 1+Math.min(0.20,d*0.03); }catch(e){ return 1; } }
+function startArenaBattle(rank){ const team=arenaPlayerTeam(); if(team.length<1) return {ok:false,reason:'noteam'};
+  try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=null; battleArena={rank:rank};
+  const buff=arenaDailyBuff();
+  const players=team.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp));
+    return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:max,max:max,atk:Math.round(atkOf(h)*fm.atk*buff),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h)}; });
+  const enemies=arenaBuildEnemies(rank); const rv=arenaRival(rank);
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent='Arena · '+rv.name+' · Rank '+rank+(rank%ARENA_TUNE.bossEvery===0?' · CHAMPION':''); }catch(e){}
+  try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
+  drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
+  document.getElementById('arena').classList.add('show');
+  try{ wireBattleControls(); }catch(e){}
+  battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
+  try{ passiveBanner('Challenging '+rv.name,'#ff6ec7'); }catch(e){}
+  battleTimer=setInterval(battleStep,battleDelay()); return {ok:true}; }
+function arenaRankReward(rank){ return { gold:Math.round(300*rank*(1+rank*0.04)), dust:Math.round(120*rank), exp:Math.round(200*rank), cores:(rank%5===0?Math.round(rank*0.6)+1:0) }; }
+function arenaTierReward(rank){ return { milestone:rank, cores:Math.round(rank*1.1)+2, cry:Math.round(rank*0.8)+1, sparks:1 }; }
+function arenaEndBattle(win){ const ba=battleArena||{}; battleArena=null; try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  const A=ensureArena(); const rank=ba.rank||(A.rank+1);
+  if(win){ A.rank=Math.max(A.rank,rank); A.best=Math.max(A.best||0,A.rank); A.wins=(A.wins||0)+1;
+    const reward=arenaRankReward(rank); try{ siegeApplyReward(reward); }catch(e){}
+    let tierUp=null; if(rank%ARENA_TUNE.tierSize===0){ tierUp=arenaTierReward(rank); try{ siegeApplyReward(tierUp); }catch(e){} }
+    try{ arenaShowResult(true,{rank:rank,reward:reward,tierUp:tierUp}); }catch(e){ console.error(e); } }
+  else { try{ arenaShowResult(false,{rank:rank}); }catch(e){ console.error(e); } }
+  try{renderHUD();}catch(e){} try{save();}catch(e){} }
+/* ===== end Rival Arena engine ===== */
+
+/* ===== Rival Arena UI (v2.33.0) ===== */
+function injectArenaStyles(){ if(document.getElementById('arenaUiStyles')) return; const st=document.createElement('style'); st.id='arenaUiStyles'; st.textContent=`
+  .arRival{border-color:#ff6ec755 !important;background:linear-gradient(135deg,rgba(255,110,199,.1),rgba(255,110,199,.02)) !important}
+  .arRivalName{font-weight:900;font-size:15px;color:#fff;margin-bottom:9px}
+  .arPow{font-size:11px;color:var(--muted);font-weight:750;margin-top:7px}
+  .arEdge{display:inline-block;margin-top:7px;font-size:11px;font-weight:900;padding:3px 9px;border-radius:8px}
+  .arEdge.good{color:#7af0a8;background:rgba(122,240,168,.12);border:1px solid rgba(122,240,168,.3)}
+  .arEdge.bad{color:#ffb27a;background:rgba(255,178,122,.1);border:1px solid rgba(255,178,122,.28)}
+  .arenaPromo{margin:8px 0;font-weight:900;font-size:13px;color:#ffd27a;letter-spacing:.5px;text-align:center}
+`; document.head.appendChild(st); }
+function arenaResultMvp(){ try{ const ps=(battleState&&battleState.players)||[]; const mvp=ps.slice().sort((a,b)=>(b.dealt||0)-(a.dealt||0))[0]; if(mvp&&(mvp.dealt||0)>0){ return '<div class="siegeMvp"><div class="mvpPort">'+(mvp.img?'<img src="'+mvp.img+'">':'')+'</div><div class="mvpInfo"><div class="mvpTag">★ MATCH MVP</div><div class="mvpName">'+esc(mvp.name)+'</div><div class="mvpUlt">'+v168Num(mvp.dealt)+' dmg</div></div></div>'; } }catch(e){} return ''; }
+function arenaShowResult(win, info){ injectArenaStyles(); const A=ensureArena(); const r=document.getElementById('arenaResult'); if(!r) return;
+  r.style.display='block'; r.className='result '+(win?'win':'lose'); try{document.querySelector('.arena').classList.add('arenaEnded');}catch(e){}
+  const mvp=arenaResultMvp();
+  if(win){ const rank=info.rank, rw=info.reward||{};
+    const chips='<div class="siegeResChips"><span>+'+v168Num(rw.gold)+' ⦿</span><span>+'+v168Num(rw.dust)+' ✺</span><span>+'+v168Num(rw.exp)+' EXP</span>'+(rw.cores?'<span>+'+rw.cores+' ◈</span>':'')+'</div>';
+    const promo=info.tierUp?'<div class="arenaPromo">★ PROMOTED TO '+arenaTierName(rank+1).toUpperCase()+'</div>':'';
+    r.innerHTML='<h2 style="color:#ff8ad8">RANK '+rank+' TAKEN</h2><p style="margin:4px 0">'+arenaTierName(rank)+' · defeated '+esc(arenaRival(rank).name)+'</p>'+mvp+promo+chips+'<div class="gRunBtns"><button class="mini-btn primary" id="arNext">Next rival ›</button><button class="mini-btn" id="arLeave">Leave</button></div>';
+    const nx=document.getElementById('arNext'); if(nx) nx.onclick=()=>{ startArenaBattle(A.rank+1); };
+  } else { const rank=info.rank;
+    r.innerHTML='<h2 style="color:#ff8a96">HELD AT RANK '+A.rank+'</h2><p style="margin:4px 0">'+esc(arenaRival(rank).name)+' turned you back</p>'+mvp+'<div class="gRunBtns"><button class="mini-btn primary" id="arRetry">Retry</button><button class="mini-btn" id="arLeave">Leave</button></div>';
+    const rt=document.getElementById('arRetry'); if(rt) rt.onclick=()=>{ startArenaBattle(A.rank+1); };
+  }
+  const lv=document.getElementById('arLeave'); if(lv) lv.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} navTo('arena'); }; }
+function renderArena(v){ injectExpStyles(); injectGauntletStyles(); injectArenaStyles(); const A=ensureArena();
+  const nextRank=A.rank+1, rv=arenaRival(nextRank), rivP=arenaRivalPower(nextRank);
+  const myTeam=arenaPlayerTeam(), myPow=myTeam.reduce((s,h)=>s+powerOf(h),0);
+  const rivPorts=rv.members.map(h=>'<div class="expPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('')||'<span style="color:var(--muted);font-size:12px">No rival available.</span>';
+  const myPorts=myTeam.slice(0,ARENA_TUNE.teamSize).map(h=>'<div class="expPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('')||'<span style="color:var(--muted);font-size:12px">No heroes owned yet.</span>';
+  const edge=myTeam.length?(myPow>=rivP?'<span class="arEdge good">You outpower them</span>':'<span class="arEdge bad">They outpower you — level up or try anyway</span>'):'';
+  v.innerHTML='<div class="modesWrap"><div class="head"><h2>Rival Arena</h2><button class="backBtn" id="arBack">‹ Modes</button></div>'+
+    '<div class="stagecard"><div class="expMeta"><div class="sm"><b>'+A.rank+'</b><span>current rank</span></div><div class="sm"><b>'+arenaTierName(A.rank)+'</b><span>tier</span></div><div class="sm"><b>'+A.wins+'</b><span>wins</span></div></div></div>'+
+    '<div class="expSection">Next rival · Rank '+nextRank+'</div>'+
+    '<div class="stagecard arRival"><div class="arRivalName">'+esc(rv.name)+' <span class="expTier">'+arenaTierName(nextRank)+(nextRank%ARENA_TUNE.bossEvery===0?' · CHAMPION':'')+'</span></div><div class="expPorts">'+rivPorts+'</div><div class="arPow">Rival power '+v168Num(rivP)+' · your best '+v168Num(myPow)+'</div>'+edge+'<button class="expField" id="arFight" style="margin-top:11px">Challenge</button></div>'+
+    '<div class="expSection">Your defenders</div>'+
+    '<div class="stagecard"><div class="expPorts">'+myPorts+'</div><div class="arPow" style="margin-top:6px">Your strongest stand guard, representing you on the ladder.</div></div></div>';
+  const ft=document.getElementById('arFight'); if(ft) ft.onclick=()=>{ const res=startArenaBattle(nextRank); if(!res||!res.ok){ try{toast('Need at least one hero to fight');}catch(e){} } };
+  const bk=document.getElementById('arBack'); if(bk) bk.onclick=()=>navTo('modes');
+}
+/* ===== end Rival Arena UI ===== */
+
+/* ===== Conquest — modifier boss ladder engine (v2.34.0) ===== */
+let battleConquest=null;
+const CONQUEST_TUNE={ growth:1.12, anchorFactor:0.62, milestoneEvery:5, teamSize:8 };
+const CONQ_BOSSES=['The Iron Colossus','Vael the Undying','Nyx, World-Eater','The Hollow King','Sablefang','The Gilded Tyrant','Mournstar','The Dread Archon','Ruin, the Endless','Thronebreaker','The Pale Verdict','Ashmaw'];
+const CONQ_ELEMS=['Flame','Tide','Stone','Storm','Grove'];
+const CONQ_ELEM_COLOR={Flame:'#ff6b35',Tide:'#3aa0ff',Stone:'#b08d57',Storm:'#9b7bff',Grove:'#5fbf60'};
+const CONQ_PATTERN=['element_boon','fandom_ban','role_boon','element_ban','domain_today','fandom_boon','role_weak','element_ban'];
+function ensureConquest(){ if(!S.conquest||typeof S.conquest!=='object') S.conquest={tier:0,best:0,tokens:0,clears:{},anchor:0}; const C=S.conquest;
+  ['tier','best','tokens','anchor'].forEach(k=>{ if(typeof C[k]!=='number') C[k]=0; }); if(!C.clears||typeof C.clears!=='object') C.clears={};
+  if(!C.anchor){ const owned=S.heroes.filter(h=>h&&h.owned).sort((a,b)=>powerOf(b)-powerOf(a)).slice(0,CONQUEST_TUNE.teamSize); const bp=owned.reduce((s,h)=>s+powerOf(h),0); C.anchor=Math.max(200,Math.round(bp*CONQUEST_TUNE.anchorFactor)); }
+  return C; }
+function conqElement(h){ return (typeof ELEMENTS!=='undefined'&&h&&ELEMENTS[h.id])||(h&&h.elementType)||null; }
+function conqDomainToday(k){ try{ const DD=ensureDomainDaily(); return ((DD[k]||{})[siegeDayStamp()]||0)>0; }catch(e){ return false; } }
+function conquestModifier(tier){ const kind=CONQ_PATTERN[(tier-1+CONQ_PATTERN.length*99)%CONQ_PATTERN.length];
+  const elem=CONQ_ELEMS[(tier-1+CONQ_ELEMS.length*99)%CONQ_ELEMS.length];
+  const fands=(typeof arenaThemes==='function'?arenaThemes():[{key:'Marvel',name:'Marvel'}]); const fan=fands[(tier-1+fands.length*99)%fands.length]||{key:'Marvel'};
+  const role=ROLES[(tier-1+ROLES.length*99)%ROLES.length];
+  const m={kind:kind,tier:tier,boon:true,color:'#5bd9a0',param:null};
+  if(kind==='element_boon'){ m.label='Resonant · '+elem; m.desc=elem+' heroes deal +50% damage'; m.param=elem; m.mult=function(h){return conqElement(h)===elem?1.5:1;}; }
+  else if(kind==='element_ban'){ m.label='Warded · '+elem; m.desc=elem+' heroes deal 70% less damage'; m.boon=false; m.color='#ff6b6b'; m.param=elem; m.mult=function(h){return conqElement(h)===elem?0.30:1;}; }
+  else if(kind==='fandom_boon'){ m.label='Allied · '+fan.key; m.desc=fan.key+' heroes deal +45% damage'; m.param=fan.key; m.mult=function(h){return h&&h.ip===fan.key?1.45:1;}; }
+  else if(kind==='fandom_ban'){ m.label='Suppressed · '+fan.key; m.desc=fan.key+' heroes deal 65% less damage'; m.boon=false; m.color='#ff6b6b'; m.param=fan.key; m.mult=function(h){return h&&h.ip===fan.key?0.35:1;}; }
+  else if(kind==='role_boon'){ m.label='Doctrine · '+role; m.desc=role+' heroes deal +40% damage'; m.param=role; m.mult=function(h){return h&&h.role===role?1.4:1;}; }
+  else if(kind==='role_weak'){ m.label='Counter-'+role; m.desc=role+' heroes deal 55% less damage'; m.boon=false; m.color='#ff6b6b'; m.param=role; m.mult=function(h){return h&&h.role===role?0.45:1;}; }
+  else { m.kind='domain_today'; m.label='Disciplined'; m.desc='Heroes tied to a Life Domain you advanced today deal +35%'; m.color='#ffd27a'; m.param='today'; m.mult=function(h){ try{ return (h.aff||[]).some(function(k){return conqDomainToday(k);})?1.35:1; }catch(e){ return 1; } }; }
+  return m; }
+function conquestModEffect(mod){ const owned=S.heroes.filter(h=>h&&h.owned); let boosted=0,weak=0; owned.forEach(h=>{ const x=mod.mult(h); if(x>1.001)boosted++; else if(x<0.999)weak++; }); return {boosted:boosted,weak:weak,total:owned.length}; }
+function conquestBestTeam(mod){ return S.heroes.filter(h=>h&&h.owned).slice().sort((a,b)=>(powerOf(b)*mod.mult(b))-(powerOf(a)*mod.mult(a))).slice(0,CONQUEST_TUNE.teamSize); }
+function conquestBossPower(tier){ const C=ensureConquest(); return Math.max(80,Math.round(C.anchor*Math.pow(CONQUEST_TUNE.growth,Math.max(0,tier-1)))); }
+function conquestBuildEnemies(tier,mod){ const total=conquestBossPower(tier); const name=CONQ_BOSSES[(tier-1+CONQ_BOSSES.length*99)%CONQ_BOSSES.length];
+  const col=(mod&&mod.kind&&mod.kind.indexOf('element')===0&&CONQ_ELEM_COLOR[mod.param])||'#c0392b';
+  const bShare=total*0.62; const out=[enemyFromSpec([name,col,'Tank'],Math.max(140,Math.round(bShare*4)),Math.max(22,Math.round(bShare*0.255)),true)];
+  const addN=2, share=total*0.38/addN; for(let i=0;i<addN;i++){ out.push(enemyFromSpec(['Vanguard',col,i%2?'Support':'DPS'],Math.max(60,Math.round(share*4)),Math.max(10,Math.round(share*0.255)),false)); }
+  return out; }
+function startConquestBattle(tier){ const mod=conquestModifier(tier); const team=conquestBestTeam(mod); if(team.length<1) return {ok:false,reason:'noteam'};
+  try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest={tier:tier,mod:mod};
+  const players=team.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp));
+    return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:max,max:max,atk:Math.max(1,Math.round(atkOf(h)*fm.atk*mod.mult(h))),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h)}; });
+  const enemies=conquestBuildEnemies(tier,mod); const bn=CONQ_BOSSES[(tier-1+CONQ_BOSSES.length*99)%CONQ_BOSSES.length];
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent='Conquest · '+bn+' · '+mod.label; }catch(e){}
+  try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
+  drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
+  document.getElementById('arena').classList.add('show');
+  try{ wireBattleControls(); }catch(e){}
+  battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
+  try{ passiveBanner(mod.label,mod.color); }catch(e){}
+  battleTimer=setInterval(battleStep,battleDelay()); return {ok:true}; }
+function conquestFirstClearReward(tier){ return { gold:Math.round(500*tier*(1+tier*0.05)), dust:Math.round(200*tier), cores:Math.round(tier*1.5)+2, cry:Math.round(tier*1.1)+1, exp:Math.round(250*tier), tokens:3+tier }; }
+function conquestRepeatReward(tier){ return { gold:Math.round(110*tier), dust:Math.round(45*tier), cores:0, exp:Math.round(60*tier), tokens:1 }; }
+function conquestMilestone(tier){ return { milestone:tier, sparks:2, cry:Math.round(tier*0.8)+1, cores:Math.round(tier*0.6)+1 }; }
+function conquestApplyReward(r){ try{ siegeApplyReward(r); }catch(e){} const C=ensureConquest(); C.tokens=(C.tokens||0)+(r.tokens||0); }
+function conquestEndBattle(win){ const bc=battleConquest||{}; battleConquest=null; try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  const C=ensureConquest(); const tier=bc.tier||(C.tier+1);
+  if(win){ const first=!C.clears[tier]; if(first){ C.tier=Math.max(C.tier,tier); C.best=Math.max(C.best||0,C.tier); C.clears[tier]=true; }
+    const reward=first?conquestFirstClearReward(tier):conquestRepeatReward(tier); conquestApplyReward(reward);
+    let ms=null; if(first && tier%CONQUEST_TUNE.milestoneEvery===0){ ms=conquestMilestone(tier); conquestApplyReward(ms); }
+    try{ conquestShowResult(true,{tier:tier,reward:reward,first:first,ms:ms,mod:bc.mod}); }catch(e){ console.error(e); } }
+  else { try{ conquestShowResult(false,{tier:tier,mod:bc.mod}); }catch(e){ console.error(e); } }
+  try{renderHUD();}catch(e){} try{save();}catch(e){} }
+/* ===== end Conquest engine ===== */
+
+/* ===== Conquest UI (v2.35.0) ===== */
+function injectConquestStyles(){ if(document.getElementById('cqStyles')) return; const st=document.createElement('style'); st.id='cqStyles'; st.textContent=`
+  .cqBoss{border-color:#ffb24d44 !important;background:linear-gradient(135deg,rgba(255,178,77,.08),rgba(192,57,43,.05)) !important}
+  .cqBossName{font-weight:900;font-size:17px;color:#fff;letter-spacing:.3px;margin-bottom:10px}
+  .cqMod{border:1px solid;border-radius:12px;padding:10px 12px;margin-bottom:11px}
+  .cqModLabel{font-weight:900;font-size:13px;letter-spacing:.6px}
+  .cqModDesc{font-size:12px;color:var(--ink);font-weight:700;margin-top:3px;opacity:.92}
+  .cqEff{font-size:11px;color:var(--muted);font-weight:800;margin-bottom:8px}
+  .expPort.boost{box-shadow:0 0 0 2px #5bd9a0, 0 0 9px rgba(91,217,160,.5)}
+  .expPort.supp{opacity:.32;filter:grayscale(.7)}
+  .cqRew{display:flex;flex-wrap:wrap;gap:6px}
+  .cqRewChip{font-size:12px;font-weight:850;padding:4px 10px;border-radius:9px;background:rgba(255,178,77,.12);border:1px solid rgba(255,178,77,.3);color:#ffce8a}
+`; document.head.appendChild(st); }
+function conquestBossName(tier){ return CONQ_BOSSES[(tier-1+CONQ_BOSSES.length*99)%CONQ_BOSSES.length]; }
+function conquestRewardChips(tier,first){ const r=first?conquestFirstClearReward(tier):conquestRepeatReward(tier);
+  const c=[]; c.push('+'+v168Num(r.gold)+' ⦿'); c.push('+'+v168Num(r.dust)+' ✺'); if(r.cores)c.push('+'+r.cores+' ◈'); if(r.cry)c.push('+'+r.cry+' ◆'); c.push('+'+r.tokens+' ⬡');
+  return c.map(x=>'<span class="cqRewChip">'+x+'</span>').join('')+(first?'':' <span class="cqEff" style="margin:0 0 0 2px">(farm — first clear gives much more)</span>'); }
+function conquestShowResult(win, info){ injectConquestStyles(); const C=ensureConquest(); const r=document.getElementById('arenaResult'); if(!r) return;
+  r.style.display='block'; r.className='result '+(win?'win':'lose'); try{document.querySelector('.arena').classList.add('arenaEnded');}catch(e){}
+  const mvp=(typeof arenaResultMvp==='function')?arenaResultMvp():''; const boss=conquestBossName(info.tier); const ml=(info.mod&&info.mod.label)||'';
+  if(win){ const rw=info.reward||{};
+    const chips='<div class="siegeResChips"><span>+'+v168Num(rw.gold)+' ⦿</span><span>+'+v168Num(rw.dust)+' ✺</span>'+(rw.cores?'<span>+'+rw.cores+' ◈</span>':'')+(rw.cry?'<span>+'+rw.cry+' ◆</span>':'')+'<span>+'+rw.tokens+' ⬡</span></div>';
+    const firstFlair=info.first?'<div class="arenaPromo">★ FIRST CONQUEST</div>':'';
+    const msFlair=info.ms?'<div class="arenaPromo" style="color:#a0e0ff">✦ MILESTONE · +'+info.ms.sparks+' sparks</div>':'';
+    r.innerHTML='<h2 style="color:#ffb24d">CONQUERED</h2><p style="margin:4px 0">'+esc(boss)+' falls · '+esc(ml)+'</p>'+mvp+firstFlair+msFlair+chips+'<div class="gRunBtns"><button class="mini-btn primary" id="cqNext">Next conquest ›</button><button class="mini-btn" id="cqLeave">Leave</button></div>';
+    const nx=document.getElementById('cqNext'); if(nx) nx.onclick=()=>{ startConquestBattle(C.tier+1); };
+  } else {
+    r.innerHTML='<h2 style="color:#ff8a96">REPELLED</h2><p style="margin:4px 0">'+esc(boss)+' held the line · '+esc(ml)+'</p>'+mvp+'<div class="gRunBtns"><button class="mini-btn primary" id="cqRetry">Retry</button><button class="mini-btn" id="cqLeave">Leave</button></div>';
+    const rt=document.getElementById('cqRetry'); if(rt) rt.onclick=()=>{ startConquestBattle(info.tier); };
+  }
+  const lv=document.getElementById('cqLeave'); if(lv) lv.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} navTo('conquest'); }; }
+function renderConquest(v){ injectExpStyles(); injectGauntletStyles(); injectArenaStyles(); injectConquestStyles(); const C=ensureConquest();
+  const tier=C.tier+1, mod=conquestModifier(tier), eff=conquestModEffect(mod), team=conquestBestTeam(mod);
+  const tpow=team.reduce((s,h)=>s+Math.round(powerOf(h)*mod.mult(h)),0), boss=conquestBossName(tier), bpow=conquestBossPower(tier), first=!C.clears[tier];
+  const ports=team.map(h=>{ const m=mod.mult(h); const cls=m>1.001?' boost':(m<0.999?' supp':''); return '<div class="expPort'+cls+'">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div>'; }).join('')||'<span style="color:var(--muted);font-size:12px">No heroes owned yet.</span>';
+  const effLine=(mod.boon?(eff.boosted+' of your heroes empowered'):(eff.weak+' of your heroes suppressed'))+' by this rule — fielding your best legal team:';
+  v.innerHTML='<div class="modesWrap"><div class="head"><h2>Conquest</h2><button class="backBtn" id="cqBack">‹ Modes</button></div>'+
+    '<div class="stagecard"><div class="expMeta"><div class="sm"><b>'+C.tier+'</b><span>conquered</span></div><div class="sm"><b>'+v168Num(C.tokens||0)+'</b><span>⬡ tokens</span></div><div class="sm"><b>'+C.best+'</b><span>best</span></div></div></div>'+
+    '<div class="expSection">Conquest '+tier+(first?' · first clear':' · farm')+'</div>'+
+    '<div class="stagecard cqBoss"><div class="cqBossName">'+esc(boss)+'</div>'+
+      '<div class="cqMod" style="border-color:'+mod.color+'66;background:'+mod.color+'14"><div class="cqModLabel" style="color:'+mod.color+'">'+(mod.boon?'◆ ':'⚠ ')+esc(mod.label.toUpperCase())+'</div><div class="cqModDesc">'+esc(mod.desc)+'</div></div>'+
+      '<div class="cqEff">'+effLine+'</div><div class="expPorts">'+ports+'</div>'+
+      '<div class="arPow">Boss power '+v168Num(bpow)+' · your legal team '+v168Num(tpow)+'</div>'+
+      '<button class="expField" id="cqFight" style="margin-top:11px">Challenge</button></div>'+
+    '<div class="expSection">Spoils '+(first?'· first clear':'· farm')+'</div>'+
+    '<div class="stagecard"><div class="cqRew">'+conquestRewardChips(tier,first)+'</div></div></div>';
+  const ft=document.getElementById('cqFight'); if(ft) ft.onclick=()=>{ const res=startConquestBattle(tier); if(!res||!res.ok){ try{toast('Need at least one hero to fight');}catch(e){} } };
+  const bk=document.getElementById('cqBack'); if(bk) bk.onclick=()=>navTo('modes');
+}
+/* ===== end Conquest UI ===== */
+
+/* ===== Bonds — habit-fed hero relationships (v2.36.0) ===== */
+const BOND_TUNE={ base:70, growth:1.42, maxLv:8, domainFactor:0.55 };
+const BOND_DOMAIN_ORDER=['faith','marriage','fatherhood','fitness','work','home','discipline','hobbies'];
+const BOND_LORE={
+  faith:["{name} sat with you in the quiet today. Faith is rarely loud — it just keeps showing up.","{name} noticed you returned to the stillness again. The practice is the point.","{name} says the steady ones are seldom the loud ones. You are becoming steady.","{name} has watched your faith turn from a feeling into a floor to stand on.","{name} no longer wonders whether you will come back to it. That trust is its own kind of prayer."],
+  marriage:["{name} saw you choose your spouse in a small, unglamorous way. That is where it lives.","{name} knows love is mostly attention, and you have been paying it.","{name} says the great romances are a thousand ordinary returns. You keep returning.","{name} has seen you put the relationship before being right. Hard-won, that.","{name} trusts the way you show up for the person you chose."],
+  fatherhood:["{name} watched you get on the floor and be present. They remember that, not the gifts.","{name} knows kids spell love T-I-M-E, and you have been spending it.","{name} says patience is love that refused to quit early. You stayed.","{name} has seen you become the calm in their storm more than once now.","{name} believes your kids feel safe to be small around you. That is the whole job."],
+  fitness:["{name} saw you move your body when it would have been easier not to.","{name} respects that you kept the promise you made to yourself today.","{name} says strength is consistency in disguise, and you are consistent.","{name} has watched discomfort stop scaring you off. That is the unlock.","{name} knows you train for the life you want, not the mirror."],
+  work:["{name} saw you lead by doing the unseen thing well.","{name} knows leadership is who you are when it is boring. You showed up.","{name} says the best leaders carry weight quietly. You have been carrying.","{name} has watched you choose the long game over the easy win.","{name} would follow the version of you that has been showing up lately."],
+  home:["{name} noticed you tended the small things that make a house a home.","{name} knows order is a kind of care, and you have been caring.","{name} says a well-kept space is a gift to your future self. You gave it.","{name} has seen you steward what you have instead of chasing more.","{name} feels the difference a tended home makes. So does everyone in it."],
+  discipline:["{name} saw you rest on purpose and rise on purpose. Both take discipline.","{name} knows the disciplined life is quietly the freest one.","{name} says small repetitions, stacked, become a person. You are stacking.","{name} has watched you keep the boring promises. The rare kind.","{name} trusts your word to yourself now. That changes everything."],
+  hobbies:["{name} saw you make time for the thing that has no use but joy.","{name} knows play is not wasted time. You let yourself have some.","{name} says a life needs delight, not only duty. You found some.","{name} has watched curiosity keep you young.","{name} likes who you are when you are lost in something you love."]
+};
+function ensureBonds(){ if(!S.bonds||typeof S.bonds!=='object') S.bonds={h:{},pending:[]}; if(!S.bonds.h||typeof S.bonds.h!=='object') S.bonds.h={}; if(!Array.isArray(S.bonds.pending)) S.bonds.pending=[]; return S.bonds; }
+function bondNeedFor(lv){ if(lv<=0) return 0; return Math.round(BOND_TUNE.base*(Math.pow(BOND_TUNE.growth,lv)-1)/(BOND_TUNE.growth-1)); }
+function bondLevelFromXp(xp){ let lv=0; while(lv<BOND_TUNE.maxLv && xp>=bondNeedFor(lv+1)) lv++; return lv; }
+function bondHero(h){ const B=ensureBonds(); const id=h&&h.id; if(!id) return {xp:0,lv:0}; if(!B.h[id]) B.h[id]={xp:0,lv:0}; return B.h[id]; }
+function bondPrimaryDomain(h){ return (h&&h.aff&&h.aff.length)?h.aff[0]:null; }
+function bondLoreLine(h,lv){ const k=bondPrimaryDomain(h); const arr=BOND_LORE[k]; if(!arr||lv<1) return null; const line=arr[Math.min(lv-1,arr.length-1)]; return line.replace(/\{name\}/g,h.name); }
+function bondReward(lv){ return { gold:200*lv, dust:80*lv, cores:(lv%3===0?1:0) }; }
+function bondGainFromDomain(k,xp){ if(!k||!(xp>0)) return; const B=ensureBonds(); let leveled=0;
+  S.heroes.forEach(h=>{ if(!h||!h.owned||!h.aff||h.aff.indexOf(k)<0) return; const rec=bondHero(h); const before=rec.lv;
+    rec.xp+=xp*BOND_TUNE.domainFactor/Math.max(1,h.aff.length); rec.lv=bondLevelFromXp(rec.xp);
+    if(rec.lv>before){ leveled++; B.pending.push({id:h.id,name:h.name,lv:rec.lv}); if(B.pending.length>40) B.pending.shift(); } });
+  if(leveled>0){ try{ toast('💞 '+leveled+' bond'+(leveled>1?'s':'')+' deepened'); }catch(e){} } }
+function bondDomainActivity(k){ try{ return Math.round(domainTrail7(k)); }catch(e){ return 0; } }
+function bondStats(){ const owned=S.heroes.filter(h=>h&&h.owned); let bonded=0,tot=0,deep=null; owned.forEach(h=>{ const b=bondHero(h); if(b.lv>=1){ bonded++; tot+=b.lv; if(!deep||b.lv>bondHero(deep).lv) deep=h; } }); return {bonded:bonded,total:tot,deepest:deep,ownedN:owned.length}; }
+/* ----- Bonds UI ----- */
+function injectBondStyles(){ if(document.getElementById('bondStyles')) return; const st=document.createElement('style'); st.id='bondStyles'; st.textContent=`
+  .bondIntro{color:var(--muted);font-size:12px;font-weight:700;line-height:1.5;margin:0 0 12px}
+  .bondFeed{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .bondFeedChip{font-size:11px;font-weight:850;padding:4px 9px;border-radius:8px;background:rgba(255,110,199,.1);border:1px solid rgba(255,110,199,.28);color:#ffaad8}
+  .bondCard{border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:14px;padding:11px;margin-bottom:9px;cursor:pointer}
+  .bondCard.fresh{border-color:#ff6ec7aa;box-shadow:0 0 14px rgba(255,110,199,.2)}
+  .bondTop{display:flex;align-items:center;gap:11px}
+  .bondPort{width:46px;height:46px;border-radius:11px;overflow:hidden;border:1px solid var(--line);background:#0c0e16;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:900;color:#cfd6e6}
+  .bondPort img{width:100%;height:100%;object-fit:cover;object-position:top center}
+  .bondInfo{flex:1;min-width:0}
+  .bondName{font-weight:900;font-size:14px;color:#fff}
+  .bondHearts{font-size:12px;letter-spacing:1px;margin-top:1px}
+  .bondDomain{font-size:10px;font-weight:850;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+  .bondBar{height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}
+  .bondBar>i{display:block;height:100%;background:linear-gradient(90deg,#ff6ec7,#ffb24d)}
+  .bondLore{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);display:none}
+  .bondCard.open .bondLore{display:block}
+  .bondBeat{font-size:12px;color:var(--ink);font-weight:600;line-height:1.5;font-style:italic;opacity:.92;margin-bottom:7px;padding-left:9px;border-left:2px solid #ff6ec766}
+  .bondEmpty{color:var(--muted);font-size:13px;font-weight:700;padding:16px;text-align:center;border:1px dashed var(--line);border-radius:13px;line-height:1.5}
+`; document.head.appendChild(st); }
+function bondHeartStr(lv){ let s=''; for(let i=0;i<BOND_TUNE.maxLv;i++) s+= i<lv?'♥':'·'; return '<span style="color:#ff6ec7">'+s.slice(0,lv)+'</span><span style="color:#ffffff22">'+s.slice(lv)+'</span>'; }
+function bondCardHTML(h){ const b=bondHero(h); const need=bondNeedFor(b.lv+1), prev=bondNeedFor(b.lv); const pct=b.lv>=BOND_TUNE.maxLv?100:Math.max(4,Math.round((b.xp-prev)/Math.max(1,need-prev)*100));
+  const dk=DKEY[bondPrimaryDomain(h)]||{label:''};
+  let lore=''; for(let L=1;L<=b.lv;L++){ const line=bondLoreLine(h,L); if(line) lore+='<div class="bondBeat">'+esc(line)+'</div>'; }
+  return '<div class="bondCard" data-bond="'+h.id+'"><div class="bondTop"><div class="bondPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div><div class="bondInfo"><div class="bondName">'+esc(h.name)+'</div><div class="bondHearts">'+bondHeartStr(b.lv)+'</div><div class="bondDomain">'+esc(dk.label)+'</div></div></div>'+(b.lv<BOND_TUNE.maxLv?'<div class="bondBar"><i style="width:'+pct+'%"></i></div>':'')+'<div class="bondLore">'+(lore||'<div class="bondBeat">A bond is forming.</div>')+'</div></div>'; }
+function renderBonds(v){ injectExpStyles(); injectBondStyles(); const B=ensureBonds(); const stt=bondStats();
+  const owned=S.heroes.filter(h=>h&&h.owned);
+  const bonded=owned.filter(h=>bondHero(h).lv>=1).sort((a,b)=>bondHero(b).lv-bondHero(a).lv||bondHero(b).xp-bondHero(a).xp);
+  const freshIds={}; B.pending.forEach(p=>{ freshIds[p.id]=true; });
+  const feed=BOND_DOMAIN_ORDER.map(k=>({k:k,n:bondDomainActivity(k)})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n).slice(0,6);
+  const feedHtml=feed.length?('<div class="bondFeed">'+feed.map(x=>'<span class="bondFeedChip">'+esc((DKEY[x.k]||{label:x.k}).label)+'</span>').join('')+'</div>'):'';
+  let listHtml;
+  if(bonded.length){ listHtml=bonded.map(h=>bondCardHTML(h)).join(''); }
+  else { listHtml='<div class="bondEmpty">Your bonds are quiet for now.<br>Complete habits in your Life Domains, and the heroes who embody them will grow close to you.</div>'; }
+  v.innerHTML='<div class="modesWrap"><div class="head"><h2>Bonds</h2><button class="backBtn" id="bdBack">‹ Modes</button></div>'+
+    '<p class="bondIntro">No battles here. Your bonds deepen as you live the domains your heroes embody — every real habit you keep draws someone closer, and their story to you unfolds.</p>'+
+    '<div class="stagecard"><div class="expMeta"><div class="sm"><b>'+stt.bonded+'</b><span>bonded</span></div><div class="sm"><b>'+stt.total+'</b><span>bond levels</span></div><div class="sm"><b>'+(stt.deepest?bondHero(stt.deepest).lv:0)+'</b><span>deepest</span></div></div>'+
+      (feedHtml?'<div class="bondDomain" style="margin-top:11px">Feeding your bonds lately</div>'+feedHtml:'')+'</div>'+
+    '<div class="expSection">Your bonds</div>'+listHtml+'</div>';
+  v.querySelectorAll('[data-bond]').forEach(c=>{ if(freshIds[c.dataset.bond]) c.classList.add('fresh'); c.onclick=()=>{ c.classList.toggle('open'); }; });
+  B.pending=[]; try{save();}catch(e){}
+}
+/* ===== end Bonds ===== */
+
+
+
+
+
+
+
+
+
+
+
+/* ===== end Siege engine core ===== */
+
 function toggleSquad(mode,id){ const arr=squad(mode), i=arr.indexOf(id); if(i>=0){arr.splice(i,1);return true;} if(arr.length>=TUNE.teamSize){toast(SQUADS.find(s=>s[0]===mode)[1]+' squad is full ('+TUNE.teamSize+')');return false;} arr.push(id); return true; }
 
 function ensureAppSettings(){ if(!S||typeof S!=='object') return {reduceMotion:false,compactMode:false,confirmDanger:true,developerTools:false,soundOn:true,hapticsOn:true,gameFeelIntensity:'medium'}; if(!S.appSettings||typeof S.appSettings!=='object') S.appSettings={reduceMotion:false,compactMode:false,confirmDanger:true,developerTools:false}; return S.appSettings; }
@@ -2844,11 +3656,17 @@ function render(){
     setNavActive(view);
     renderHUD();
     const v=document.getElementById('view');
-    if(view==='home') renderHome(v);
+    if(view==='home'){ renderHome(v); try{ homeInjectModes(v); }catch(e){} }
     else if(view==='quests') renderQuests(v);
     else if(view==='heroes') renderHeroes(v);
     else if(view==='battles') renderBattles(v);
     else if(view==='growth') renderGrowth(v);
+    else if(view==='modes') renderModes(v);
+    else if(view==='expeditions') renderExpeditions(v);
+    else if(view==='gauntlet') renderGauntlet(v);
+    else if(view==='arena') renderArena(v);
+    else if(view==='conquest') renderConquest(v);
+    else if(view==='bonds') renderBonds(v);
     else { view='home'; setNavActive(view); renderHome(v); }
   }catch(err){
     console.error('Oathforge render failed',err);
@@ -3425,6 +4243,8 @@ function renderCampaign(v){
       '<div class="stagecard" style="border-color:#ffd95a66"><h3>🛕 Room Trials</h3><p>Weekly Room Trials. They reward real actions in each life area — no extra grind.</p></div>'+
       '<div class="dungeonBox"><div class="dh"><b>Weekly Trials</b><span>'+c.ready+' ready · '+c.claimed+'/8 cleared</span></div><div class="dungeonGrid">'+DOMAINS.map(d=>dungeonCardHTML(d[0])).join('')+'</div></div>';
     v.querySelectorAll('[data-dungeon]').forEach(btn=>btn.onclick=()=>{ claimDungeon(btn.dataset.dungeon); renderHUD(); render(); save(); });
+  } else if(campSub==='siege'){
+    injectSiegeStyles(); v.innerHTML=tabs+siegePanelHTML(); try{ siegeWireButtons(v); }catch(e){} try{ v.querySelectorAll('.v158FormationStage,.v155EnemyPreview,.v156SceneCard').forEach(el=>el.remove()); }catch(e){}
   } else if(campSub==='raid'){
     const R=ensureRaid(), pct=Math.min(100,R.dmg/R.max*100), mult=1+tp/1000, boss=currentBoss();
     const weakChips=boss.weak.map(k=>DKEY[k]?'<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:'+DKEY[k].color+'22;color:'+DKEY[k].color+';margin:0 6px 4px 0">'+DKEY[k].icon+' '+DKEY[k].label+' ×'+WEAK_MULT+'</span>':'').join('');
@@ -3480,7 +4300,7 @@ function renderCampaign(v){
   const ct=document.getElementById('cs_camp'); if(ct) ct.onclick=()=>{campSub='campaign';render();};
   const tt=document.getElementById('cs_tower'); if(tt) tt.onclick=()=>{campSub='tower';render();};
   const cl=document.getElementById('cs_clash'); if(cl) cl.onclick=()=>{campSub='clash';render();};
-  const rt=document.getElementById('cs_raid'); if(rt) rt.onclick=()=>{campSub='raid';render();};
+  const rt=document.getElementById('cs_raid'); if(rt) rt.onclick=()=>{campSub='raid';render();}; 
   const dt=document.getElementById('cs_trials'); if(dt) dt.onclick=()=>{campSub='trials';render();};
   document.querySelectorAll('[data-lineup-edit]').forEach(b=>b.onclick=()=>openSquadPicker(b.dataset.lineupEdit||campSub));
 }
@@ -3843,8 +4663,14 @@ function formationRow(i){ return i<Math.floor((TUNE.teamSize||6)/2)?'front':'bac
 function squadHeroes(mode){ return squad(mode).map(id=>S.heroes.find(h=>h.id===id)).filter(Boolean); }
 function countBy(arr,fn){ const m={}; arr.forEach(x=>{ const k=fn(x); if(k) m[k]=(m[k]||0)+1; }); return m; }
 function topCount(map){ return Object.entries(map).sort((a,b)=>b[1]-a[1])[0]||[null,0]; }
-function teamSynergy(mode){
-  const hs=squadHeroes(mode), roles=countBy(hs,h=>h.role), archetypes=countBy(hs,h=>heroArchetype(h)?.key), ips=countBy(hs,h=>h.ip);
+function teamSynergy(mode){ return computeSynergy(squadHeroes(mode)); }
+const IP_SYNERGY_NAME={'Marvel':'Avengers Assemble','Star Wars':'The Force Unites','Harry Potter':"Dumbledore's Army",'Pokemon':"Gotta Catch 'Em All",'The Witcher':'School of the Wolf','World of Warcraft':'Azeroth Rallies','Red Rising':'Hail Reaper','Stormlight Archive':'Life Before Death','Lord of the Rings':'The Fellowship','Critical Role':'Vox Machina Rallies','Game of Thrones':'Winter Is Coming','Disney / Pixar':'Magic Awakens','Fourth Wing':'Empyrean Bond','A Court of Thorns and Roses':'The Night Court','DC':'Justice League','Mass Effect':'N7 Assembled','Diablo':'Champions of Sanctuary','League of Legends':"Summoner's Call","Baldur's Gate 3":'The Party Gathers'};
+function ipSynergyName(ip){ return IP_SYNERGY_NAME[ip]||((ip||'World')+' Alliance'); }
+function ipSynergyTier(n){ if(n>=8) return 0.40; if(n>=7) return 0.34; if(n>=6) return 0.28; if(n>=5) return 0.20; if(n>=4) return 0.14; if(n>=3) return 0.08; return 0; }
+function teamTopIp(heroes){ const c={}; (heroes||[]).forEach(h=>{ if(h&&h.ip){ c[h.ip]=(c[h.ip]||0)+1; } }); let top=null,n=0; Object.keys(c).forEach(k=>{ if(c[k]>n){ n=c[k]; top=k; } }); return {ip:top,n:n}; }
+function teamSynLabel(heroes){ const t=teamTopIp(heroes); if(t.n>=3) return ipSynergyName(t.ip)+' x'+t.n; return ''; }
+function computeSynergy(hs){
+  const roles=countBy(hs,h=>h.role), archetypes=countBy(hs,h=>heroArchetype(h)?.key), ips=countBy(hs,h=>h.ip);
   const aff={}; hs.forEach(h=>(h.aff||[]).forEach(k=>aff[k]=(aff[k]||0)+1));
   const assignedIds=new Set(Object.values((S.assignments&&S.assignments.rooms)||{}));
   const assigned=hs.filter(h=>assignedIds.has(h.id)).length;
@@ -3866,7 +4692,7 @@ function teamSynergy(mode){
   if((archetypes.Caster||0)>=2) add('Arcane Core','2+ Casters: +5% ATK / support.',{atk:1.05,support:1.05});
   if((archetypes.Healer||0)>=1 && (archetypes.Protector||0)>=1) add('Sustain Core','Healer + Protector: +8% support output.',{support:1.08});
   if((archetypes.Leader||0)>=1 && hs.length>=4) add('Command Presence','Leader in 4+ hero team: +3% HP / ATK.',{hp:1.03,atk:1.03});
-  if(ipN>=3) add('World Alliance',topIp+' x'+ipN+': +4% HP / ATK.',{hp:1.04,atk:1.04});
+  if(ipN>=3){ const _ib=ipSynergyTier(ipN); add(ipSynergyName(topIp),topIp+' x'+ipN+': +'+Math.round(_ib*100)+'% HP / ATK.',{hp:1+_ib,atk:1+_ib},'gold'); }
   if(affN>=3) add('Shared Purpose',(DKEY[topAff]?DKEY[topAff].label:topAff)+' x'+affN+': +4% HP / ATK.',{hp:1.04,atk:1.04});
   if(favs>=2) add('Favorites Fight Harder',favs+' favorites: +3% HP / ATK.',{hp:1.03,atk:1.03});
   if(assigned>=2) add('Sanctuary Support',assigned+' assigned heroes: +5% support output.',{support:1.05});
@@ -4109,7 +4935,7 @@ function skipBattle(){
 /* ===== BATTLE ENGINE ===== */
 let battleTimer=null, autoNext=null, battleMode='campaign', battleSpeed=1, battleState=null, autoAdvance=true, battleLastReplay=null, battleReplay=false;
 function startBattle(mode,opts){
-  opts=opts||{}; clearAuto(); clearTransientUI();
+  opts=opts||{}; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; clearAuto(); clearTransientUI();
   if(battleTimer){ clearInterval(battleTimer); battleTimer=null; }
   battleMode = (mode==='tower')?'tower':'campaign';
   battleReplay=!!opts.replay;
@@ -4201,9 +5027,9 @@ function castUltimate(u,allies,enemies){
 function v21Ultimates(players,enemies){
   if(!battleState) return;
   players.filter(u=>!u.dead).forEach(u=>{
-    if(u.energy==null) u.energy=v21Hash(u.id)%28;
+    if(u.energy==null) u.energy=(v21Hash(u.id)%28)+fxEnergyStart();
     if(u.ultCast) return;
-    u.energy+=ULT_ENERGY_PER_TURN;
+    u.energy+=ULT_ENERGY_PER_TURN*fxEnergyMult();
     if(u.energy>=100){ u.ultCast=true; u.energy=0; castUltimate(u,players,enemies); }
   });
 }
@@ -4285,6 +5111,7 @@ function strike(att,tgt,sideClass,dmgMod){
   if(supportOut) att.support=(att.support||0)+supportOut;
   const died = tgt.hp>0 && (tgt.hp-actual)<=0;
   tgt.hp-=actual; if(tgt.hp<=0){tgt.hp=0;tgt.dead=true;}
+  if(died && att.side==='p' && battleState && !battleState.enemies.some(u=>!u.dead)){ try{ siegeKillFlash(att); }catch(e){} }
 
   const ranged = att.side==='p' && (att.role==='DPS'||att.role==='Support');
   const col = att.side==='p' ? (ROLECOLOR[att.role]||'#fff') : '#ff9f43';
@@ -4364,6 +5191,7 @@ const ENEMY_ART={"Street Thug":"data:image/webp;base64,UklGRjRCAABXRUJQVlA4IChCA
 function enemyArtFallback(u){
   try{
     if(!u) return null;
+    if(u.keepArt){ return u.img||null; }
     if(typeof ENEMY_ART==='object'){ var a=ENEMY_ART[u.name]||ENEMY_ART[u.baseName]||(u.artFamily&&ENEMY_ART[u.artFamily]); if(a) return a; }
     if(typeof ARCH_ART==='object'){
       var role=String(u.role||u.enemyRole||'').toLowerCase();
@@ -4425,7 +5253,7 @@ function battleResultMiniHTML(win){
   if(!battleState) return '';
   const p=battleState.players||[], e=battleState.enemies||[];
   const dmg=p.reduce((n,u)=>n+(u.dealt||0),0), taken=p.reduce((n,u)=>n+(u.taken||0),0), turns=battleState.turn||0;
-  return '<div class="battle-result-head"><div class="mini"><b>'+Math.round(dmg)+'</b><span>Damage</span></div><div class="mini"><b>'+Math.round(taken)+'</b><span>Taken</span></div><div class="mini"><b>'+turns+'</b><span>Turns</span></div></div>';
+  return (typeof arenaResultMvp==='function'?arenaResultMvp():'')+'<div class="battle-result-head"><div class="mini"><b>'+Math.round(dmg)+'</b><span>Damage</span></div><div class="mini"><b>'+Math.round(taken)+'</b><span>Taken</span></div><div class="mini"><b>'+turns+'</b><span>Turns</span></div></div>';
 }
 function battleEventRows(){
   if(!battleState) return '';
@@ -4472,6 +5300,10 @@ function endBattle(win){
   if(!battleState || battleState.over){ return; }
   battleState.over=true;
   clearAuto();
+  if(battleSiege){ try{ siegeEndBattle(win); }catch(e){ console.error(e); } return; }
+  if(battleGauntlet){ try{ gauntletEndBattle(win); }catch(e){ console.error(e); } return; }
+  if(battleArena){ try{ arenaEndBattle(win); }catch(e){ console.error(e); } return; }
+  if(battleConquest){ try{ conquestEndBattle(win); }catch(e){ console.error(e); } return; }
   const r=document.getElementById('arenaResult'); r.style.display='block'; r.className='result '+(win?'win':'lose'); try{var _ae=document.querySelector('.arena'); if(_ae) _ae.classList.add('arenaEnded');}catch(e){}
   if(battleReplay){
     document.querySelectorAll('#playerSide .unit:not(.dead)').forEach(u=>u.classList.toggle('cheer',!!win));
@@ -5871,7 +6703,7 @@ function renderRoster(v){
     '</div>'+
     '<div class="rosterstats"><span>♥ '+favN+' favorites</span><span>⬆ '+readyN+' ready</span><span>⚔ '+lineupN+' in lineups</span><span>★ '+wishN+' wishlist</span><span>✦ '+totalPrestigeStars()+' prestige</span></div>'+
     '' + currencyWallet() + '<button class="go" id="summonBtn" style="background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a;margin:0 0 8px">🎲 Summon a hero · '+randomCostText()+'</button>'+
-    '<button class="go" id="albumsBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin:0 0 13px">📚 Collection Albums · '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+'</button>'+
+    '<button class="go" id="albumsBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin:0 0 13px">Collection Albums · '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+'</button>'+
     '<button class="go" id="autoEquipAllBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin:0 0 13px">⚙️ Auto-Equip ALL Heroes</button>'+
     rosterViewToggleHTML()+
     '<div class="rosterHint">Use <b>Cards</b> when browsing hero details. Use <b>Compact</b> when managing a large roster, checking upgrade badges, or moving fast.</div>'+
@@ -6001,7 +6833,7 @@ function growthHubHTML(){
   injectGrowthHubStyles();
   const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain(), sm=DKEY[strong.k], lm=DKEY[light.k];
   const done=W.completed||0, touched=touchedDomainsThisWeek().length, assigned=Object.keys((S.assignments&&S.assignments.rooms)||{}).length;
-  return '<div class="growthHero"><div class="kicker">Growth sanctuary</div><h2>🌱 The Man I’m Becoming</h2><p>Use this tab for identity progress: domains, reflection, Life Base, research, and recovery. Meaning first; rewards support it.</p><span class="focusPill">Focus · '+(lm?lm.icon+' '+lm.label:'Balance')+'</span>'+ 
+  return '<div class="growthHero"><div class="kicker">Growth sanctuary</div><h2>The Man I’m Becoming</h2><p>Use this tab for identity progress: domains, reflection, Life Base, research, and recovery. Meaning first; rewards support it.</p><span class="focusPill">Focus · '+(lm?lm.icon+' '+lm.label:'Balance')+'</span>'+ 
     '<div class="growthStats"><div class="gs"><b>'+done+'</b><span>This week</span></div><div class="gs"><b>'+touched+'/8</b><span>Domains</span></div><div class="gs"><b>'+assigned+'/8</b><span>Assigned</span></div><div class="gs"><b>'+(sm?sm.icon:'✦')+'</b><span>Strongest</span></div></div></div>';
 }
 function growthModesHTML(){
@@ -6016,7 +6848,7 @@ function lifeBaseMapHTML(){
   return '<div class="lifeBaseMap"><div class="mapHead"><b>🏡 Life Base Map</b><span>'+sanctuaryPower()+' power</span></div><div class="roomGrid">'+tiles+'</div><div class="lifeactions"><button class="primary" id="openSanctuary">Open full Life Base</button></div></div>';
 }
 function growthQuickActionsHTML(){
-  return '<div class="growthActionStrip"><button id="openReview"><b>🧭 Weekly Review</b><span>Claim research and set focus.</span></button><button id="openStrategy"><b>🃏 Strategy</b><span>Cards and permanent research.</span></button><button id="openRecovery"><b>🕊️ Recovery Anchor</b><span>Small day, still faithful.</span></button></div>';
+  return '<div class="growthActionStrip"><button id="openReview"><b>Weekly Review</b><span>Claim research and set focus.</span></button><button id="openStrategy"><b>🃏 Strategy</b><span>Cards and permanent research.</span></button><button id="openRecovery"><b>Recovery Anchor</b><span>Small day, still faithful.</span></button></div>';
 }
 
 
@@ -6394,6 +7226,7 @@ function battleHubModeData(){
     tower:{id:'cs_tower',key:'tower',icon:cicon('tower',22),title:'Tower',meta:'Challenge climb',stat:'Floor '+(S.tower||1),sub:'Enemy '+towerEnemy+' · Team '+towerTeam,pill:towerReady?(towerOk?'Climb ready':'Needs power'):'Needs squad',color:'#8bd0ff',pct:Math.min(100,((S.tower||1)%10)/10*100),ready:towerOk},
     clash:{id:'cs_clash',key:'clash',icon:cicon('clash',22),title:'Clash Trials',meta:'Lane strategy',stat:'C'+(ensureClashState().chapter||1)+' · S'+(ensureClashState().stage||1),sub:'Lane squad · '+ELEMENT_TYPES.length+' type wheel',pill:'Timed swarm ready',color:'#cdbcff',pct:Math.min(100,(((ensureClashState().stage||1)-1)/80)*100),ready:true},
     raid:{id:'cs_raid',key:'raid',icon:boss.icon||'☠️',title:'Weekly Raid',meta:'Boss arena',stat:Math.floor(raidPct)+'% damaged',sub:(boss.name||'Raid Boss')+' · Team ×'+(1+teamPower('raid')/1000).toFixed(2),pill:raidReady?'Squad active':'Needs raid squad',color:'#ffb01f',pct:raidPct,ready:raidReady&&raidPct>=25},
+    siege:{id:'cs_siege',key:'siege',icon:'⚔️',title:'Siege',meta:'Eight Fronts',stat:(ensureSiege().totalWaves||0)+' waves cleared',sub:'Whole roster · '+Object.keys(ensureSiege().tapped||{}).length+' sent',pill:'Weekly · all heroes',color:'#b88af0',pct:Math.min(100,siegeFrontsTouched()/8*100),ready:true},
     trials:{id:'cs_trials',key:'trials',icon:'🛕',title:'Trials',meta:'Domain gates',stat:dc.ready+' ready',sub:dc.claimed+'/8 cleared this week',pill:dc.ready?'Reward ready':'Build domains',color:'#37d67a',pct:Math.min(100,(dc.claimed||0)/8*100),ready:dc.ready>0}
   };
 }
@@ -6486,14 +7319,14 @@ function sanctuaryMapV148(){
   ensureAssignments(); ensureDomainStats();
   const assigned=Object.keys((S.assignments&&S.assignments.rooms)||{}).length;
   return '<div class="growthSanctuaryV148">'+
-    '<div class="lqSectionHeader"><b>🏡 Life Base Sanctuary</b><span>'+assigned+'/8 rooms guarded</span></div>'+ 
+    '<div class="lqSectionHeader"><b>Life Base Sanctuary</b><span>'+assigned+'/8 rooms guarded</span></div>'+ 
     '<div class="sanctuaryMapV148">'+DOMAINS.map(d=>sanctuaryRoomNodeV148(d[0])).join('')+'</div></div>';
 }
 function growthHeroV148(){
   injectLifeBaseVisualStylesV148();
   const W=ensureLifeWeek(), light=lightestDomain(), strong=strongestDomain(), lm=DKEY[light.k], sm=DKEY[strong.k];
   const touched=touchedDomainsThisWeek().length, assigned=Object.keys((S.assignments&&S.assignments.rooms)||{}).length;
-  return '<div class="growthSanctuaryV148"><div class="gsvTop"><div><div class="k">Growth sanctuary</div><h2>🌱 The Man I’m Becoming</h2><p>Your habits are building rooms, not just filling meters. Keep meaning louder than loot.</p></div><div class="focusOrb" style="--focusColor:'+(lm?lm.color:'var(--accent2)')+'"><b>'+(lm?lm.icon:'✦')+'</b><span>Focus<br>'+(lm?lm.label:'Balance')+'</span></div></div>'+ 
+  return '<div class="growthSanctuaryV148"><div class="gsvTop"><div><div class="k">Growth sanctuary</div><h2>The Man I’m Becoming</h2><p>Your habits are building rooms, not just filling meters. Keep meaning louder than loot.</p></div><div class="focusOrb" style="--focusColor:'+(lm?lm.color:'var(--accent2)')+'"><b>'+(lm?lm.icon:'✦')+'</b><span>Focus<br>'+(lm?lm.label:'Balance')+'</span></div></div>'+ 
     '<div class="growthStats"><div class="gs"><b>'+(W.completed||0)+'</b><span>This week</span></div><div class="gs"><b>'+touched+'/8</b><span>Domains</span></div><div class="gs"><b>'+assigned+'/8</b><span>Rooms guarded</span></div><div class="gs"><b>'+(sm?sm.icon:'✦')+'</b><span>Strongest</span></div></div></div>';
 }
 function domainFocusV148(){
@@ -6503,16 +7336,79 @@ function domainFocusV148(){
     '<div class="focusCard"><b>⚖ Balance Chest</b><p>'+balance.n+'/8 domains touched. '+(balance.ready?'Chest ready — claim it.':('Touch '+balance.missing+' more domain'+(balance.missing===1?'':'s')+' for the next chest.'))+'</p><div class="ask">Strongest: '+(sm?sm.icon+' '+sm.label:'—')+'</div></div></div>';
 }
 function growthQuickActionsV148(){
-  return '<div class="growthQuickV148"><button id="v148Review"><b>🧭 Weekly Review</b><span>Name the win and next step</span></button><button id="v148Strategy"><b>🃏 Strategy</b><span>Cards + research</span></button><button id="v148Recovery"><b>🕊️ Recovery</b><span>Grace, rest, hard days</span></button></div>';
+  return '<div class="growthQuickV148"><button id="v148Review"><b>Weekly Review</b><span>Name the win and next step</span></button><button id="v148Strategy"><b>🃏 Strategy</b><span>Cards + research</span></button><button id="v148Recovery"><b>Recovery</b><span>Grace, rest, hard days</span></button></div>';
 }
+
+
+/* ===== App icon system (authored SVG, art-ready; replaces emoji per-slot) ===== */
+const ICON_ART = {}; /* optional raster overrides: key -> 'art/icons/<file>.webp' */
+const ICON_SVG = {
+  'domain.faith':'<path d="M12 2v20M6 8h12"/>',
+  'domain.marriage':'<circle cx="9" cy="13" r="5.5"/><circle cx="15" cy="13" r="5.5"/>',
+  'domain.fatherhood':'<circle cx="9" cy="7" r="3.2"/><path d="M3.6 20v-1a5.4 5.4 0 0 1 10.8 0v1"/><circle cx="17.2" cy="9.6" r="2.3"/><path d="M13.8 20a3.6 3.6 0 0 1 7-1.2"/>',
+  'domain.fitness':'<path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/>',
+  'domain.work':'<path d="M3 21h18M6 21V12M12 21V4M18 21v-6"/>',
+  'domain.home':'<path d="M3 11l9-8 9 8"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
+  'domain.discipline':'<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>',
+  'domain.hobbies':'<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>'
+};
+function appIcon(key, fallback, opts){ opts=opts||{}; const cls='appicon'+(opts.cls?' '+opts.cls:'');
+  const svg=ICON_SVG[key]; if(svg) return '<span class="'+cls+'" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+svg+'</svg></span>';
+  const url=ICON_ART[key]; if(url) return '<img class="'+cls+'" src="'+url+'" alt="" />';
+  return '<span class="'+cls+' iconfb" aria-hidden="true">'+(fallback||'')+'</span>'; }
+function injectAppIconStyles(){ if(document.getElementById('appIconStyles')) return; const st=document.createElement('style'); st.id='appIconStyles'; st.textContent=`
+  .appicon{display:inline-flex;align-items:center;justify-content:center;width:1em;height:1em;line-height:1;vertical-align:-0.12em}
+  .appicon svg{width:100%;height:100%;display:block}
+  .appicon.iconfb{font-style:normal}
+  .dgIcon .appicon{width:21px;height:21px}
+  .focusOrb .appicon{width:26px;height:26px}
+`; document.head.appendChild(st); }
+/* ===== end app icon system ===== */
+
+/* ===== Growth tab v2 — domain-first ("the man I'm becoming") ===== */
+function injectDomainGrowthStylesV2(){ try{injectAppIconStyles();}catch(e){} if(document.getElementById('dgStylesV2')) return; const st=document.createElement('style'); st.id='dgStylesV2'; st.textContent=`
+  .dgPanel{padding:13px}
+  .dgRow{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .dgRow:last-child{border-bottom:none}
+  .dgIcon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .dgBody{flex:1;min-width:0}
+  .dgTop{display:flex;justify-content:space-between;align-items:baseline}
+  .dgName{font-weight:900;font-size:13px;color:#fff}
+  .dgLv{font-family:Orbitron;font-size:12px;color:var(--muted);font-weight:800}
+  .dgBar{height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:5px 0}
+  .dgBar>i{display:block;height:100%;border-radius:4px}
+  .dgMeta{display:flex;justify-content:space-between;font-size:11px;font-weight:800}
+  .dgTrend{letter-spacing:.2px}
+  .dgWk{color:var(--muted)}
+`; document.head.appendChild(st); }
+function domainTrailRange(k,a,b){ try{ const DD=ensureDomainDaily(), m=DD[k]||{}, now=new Date(); let sum=0; for(let i=a;i<b;i++){ const d=new Date(now); d.setDate(d.getDate()-i); sum+=(m[siegeDayStamp(d)]||0); } return sum; }catch(e){ return 0; } }
+function domainTrend(k){ const cur=domainTrailRange(k,0,7), prev=domainTrailRange(k,7,14); if(cur<=0&&prev<=0) return 'idle'; if(cur>prev*1.15) return 'up'; if(cur<prev*0.7&&prev>0) return 'down'; return 'steady'; }
+function domainGrowthPanelV2(){ ensureDomainStats();
+  const rows=DOMAINS.map(d=>{ const k=d[0], dk=DKEY[k]||{label:k,icon:'•',color:'#888'}, stx=S.domainStats[k]||{xp:0,actions:0};
+    const lv=domainLevelFromXp(stx.xp), prev=domainXpForLevel(lv), need=domainXpForLevel(lv+1), pct=Math.max(3,Math.min(100,Math.round((stx.xp-prev)/Math.max(1,need-prev)*100)));
+    const wk=Math.round(domainTrail7(k)), tr=domainTrend(k);
+    const TM={up:['Growing','#5bd9a0','↑'],steady:['Steady','#9ec3ff','→'],down:['Cooling','#ffb27a','↓'],idle:['Quiet','#7c8499','·']}, t=TM[tr];
+    return '<div class="dgRow"><div class="dgIcon" style="background:'+dk.color+'22;color:'+dk.color+'">'+appIcon('domain.'+k,dk.icon)+'</div>'+
+      '<div class="dgBody"><div class="dgTop"><span class="dgName">'+esc(dk.label)+'</span><span class="dgLv">Lv '+lv+'</span></div>'+
+      '<div class="dgBar"><i style="width:'+pct+'%;background:'+dk.color+'"></i></div>'+
+      '<div class="dgMeta"><span class="dgTrend" style="color:'+t[1]+'">'+t[2]+' '+t[0]+'</span><span class="dgWk">'+(wk>0?wk+' XP this week':'rest is okay too')+'</span></div></div></div>'; }).join('');
+  return '<div class="stagecard dgPanel"><div class="lqSectionHeader"><b>Your growth, by area</b><span>where the man is built</span></div>'+rows+'</div>'; }
+function growthHeaderV2(){ injectLifeBaseVisualStylesV148(); const W=ensureLifeWeek(); ensureDomainStats();
+  const touched=touchedDomainsThisWeek().length, strong=strongestDomain(), sm=DKEY[strong.k], light=lightestDomain(), lm=DKEY[light.k];
+  const growingN=DOMAINS.filter(d=>domainTrend(d[0])==='up').length;
+  return '<div class="growthSanctuaryV148"><div class="gsvTop"><div><div class="k">Growth</div><h2>The Man I’m Becoming</h2><p>Your real days, made visible. Meaning louder than loot.</p></div><div class="focusOrb" style="--focusColor:'+((lm&&lm.color)||'var(--accent2)')+'"><b>'+appIcon('domain.'+light.k,(lm&&lm.icon)||'✦')+'</b><span>Focus<br>'+((lm&&lm.label)||'Balance')+'</span></div></div>'+
+    '<div class="growthStats"><div class="gs"><b>'+(W.completed||0)+'</b><span>This week</span></div><div class="gs"><b>'+touched+'/8</b><span>Areas active</span></div><div class="gs"><b>'+growingN+'</b><span>Growing</span></div><div class="gs"><b>'+((sm&&sm.icon)||'✦')+'</b><span>Strongest</span></div></div></div>'; }
+function growthFocusV2(){ const light=lightestDomain(), lm=DKEY[light.k]; let q=''; try{ q=suggestedQuestForDomain(light.k); }catch(e){}
+  return '<div class="domainFocusV148"><div class="focusCard" style="border-color:'+((lm&&lm.color)||'var(--line)')+'55"><b>Gentle nudge</b><p>Your quietest area lately is '+(lm?appIcon('domain.'+light.k,lm.icon)+' '+lm.label:'balance')+'. No guilt — just an invitation back.</p>'+(q?'<div class="ask">Try: '+esc(q)+'</div>':'')+'</div></div>'; }
+function growthToolsV2(){ return '<div class="growthQuickV148"><button id="v2Review"><b>Weekly Review</b><span>Name the win and next step</span></button><button id="v2Recovery"><b>Recovery</b><span>Grace, rest, hard days</span></button><button id="v2Monthly"><b>Monthly Review</b><span>Zoom out on the season</span></button></div>'+
+  '<div style="text-align:center;margin-top:8px"><button id="v2Sanctuary" style="background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer">Life Base Sanctuary →</button></div>'; }
+/* ===== end Growth tab v2 ===== */
+
 function renderGrowth(v){
-  injectGrowthHubStyles(); injectLifeBaseVisualStylesV148();
-  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">sanctuary map</span></div>'+growthHeroV148()+domainFocusV148()+sanctuaryMapV148()+growthQuickActionsV148();
-  bindLifeCards();
+  injectGrowthHubStyles(); injectLifeBaseVisualStylesV148(); injectDomainGrowthStylesV2();
+  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I’m becoming</span></div>'+growthHeaderV2()+domainGrowthPanelV2()+growthFocusV2()+growthToolsV2();
   const bind=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
-  bind('gh_domains',showDomainLevels); bind('gh_base',showSanctuary); bind('gh_strategy',showStrategyModal); bind('gh_weekly',showWeeklyReview); bind('gh_monthly',showMonthlyReview); bind('gh_recovery',showRecoveryModal);
-  bind('v148Review',showWeeklyReview); bind('v148Strategy',showStrategyModal); bind('v148Recovery',showRecoveryModal);
-  document.querySelectorAll('[data-roomtile]').forEach(el=>el.onclick=()=>showRoomAssign(el.dataset.roomtile));
+  bind('v2Review',showWeeklyReview); bind('v2Recovery',showRecoveryModal); bind('v2Monthly',showMonthlyReview); bind('v2Sanctuary',showSanctuary);
 }
 
 
@@ -7632,7 +8528,7 @@ const __v157_lifeBaseMapHTML = (typeof lifeBaseMapHTML==='function') ? lifeBaseM
 lifeBaseMapHTML = function(){
   v157InjectStyles(); ensureAssignments();
   const tiles=DOMAINS.map(d=>v157RoomTileHTML(d[0])).join('');
-  return '<div class="v157SanctuaryMap" style="--sanctuary-bg:url('+v157SanctuarySVG()+')"><div class="mapHead"><b>🏡 Life Base Sanctuary</b><span>'+sanctuaryPower()+' power · '+Object.keys((S.assignments&&S.assignments.rooms)||{}).length+'/8 guarded</span></div><div class="v157RoomGrid">'+tiles+'</div><div class="lifeactions"><button class="primary" id="openSanctuary">Open full Life Base</button></div></div>';
+  return '<div class="v157SanctuaryMap" style="--sanctuary-bg:url('+v157SanctuarySVG()+')"><div class="mapHead"><b>Life Base Sanctuary</b><span>'+sanctuaryPower()+' power · '+Object.keys((S.assignments&&S.assignments.rooms)||{}).length+'/8 guarded</span></div><div class="v157RoomGrid">'+tiles+'</div><div class="lifeactions"><button class="primary" id="openSanctuary">Open full Life Base</button></div></div>';
 };
 const __v157_growthHubHTML = (typeof growthHubHTML==='function') ? growthHubHTML : null;
 if(__v157_growthHubHTML){
@@ -7752,7 +8648,7 @@ renderCampaign = function(v){
   v158InjectStyles();
   __v158_renderCampaign.apply(this,arguments);
   try{
-    if(campSub==='dungeons'||campSub==='clash') return;
+    if(campSub==='dungeons'||campSub==='clash'||campSub==='siege') return;
     if(v.querySelector('.v158FormationStage')) return;
     const hub=v.querySelector('.battleHub');
     const html=v158StageHTML(campSub);
@@ -8307,14 +9203,13 @@ if(__v163_battleHubHTML){
     if(campSub==='dungeons') campSub='campaign';
     injectBattleHubStyles&&injectBattleHubStyles();
     const d=battleHubModeData(), cur=d[campSub]||d.campaign;
-    const cards=['campaign','tower','clash'].map(k=>{ const x=d[k], on=campSub===k;
+    const cards=['campaign','tower','clash','raid'].map(k=>{ const x=d[k], on=campSub===k;
       return '<button id="'+x.id+'" class="battleHubCard '+(on?'on':'')+'" style="--modeColor:'+x.color+'" aria-label="Open '+x.title+'">'+
         '<div class="modeTop"><div><div class="modeTitle">'+x.title+'</div><div class="modeMeta">'+x.meta+'</div></div><div class="modeIcon">'+x.icon+'</div></div>'+ 
         '<div class="modeStat">'+x.stat+'</div><div class="modeSub">'+x.sub+'</div><div class="progressTiny"><i style="width:'+Math.max(4,Math.min(100,x.pct||0))+'%"></i></div><div class="modePill">'+(on?'Viewing · ':'')+x.pill+'</div>'+ 
       '</button>'; }).join('');
-    const r=d.raid, ron=campSub==='raid';
-    const raidCard='<div class="v163QuietNote" style="border-color:'+(ron?r.color+'88':'var(--line)')+'"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><b>'+r.icon+' '+r.title+'</b><div style="margin-top:3px">'+r.sub+' · '+r.stat+'</div></div><button id="'+r.id+'" class="mini-btn '+(ron?'primary':'')+'">'+(ron?'Viewing Raid':'Open Raid')+'</button></div></div>';
-    return '<div class="battleHub v163"><div class="battleHubGrid">'+cards+'</div>'+raidCard+'</div>';
+    const siegeRow='';
+    return '<div class="battleHub v163"><div class="battleHubGrid">'+cards+'</div>'+siegeRow+'</div>';
   };
 }
 const __v163_renderCampaign = (typeof renderCampaign==='function') ? renderCampaign : null;
@@ -9238,6 +10133,16 @@ const __v170_renderBattles = renderBattles;
 renderBattles = function(v){ __v170_renderBattles(v); try{ v170InjectStyles(); v.classList.add('v170GameShell','v170Battles'); /* battles intro band removed (redundant) */ }catch(e){} };
 const __v170_renderGrowth = renderGrowth;
 renderGrowth = function(v){ __v170_renderGrowth(v); try{ v170InjectStyles(); v.classList.add('v170GameShell','v170Growth'); /* growth intro band removed (duplicate of growthHero band) */ }catch(e){} };
+/* v2.40 — domain-first Growth (final override; supersedes v148/v169/v170 layout) */
+renderGrowth = function(v){
+  try{ injectGrowthHubStyles(); }catch(e){}
+  try{ injectLifeBaseVisualStylesV148(); }catch(e){}
+  try{ injectDomainGrowthStylesV2(); }catch(e){}
+  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I\u2019m becoming</span></div>'+growthHeaderV2()+domainGrowthPanelV2()+growthFocusV2()+growthToolsV2();
+  const bind=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
+  bind('v2Review',showWeeklyReview); bind('v2Recovery',showRecoveryModal); bind('v2Monthly',showMonthlyReview); bind('v2Sanctuary',showSanctuary);
+  try{ v170InjectStyles(); v.classList.add('v170GameShell','v170Growth'); }catch(e){}
+};
 (function(){ v170InjectStyles(); })();
 
 
