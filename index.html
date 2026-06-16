@@ -1920,7 +1920,7 @@ function showWeeklyReview(){ const W=ensureLifeWeek(), strong=strongestDomain(),
   document.getElementById('reviewClose').onclick=()=>modal.classList.remove('show');
   bindRecapButtons(box);
   const cb=document.getElementById('claimBalance'); if(cb) cb.onclick=()=>{ grantBalanceChest(); modal.classList.remove('show'); };
-  const od=document.getElementById('openDomains'); if(od) od.onclick=showDomainLevels; const qb=document.getElementById('openQuestBoard'); if(qb) qb.onclick=showQuestBoard; const st=document.getElementById('openStrategy'); if(st) st.onclick=showStrategyModal; const os=document.getElementById('openSanctuary'); if(os) os.onclick=showSanctuary; const odg=document.getElementById('openTrials'); if(odg) odg.onclick=showDungeons;
+  const od=document.getElementById('openDomains'); if(od) od.onclick=showDomainLevels; const qb=document.getElementById('openQuestBoard'); if(qb) qb.onclick=showQuestBoard; var _qca=document.querySelector('[data-claimall]'); if(_qca) _qca.onclick=function(){ claimAllQuests(); }; const st=document.getElementById('openStrategy'); if(st) st.onclick=showStrategyModal; const os=document.getElementById('openSanctuary'); if(os) os.onclick=showSanctuary; const odg=document.getElementById('openTrials'); if(odg) odg.onclick=showDungeons;
   document.getElementById('reviewDone').onclick=()=>{ if(!W.reviewed){ W.reviewed=true; S.grace=(S.grace||0)+1; const tm=grantTicket(1), rp=grantResearch(1); ensureTitles(); if(!S.titlesUnlocked['Reflective']) S.titlesUnlocked['Reflective']=true; addWin('Weekly Review Complete','You reflected and chose the next faithful step.', null); toast('Weekly review complete · +1🕊️ Grace Token · '+tm+' · '+rp); rewardSummary('Weekly review complete',[{txt:'+1🕊️ Grace Token',cls:'main'},{txt:tm,cls:'bonus'},{txt:rp,cls:'bonus'},{txt:'🏷 Reflective title unlocked',cls:'title'}]); } modal.classList.remove('show'); renderHUD(); render(); save(); };
 }
 function todayRecovery(){ if(!S.recoveryDays) S.recoveryDays={}; return S.recoveryDays[dateStamp()]||null; }
@@ -2156,6 +2156,8 @@ function normalizeHero(h){
   if(h.owned===undefined) h.owned=!!base.owned;
   h.owned=!!h.owned;
   if(!Array.isArray(h.aff) || !h.aff.length) h.aff=(RAFF[h.id]||base.aff||affByRole(h.role)).slice();
+  if(Array.isArray(h.aff)) h.aff=foldFamilyList(h.aff,h.id);
+  if(Array.isArray(h.tags)) h.tags=foldFamilyList(h.tags,h.id);
   if(!Array.isArray(h.tags)) h.tags=[];
   if(!h.gear || typeof h.gear!=='object' || ('w' in h.gear)) h.gear={weapon:null,armor:null,boots:null,relic:null};
   ['weapon','armor','boots','relic'].forEach(slot=>{ if(!(slot in h.gear)) h.gear[slot]=null; });
@@ -2215,6 +2217,20 @@ function seedRoster(){ sanitizeHeroes(); const have=new Set(S.heroes.map(h=>h.id
     if(!have.has(r.id)){ const nh={id:r.id,name:r.name,ip:r.ip,role:r.role,color:r.color,img:null,level:1,rank:0,prestige:0,exp:0,bondXp:0,aff:(r.aff||[]).slice(),archetype:r.archetype||null,tags:Array.isArray(r.tags)?r.tags.slice():[],gear:{weapon:null,armor:null,boots:null,relic:null},owned:!!r.owned}; nh.elementType=inferHeroElementType(nh); nh.clashRole=inferClashRole(nh); S.heroes.push(nh); }
   }); sanitizeHeroes(); }
 function lockedHeroes(){ sanitizeHeroes(); return S.heroes.filter(h=>h&&!h.owned); }
+function foldFamilyDomain(id,present){
+  var trio=['marriage','home','fatherhood'];
+  var hsh=0, ss=String(id||''); for(var i=0;i<ss.length;i++) hsh=(hsh*31+ss.charCodeAt(i))>>>0;
+  for(var t=0;t<3;t++){ var c=trio[(hsh+t)%3]; if(present.indexOf(c)<0) return c; }
+  return null;
+}
+function foldFamilyList(list,id){
+  if(!Array.isArray(list) || list.indexOf('family')<0) return list;
+  var out=list.slice(); var idx=out.indexOf('family');
+  var pick=foldFamilyDomain(id, out.filter(function(x){return x!=='family';}));
+  if(pick) out[idx]=pick; else out.splice(idx,1);
+  return out.filter(function(x,i){return out.indexOf(x)===i;});
+}
+try{ ROSTER.forEach(function(r){ if(!r) return; if(Array.isArray(r.aff)) r.aff=foldFamilyList(r.aff,r.id); if(Array.isArray(r.tags)) r.tags=foldFamilyList(r.tags,r.id); }); }catch(e){}
 const RAFF=Object.fromEntries(ROSTER.map(r=>[r.id,(r.aff||[]).slice()]));
 const UNLOCK_RANDOM=100, UNLOCK_TARGET=750, CRYSTALS={easy:5,med:12,hard:25};
 const TICKET_SHARDS_PER=20, TICKET_SHARD_DROP=0, WISHLIST_PITY=10;
@@ -2383,7 +2399,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.62.0-battles-modes-panel';
+const APP_BUILD='v2.64.0-even-domains';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3698,7 +3714,7 @@ function render(){
     setNavActive(view);
     renderHUD();
     const v=document.getElementById('view');
-    if(view==='home'){ renderHome(v); try{ homeInjectModes(v); }catch(e){} }
+    if(view==='home'){ renderHome(v); }
     else if(view==='quests') renderQuests(v);
     else if(view==='heroes') renderHeroes(v);
     else if(view==='battles') renderBattles(v);
@@ -3928,7 +3944,7 @@ function renderTasks(v){
     '<div class="list" id="list"></div>';
   document.getElementById('subtabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;subtab=b.dataset.s;render();};
   document.getElementById('addTask').onclick=()=>openTaskSheet(null);
-  const qb=document.getElementById('openQuestBoard'); if(qb) qb.onclick=showQuestBoard;
+  const qb=document.getElementById('openQuestBoard'); if(qb) qb.onclick=showQuestBoard; var _qca=document.querySelector('[data-claimall]'); if(_qca) _qca.onclick=function(){ claimAllQuests(); };
   const L=document.getElementById('list');
   let items=taskListFor(subtab).slice();
   if(taskIsRecurring(subtab) && S.hideOffDayTasks!==false) items=items.filter(it=>taskActiveToday(it));
@@ -3956,13 +3972,22 @@ function renderTasks(v){
 
 
 let lastTaskLoot=null;
+var __flavorIdxCache=null;
+function heroFlavorDomain(h){
+  if(!h||!h.id) return null;
+  if(!__flavorIdxCache){
+    var ids=(S.heroes||[]).map(function(x){return x&&x.id;}).filter(Boolean).slice().sort();
+    var keys=DOMAINS.map(function(d){return d[0];});
+    __flavorIdxCache={}; ids.forEach(function(id,i){ __flavorIdxCache[id]=keys[i%keys.length]; });
+  }
+  return __flavorIdxCache[h.id]||null;
+}
 function taskHeroFor(domain){
-  const ids=[...squad('campaign'),...squad('raid'),...squad('tower')];
-  const seen=new Set(), heroes=[];
-  ids.forEach(id=>{ if(!seen.has(id)){ const h=S.heroes.find(x=>x.id===id&&x.owned); if(h){heroes.push(h);seen.add(id);} } });
-  let h=heroes.find(x=>domain && Array.isArray(x.aff)&&x.aff.includes(domain));
-  if(!h) h=featuredHero();
-  return h||S.heroes.find(x=>x.owned)||null;
+  var owned=(S.heroes||[]).filter(function(h){return h&&h.owned;});
+  if(!owned.length) return null;
+  var pool = domain ? owned.filter(function(h){return heroFlavorDomain(h)===domain;}) : [];
+  if(!pool.length) pool=owned;
+  return pool[Math.floor(Math.random()*pool.length)];
 }
 function taskActionVerb(h,domain){
   const domainMove={fitness:'Iron Will Strike',faith:'Shield of Peace',marriage:'Hearthguard',fatherhood:'Hearthguard',discipline:'Chainbreaker',work:'Strategy Burst',home:'Homefront Restore',hobbies:'Joyful Focus'};
@@ -4622,8 +4647,8 @@ function raidRecapHTML(){
   return '<div class="raidRecap"><div class="rh"><b>'+b.icon+' '+esc(b.name)+'</b><span>'+pct.toFixed(0)+'%</span></div><div class="xpbar" style="height:10px;margin:8px 0"><i style="width:'+pct+'%;background:linear-gradient(90deg,#ff5d6c,#ffb01f)"></i></div><div style="font-size:12px;color:var(--muted);font-weight:750;line-height:1.35">Weak to '+weak+'<br>'+(ni.ready?'Reward tier ready.':'Need '+ni.need.toLocaleString()+' damage for '+ni.tier+'% tier.')+'</div><div class="raidTierDots">'+tiers+'</div></div>';
 }
 function questBoardHTML(){
-  const qc=questCounts(), hn=holdLineCount(), hd=holdLineComplete();
-  return '<div class="questBoard"><div class="qh"><b>🗺 Quest Board</b><span>'+qc.ready+' ready · '+qc.done+' claimed</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">One board for today, this week, hard-day anchors, chains, hero quests, and raid progress.</p>'+oathChestNudgeHTML()+'<div class="questMiniGrid"><div class="questMini"><b>'+qc.d.filter(q=>q.ready).length+'/'+qc.d.length+'</b><span>Daily</span></div><div class="questMini"><b>'+qc.w.filter(q=>q.ready).length+'/'+qc.w.length+'</b><span>Weekly</span></div><div class="questMini"><b>'+qc.c.filter(q=>q.ready).length+'/'+qc.c.length+'</b><span>Chains</span></div><div class="questMini"><b>'+(hd?'✓':hn+'/3')+'</b><span>Hold</span></div></div>'+(qc.ready>0?'<button data-claimall="1" style="width:100%;margin:11px 0 2px;padding:11px;border:none;border-radius:12px;background:linear-gradient(135deg,#ffb01f,#ff8a3d);color:#231603;font-weight:900;font-size:15px;font-family:inherit;cursor:pointer">\u2728 Claim All Ready ('+qc.ready+')</button>':'')+'<div class="lifeactions"><button class="primary" id="openQuestBoard">Open Quest Board</button></div>'+raidRecapHTML()+'</div>';
+  const qc=questCounts(), hn=holdLineCount(), hd=holdLineComplete(); const qcBoardReady=qc.d.concat(qc.w,qc.c).filter(function(q){return q.ready&&!q.claimed;}).length;
+  return '<div class="questBoard"><div class="qh"><b>🗺 Quest Board</b><span>'+qc.ready+' ready · '+qc.done+' claimed</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">One board for today, this week, hard-day anchors, chains, hero quests, and raid progress.</p>'+oathChestNudgeHTML()+'<div class="questMiniGrid"><div class="questMini"><b>'+qc.d.filter(q=>q.ready).length+'/'+qc.d.length+'</b><span>Daily</span></div><div class="questMini"><b>'+qc.w.filter(q=>q.ready).length+'/'+qc.w.length+'</b><span>Weekly</span></div><div class="questMini"><b>'+qc.c.filter(q=>q.ready).length+'/'+qc.c.length+'</b><span>Chains</span></div><div class="questMini"><b>'+(hd?'✓':hn+'/3')+'</b><span>Hold</span></div></div>'+(qcBoardReady>0?'<button data-claimall="1" style="width:100%;margin:11px 0 2px;padding:11px;border:none;border-radius:12px;background:linear-gradient(135deg,#ffb01f,#ff8a3d);color:#231603;font-weight:900;font-size:15px;font-family:inherit;cursor:pointer">\u2728 Claim All Ready ('+qcBoardReady+')</button>':'')+'<div class="lifeactions"><button class="primary" id="openQuestBoard">Open Quest Board</button></div>'+raidRecapHTML()+'</div>';
 }
 function showQuestBoard(){
   const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
