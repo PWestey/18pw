@@ -2399,7 +2399,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.76.11-hero-modal-viewport-fix';
+const APP_BUILD='v2.76.12-battle-board-modal-hard-fix';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -14481,7 +14481,7 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
   'use strict';
   if(window.__of27610BattleDeclutterResultFix) return;
   window.__of27610BattleDeclutterResultFix=true;
-  var BUILD='v2.76.11-hero-modal-viewport-fix';
+  var BUILD='v2.76.12-battle-board-modal-hard-fix';
 
   function qa(sel,root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
   function q(sel,root){ return (root||document).querySelector(sel); }
@@ -14674,7 +14674,7 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
   'use strict';
   if(window.__of27611HeroModalViewportFix) return;
   window.__of27611HeroModalViewportFix=true;
-  var BUILD='v2.76.11-hero-modal-viewport-fix';
+  var BUILD='v2.76.12-battle-board-modal-hard-fix';
   function qa(sel,root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
   function q(sel,root){ return (root||document).querySelector(sel); }
   function safe(fn,fb){ try{ var v=fn(); return v==null?fb:v; }catch(e){ return fb; } }
@@ -14772,6 +14772,148 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
   boot();
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else setTimeout(boot,0);
   setInterval(normalizeHeroSheet,900);
+})();
+</script>
+
+
+
+<script id="battleBoardModalHardFixV27612Script">
+/* Oathforge v2.76.12 — hard fix for mobile battle board + hero modal
+   Scope: no new content. Suppress overlapping battle presentation layers, force all active heroes visible,
+   and make hero sheets open as true viewport drawers instead of page-flow scroll panels. */
+(function BattleBoardModalHardFix27612(){
+  'use strict';
+  if(window.__of27612HardFix) return;
+  window.__of27612HardFix=true;
+  var BUILD='v2.76.12-battle-board-modal-hard-fix';
+  try{ if(typeof APP_BUILD!=='undefined') APP_BUILD=BUILD; }catch(e){}
+  function q(s,r){return (r||document).querySelector(s);} function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+  function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function injectStyles(){
+    if(q('#of27612HardFixStyles')) return;
+    var st=document.createElement('style'); st.id='of27612HardFixStyles';
+    st.textContent=[
+      '/* v2.76.12: mobile battle is a board, not a stack of spectacle layers */',
+      'body.of27612BattleBoard #arena.show{position:fixed!important;inset:0!important;z-index:999990!important;display:grid!important;grid-template-rows:auto auto minmax(176px,28dvh) 24px minmax(236px,39dvh) 34px!important;gap:5px!important;padding:calc(env(safe-area-inset-top) + 8px) 10px calc(env(safe-area-inset-bottom) + 8px)!important;box-sizing:border-box!important;overflow:hidden!important;background:radial-gradient(720px 280px at 50% -10%,rgba(54,224,230,.15),transparent 62%),linear-gradient(180deg,#071522,#050811)!important;}',
+      'body.of27612BattleBoard #arena.show *{box-sizing:border-box!important;}',
+      'body.of27612BattleBoard #arena.show .arena-stagewash,body.of27612BattleBoard #arena.show .bsv26813Stage,body.of27612BattleBoard #battleSceneV26813,body.of27612BattleBoard #arena.show .bsv26813Director,body.of27612BattleBoard #arena.show .lwCutin2705,body.of27612BattleBoard #arena.show .lwVictory2705,body.of27612BattleBoard #arena.show .waCallout,body.of27612BattleBoard #arena.show .of2731Callout{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}',
+      'body.of27612BattleBoard .bsv26813Line,body.of27612BattleBoard .bsv26813Impact,body.of27612BattleBoard .bsv26813Cut,body.of27612BattleBoard .bsv26813Intro,body.of27612BattleBoard .bsv26813Boss,body.of27612BattleBoard .bsv26813ResultGlow,body.of27612BattleBoard .clashShot,body.of27612BattleBoard .clashImpact{display:none!important;}',
+      'body.of27612BattleBoard #arena.show .battle-controls{position:relative!important;grid-row:1!important;display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:6px!important;margin:0!important;padding:0!important;top:auto!important;left:auto!important;right:auto!important;transform:none!important;z-index:5!important;}',
+      'body.of27612BattleBoard #arena.show .battle-controls button{min-width:0!important;min-height:32px!important;padding:6px 9px!important;border-radius:12px!important;font-size:10px!important;line-height:1!important;background:rgba(5,10,22,.74)!important;border:1px solid rgba(139,208,255,.26)!important;box-shadow:none!important;}',
+      'body.of27612BattleBoard #arena.show .vs-head{grid-row:2!important;margin:0!important;min-height:34px!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;padding:6px 12px!important;border-radius:16px!important;background:rgba(7,12,24,.74)!important;border:1px solid rgba(255,255,255,.11)!important;font-size:13px!important;line-height:1!important;color:#f4f7ff!important;letter-spacing:1.5px!important;text-shadow:none!important;}',
+      'body.of27612BattleBoard #arena.show .arena-sub{position:absolute!important;left:12px!important;right:12px!important;top:78px!important;margin:0!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:9.5px!important;letter-spacing:1.1px!important;opacity:.82!important;color:#aeb8d4!important;z-index:2!important;}',
+      'body.of27612BattleBoard #arena.show .side{position:relative!important;display:grid!important;width:100%!important;margin:0!important;padding:10px 8px!important;gap:7px!important;align-items:center!important;align-content:center!important;justify-content:center!important;justify-items:center!important;overflow:hidden!important;border-radius:18px!important;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012))!important;border:1px solid rgba(255,255,255,.08)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.025)!important;}',
+      'body.of27612BattleBoard #arena.show #enemySide{grid-row:3!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;background:linear-gradient(180deg,rgba(255,93,108,.055),rgba(255,255,255,.012))!important;padding-top:18px!important;}',
+      'body.of27612BattleBoard #arena.show #playerSide{grid-row:5!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;background:linear-gradient(180deg,rgba(54,224,230,.055),rgba(255,255,255,.012))!important;}',
+      'body.of27612BattleBoard #arena.show .vs-mid{grid-row:4!important;margin:0!important;height:24px!important;line-height:24px!important;font-size:20px!important;color:#ff3348!important;text-align:center!important;text-shadow:0 0 14px rgba(255,51,72,.45)!important;}',
+      'body.of27612BattleBoard #arena.show .vs-mid:before,body.of27612BattleBoard #arena.show .vs-mid:after{display:none!important;}',
+      'body.of27612BattleBoard #arena.show .unit,body.of27612BattleBoard #arena.show .side .unit,body.of27612BattleBoard #arena.show .side.enemy .unit,body.of27612BattleBoard #arena.show .side.player .unit{position:relative!important;display:grid!important;grid-template-rows:42px 28px 8px!important;justify-items:center!important;align-items:center!important;width:100%!important;max-width:78px!important;min-width:0!important;height:82px!important;min-height:82px!important;max-height:82px!important;padding:5px 4px!important;margin:0!important;border-radius:14px!important;gap:2px!important;background:rgba(5,8,17,.42)!important;border:1px solid rgba(255,255,255,.10)!important;box-shadow:none!important;transform:none!important;overflow:hidden!important;opacity:1!important;filter:none!important;}',
+      'body.of27612BattleBoard #arena.show .unit.dead{opacity:.26!important;filter:grayscale(1) brightness(.55)!important;}',
+      'body.of27612BattleBoard #arena.show .unit .face{grid-row:1!important;width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;max-width:40px!important;max-height:40px!important;border-radius:11px!important;margin:0!important;box-shadow:0 0 0 1px rgba(255,255,255,.15)!important;font-size:16px!important;}',
+      'body.of27612BattleBoard #arena.show .unit .face img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}',
+      'body.of27612BattleBoard #arena.show .unit .info{grid-row:2/4!important;display:block!important;width:100%!important;min-width:0!important;text-align:center!important;margin:0!important;}',
+      'body.of27612BattleBoard #arena.show .unit .nm{display:block!important;width:100%!important;max-height:26px!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:10px!important;line-height:12px!important;font-weight:1000!important;text-align:center!important;white-space:normal!important;color:#ffd18a!important;}',
+      'body.of27612BattleBoard #arena.show #playerSide .unit .nm{color:#e8798e!important;} body.of27612BattleBoard #arena.show #playerSide .unit:nth-child(4n) .nm,body.of27612BattleBoard #arena.show #playerSide .unit:nth-child(4n-1) .nm{color:#42f098!important;}',
+      'body.of27612BattleBoard #arena.show .unit .info>div:nth-child(2),body.of27612BattleBoard #arena.show .unit .enemyRoleChip,body.of27612BattleBoard #arena.show .unit:after,body.of27612BattleBoard #arena.show .unit .face:before{display:none!important;}',
+      'body.of27612BattleBoard #arena.show .unit .hpbar{display:block!important;width:88%!important;height:6px!important;margin:2px auto 0!important;border-radius:999px!important;background:rgba(0,0,0,.55)!important;overflow:hidden!important;}',
+      'body.of27612BattleBoard #arena.show .unit .hpbar i{display:block!important;height:100%!important;border-radius:999px!important;}',
+      'body.of27612BattleBoard #arena.show .battle-logline,body.of27612BattleBoard #arena.show #battleLogline{grid-row:6!important;position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;margin:0!important;min-height:32px!important;max-height:32px!important;padding:7px 10px!important;border-radius:16px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-align:center!important;font-size:12px!important;line-height:16px!important;background:rgba(0,0,0,.54)!important;border:1px solid rgba(255,255,255,.11)!important;color:#f6f8ff!important;}',
+      'body.of27612BattleBoard #arena.show .result{position:fixed!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:min(430px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;overflow:auto!important;padding:18px!important;border-radius:22px!important;z-index:1000002!important;}',
+      'body.of27612BattleBoard #arena.show .result img{max-width:180px!important;max-height:180px!important;object-fit:cover!important;}',
+      'body.of27612BattleBoard #arena.show .result .resultActions,body.of27612BattleBoard #arena.show .resultActions,body.of27612BattleBoard #arena.show .result .actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;}',
+      'body.of27612BattleBoard #arena.show .result button{margin:0!important;min-height:46px!important;border-radius:14px!important;font-size:15px!important;}',
+      '@media(max-width:390px){body.of27612BattleBoard #arena.show{grid-template-rows:auto auto minmax(166px,27dvh) 22px minmax(226px,38dvh) 32px!important;padding-left:8px!important;padding-right:8px!important;}body.of27612BattleBoard #arena.show .unit{height:76px!important;min-height:76px!important;max-height:76px!important;grid-template-rows:38px 24px 6px!important;}body.of27612BattleBoard #arena.show .unit .face{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;}body.of27612BattleBoard #arena.show .unit .nm{font-size:9px!important;line-height:11px!important;max-height:23px!important;}}',
+      '/* v2.76.12: hero sheet is a proper overlay drawer with a close bar */',
+      'body.of27612HeroSheetOpen{overflow:hidden!important;touch-action:none!important;}',
+      'body.of27612HeroSheetOpen #scrim.scrim{position:fixed!important;inset:0!important;z-index:2147483600!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;padding:0!important;background:rgba(3,6,14,.76)!important;backdrop-filter:blur(8px)!important;overflow:hidden!important;}',
+      'body.of27612HeroSheetOpen #scrim.scrim .sheet{position:relative!important;width:100vw!important;max-width:560px!important;height:min(88dvh,820px)!important;max-height:calc(100dvh - env(safe-area-inset-top) - 8px)!important;margin:0!important;border-radius:24px 24px 0 0!important;border:1px solid rgba(139,208,255,.28)!important;border-bottom:0!important;overflow:auto!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;padding:54px 14px 18px!important;background:linear-gradient(180deg,#132039,#07101e)!important;box-shadow:0 -22px 80px rgba(0,0,0,.72)!important;transform:none!important;}',
+      '#of27612HeroClose{position:sticky!important;top:-54px!important;z-index:5!important;margin:-54px -14px 12px!important;height:46px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;padding:8px 12px!important;background:linear-gradient(180deg,rgba(9,16,32,.98),rgba(9,16,32,.88))!important;border-bottom:1px solid rgba(255,255,255,.10)!important;backdrop-filter:blur(10px)!important;}',
+      '#of27612HeroClose b{font-family:Orbitron!important;font-size:13px!important;color:#f4f7ff!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}#of27612HeroClose button{width:36px!important;height:36px!important;border-radius:12px!important;margin:0!important;background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.16)!important;color:#fff!important;font-size:20px!important;line-height:1!important;}',
+      'body.of27612HeroSheetOpen #scrim.scrim .heroDetailV141{display:grid!important;gap:10px!important;}body.of27612HeroSheetOpen #scrim.scrim .heroStageV141{margin-top:0!important;transform:scale(.92)!important;transform-origin:center top!important;margin-bottom:-12px!important;}body.of27612HeroSheetOpen #scrim.scrim .heroPanelV141{padding:10px!important;border-radius:14px!important;}body.of27612HeroSheetOpen #scrim.scrim .heroPanelV141 p{font-size:12px!important;}body.of27612HeroSheetOpen #scrim.scrim .heroActionsV141,body.of27612HeroSheetOpen #scrim.scrim .heroUtilityV141{gap:7px!important;}body.of27612HeroSheetOpen #scrim.scrim .go,body.of27612HeroSheetOpen #scrim.scrim .ghost{min-height:42px!important;margin-top:6px!important;}',
+      'body.of27612HeroSheetOpen #arena.show{pointer-events:none!important;filter:blur(1px) brightness(.65)!important;}',
+      'body.of27612HeroSheetOpen .nav{display:none!important;}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+  function normalizeBattle(){
+    var a=q('#arena');
+    var active=!!(a&&a.classList.contains('show'));
+    document.body.classList.toggle('of27612BattleBoard',active);
+    if(!active) return;
+    try{ qa('.bsv26813Line,.bsv26813Impact,.bsv26813Cut,.bsv26813Intro,.bsv26813Boss,.bsv26813ResultGlow,.of2731Callout,.waCallout,.lwCutin2705,.lwVictory2705').forEach(function(el){el.remove();}); }catch(e){}
+    // Keep all live unit elements visible; if battle code dimmed them with inline styles, undo the display/geometry damage.
+    qa('#enemySide .unit,#playerSide .unit').forEach(function(u){
+      u.style.display=''; u.style.visibility=''; u.style.position=''; u.style.left=''; u.style.top=''; u.style.transform='';
+      if(u.getAttribute('aria-hidden')==='true') u.removeAttribute('aria-hidden');
+    });
+  }
+  function addHeroClose(){
+    var scr=q('#scrim'), sheet=q('#sheet'); if(!scr||!sheet||!scr.classList.contains('show')){ document.body.classList.remove('of27612HeroSheetOpen'); return; }
+    // Only treat normal hero sheets as hero drawers. Settings and health modals use setScrim or custom content.
+    var hero=sheet.querySelector('.heroDetailV141,[id="h_name"],#hPrev');
+    if(!hero){ document.body.classList.remove('of27612HeroSheetOpen'); return; }
+    document.body.classList.add('of27612HeroSheetOpen');
+    if(!q('#of27612HeroClose',sheet)){
+      var name=(q('.heroTitleV141 h3',sheet)||q('#h_name',sheet)||{}).textContent||'Hero Details';
+      var bar=document.createElement('div'); bar.id='of27612HeroClose';
+      bar.innerHTML='<b>'+esc(name)+'</b><button type="button" aria-label="Close hero sheet">×</button>';
+      sheet.insertBefore(bar,sheet.firstChild);
+      var btn=bar.querySelector('button'); if(btn) btn.onclick=function(){ try{ if(typeof hideScrim==='function') hideScrim(); else scr.classList.remove('show'); }catch(e){ scr.classList.remove('show'); } document.body.classList.remove('of27612HeroSheetOpen'); };
+    }
+    try{ sheet.scrollTop=0; }catch(e){}
+  }
+  function forceOpenHero(id){
+    try{
+      if(!id) return false;
+      if(typeof openHeroSheet==='function'){ openHeroSheet(id); setTimeout(addHeroClose,30); setTimeout(addHeroClose,180); return true; }
+    }catch(e){ console.warn('[v2.76.12 hero open]',e); }
+    return false;
+  }
+  function installHeroTapRepair(){
+    if(document.__of27612HeroTapRepair) return; document.__of27612HeroTapRepair=true;
+    document.addEventListener('click',function(ev){
+      var t=ev.target&&ev.target.closest&&ev.target.closest('[data-open-hero],[data-hero-id],[data-id].hero,.hero[data-id],.heroCard[data-id],.heroTile[data-id]');
+      if(!t) return;
+      // Do not hijack squad picker, battle units, or buttons inside an already-open sheet.
+      if(t.closest('#arena.show,.squadpicker,#scrim.show,#setScrim.show')) return;
+      var id=t.getAttribute('data-open-hero')||t.getAttribute('data-hero-id')||t.getAttribute('data-id');
+      if(!id) return;
+      if(forceOpenHero(id)){ ev.preventDefault(); ev.stopPropagation(); }
+    },true);
+  }
+  function patchOpenHero(){
+    if(typeof openHeroSheet==='function' && !openHeroSheet.__of27612){
+      var old=openHeroSheet;
+      window.openHeroSheet=openHeroSheet=function(id){
+        var r=old.apply(this,arguments);
+        setTimeout(addHeroClose,20); setTimeout(addHeroClose,140); setTimeout(addHeroClose,420);
+        return r;
+      };
+      openHeroSheet.__of27612=true;
+    }
+    if(typeof hideScrim==='function' && !hideScrim.__of27612){
+      var oh=hideScrim;
+      window.hideScrim=hideScrim=function(){ document.body.classList.remove('of27612HeroSheetOpen'); return oh.apply(this,arguments); };
+      hideScrim.__of27612=true;
+    }
+  }
+  function observe(){
+    var a=q('#arena'), scr=q('#scrim'), sheet=q('#sheet');
+    try{ if(a&&!a.__of27612Obs){ a.__of27612Obs=true; new MutationObserver(normalizeBattle).observe(a,{attributes:true,attributeFilter:['class','style'],childList:true,subtree:true}); } }catch(e){}
+    try{ if(scr&&!scr.__of27612Obs){ scr.__of27612Obs=true; new MutationObserver(addHeroClose).observe(scr,{attributes:true,attributeFilter:['class','style'],childList:true,subtree:true}); } }catch(e){}
+    try{ if(sheet&&!sheet.__of27612Obs){ sheet.__of27612Obs=true; new MutationObserver(addHeroClose).observe(sheet,{childList:true,subtree:true}); } }catch(e){}
+  }
+  function patchBattleHooks(){
+    ['startBattle','drawUnits','battleStep','endBattle'].forEach(function(fn){
+      try{ if(typeof window[fn]==='function' && !window[fn].__of27612){ var old=window[fn]; window[fn]=function(){ var r=old.apply(this,arguments); setTimeout(normalizeBattle,0); setTimeout(normalizeBattle,80); return r; }; window[fn].__of27612=true; } }catch(e){}
+    });
+  }
+  function health(){
+    var a=q('#arena'), scr=q('#scrim'), sheet=q('#sheet');
+    return {build:BUILD,save:(typeof SAVE_VERSION!=='undefined'?SAVE_VERSION:'missing'),scripts:document.scripts.length,styles:qa('style').length,battleBoard:document.body.classList.contains('of27612BattleBoard'),enemyUnits:qa('#enemySide .unit').length,playerUnits:qa('#playerSide .unit').length,heroDrawer:document.body.classList.contains('of27612HeroSheetOpen'),scrimOpen:!!(scr&&scr.classList.contains('show')),sheetTop:sheet?sheet.getBoundingClientRect().top:null,openHeroHook:!!(typeof openHeroSheet==='function'&&openHeroSheet.__of27612)};
+  }
+  function boot(){ injectStyles(); patchBattleHooks(); patchOpenHero(); installHeroTapRepair(); observe(); normalizeBattle(); addHeroClose(); window.of27612Health=health; window.OATHFORGE_V27612={build:BUILD,health:health}; }
+  boot(); setTimeout(boot,150); setTimeout(boot,800);
 })();
 </script>
 
