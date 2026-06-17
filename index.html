@@ -2399,7 +2399,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.76.13-hero-modal-deep-fix-battle-tune';
+const APP_BUILD='v2.76.14-advanced-sheet-unlock-hotfix';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -15094,6 +15094,114 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
   window.of27613OpenHero=openDedicatedHero;
   window.of27613CloseHero=closeHero;
   window.of27613Health=function(){ var ov=q('#of27613HeroOverlay'), scr=q('#scrim'), sheet=q('#sheet'); return {build:BUILD,save:(typeof SAVE_VERSION!=='undefined'?SAVE_VERSION:'missing'),scripts:document.scripts.length,styles:qa('style').length,customOverlay:!!ov,customOpen:!!(ov&&ov.classList.contains('show')),legacyScrimOpen:!!(scr&&scr.classList.contains('show')),bodyHeroOpen:document.body.classList.contains('of27613HeroOpen'),battlePlayers:qa('#playerSide .unit').length,battleEnemies:qa('#enemySide .unit').length,openHeroHook:!!(window.openHeroSheet&&window.openHeroSheet.__of27613),sheetTop:sheet?safe(function(){return sheet.getBoundingClientRect().top;},null):null}; };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
+
+
+<script id="advancedSheetUnlockV27614Script">
+/* Oathforge v2.76.14 — advanced sheet unlock hotfix
+   The dedicated hero sheet works; the old Advanced Sheet path can leave an invisible legacy scrim
+   above the app. This pass makes Advanced safe: it no longer calls the legacy modal directly.
+   Instead it expands an Advanced section inside the working dedicated drawer, and aggressively
+   clears any leftover invisible overlay traps. */
+(function(){
+  'use strict';
+  var BUILD='v2.76.14-advanced-sheet-unlock-hotfix';
+  function q(s,r){return (r||document).querySelector(s);} 
+  function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+  function E(x){try{return (typeof esc==='function')?esc(x):String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}catch(e){return String(x==null?'':x);} }
+  function safe(fn,f){try{return fn();}catch(e){return f;}}
+  function toast(msg){try{ if(typeof toast==='function') return window.toast(msg); }catch(e){} var t=document.createElement('div'); t.textContent=msg; t.style.cssText='position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147483647;background:#17233d;color:#fff;border:1px solid rgba(139,208,255,.35);border-radius:14px;padding:10px 13px;font:800 13px system-ui;box-shadow:0 12px 38px rgba(0,0,0,.45);max-width:86vw;text-align:center'; document.body.appendChild(t); setTimeout(function(){t.remove();},1800); }
+  function heroByName(name){return safe(function(){return (S.heroes||[]).find(function(h){return h&&h.name===name;})||null;},null);} 
+  function heroById(id){return safe(function(){return (S.heroes||[]).find(function(h){return h&&h.id===id;})||null;},null);} 
+  function currentHero(){ var ov=q('#of27613HeroOverlay'); var id=ov&&ov.getAttribute('data-hero-id'); if(id) return heroById(id); var name=q('#of27613HeroOverlay .of27613Top b'); return name?heroByName(name.textContent):null; }
+  function unlockAll(){
+    try{document.body.classList.remove('of27612HeroSheetOpen');}catch(e){}
+    ['scrim','setScrim'].forEach(function(id){
+      var el=q('#'+id); if(!el) return;
+      // If legacy modal is not explicitly allowed and visible, make it inert.
+      if(!el.classList.contains('of27614AllowLegacy')){
+        el.classList.remove('show','open','active');
+        el.style.pointerEvents='none';
+        el.style.display='none';
+        setTimeout(function(){ if(!el.classList.contains('show')){ el.style.pointerEvents=''; el.style.display=''; } },160);
+      }
+    });
+  }
+  function ensureAdvancedStyles(){
+    if(q('#of27614Styles')) return;
+    var st=document.createElement('style'); st.id='of27614Styles';
+    st.textContent=[
+      '#of27613HeroOverlay{z-index:2147483642!important;}',
+      '#of27613HeroOverlay[data-hero-id]{pointer-events:auto!important;}',
+      '.of27614Advanced{border:1px solid rgba(139,208,255,.24)!important;border-radius:17px!important;background:linear-gradient(180deg,rgba(139,208,255,.08),rgba(255,255,255,.035))!important;padding:12px!important;margin:10px 0 4px!important;}',
+      '.of27614Advanced h4{margin:0 0 8px!important;font-family:Orbitron,system-ui!important;color:#ffd95a!important;font-size:13px!important;}',
+      '.of27614Grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;}',
+      '.of27614Cell{background:#07101d!important;border:1px solid rgba(139,208,255,.2)!important;border-radius:13px!important;padding:9px!important;min-width:0!important;}',
+      '.of27614Cell b{display:block!important;color:#8bd0ff!important;font-family:Orbitron,system-ui!important;font-size:13px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}',
+      '.of27614Cell span{display:block!important;margin-top:3px!important;color:var(--muted,#9aa7c7)!important;text-transform:uppercase!important;letter-spacing:.7px!important;font-size:8px!important;font-family:Orbitron,system-ui!important;font-weight:900!important;}',
+      '.of27614Note{margin-top:9px!important;color:#aab7d4!important;font-weight:800!important;font-size:11px!important;line-height:1.35!important;}'
+    ].join('\n'); document.head.appendChild(st);
+  }
+  function openSafeAdvanced(){
+    ensureAdvancedStyles();
+    var h=currentHero(); if(!h){ unlockAll(); toast('Advanced details unavailable'); return false; }
+    var cont=q('#of27613HeroOverlay .of27613Content'); if(!cont){ unlockAll(); return false; }
+    var existing=q('#of27614Advanced',cont); if(existing){ existing.scrollIntoView({block:'nearest',behavior:'smooth'}); return true; }
+    var power=safe(function(){return powerOf(h);},h.power||0), hp=safe(function(){return hpOf(h);},h.hp||0), atk=safe(function(){return atkOf(h);},h.atk||0), gear=safe(function(){return gearScore(h);},h.gear||0);
+    var rank=safe(function(){return RANKS&&RANKS[rankIdx(h)]?RANKS[rankIdx(h)].name:'Rank';},'Rank');
+    var cap=safe(function(){return rankCap(h);},h.level||1);
+    var passive=safe(function(){return passiveOf(h);},null);
+    var adv=document.createElement('div'); adv.id='of27614Advanced'; adv.className='of27614Advanced';
+    adv.innerHTML='<h4>Advanced Sheet</h4><div class="of27614Grid">'+
+      '<div class="of27614Cell"><b>'+E(power)+'</b><span>Power</span></div>'+
+      '<div class="of27614Cell"><b>'+E(rank)+'</b><span>Rank</span></div>'+
+      '<div class="of27614Cell"><b>'+E((h.level||1)+' / '+cap)+'</b><span>Level</span></div>'+
+      '<div class="of27614Cell"><b>'+E(hp)+'</b><span>HP</span></div>'+
+      '<div class="of27614Cell"><b>'+E(atk)+'</b><span>Attack</span></div>'+
+      '<div class="of27614Cell"><b>'+E(gear)+'</b><span>Gear</span></div>'+
+      '<div class="of27614Cell"><b>'+E(h.ip||'—')+'</b><span>World</span></div>'+
+      '<div class="of27614Cell"><b>'+E(h.role||'Hero')+'</b><span>Role</span></div>'+
+      '</div><div class="of27614Note">'+(passive?('<b>'+E(passive.name)+'</b>: '+E(passive.desc||'')):'This safe advanced panel replaces the old legacy sheet so it cannot trap taps behind an invisible overlay.')+'</div>';
+    cont.appendChild(adv);
+    adv.scrollIntoView({block:'nearest',behavior:'smooth'});
+    unlockAll();
+    return true;
+  }
+  function markHeroId(){
+    var ov=q('#of27613HeroOverlay'); if(!ov) return;
+    if(!ov.classList.contains('show')){ ov.removeAttribute('data-hero-id'); return; }
+    var h=currentHero(); if(h&&h.id) ov.setAttribute('data-hero-id',h.id);
+  }
+  function clickRoute(e){
+    var btn=e.target&&e.target.closest&&e.target.closest('[data-of27613-act="legacy"]');
+    if(!btn) return;
+    e.preventDefault(); e.stopPropagation();
+    openSafeAdvanced();
+  }
+  function patchLegacyActByCapture(){
+    document.removeEventListener('click',clickRoute,true);
+    document.addEventListener('click',clickRoute,true);
+    document.removeEventListener('touchend',touchRoute,true);
+    document.addEventListener('touchend',touchRoute,true);
+  }
+  function touchRoute(e){
+    var btn=e.target&&e.target.closest&&e.target.closest('[data-of27613-act="legacy"]');
+    if(!btn) return;
+    e.preventDefault(); e.stopPropagation();
+    openSafeAdvanced();
+  }
+  function watchdog(){
+    markHeroId();
+    var ov=q('#of27613HeroOverlay');
+    var ourOpen=!!(ov&&ov.classList.contains('show'));
+    var bad=qa('#scrim.show,#setScrim.show').filter(function(el){return !el.classList.contains('of27614AllowLegacy');});
+    if(bad.length && !ourOpen) unlockAll();
+    if(bad.length && ourOpen){ bad.forEach(function(el){el.classList.remove('show','open','active'); el.style.pointerEvents='none';}); }
+  }
+  function boot(){ ensureAdvancedStyles(); patchLegacyActByCapture(); unlockAll(); markHeroId(); setInterval(watchdog,500); window.of27614OpenSafeAdvanced=openSafeAdvanced; window.of27614Unlock=unlockAll; window.of27614Health=function(){return {build:BUILD,save:(typeof SAVE_VERSION!=='undefined'?SAVE_VERSION:'missing'),scripts:document.scripts.length,styles:qa('style').length,heroOverlay:!!q('#of27613HeroOverlay'),heroOpen:!!q('#of27613HeroOverlay.show'),advancedOpen:!!q('#of27614Advanced'),legacyScrimsOpen:qa('#scrim.show,#setScrim.show').length,openHeroHook:!!(window.openHeroSheet&&window.openHeroSheet.__of27613)};}; }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
