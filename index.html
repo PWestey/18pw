@@ -2399,7 +2399,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.76.18-battle-scroll-unlock-hotfix';
+const APP_BUILD='v2.76.19-white-screen-recovery-live-stats';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -15353,22 +15353,22 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
 <script id="battleGridHeroToolsV27616Script">
 /* Oathforge v2.76.16 — hard override for clean battle grid + fully restored hero tools modal */
 (function(){
-  const BUILD='v2.76.16-battle-grid-hero-tools-hard-fix';
+  const BUILD='v2.76.19-white-screen-recovery-live-stats';
   const q=(s,r=document)=>r.querySelector(s), qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const E=(x)=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const safe=(fn,f)=>{try{return fn();}catch(e){return f;}};
   const owned=()=>safe(()=>S.heroes||[],[]);
   const heroById=(id)=>owned().find(h=>h&&h.id===id)||null;
   const hval=(h,fn,f)=>safe(()=>fn(h),f);
-  const pwr=(h)=>hval(h,hh=>hpow(hh),h&&h.power||0);
-  const hp=(h)=>hval(h,hh=>hhp(hh),h&&h.hp||0);
-  const atk=(h)=>hval(h,hh=>hatk(hh),h&&h.atk||0);
-  const gearScore2=(h)=>hval(h,hh=>hgear(hh),h&&h.gearScore||0);
-  const bond=(h)=>hval(h,hh=>hbond(hh),h&&h.bond||0);
-  const rank=(h)=>hval(h,hh=>rankName(hh.rank),h&&h.rank||'Hero');
-  const cap=(h)=>hval(h,hh=>rankCap(hh),h&&h.level||1);
-  const arch=(h)=>hval(h,hh=>harch(hh),null);
-  const passive=(h)=>hval(h,hh=>hpassive(hh),null);
+  const pwr=(h)=>safe(()=>powerOf(h), h&&h.power||0);
+  const hp=(h)=>safe(()=>hpOf(h), h&&h.hp||0);
+  const atk=(h)=>safe(()=>atkOf(h), h&&h.atk||0);
+  const gearScore2=(h)=>safe(()=>gearScore(h), h&&h.gearScore||0);
+  const bond=(h)=>safe(()=>bondHero(h).lv, (h&&h.bond)||((h&&h.bondXp)?Math.floor((h.bondXp||0)/100):0));
+  const rank=(h)=>safe(()=>rankName(h), (h&&h.rankName)||(h&&h.rank)||'Hero');
+  const cap=(h)=>safe(()=>rankCap(h), h&&h.level||1);
+  const arch=(h)=>safe(()=>heroArchetype(h), null);
+  const passive=(h)=>safe(()=>heroPassive(h), null);
   const imgHTML=(h)=>{try{return heroImg(h)}catch(e){return h&&h.img?'<img src="'+E(h.img)+'" alt="">':E((h&&h.name||'?').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase());}};
   const toast2=(t)=>{try{toast(t)}catch(e){let d=document.createElement('div');d.className='of27616Toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1700)}};
   const save2=()=>{try{saveAll()}catch(e){try{save()}catch(_){}}};
@@ -15450,83 +15450,42 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
 
 
 
-<!-- ===== v2.76.18 Battle Scroll Unlock Hotfix ===== -->
-<script id="battleScrollUnlockV27618Script">
+<script id="whiteScreenRecoveryLiveStatsV27619Script">
 (function(){
-  const BUILD='v2.76.18-battle-scroll-unlock-hotfix';
+  const BUILD='v2.76.19-white-screen-recovery-live-stats';
   function q(s,r=document){return r.querySelector(s)}
   function qa(s,r=document){return Array.from(r.querySelectorAll(s))}
-  function inject(){
-    if(q('#battleScrollUnlockV27618Styles')) return;
-    const st=document.createElement('style');
-    st.id='battleScrollUnlockV27618Styles';
-    st.textContent=[
-      'html.of27618ScrollOK,html.of27618ScrollOK body{height:auto!important;min-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;}',
-      'body.of27618BattleScroll:not(.of27616HeroOpen):not(.of27615HeroOpen):not(.of27613HeroOpen){overflow-y:auto!important;overflow-x:hidden!important;position:static!important;touch-action:pan-y!important;}',
-      'body.of27618BattleScroll #arena.show{position:fixed!important;inset:0!important;height:100dvh!important;max-height:100dvh!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;overscroll-behavior-y:contain!important;padding-bottom:calc(34px + env(safe-area-inset-bottom))!important;}',
-      'body.of27618BattleScroll #arena.show #playerSide,body.of27618BattleScroll #arena.show #enemySide{flex-shrink:0!important;}',
-      'body.of27618BattleScroll #arena.show .battle-logline{position:sticky!important;bottom:6px!important;z-index:8!important;}',
-      'body.of27618BattleScroll #arena.show .result{max-height:calc(92dvh - env(safe-area-inset-top))!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;}',
-      'body.of27618BattleScroll #of27616HeroOverlay.show{touch-action:auto!important;}',
-      'body.of27618BattleScroll #of27616HeroOverlay.show .of27616Drawer{touch-action:pan-y!important;}'
-    ].join('\n');
-    document.head.appendChild(st);
-  }
-  function realHeroModalOpen(){
-    return !!q('#of27616HeroOverlay.show,#of27615HeroOverlay.show,#of27613HeroOverlay.show');
-  }
-  function legacyModalOpen(){
-    return qa('#scrim.show,#setScrim.show,.scrim.show,.modal.show').some(el=>{
-      if(!el) return false;
-      const cs=getComputedStyle(el);
-      if(cs.display==='none'||cs.visibility==='hidden'||cs.opacity==='0'||cs.pointerEvents==='none') return false;
-      return true;
-    });
-  }
-  function unlockIfSafe(){
-    inject();
-    const arena=!!q('#arena.show');
-    if(arena) document.body.classList.add('of27618BattleScroll'); else document.body.classList.remove('of27618BattleScroll');
-    document.documentElement.classList.add('of27618ScrollOK');
-    if(!realHeroModalOpen() && !legacyModalOpen()){
+  function safe(fn,f){try{return fn()}catch(e){return f}}
+  function restoreScroll(){
+    const heroOpen=!!q('#of27616HeroOverlay.show,#of27615HeroOverlay.show,#of27613HeroOverlay.show');
+    document.documentElement.style.background='#07101d';
+    document.body.style.background='#07101d';
+    if(!heroOpen){
       document.body.classList.remove('of27616HeroOpen','of27615HeroOpen','of27613HeroOpen');
-      document.documentElement.style.overflow='';
-      document.documentElement.style.position='';
-      document.documentElement.style.touchAction='';
-      document.body.style.overflow='';
+      document.documentElement.style.overflowY='auto';
+      document.body.style.overflowY='auto';
       document.body.style.position='';
-      document.body.style.touchAction='';
+      document.body.style.touchAction='pan-y';
     }
+    const arena=q('#arena.show');
     if(arena){
-      const a=q('#arena');
-      if(a){ a.style.overflowY='auto'; a.style.webkitOverflowScrolling='touch'; a.style.touchAction='pan-y'; }
+      arena.style.overflowY='auto';
+      arena.style.webkitOverflowScrolling='touch';
+      arena.style.touchAction='pan-y';
+      arena.style.maxHeight='none';
     }
   }
   function boot(){
-    inject();
-    unlockIfSafe();
-    new MutationObserver(unlockIfSafe).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','style']});
-    document.addEventListener('touchstart',unlockIfSafe,{capture:true,passive:true});
-    document.addEventListener('click',()=>setTimeout(unlockIfSafe,0),true);
-    setInterval(unlockIfSafe,650);
-    window.of27618Health=function(){
-      const a=q('#arena');
-      return {
-        build:BUILD,
-        save:(typeof SAVE_VERSION!=='undefined'?SAVE_VERSION:'missing'),
-        scripts:document.scripts.length,
-        styles:qa('style').length,
-        arenaOpen:!!q('#arena.show'),
-        arenaOverflow:a?getComputedStyle(a).overflowY:'missing',
-        bodyOverflow:getComputedStyle(document.body).overflowY,
-        heroOpen:realHeroModalOpen(),
-        bodyLocks:['of27616HeroOpen','of27615HeroOpen','of27613HeroOpen'].filter(c=>document.body.classList.contains(c))
-      };
+    try{ if(typeof APP_BUILD!=='undefined') window.APP_BUILD=BUILD; }catch(e){}
+    restoreScroll();
+    document.addEventListener('click',function(){setTimeout(restoreScroll,60)},true);
+    document.addEventListener('touchend',function(){setTimeout(restoreScroll,60)},{capture:true,passive:true});
+    window.of27619Health=function(){
+      return {build:BUILD, save:(typeof SAVE_VERSION!=='undefined'?SAVE_VERSION:'missing'), scripts:document.scripts.length, styles:qa('style').length, bodyOverflow:getComputedStyle(document.body).overflowY, arenaOpen:!!q('#arena.show'), heroOpen:!!q('#of27616HeroOverlay.show'), heroHook:!!(window.openHeroSheet&&window.openHeroSheet.__of27616)};
     };
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
-
 </body>
 </html>
