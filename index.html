@@ -2399,7 +2399,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.76.16-battle-grid-hero-tools-hard-fix';
+const APP_BUILD='v2.76.18-battle-scroll-unlock-hotfix';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -15444,6 +15444,86 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
   function idFrom(el){if(!el)return null; return el.getAttribute('data-id')||el.getAttribute('data-hero-id')||el.getAttribute('data-open-hero')||el.getAttribute('data-prestigehero')||el.getAttribute('data-hce-open')||el.getAttribute('data-heroid');}
   function installCapture(){ if(document.__of27616Capture)return; document.__of27616Capture=true; document.addEventListener('click',function(ev){let t=ev.target; if(!t||q('#of27616HeroOverlay.show')?.contains(t))return; let el=t.closest&&t.closest('.hero[data-id],.heroCard[data-id],.lqHeroCard[data-id],.compactHero[data-id],.v161RosterHero[data-id],[data-open-hero],[data-hero-id],[data-prestigehero],[data-hce-open]'); let id=idFrom(el); if(id&&heroById(id)){ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation(); openHero(id);}},true); }
   function boot(){inject(); window.openHeroSheet=function(id){return openHero(id)}; window.openHeroSheet.__of27616=true; installCapture(); setInterval(()=>{if(!q('#of27616HeroOverlay.show')) document.body.classList.remove('of27616HeroOpen');},900); window.of27616Health=function(){return {build:BUILD,save:(typeof SAVE_VERSION!=='undefined'?SAVE_VERSION:'missing'),scripts:document.scripts.length,styles:qa('style').length,heroOverlay:!!q('#of27616HeroOverlay'),heroOpen:!!q('#of27616HeroOverlay.show'),openHeroHook:!!(window.openHeroSheet&&window.openHeroSheet.__of27616),battlePlayers:qa('#playerSide .unit').length,battleEnemies:qa('#enemySide .unit').length};}; }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
+
+
+<!-- ===== v2.76.18 Battle Scroll Unlock Hotfix ===== -->
+<script id="battleScrollUnlockV27618Script">
+(function(){
+  const BUILD='v2.76.18-battle-scroll-unlock-hotfix';
+  function q(s,r=document){return r.querySelector(s)}
+  function qa(s,r=document){return Array.from(r.querySelectorAll(s))}
+  function inject(){
+    if(q('#battleScrollUnlockV27618Styles')) return;
+    const st=document.createElement('style');
+    st.id='battleScrollUnlockV27618Styles';
+    st.textContent=[
+      'html.of27618ScrollOK,html.of27618ScrollOK body{height:auto!important;min-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;}',
+      'body.of27618BattleScroll:not(.of27616HeroOpen):not(.of27615HeroOpen):not(.of27613HeroOpen){overflow-y:auto!important;overflow-x:hidden!important;position:static!important;touch-action:pan-y!important;}',
+      'body.of27618BattleScroll #arena.show{position:fixed!important;inset:0!important;height:100dvh!important;max-height:100dvh!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;overscroll-behavior-y:contain!important;padding-bottom:calc(34px + env(safe-area-inset-bottom))!important;}',
+      'body.of27618BattleScroll #arena.show #playerSide,body.of27618BattleScroll #arena.show #enemySide{flex-shrink:0!important;}',
+      'body.of27618BattleScroll #arena.show .battle-logline{position:sticky!important;bottom:6px!important;z-index:8!important;}',
+      'body.of27618BattleScroll #arena.show .result{max-height:calc(92dvh - env(safe-area-inset-top))!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;}',
+      'body.of27618BattleScroll #of27616HeroOverlay.show{touch-action:auto!important;}',
+      'body.of27618BattleScroll #of27616HeroOverlay.show .of27616Drawer{touch-action:pan-y!important;}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+  function realHeroModalOpen(){
+    return !!q('#of27616HeroOverlay.show,#of27615HeroOverlay.show,#of27613HeroOverlay.show');
+  }
+  function legacyModalOpen(){
+    return qa('#scrim.show,#setScrim.show,.scrim.show,.modal.show').some(el=>{
+      if(!el) return false;
+      const cs=getComputedStyle(el);
+      if(cs.display==='none'||cs.visibility==='hidden'||cs.opacity==='0'||cs.pointerEvents==='none') return false;
+      return true;
+    });
+  }
+  function unlockIfSafe(){
+    inject();
+    const arena=!!q('#arena.show');
+    if(arena) document.body.classList.add('of27618BattleScroll'); else document.body.classList.remove('of27618BattleScroll');
+    document.documentElement.classList.add('of27618ScrollOK');
+    if(!realHeroModalOpen() && !legacyModalOpen()){
+      document.body.classList.remove('of27616HeroOpen','of27615HeroOpen','of27613HeroOpen');
+      document.documentElement.style.overflow='';
+      document.documentElement.style.position='';
+      document.documentElement.style.touchAction='';
+      document.body.style.overflow='';
+      document.body.style.position='';
+      document.body.style.touchAction='';
+    }
+    if(arena){
+      const a=q('#arena');
+      if(a){ a.style.overflowY='auto'; a.style.webkitOverflowScrolling='touch'; a.style.touchAction='pan-y'; }
+    }
+  }
+  function boot(){
+    inject();
+    unlockIfSafe();
+    new MutationObserver(unlockIfSafe).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','style']});
+    document.addEventListener('touchstart',unlockIfSafe,{capture:true,passive:true});
+    document.addEventListener('click',()=>setTimeout(unlockIfSafe,0),true);
+    setInterval(unlockIfSafe,650);
+    window.of27618Health=function(){
+      const a=q('#arena');
+      return {
+        build:BUILD,
+        save:(typeof SAVE_VERSION!=='undefined'?SAVE_VERSION:'missing'),
+        scripts:document.scripts.length,
+        styles:qa('style').length,
+        arenaOpen:!!q('#arena.show'),
+        arenaOverflow:a?getComputedStyle(a).overflowY:'missing',
+        bodyOverflow:getComputedStyle(document.body).overflowY,
+        heroOpen:realHeroModalOpen(),
+        bodyLocks:['of27616HeroOpen','of27615HeroOpen','of27613HeroOpen'].filter(c=>document.body.classList.contains(c))
+      };
+    };
+  }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
