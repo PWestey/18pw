@@ -214,7 +214,7 @@ body:has(#arena.show) .wrap,body:has(#arena.show) .nav{visibility:hidden!importa
 .nav button.on{color:var(--accent)}
 
 /* sheets */
-.scrim{position:fixed;inset:0;background:#050811cc;backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:80}
+.scrim{position:fixed;inset:0;background:#050811cc;backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:1100}
 .scrim.show{display:flex;animation:fade .2s}
 .sheet{background:var(--panel);border:1px solid var(--line);border-bottom:none;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));animation:up .28s cubic-bezier(.2,.8,.2,1);max-height:88vh;overflow:auto}
 .sheet h3{font-size:18px;margin-bottom:14px}
@@ -2399,7 +2399,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.76.5-display-pass6-shellgate';
+const APP_BUILD='v2.76.9-battle-hero-modal-hotfix';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -6239,7 +6239,7 @@ function injectV139Styles(){
     .formationGuide{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 10px}.formationGuide .guide{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px}.formationGuide .guide b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--gold);margin-bottom:4px;font-family:Orbitron}.formationGuide .guide span{display:block;color:var(--muted);font-size:11px;font-weight:700;line-height:1.35}
     .pickSlot .slotname{display:block;font-size:14px!important;white-space:normal!important;line-height:1.15}.pickSlot .slotsub{display:block;margin-top:2px;line-height:1.25}.pickSlot .slotnote{display:block;margin-top:4px;font-size:11px;font-weight:800;line-height:1.25}.pickHero .psub{line-height:1.25}.pickHero .pnote{display:block;margin-top:4px;font-size:11px;font-weight:800;line-height:1.25}.pickHero .status{min-width:28px;text-align:center}.themeframe{border-color:color-mix(in srgb,var(--accent) 22%,var(--line))!important;box-shadow:0 0 0 1px color-mix(in srgb,var(--accent2) 10%,transparent),0 18px 44px rgba(0,0,0,.28)!important}
     .arena .result{max-height:min(76vh,680px)!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:18px!important}.arena .result .btnset,.arena .result .resultActions{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--modalbg) 96%,#050811) 22%);padding-top:8px}
-    .cards .card,.heroCard{overflow:hidden}.heroCard .badges,.card .badges{min-height:18px}.card .small,.heroCard .small{line-height:1.25}.card .actionrow,.heroCard .actionrow{position:relative;z-index:2}
+    .cards .card,.heroCard{overflow:hidden}.lqHeroCard,.lqHeroCard *,.hero.lqHeroCard{cursor:pointer}.heroCard .badges,.card .badges{min-height:18px}.card .small,.heroCard .small{line-height:1.25}.card .actionrow,.heroCard .actionrow{position:relative;z-index:2}
     @media (max-width:480px){.formationLegend,.formationGuide{grid-template-columns:1fr}.pickSlot{grid-template-columns:40px 1fr auto!important}.wallet{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
   `;
   document.head.appendChild(st);
@@ -6952,7 +6952,7 @@ function injectV1441StabilityStyles(){
     button,.go,.ghost,.nav button,.segs button,.chip,.clearMini{min-height:var(--tap)}
     .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
     .sheet{max-height:86dvh;overflow:auto;overscroll-behavior:contain;padding-bottom:calc(24px + env(safe-area-inset-bottom))!important}
-    .scrim{align-items:flex-end}.scrim.show{display:flex}
+    .scrim{align-items:flex-end}.scrim.show{display:flex;z-index:1100}
     .arena .result{max-height:82dvh;overflow:auto;width:min(92vw,520px)}
     .heroDetailV141,.growthHubV144,.battleHubV143,.rosterCompactGridV142,.lifesys-grid,.battleModeGrid,.growthModeGrid{max-width:100%;min-width:0}
     .heroStageV141{max-width:100%;margin-left:auto;margin-right:auto}
@@ -14008,7 +14008,8 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
     ['Duplicate id guard still active',safe(function(){return !window.OATHFORGE_V2715||!window.OATHFORGE_V2715.health().duplicateIds.length;},true),'delegated to hard cleanup']
   ]; return '<section class="hiHealth2720"><h4>v2.72.0 Hero Identity Health Check</h4>'+checks.map(function(c){return '<div class="'+(c[1]?'ok':'bad')+'">'+(c[1]?'✅':'❌')+' <b>'+esc(c[0])+':</b> '+esc(c[2])+'</div>';}).join('')+'</section>'; }
   function injectStyles(){ if(document.getElementById('hi2720Styles')) return; var st=document.createElement('style'); st.id='hi2720Styles'; st.textContent=`
-    .hi2720{position:relative;overflow:hidden;margin:10px 0 14px;border:1px solid rgba(167,139,250,.28);border-radius:22px;padding:13px;background:radial-gradient(600px 240px at 8% -12%,rgba(167,139,250,.16),transparent 60%),radial-gradient(520px 220px at 100% 0%,rgba(54,224,230,.10),transparent 62%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(3,7,18,.22));box-shadow:0 20px 48px rgba(0,0,0,.28)}.hiHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.hiKicker{font-family:Orbitron;font-size:9px;font-weight:1000;letter-spacing:.9px;text-transform:uppercase;color:#c4b5fd}.hiHeader h3{margin:3px 0 3px;font-family:Orbitron;font-size:17px}.hiHeader p{margin:0;color:var(--muted);font-size:11px;font-weight:850}.hiSigil{min-width:46px;height:46px;border-radius:16px;border:1px solid rgba(196,181,253,.34);display:grid;place-items:center;font-family:Orbitron;font-weight:1000;color:#ddd6fe;background:rgba(167,139,250,.12);box-shadow:0 0 28px rgba(167,139,250,.12)}.hiQuoteGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:11px}.hiQuoteGrid div{border:1px solid rgba(255,255,255,.10);border-radius:15px;padding:9px;background:rgba(255,255,255,.045)}.hiQuoteGrid b{display:block;font-size:10px;color:#fff}.hiQuoteGrid span{display:block;margin-top:5px;font-size:10px;color:#dbeafe;font-weight:850;line-height:1.35}.hiRoster{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.hiCard{position:relative;border:1px solid rgba(255,255,255,.11);border-radius:17px;padding:9px;background:rgba(255,255,255,.045);min-width:0}.hiRank{font-size:8px;font-family:Orbitron;color:#fde68a;font-weight:1000;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}.hiFace{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(135deg,#263759,#101827);border:1px solid rgba(255,255,255,.15);margin-bottom:7px}.hiFace img{width:100%;height:100%;object-fit:cover}.hiFace b{font-family:Orbitron;font-size:11px;color:#fff}.hiCard>b{display:block;font-size:11px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hiCard span{display:block;margin-top:3px;font-size:9px;color:#c4b5fd;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hiCard small{display:block;margin-top:6px;font-size:9px;color:var(--muted);font-weight:850;line-height:1.25}.hiEmpty{grid-column:1/-1;color:var(--muted);font-size:11px;font-weight:850;border:1px dashed rgba(255,255,255,.18);border-radius:15px;padding:12px}.hiHealth2720{margin:12px 0;border:1px solid rgba(52,211,153,.26);border-radius:16px;padding:10px;background:linear-gradient(180deg,rgba(52,211,153,.08),rgba(0,0,0,.14))}.hiHealth2720 h4{margin:0 0 8px;font-family:Orbitron;font-size:11px;color:#86efac}.hiHealth2720 div{font-size:10px;color:var(--muted);font-weight:850;margin:3px 0}.hiHealth2720 div.bad{color:#fecaca}.hiHealth2720 b{color:#fff}.battleTheater:before,.arena:before{content:attr(data-hi-callout);position:absolute;left:12px;right:12px;top:8px;z-index:4;text-align:center;font-family:Orbitron;font-size:10px;font-weight:1000;color:#e0e7ff;text-shadow:0 2px 12px rgba(0,0,0,.8);pointer-events:none}.battleTheater,.arena{position:relative}@media(max-width:560px){.hiQuoteGrid{grid-template-columns:1fr}.hiRoster{grid-template-columns:repeat(2,minmax(0,1fr))}.hiHeader h3{font-size:15px}.hiSigil{min-width:40px;height:40px;border-radius:14px}}
+    .hi2720{position:relative;overflow:hidden;margin:10px 0 14px;border:1px solid rgba(167,139,250,.28);border-radius:22px;padding:13px;background:radial-gradient(600px 240px at 8% -12%,rgba(167,139,250,.16),transparent 60%),radial-gradient(520px 220px at 100% 0%,rgba(54,224,230,.10),transparent 62%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(3,7,18,.22));box-shadow:0 20px 48px rgba(0,0,0,.28)}.hiHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.hiKicker{font-family:Orbitron;font-size:9px;font-weight:1000;letter-spacing:.9px;text-transform:uppercase;color:#c4b5fd}.hiHeader h3{margin:3px 0 3px;font-family:Orbitron;font-size:17px}.hiHeader p{margin:0;color:var(--muted);font-size:11px;font-weight:850}.hiSigil{min-width:46px;height:46px;border-radius:16px;border:1px solid rgba(196,181,253,.34);display:grid;place-items:center;font-family:Orbitron;font-weight:1000;color:#ddd6fe;background:rgba(167,139,250,.12);box-shadow:0 0 28px rgba(167,139,250,.12)}.hiQuoteGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:11px}.hiQuoteGrid div{border:1px solid rgba(255,255,255,.10);border-radius:15px;padding:9px;background:rgba(255,255,255,.045)}.hiQuoteGrid b{display:block;font-size:10px;color:#fff}.hiQuoteGrid span{display:block;margin-top:5px;font-size:10px;color:#dbeafe;font-weight:850;line-height:1.35}.hiRoster{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.hiCard{position:relative;border:1px solid rgba(255,255,255,.11);border-radius:17px;padding:9px;background:rgba(255,255,255,.045);min-width:0}.hiRank{font-size:8px;font-family:Orbitron;color:#fde68a;font-weight:1000;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}.hiFace{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(135deg,#263759,#101827);border:1px solid rgba(255,255,255,.15);margin-bottom:7px}.hiFace img{width:100%;height:100%;object-fit:cover}.hiFace b{font-family:Orbitron;font-size:11px;color:#fff}.hiCard>b{display:block;font-size:11px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hiCard span{display:block;margin-top:3px;font-size:9px;color:#c4b5fd;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hiCard small{display:block;margin-top:6px;font-size:9px;color:var(--muted);font-weight:850;line-height:1.25}.hiEmpty{grid-column:1/-1;color:var(--muted);font-size:11px;font-weight:850;border:1px dashed rgba(255,255,255,.18);border-radius:15px;padding:12px}.hiHealth2720{margin:12px 0;border:1px solid rgba(52,211,153,.26);border-radius:16px;padding:10px;background:linear-gradient(180deg,rgba(52,211,153,.08),rgba(0,0,0,.14))}.hiHealth2720 h4{margin:0 0 8px;font-family:Orbitron;font-size:11px;color:#86efac}.hiHealth2720 div{font-size:10px;color:var(--muted);font-weight:850;margin:3px 0}.hiHealth2720 div.bad{color:#fecaca}.hiHealth2720 b{color:#fff}.battleTheater:before,.arena:before{content:attr(data-hi-callout);position:absolute;left:12px;right:12px;top:8px;z-index:4;text-align:center;font-family:Orbitron;font-size:10px;font-weight:1000;color:#e0e7ff;text-shadow:0 2px 12px rgba(0,0,0,.8);pointer-events:none}.battleTheater,.arena{position:relative}
+.arena.show{position:fixed!important;inset:0!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch}@media(max-width:560px){.hiQuoteGrid{grid-template-columns:1fr}.hiRoster{grid-template-columns:repeat(2,minmax(0,1fr))}.hiHeader h3{font-size:15px}.hiSigil{min-width:40px;height:40px;border-radius:14px}}
   `; document.head.appendChild(st); }
   function patchHome(){ if(typeof renderHome==='function'&&!renderHome.__hi2720){ var prev=renderHome; renderHome=function(){ injectStyles(); var html=stripOwn(String(prev.apply(this,arguments)||'')); return html.replace(/(<section class="hc2715Shell"[\s\S]*?<\/section>)/,function(m){ return m+panel(); })+health(); }; renderHome.__hi2720=true; } }
   function annotateBattle(){ safe(function(){ var h=fellowshipState().primary; var txt=line(h,'battle'); Array.prototype.forEach.call(document.querySelectorAll('.battleTheater,.arena'),function(el){ if(!el.getAttribute('data-hi-callout')) el.setAttribute('data-hi-callout',txt); }); },null); }
@@ -14255,6 +14256,220 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
   if(oldRender && !oldRender.__of2750Wrapped){ const wrapped=function(){ const res=oldRender.apply(this,arguments); safe(function(){ if(typeof res==='string') res=stripLegacyHome(res); },null); setTimeout(cleanupDom,0); setTimeout(cleanupDom,90); return res; }; wrapped.__of2750Wrapped=true; render=wrapped; }
   window.of2750Health=health; window.of2750Report=report; window.of2750Clean=cleanupDom; window.OATHFORGE_FINAL_CLEAN_2750={build:BUILD,passes:PASS,health:health,clean:cleanupDom};
   injectStyles(); bind(); setTimeout(cleanupDom,0); setTimeout(cleanupDom,160); setTimeout(cleanupDom,650);
+})();
+</script>
+
+
+<script id="battleHeroModalHotfixV2769Script">
+/* Oathforge v2.76.9 — Battle screen + hero modal hotfix
+   Scope: no new systems. Fix mobile battle clutter/overflow and restore reliable hero sheet taps. */
+(function BattleHeroModalHotfix2769(){
+  'use strict';
+  if(window.__of2769BattleHeroModalHotfix) return;
+  window.__of2769BattleHeroModalHotfix=true;
+  var BUILD='v2.76.9-battle-hero-modal-hotfix';
+
+  function safe(fn,fb){ try{ var v=fn(); return v==null?fb:v; }catch(e){ return fb; } }
+  function q(sel,root){ return (root||document).querySelector(sel); }
+  function qa(sel,root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+
+  function injectStyles(){
+    if(document.getElementById('of2769BattleHeroModalStyles')) return;
+    var st=document.createElement('style');
+    st.id='of2769BattleHeroModalStyles';
+    st.textContent=[
+      '/* v2.76.9: calm the battle theater and make it mobile-safe */',
+      'body.of2769BattleFix #arena.arena{',
+      '  box-sizing:border-box!important;',
+      '  width:100vw!important; max-width:100vw!important;',
+      '  height:100dvh!important; max-height:100dvh!important;',
+      '  overflow:hidden!important;',
+      '  padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom))!important;',
+      '  gap:7px!important;',
+      '  display:none;',
+      '}',
+      'body.of2769BattleFix #arena.arena.show{display:grid!important;grid-template-rows:auto auto minmax(0,1fr) auto minmax(0,1fr) auto!important;}',
+      'body.of2769BattleFix #arena .battle-controls{position:relative!important;top:auto!important;left:auto!important;right:auto!important;z-index:20!important;display:flex!important;justify-content:flex-end!important;gap:7px!important;margin:0 0 4px!important;padding:0!important;transform:none!important;}',
+      'body.of2769BattleFix #arena .battle-controls button{min-height:38px!important;padding:8px 11px!important;border-radius:12px!important;font-size:11px!important;line-height:1!important;white-space:nowrap!important;}',
+      'body.of2769BattleFix #arena .vs-head{position:relative!important;z-index:5!important;margin:0!important;padding:9px 12px!important;border-radius:18px!important;border:1px solid rgba(255,255,255,.12)!important;background:rgba(7,10,18,.58)!important;text-align:left!important;font-size:12px!important;letter-spacing:.8px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}',
+      'body.of2769BattleFix #arena .arena-sub{position:relative!important;z-index:5!important;margin:0!important;text-align:center!important;font-size:10px!important;letter-spacing:.7px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;color:var(--muted)!important;}',
+      'body.of2769BattleFix #arena .vs-mid{position:relative!important;z-index:4!important;margin:0!important;font-size:19px!important;line-height:1!important;}',
+      'body.of2769BattleFix #arena .side{position:relative!important;z-index:3!important;min-height:0!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:minmax(88px,1fr)!important;align-content:center!important;justify-content:center!important;gap:8px!important;overflow:hidden!important;padding:8px!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:18px!important;background:rgba(8,12,22,.28)!important;flex:none!important;}',
+      'body.of2769BattleFix #arena .side.enemy .unit,body.of2769BattleFix #arena .unit{position:relative!important;z-index:4!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;gap:5px!important;min-width:0!important;width:auto!important;max-width:100%!important;height:auto!important;min-height:0!important;padding:5px!important;border-radius:14px!important;background:rgba(0,0,0,.18)!important;border:1px solid rgba(255,255,255,.08)!important;transform:none!important;}',
+      'body.of2769BattleFix #arena .unit.hit{transform:translateY(-2px)!important;}',
+      'body.of2769BattleFix #arena .unit .face{width:50px!important;height:50px!important;border-radius:13px!important;font-size:18px!important;box-sizing:border-box!important;flex:0 0 auto!important;}',
+      'body.of2769BattleFix #arena .unit .face img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;}',
+      'body.of2769BattleFix #arena .unit .info{width:100%!important;min-width:0!important;flex:0 1 auto!important;}',
+      'body.of2769BattleFix #arena .unit .nm{font-size:10px!important;line-height:1.05!important;white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;text-overflow:ellipsis!important;min-height:21px!important;}',
+      'body.of2769BattleFix #arena .unit .info>div:nth-child(2){display:none!important;}',
+      'body.of2769BattleFix #arena .unit .hpbar{height:6px!important;margin-top:4px!important;width:100%!important;}',
+      'body.of2769BattleFix #arena .enemyRoleChip,.ofUltMeter,.ofUnitShadow{display:none!important;}',
+      'body.of2769BattleFix #arena .battle-logline,body.of2769BattleFix #arena #battleLogline{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;z-index:8!important;margin:0!important;border-radius:14px!important;min-height:28px!important;max-height:32px!important;padding:6px 10px!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important;text-align:center!important;background:rgba(0,0,0,.48)!important;border:1px solid rgba(255,255,255,.11)!important;font-size:11px!important;line-height:16px!important;}',
+      'body.of2769BattleFix #arena .result,body.of2769BattleFix #arena #arenaResult{position:absolute!important;left:12px!important;right:12px!important;top:50%!important;width:auto!important;min-width:0!important;max-width:none!important;transform:translateY(-50%)!important;z-index:40!important;box-sizing:border-box!important;padding:16px!important;overflow:hidden!important;}',
+      'body.of2769BattleFix #arena .battle-result-head{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;}',
+      'body.of2769BattleFix #arena .mini{min-width:0!important;padding:10px 6px!important;}',
+      'body.of2769BattleFix #arena .mini b{font-size:18px!important;}',
+      'body.of2769BattleFix #arena .sumblock,body.of2769BattleFix #arena .eventlog{max-height:130px!important;overflow:auto!important;}',
+      '/* Retire decorative battle layers that were visually colliding on mobile. */',
+      'body.of2769BattleFix #arena .lwBattleFrame2705,body.of2769BattleFix #arena .lwLaneGrid2705,body.of2769BattleFix #arena .lwTheaterHud2705,body.of2769BattleFix #arena .lwBossWarn2705,body.of2769BattleFix #arena #ofBattleDirector{display:none!important;}',
+      'body.of2769BattleFix #arena:before,body.of2769BattleFix #arena:after{pointer-events:none!important;}',
+      'body.of2769BattleFix .waCallout,body.of2769BattleFix .lwCutin2705,body.of2769BattleFix .lwVictory2705{max-width:calc(100vw - 28px)!important;left:14px!important;right:14px!important;transform:none!important;box-sizing:border-box!important;z-index:45!important;}',
+      'body.of2769BattleFix .waCallout{top:calc(84px + env(safe-area-inset-top))!important;font-size:12px!important;padding:9px 12px!important;}',
+      'body.of2769BattleFix .lwCutin2705{top:calc(74px + env(safe-area-inset-top))!important;}',
+      'body.of2769BattleFix .passiveToast{max-width:calc(100vw - 32px)!important;text-align:center!important;white-space:normal!important;}',
+      'body.of2769BattleFix .dmg,body.of2769BattleFix .lwDmg2705{z-index:48!important;}',
+      '@media(max-width:430px){',
+      ' body.of2769BattleFix #arena .side{gap:6px!important;padding:7px!important;grid-auto-rows:minmax(78px,1fr)!important;}',
+      ' body.of2769BattleFix #arena .unit .face{width:43px!important;height:43px!important;font-size:16px!important;}',
+      ' body.of2769BattleFix #arena .unit .nm{font-size:9px!important;}',
+      ' body.of2769BattleFix #arena .battle-controls button{font-size:10px!important;padding:7px 9px!important;min-height:34px!important;}',
+      '}',
+      '@media(max-height:720px){',
+      ' body.of2769BattleFix #arena .side{grid-auto-rows:minmax(68px,1fr)!important;gap:5px!important;}',
+      ' body.of2769BattleFix #arena .unit .face{width:38px!important;height:38px!important;}',
+      ' body.of2769BattleFix #arena .arena-sub{display:none!important;}',
+      '}',
+      '/* Hero sheet tap/stacking repair */',
+      '.scrim.show{z-index:50000!important;pointer-events:auto!important;}',
+      '.scrim.show .sheet{pointer-events:auto!important;}',
+      '#sheet.heroTapOpening,.sheet.heroTapOpening{outline:1px solid transparent;}',
+      '.hero[data-id],.heroCard[data-id],.lqHeroCard[data-id],.compactHero[data-id],[data-open-hero],[data-hero-id],[data-heroid]{cursor:pointer!important;touch-action:manipulation!important;}',
+      '.lwImpact2705,.lwDmg2705,.waCallout,.lwCutin2705,.lwVictory2705,.passiveToast,#rewardPop,#undoBar{pointer-events:none!important;}',
+      'body.of2769BattleFix #arena.show + .scrim.show{z-index:50000!important;}'
+    ].join('\n');
+    document.head.appendChild(st);
+    document.body.classList.add('of2769BattleFix');
+  }
+
+  function cleanupBattleVisuals(){
+    var arena=q('#arena');
+    if(!arena) return;
+    if(!arena.classList.contains('show')) return;
+    // Remove old decorative children that accumulate across battle starts.
+    qa('.lwBattleFrame2705,.lwLaneGrid2705,.lwTheaterHud2705,.lwBossWarn2705,#ofBattleDirector',arena).forEach(function(el){
+      if(el && el.parentNode) el.parentNode.removeChild(el);
+    });
+    // Cap transient spectacle overlays so they do not stack into a wall of UI.
+    var transient=qa('.waCallout,.lwCutin2705,.lwVictory2705,.passiveToast,.lwImpact2705,.lwDmg2705,.dmg',document);
+    if(transient.length>14){
+      transient.slice(0,transient.length-14).forEach(function(el){ if(el&&el.parentNode) el.parentNode.removeChild(el); });
+    }
+  }
+
+  function normalizeBattleCards(){
+    var arena=q('#arena');
+    if(!arena || !arena.classList.contains('show')) return;
+    qa('#enemySide .unit,#playerSide .unit',arena).forEach(function(el){
+      el.style.removeProperty('left');
+      el.style.removeProperty('top');
+      el.style.removeProperty('right');
+      el.style.removeProperty('bottom');
+      el.style.removeProperty('position');
+      var img=q('.face img',el);
+      if(img){
+        img.loading='eager';
+        img.decoding='async';
+      }
+    });
+  }
+
+  function getHeroIdFromTarget(target){
+    var el=target && target.closest && target.closest('.hero[data-id],.heroCard[data-id],.lqHeroCard[data-id],.compactHero[data-id],[data-open-hero],[data-hero-id]');
+    if(!el) return null;
+    if(target.closest && target.closest('button,input,select,textarea,a,[data-no-hero-open]')) return null;
+    return el.dataset.id || el.dataset.openHero || el.dataset.heroId || null;
+  }
+
+  function installHeroTapRepair(){
+    if(window.__of2769HeroTapRepairInstalled) return;
+    window.__of2769HeroTapRepairInstalled=true;
+    document.addEventListener('click',function(e){
+      var id=getHeroIdFromTarget(e.target);
+      if(!id) return;
+      // Only repair hero sheets outside active battle overlay. Battle unit clicks should not open sheets.
+      if(e.target.closest && e.target.closest('#arena.show,#clashBattleOverlay')) return;
+      if(typeof openHeroSheet==='function'){
+        e.preventDefault();
+        e.stopPropagation();
+        try{
+          qa('.waCallout,.lwCutin2705,.lwVictory2705,.passiveToast').forEach(function(el){ if(el&&el.parentNode) el.parentNode.removeChild(el); });
+          openHeroSheet(id);
+          var sheet=q('#sheet');
+          if(sheet) sheet.classList.add('heroTapOpening');
+          setTimeout(function(){ if(sheet) sheet.classList.remove('heroTapOpening'); },250);
+        }catch(err){ console.warn('[v2.76.9 hero tap repair]',err); }
+      }
+    },true);
+  }
+
+  function patchBattleHooks(){
+    if(typeof startBattle==='function' && !startBattle.__of2769){
+      var oldStart=startBattle;
+      window.startBattle=startBattle=function(){
+        injectStyles();
+        var r=oldStart.apply(this,arguments);
+        setTimeout(function(){ cleanupBattleVisuals(); normalizeBattleCards(); },30);
+        setTimeout(function(){ cleanupBattleVisuals(); normalizeBattleCards(); },250);
+        setTimeout(function(){ cleanupBattleVisuals(); normalizeBattleCards(); },900);
+        return r;
+      };
+      startBattle.__of2769=true;
+    }
+    if(typeof drawUnits==='function' && !drawUnits.__of2769){
+      var oldDraw=drawUnits;
+      window.drawUnits=drawUnits=function(){
+        var r=oldDraw.apply(this,arguments);
+        setTimeout(normalizeBattleCards,0);
+        return r;
+      };
+      drawUnits.__of2769=true;
+    }
+    if(typeof render==='function' && !render.__of2769){
+      var oldRender=render;
+      window.render=render=function(){
+        injectStyles();
+        var r=oldRender.apply(this,arguments);
+        setTimeout(function(){ cleanupBattleVisuals(); normalizeBattleCards(); },60);
+        return r;
+      };
+      render.__of2769=true;
+    }
+  }
+
+  function health(){
+    var arena=q('#arena');
+    var duplicateIds=0;
+    var seen={};
+    qa('[id]').forEach(function(el){ var id=el.id; if(seen[id]) duplicateIds++; seen[id]=1; });
+    return {
+      build: BUILD,
+      appBuild: safe(function(){return APP_BUILD;},'missing'),
+      saveVersion: safe(function(){return SAVE_VERSION;},'missing'),
+      scripts: qa('script').length,
+      styles: qa('style').length,
+      battleFixClass: !!(document.body && document.body.classList.contains('of2769BattleFix')),
+      startBattleHook: !!(typeof startBattle==='function' && startBattle.__of2769),
+      drawUnitsHook: !!(typeof drawUnits==='function' && drawUnits.__of2769),
+      heroTapRepair: !!window.__of2769HeroTapRepairInstalled,
+      duplicateIds: duplicateIds,
+      visibleBattleDecorators: arena ? qa('.lwBattleFrame2705,.lwLaneGrid2705,.lwTheaterHud2705,.lwBossWarn2705,#ofBattleDirector',arena).filter(function(el){ return getComputedStyle(el).display!=='none'; }).length : 0
+    };
+  }
+
+  function boot(){
+    injectStyles();
+    installHeroTapRepair();
+    patchBattleHooks();
+    cleanupBattleVisuals();
+    normalizeBattleCards();
+    window.of2769Health=health;
+    window.OATHFORGE_V2769={build:BUILD,health:health};
+  }
+
+  boot();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else setTimeout(boot,0);
+  setInterval(function(){ cleanupBattleVisuals(); normalizeBattleCards(); },1200);
 })();
 </script>
 
