@@ -2399,7 +2399,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.76.9-battle-hero-modal-hotfix';
+const APP_BUILD='v2.76.11-hero-modal-viewport-fix';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -14470,6 +14470,308 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
   else setTimeout(boot,0);
   setInterval(function(){ cleanupBattleVisuals(); normalizeBattleCards(); },1200);
+})();
+</script>
+
+
+<script id="battleDeclutterResultFixV27610Script">
+/* Oathforge v2.76.10 — battle declutter + victory result fit
+   Scope: visual hotfix only. Calms mobile battle, hides intrusive callouts, and makes end screen fit. */
+(function BattleDeclutterResultFix27610(){
+  'use strict';
+  if(window.__of27610BattleDeclutterResultFix) return;
+  window.__of27610BattleDeclutterResultFix=true;
+  var BUILD='v2.76.11-hero-modal-viewport-fix';
+
+  function qa(sel,root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+  function q(sel,root){ return (root||document).querySelector(sel); }
+  function safe(fn,fb){ try{ var v=fn(); return v==null?fb:v; }catch(e){ return fb; } }
+
+  function injectStyles(){
+    if(document.getElementById('of27610BattleDeclutterStyles')) return;
+    var st=document.createElement('style');
+    st.id='of27610BattleDeclutterStyles';
+    st.textContent=[
+      '/* v2.76.10: one battle layer, fewer floating effects, fitted victory modal */',
+      'body.of27610BattleDeclutter #arena.arena.show{',
+      '  padding:calc(8px + env(safe-area-inset-top)) 10px calc(8px + env(safe-area-inset-bottom))!important;',
+      '  gap:6px!important;',
+      '  grid-template-rows:auto auto minmax(0,0.82fr) auto minmax(0,1fr) auto!important;',
+      '}',
+      'body.of27610BattleDeclutter #arena .battle-controls{',
+      '  justify-content:flex-end!important; gap:6px!important; margin:0!important;',
+      '}',
+      'body.of27610BattleDeclutter #arena .battle-controls button{',
+      '  min-height:32px!important; padding:6px 9px!important; border-radius:12px!important; font-size:10px!important;',
+      '}',
+      'body.of27610BattleDeclutter #arena .vs-head{',
+      '  min-height:34px!important; padding:7px 10px!important; font-size:11px!important; opacity:.92!important;',
+      '}',
+      'body.of27610BattleDeclutter #arena .vs-mid{font-size:18px!important;margin:-1px 0!important;opacity:.9!important;}',
+      'body.of27610BattleDeclutter #arena .arena-sub{font-size:9px!important;line-height:1.1!important;opacity:.68!important;}',
+      'body.of27610BattleDeclutter #arena .side{',
+      '  grid-template-columns:repeat(3,minmax(0,1fr))!important;',
+      '  grid-template-rows:repeat(2,minmax(0,1fr))!important;',
+      '  grid-auto-rows:minmax(0,1fr)!important;',
+      '  gap:5px!important; padding:7px!important; align-items:center!important;',
+      '}',
+      'body.of27610BattleDeclutter #arena .unit{',
+      '  padding:4px!important; gap:3px!important; border-radius:13px!important;',
+      '  background:rgba(0,0,0,.14)!important; box-shadow:none!important;',
+      '}',
+      'body.of27610BattleDeclutter #arena .unit .face{width:39px!important;height:39px!important;border-radius:11px!important;}',
+      'body.of27610BattleDeclutter #arena .unit .nm{font-size:8.5px!important;line-height:1.05!important;min-height:18px!important;-webkit-line-clamp:2!important;}',
+      'body.of27610BattleDeclutter #arena .unit .hpbar{height:5px!important;margin-top:2px!important;}',
+      'body.of27610BattleDeclutter #arena .unit .hpbar+*,body.of27610BattleDeclutter #arena .unit small{display:none!important;}',
+      'body.of27610BattleDeclutter #arena .battle-logline,body.of27610BattleDeclutter #arena #battleLogline{',
+      '  min-height:26px!important; max-height:28px!important; padding:5px 9px!important; font-size:10.5px!important;',
+      '}',
+      '/* Hide the hero quote bubble during combat; it was fighting the battlefield for attention. */',
+      'body.of27610BattleDeclutter #arena.show ~ .waCallout,',
+      'body.of27610BattleDeclutter #arena.show .waCallout,',
+      'body.of27610BattleDeclutter.battleActive27610 .waCallout,',
+      'body.of27610BattleDeclutter.battleActive27610 .lwCutin2705,',
+      'body.of27610BattleDeclutter.battleActive27610 .lwVictory2705{display:none!important;}',
+      '/* Reduce particle noise that reads as clutter on small screens. */',
+      'body.of27610BattleDeclutter #arena .lwImpact2705{opacity:.38!important;filter:blur(.2px)!important;transform:scale(.72)!important;}',
+      'body.of27610BattleDeclutter #arena .dmg,body.of27610BattleDeclutter #arena .lwDmg2705{font-size:11px!important;opacity:.78!important;}',
+      'body.of27610BattleDeclutter #arena .unit:nth-child(n+7){display:none!important;}',
+      '/* Victory result must never extend below the phone viewport. */',
+      'body.of27610BattleDeclutter #arena .result,body.of27610BattleDeclutter #arena #arenaResult{',
+      '  left:14px!important; right:14px!important; top:50%!important; transform:translateY(-50%)!important;',
+      '  width:auto!important; max-width:none!important; max-height:calc(100dvh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;',
+      '  overflow:auto!important; overscroll-behavior:contain!important;',
+      '  padding:15px!important; border-radius:20px!important; box-sizing:border-box!important;',
+      '}',
+      'body.of27610BattleDeclutter #arena .result h2,body.of27610BattleDeclutter #arena #arenaResult h2{font-size:28px!important;line-height:1!important;margin:0 0 8px!important;}',
+      'body.of27610BattleDeclutter #arena .result p,body.of27610BattleDeclutter #arena #arenaResult p{font-size:14px!important;line-height:1.25!important;margin:6px 0 10px!important;}',
+      'body.of27610BattleDeclutter #arena .result img,body.of27610BattleDeclutter #arena #arenaResult img,body.of27610BattleDeclutter #arena .result .face img{',
+      '  max-height:24dvh!important; max-width:70%!important; object-fit:cover!important; display:block!important; margin:8px auto!important;',
+      '}',
+      'body.of27610BattleDeclutter #arena .battle-result-head{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin:8px 0!important;}',
+      'body.of27610BattleDeclutter #arena .mini{padding:8px 4px!important;border-radius:12px!important;min-height:48px!important;}',
+      'body.of27610BattleDeclutter #arena .mini b{font-size:17px!important;line-height:1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}',
+      'body.of27610BattleDeclutter #arena .mini span{font-size:8px!important;letter-spacing:.5px!important;}',
+      'body.of27610BattleDeclutter #arena .result .actions,body.of27610BattleDeclutter #arena #arenaResult .actions,body.of27610BattleDeclutter #arena .result .battle-actions{',
+      '  display:grid!important; grid-template-columns:1fr 1fr!important; gap:8px!important; margin-top:8px!important;',
+      '}',
+      'body.of27610BattleDeclutter #arena .result button,body.of27610BattleDeclutter #arena #arenaResult button{',
+      '  min-width:0!important; width:100%!important; min-height:46px!important; padding:9px 8px!important; font-size:13px!important; border-radius:14px!important; white-space:normal!important;',
+      '}',
+      'body.of27610BattleDeclutter #arena .sumblock,body.of27610BattleDeclutter #arena .eventlog{max-height:84px!important;overflow:auto!important;font-size:11px!important;line-height:1.25!important;}',
+      '@media(max-width:390px){',
+      ' body.of27610BattleDeclutter #arena.arena.show{gap:5px!important;padding-left:8px!important;padding-right:8px!important;}',
+      ' body.of27610BattleDeclutter #arena .unit .face{width:34px!important;height:34px!important;}',
+      ' body.of27610BattleDeclutter #arena .unit .nm{font-size:8px!important;min-height:17px!important;}',
+      ' body.of27610BattleDeclutter #arena .battle-controls button{padding:5px 7px!important;min-height:30px!important;font-size:9px!important;}',
+      ' body.of27610BattleDeclutter #arena .result img,body.of27610BattleDeclutter #arena #arenaResult img{max-height:20dvh!important;}',
+      '}',
+      '@media(max-height:760px){',
+      ' body.of27610BattleDeclutter #arena .arena-sub{display:none!important;}',
+      ' body.of27610BattleDeclutter #arena .unit .face{width:34px!important;height:34px!important;}',
+      ' body.of27610BattleDeclutter #arena .result img,body.of27610BattleDeclutter #arena #arenaResult img{max-height:18dvh!important;}',
+      ' body.of27610BattleDeclutter #arena .result h2,body.of27610BattleDeclutter #arena #arenaResult h2{font-size:24px!important;}',
+      ' body.of27610BattleDeclutter #arena .sumblock,body.of27610BattleDeclutter #arena .eventlog{display:none!important;}',
+      '}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
+  function markBattleState(){
+    var arena=q('#arena');
+    var active=!!(arena && arena.classList.contains('show'));
+    document.body.classList.toggle('of27610BattleDeclutter',true);
+    document.body.classList.toggle('battleActive27610',active);
+    if(!active) return;
+    // The old theater added several floating banners/quotes. Keep them out of combat.
+    qa('.waCallout,.lwCutin2705,.lwVictory2705').forEach(function(el){
+      el.setAttribute('aria-hidden','true');
+      el.style.pointerEvents='none';
+    });
+  }
+
+  function fitResult(){
+    var arena=q('#arena'); if(!arena) return;
+    var res=q('#arenaResult',arena)||q('.result',arena); if(!res) return;
+    res.classList.add('of27610FittedResult');
+    // Move extremely long summary/detail blocks below buttons if old render order stacks badly.
+    qa('.sumblock,.eventlog',res).forEach(function(el){ el.style.maxHeight='84px'; el.style.overflow='auto'; });
+  }
+
+  function patchHooks(){
+    if(typeof startBattle==='function' && !startBattle.__of27610){
+      var oldStart=startBattle;
+      window.startBattle=startBattle=function(){
+        var r=oldStart.apply(this,arguments);
+        setTimeout(function(){ markBattleState(); fitResult(); },20);
+        setTimeout(function(){ markBattleState(); fitResult(); },220);
+        return r;
+      };
+      startBattle.__of27610=true;
+    }
+    if(typeof drawUnits==='function' && !drawUnits.__of27610){
+      var oldDraw=drawUnits;
+      window.drawUnits=drawUnits=function(){
+        var r=oldDraw.apply(this,arguments);
+        setTimeout(function(){ markBattleState(); fitResult(); },0);
+        return r;
+      };
+      drawUnits.__of27610=true;
+    }
+    if(typeof finishBattle==='function' && !finishBattle.__of27610){
+      var oldFinish=finishBattle;
+      window.finishBattle=finishBattle=function(){
+        var r=oldFinish.apply(this,arguments);
+        setTimeout(function(){ markBattleState(); fitResult(); },30);
+        setTimeout(function(){ markBattleState(); fitResult(); },260);
+        return r;
+      };
+      finishBattle.__of27610=true;
+    }
+  }
+
+  function health(){
+    var arena=q('#arena');
+    var res=arena?(q('#arenaResult',arena)||q('.result',arena)):null;
+    return {
+      build:BUILD,
+      appBuild:safe(function(){return APP_BUILD;},'missing'),
+      saveVersion:safe(function(){return SAVE_VERSION;},'missing'),
+      scripts:qa('script').length,
+      styles:qa('style').length,
+      battleClass:document.body.classList.contains('of27610BattleDeclutter'),
+      battleActive:document.body.classList.contains('battleActive27610'),
+      startBattleHook:!!(typeof startBattle==='function'&&startBattle.__of27610),
+      drawUnitsHook:!!(typeof drawUnits==='function'&&drawUnits.__of27610),
+      resultFitted:!!(res&&res.classList.contains('of27610FittedResult')),
+      visibleQuoteBubbles:qa('.waCallout').filter(function(el){ return getComputedStyle(el).display!=='none'; }).length
+    };
+  }
+
+  function boot(){
+    injectStyles();
+    document.body.classList.add('of27610BattleDeclutter');
+    patchHooks();
+    markBattleState();
+    fitResult();
+    window.of27610Health=health;
+    window.OATHFORGE_V27610={build:BUILD,health:health};
+  }
+
+  boot();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else setTimeout(boot,0);
+  setInterval(function(){ markBattleState(); fitResult(); },800);
+})();
+</script>
+
+
+<script id="heroModalViewportFixV27611Script">
+/* Oathforge v2.76.11 — hero modal viewport fix
+   Fixes a regression where older atmosphere CSS changed .scrim from fixed to relative,
+   causing hero sheets to render far below the current scroll position. */
+(function HeroModalViewportFix27611(){
+  'use strict';
+  if(window.__of27611HeroModalViewportFix) return;
+  window.__of27611HeroModalViewportFix=true;
+  var BUILD='v2.76.11-hero-modal-viewport-fix';
+  function qa(sel,root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+  function q(sel,root){ return (root||document).querySelector(sel); }
+  function safe(fn,fb){ try{ var v=fn(); return v==null?fb:v; }catch(e){ return fb; } }
+  function injectStyles(){
+    if(document.getElementById('of27611HeroModalViewportStyles')) return;
+    var st=document.createElement('style');
+    st.id='of27611HeroModalViewportStyles';
+    st.textContent=[
+      '/* v2.76.11: hero sheets must be viewport overlays, never document-flow panels. */',
+      'html:has(#scrim.show),body:has(#scrim.show){overflow:hidden!important;}',
+      '#scrim.scrim,#setScrim.scrim{position:fixed!important;inset:0!important;display:none;align-items:center!important;justify-content:center!important;z-index:2147483000!important;padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom))!important;box-sizing:border-box!important;background:rgba(5,8,17,.86)!important;backdrop-filter:blur(8px)!important;}',
+      '#scrim.scrim.show,#setScrim.scrim.show{display:flex!important;}',
+      '#scrim.scrim.show .sheet,#setScrim.scrim.show .sheet{position:relative!important;display:block!important;width:min(560px,calc(100vw - 24px))!important;max-width:min(560px,calc(100vw - 24px))!important;max-height:calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;margin:0 auto!important;border:1px solid rgba(139,208,255,.25)!important;border-radius:22px!important;overflow:auto!important;overscroll-behavior:contain!important;box-sizing:border-box!important;transform:none!important;animation:of27611SheetIn .18s cubic-bezier(.2,.9,.2,1)!important;box-shadow:0 28px 90px rgba(0,0,0,.72),0 0 42px rgba(54,224,230,.10)!important;}',
+      '#scrim.scrim.show .sheet.heroViewportSheet27611{scrollbar-gutter:stable both-edges;}',
+      '@keyframes of27611SheetIn{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}',
+      '@media(max-width:520px){#scrim.scrim,#setScrim.scrim{align-items:center!important;padding:calc(8px + env(safe-area-inset-top)) 8px calc(8px + env(safe-area-inset-bottom))!important;}#scrim.scrim.show .sheet,#setScrim.scrim.show .sheet{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;border-radius:18px!important;padding:14px!important;}}',
+      'body.of27611HeroModalOpen #arena.show{pointer-events:none!important;}',
+      'body.of27611HeroModalOpen #fxLayer,body.of27611HeroModalOpen .waCallout,body.of27611HeroModalOpen .passiveToast,body.of27611HeroModalOpen .lwCutin2705,body.of27611HeroModalOpen .lwVictory2705{display:none!important;}',
+      'body.of27611HeroModalOpen .nav{display:none!important;}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+  function normalizeHeroSheet(){
+    var scrim=q('#scrim'), sheet=q('#sheet');
+    if(!scrim||!sheet) return;
+    if(scrim.classList.contains('show')){
+      document.body.classList.add('of27611HeroModalOpen');
+      sheet.classList.add('heroViewportSheet27611');
+      try{ sheet.scrollTop=0; }catch(e){}
+    } else {
+      document.body.classList.remove('of27611HeroModalOpen');
+    }
+  }
+  function patchShowHide(){
+    if(typeof showScrim==='function' && !showScrim.__of27611){
+      var oldShow=showScrim;
+      window.showScrim=showScrim=function(id){
+        injectStyles();
+        var r=oldShow.apply(this,arguments);
+        if(id==='scrim'||id==='setScrim'){
+          setTimeout(normalizeHeroSheet,0);
+          setTimeout(normalizeHeroSheet,60);
+        }
+        return r;
+      };
+      showScrim.__of27611=true;
+    }
+    if(typeof hideScrim==='function' && !hideScrim.__of27611){
+      var oldHide=hideScrim;
+      window.hideScrim=hideScrim=function(){
+        var r=oldHide.apply(this,arguments);
+        document.body.classList.remove('of27611HeroModalOpen');
+        return r;
+      };
+      hideScrim.__of27611=true;
+    }
+    if(typeof openHeroSheet==='function' && !openHeroSheet.__of27611){
+      var oldHero=openHeroSheet;
+      window.openHeroSheet=openHeroSheet=function(){
+        injectStyles();
+        var r=oldHero.apply(this,arguments);
+        var scrim=q('#scrim');
+        if(scrim && !scrim.classList.contains('show')) scrim.classList.add('show');
+        setTimeout(normalizeHeroSheet,0);
+        setTimeout(normalizeHeroSheet,50);
+        setTimeout(normalizeHeroSheet,180);
+        return r;
+      };
+      openHeroSheet.__of27611=true;
+    }
+  }
+  function installObserver(){
+    var scrim=q('#scrim');
+    if(!scrim || scrim.__of27611Observed) return;
+    scrim.__of27611Observed=true;
+    try{ new MutationObserver(normalizeHeroSheet).observe(scrim,{attributes:true,attributeFilter:['class','style'],childList:true,subtree:true}); }catch(e){}
+  }
+  function health(){
+    var scrim=q('#scrim'), sheet=q('#sheet');
+    var cs=scrim?getComputedStyle(scrim):null;
+    return {
+      build:BUILD,
+      appBuild:safe(function(){return APP_BUILD;},'missing'),
+      saveVersion:safe(function(){return SAVE_VERSION;},'missing'),
+      scripts:qa('script').length,
+      styles:qa('style').length,
+      scrimPosition:cs?cs.position:'missing',
+      scrimZ:cs?cs.zIndex:'missing',
+      openHeroHook:!!(typeof openHeroSheet==='function'&&openHeroSheet.__of27611),
+      showScrimHook:!!(typeof showScrim==='function'&&showScrim.__of27611),
+      sheetClass:!!(sheet&&sheet.classList.contains('heroViewportSheet27611'))
+    };
+  }
+  function boot(){ injectStyles(); patchShowHide(); installObserver(); normalizeHeroSheet(); window.of27611Health=health; window.OATHFORGE_V27611={build:BUILD,health:health}; }
+  boot();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else setTimeout(boot,0);
+  setInterval(normalizeHeroSheet,900);
 })();
 </script>
 
