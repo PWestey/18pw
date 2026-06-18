@@ -2415,7 +2415,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.80.1-home-single-anchor-hard-enforce';
+const APP_BUILD='v2.80.2-home-legolas-only-hard-clean';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -17460,6 +17460,73 @@ body.of2801HomeOnly #view [data-of2790="domain-reward-tracks"]{display:none!impo
   function enforce(){if(enforcing) return; if(!isHome()) return; enforcing=true; try{var v=document.getElementById('view'); if(v && !v.querySelector('[data-of2801="single-home-anchor"]')) render(v); else if(v){ var txt=v.textContent||''; if(/Fellowship Chronicle|Living World Signals|Legendary Moments|Combat Identity|Domain Reward Tracks|Vertical Slice/i.test(txt)) render(v); }}catch(e){console.warn('[of2801 enforce]',e)} enforcing=false;}
   function patch(){var oldRender=window.render; if(typeof oldRender==='function'&&!oldRender.__of2801){window.render=function(){var r=oldRender.apply(this,arguments); setTimeout(enforce,0); return r}; window.render.__of2801=true;} var oldNav=window.navTo; if(typeof oldNav==='function'&&!oldNav.__of2801){window.navTo=function(to){var r=oldNav.apply(this,arguments); if(String(to)==='home') setTimeout(function(){render(document.getElementById('view'))},0); return r}; window.navTo.__of2801=true;} window.renderHome=function(v){render(v||document.getElementById('view'))}; window.renderHome.__of2801=true; window.of2801Health=function(){var v=document.getElementById('view'),txt=v?v.textContent:'';return {build:BUILD,home:isHome(),singleAnchors:v?v.querySelectorAll('[data-of2801="single-home-anchor"]').length:0,legacyText:/Fellowship Chronicle|Living World Signals|Legendary Moments|Combat Identity|Domain Reward Tracks|Vertical Slice/i.test(txt),hero:lastHeroId,scripts:document.scripts.length,styles:document.querySelectorAll('style').length}}; window.of2801Rerender=function(){render(document.getElementById('view'))};}
   function boot(){patch(); if(isHome()) setTimeout(function(){render(document.getElementById('view'))},0); try{var obs=new MutationObserver(function(){setTimeout(enforce,0)}); obs.observe(document.body,{childList:true,subtree:true});}catch(e){}}
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
+
+
+<style id="of2802HomeOnlyHardStyles">
+body.of2802HomeLocked #view > :not(.of2801Home){display:none!important}
+body.of2802HomeLocked #view .of2731Panel,
+body.of2802HomeLocked #view .of2731Chronicle,
+body.of2802HomeLocked #view .of274Shell,
+body.of2802HomeLocked #view .of274Onboard,
+body.of2802HomeLocked #view .of274Health,
+body.of2802HomeLocked #view .of2750Shell,
+body.of2802HomeLocked #view .of2785Home,
+body.of2802HomeLocked #view .of2797Home,
+body.of2802HomeLocked #view .of2798TrackPanel,
+body.of2802HomeLocked #view .of2790-track-panel,
+body.of2802HomeLocked #view [data-of2790="domain-sigil-row"],
+body.of2802HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!important}
+</style>
+<script id="homeLegolasOnlyHardCleanV2802Script">
+/* Oathforge v2.80.2 — Home Legolas-style single-card hard clean.
+   Purpose: keep only the unified anchor/path/CTA/destination card on Home.
+   Preserves Fellowship Chronicle code/data for later relocation; removes it from Home render only. */
+(function(){
+  'use strict';
+  var BUILD='v2.80.2-home-legolas-only-hard-clean';
+  var cleaning=false, obs=null;
+  function isHome(){try{return !window.view||String(window.view)==='home'}catch(e){return true}}
+  function view(){return document.getElementById('view')}
+  function haveAnchor(v){return !!(v&&v.querySelector&&v.querySelector('[data-of2801="single-home-anchor"]'))}
+  function clean(){
+    if(cleaning||!isHome()) return; cleaning=true;
+    try{
+      document.body.classList.add('of2802HomeLocked');
+      var v=view(); if(!v){cleaning=false;return;}
+      if(!haveAnchor(v) && typeof window.of2801Rerender==='function'){ try{ window.of2801Rerender(); }catch(e){} }
+      v=view(); if(!v){cleaning=false;return;}
+      var home=v.querySelector('.of2801Home');
+      if(home){
+        Array.prototype.slice.call(v.children).forEach(function(child){ if(child!==home) child.remove(); });
+        Array.prototype.slice.call(v.querySelectorAll('.of2731Panel,.of2731Chronicle,.of274Shell,.of274Onboard,.of274Health,.of2750Shell,.of2785Home,.of2797Home,.of2798TrackPanel,.of2790-track-panel,[data-of2790="domain-sigil-row"],[data-of2790="domain-reward-tracks"]')).forEach(function(n){ if(!n.closest('.of2801Home')) n.remove(); });
+      }
+    }catch(e){console.warn('[of2802 clean]',e)}
+    cleaning=false;
+  }
+  function patch(){
+    var oldRender=window.render;
+    if(typeof oldRender==='function'&&!oldRender.__of2802){
+      window.render=function(){var r=oldRender.apply(this,arguments); setTimeout(clean,0); setTimeout(clean,75); setTimeout(clean,250); return r};
+      window.render.__of2802=true;
+    }
+    var oldNav=window.navTo;
+    if(typeof oldNav==='function'&&!oldNav.__of2802){
+      window.navTo=function(to){var r=oldNav.apply(this,arguments); if(String(to)==='home'){setTimeout(clean,0);setTimeout(clean,100);setTimeout(clean,350);} return r};
+      window.navTo.__of2802=true;
+    }
+    window.of2802CleanHome=clean;
+    window.of2802Health=function(){var v=view(),txt=v?(v.textContent||''):''; return {build:BUILD,home:isHome(),singleAnchors:v?v.querySelectorAll('[data-of2801="single-home-anchor"]').length:0,topLevelChildren:v?v.children.length:0,chronicleOnHome:/Fellowship Chronicle|Living World Signals|Legendary Moments|Combat Identity/i.test(txt),hasUnified:haveAnchor(v)}};
+    try{
+      obs=new MutationObserver(function(){ if(isHome()) setTimeout(clean,0); });
+      var target=view(); if(target) obs.observe(target,{childList:true,subtree:false});
+      document.addEventListener('click',function(){setTimeout(function(){var v=view(); if(v&&obs){try{obs.disconnect();obs.observe(v,{childList:true,subtree:false});}catch(e){}} clean();},0)},true);
+    }catch(e){}
+  }
+  function boot(){patch(); setTimeout(function(){ if(isHome()&&typeof window.of2801Rerender==='function') window.of2801Rerender(); clean(); },0); setTimeout(clean,200);}
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
