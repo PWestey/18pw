@@ -2415,7 +2415,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.80.9-scroll-unlock-safe-modals';
+const APP_BUILD='v2.81.0-remove-legacy-completion-card';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -17839,6 +17839,259 @@ body.of2803HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!im
   window.of2808CleanOldTaskModals=cleanOld;
   window.of2808Health=function(){return {build:BUILD,appBuild:safe(function(){return APP_BUILD},null),showTaskDopamine:!!(window.showTaskDopamine&&window.showTaskDopamine.__of2808),rewardSummary:!!(window.rewardSummary&&window.rewardSummary.__of2808),oldRewardHidden:true,scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
   setInterval(cleanOld,1200);
+})();
+</script>
+
+
+
+<!-- v2.81.0 remove legacy completion card: one completion moment only -->
+<style id="of2810RemoveLegacyCompletionCardStyle">
+  /* The old Quest Ceremony card is visually broken with domain image HTML and competes with the hero strike. Remove it entirely. */
+  .qc2684Card,
+  .qc2684Halo,
+  .qc2684Spark,
+  .qc2684Stamp,
+  .ofRewardCeremony26821.rewardCeremonyV3,
+  .of2789-sigil-toast,
+  #of2787CompletionAttack,
+  .of2787CompletionAttack,
+  #taskBurst.taskburst{
+    display:none!important;
+    opacity:0!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+</style>
+<script id="of2810RemoveLegacyCompletionCardScript">
+(function(){
+  'use strict';
+  var BUILD='v2.81.0-remove-legacy-completion-card';
+  function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+  function cleanLegacyCompletion(){
+    try{
+      qa('.qc2684Card,.qc2684Halo,.qc2684Spark,.qc2684Stamp,.ofRewardCeremony26821,#of2787CompletionAttack,.of2787CompletionAttack,#taskBurst,.of2789-sigil-toast').forEach(function(n){try{n.remove();}catch(e){}});
+    }catch(e){}
+  }
+  function looksLikeTaskCompletion(title){
+    var t=String(title||'').toLowerCase();
+    if(!t) return false;
+    if(/chest|cache|welcome|idle|hero unlocked|weekly review|monthly review|new cycle|founding/i.test(t)) return false;
+    return /\b(complete|completed|logged|small win|habit logged|oath completed|major habit|keystone oath)\b/i.test(t);
+  }
+  function blockLegacyQuestEvent(type){
+    return type==='questCeremony'||type==='questCeremonyTest'||type==='questCompleteCeremony';
+  }
+  function patchGameEvent(){
+    try{
+      if(typeof window.gameEvent==='function' && !window.gameEvent.__of2810){
+        var oldGE=window.gameEvent;
+        window.gameEvent=function(type,payload){
+          if(blockLegacyQuestEvent(type)){ cleanLegacyCompletion(); return true; }
+          return oldGE.apply(this,arguments);
+        };
+        window.gameEvent.__of2810=true;
+      }
+    }catch(e){}
+  }
+  function patchRewardSummary(){
+    try{
+      if(typeof window.rewardSummary==='function' && !window.rewardSummary.__of2810){
+        var oldRS=window.rewardSummary;
+        window.rewardSummary=function(title,items){
+          if(looksLikeTaskCompletion(title)){ cleanLegacyCompletion(); return true; }
+          return oldRS.apply(this,arguments);
+        };
+        window.rewardSummary.__of2810=true;
+      }
+    }catch(e){}
+  }
+  function patchTaskDopamine(){
+    try{
+      if(typeof window.of2808ShowCompletionStrike==='function'){
+        window.showTaskDopamine=function(item,kind,charged,gains){
+          cleanLegacyCompletion();
+          var result=window.of2808ShowCompletionStrike(item,kind,charged,gains);
+          setTimeout(cleanLegacyCompletion,60);
+          setTimeout(cleanLegacyCompletion,280);
+          setTimeout(cleanLegacyCompletion,900);
+          return result;
+        };
+        window.showTaskDopamine.__of2808=true;
+        window.showTaskDopamine.__of2810=true;
+        /* Mark as already handled so older dev/QA hooks do not wrap it again after opening Settings. */
+        window.showTaskDopamine.__qc2684=true;
+        window.showTaskDopamine.__gf2683=true;
+        window.showTaskDopamine.__of2787=true;
+      }
+    }catch(e){}
+  }
+  function unlockIfNoModal(){
+    try{
+      var real=qa('.modal.show,#revealModal.show,.of2808StrikeOverlay.show').filter(function(el){return el&&el.isConnected&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden';});
+      if(!real.length){document.documentElement.classList.remove('modal-open','ofModalOpen','of2809ModalOpen');document.body.classList.remove('modal-open','ofModalOpen','of2809ModalOpen');document.body.style.overflow='';document.documentElement.style.overflow='';}
+    }catch(e){}
+  }
+  function apply(){patchGameEvent();patchRewardSummary();patchTaskDopamine();cleanLegacyCompletion();unlockIfNoModal();}
+  window.of2810CleanLegacyCompletion=cleanLegacyCompletion;
+  window.of2810Health=function(){return {build:BUILD,appBuild:(typeof APP_BUILD!=='undefined'?APP_BUILD:null),showTaskDopamine:!!(window.showTaskDopamine&&window.showTaskDopamine.__of2810),gameEvent:!!(window.gameEvent&&window.gameEvent.__of2810),rewardSummary:!!(window.rewardSummary&&window.rewardSummary.__of2810),legacyCards:qa('.qc2684Card,.qc2684Halo,.qc2684Spark,.qc2684Stamp').length,scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
+  apply();
+  setTimeout(apply,80);
+  setTimeout(apply,360);
+  setTimeout(apply,1200);
+  document.addEventListener('click',function(){setTimeout(apply,0);setTimeout(cleanLegacyCompletion,160);},true);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(apply,0);});
+  setInterval(function(){cleanLegacyCompletion();unlockIfNoModal();},700);
+})();
+</script>
+
+
+
+<!-- v2.81.1 manual hero strike + hard legacy quest ceremony suppression -->
+<style id="of2811ManualHeroStrikeNoLegacyStyle">
+  /* Legacy task-completion ceremonies are removed. The only daily/weekly/monthly completion moment should be the hero raid strike. */
+  .qc2684Card,
+  .qc2684Halo,
+  .qc2684Spark,
+  .qc2684Stamp,
+  .ofRewardCeremony26821.rewardCeremonyV3,
+  .of2789-sigil-toast,
+  #of2787CompletionAttack,
+  .of2787CompletionAttack,
+  #taskBurst.taskburst,
+  .taskburst{
+    display:none!important;
+    opacity:0!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+  .of2811StrikeOverlay{position:fixed;inset:0;z-index:2147483400;display:grid;place-items:center;padding:22px;background:radial-gradient(circle at 50% 42%,rgba(54,224,230,.16),rgba(6,10,20,.78) 48%,rgba(3,6,14,.88));backdrop-filter:blur(10px);opacity:0;transition:opacity .16s ease;touch-action:none}.of2811StrikeOverlay.show{opacity:1}.of2811StrikeCard{width:min(520px,calc(100vw - 30px));border-radius:28px;border:1px solid color-mix(in srgb,var(--of2811-color,#36e0e6) 48%,rgba(255,255,255,.16));background:linear-gradient(145deg,rgba(14,21,38,.98),rgba(11,17,31,.96));box-shadow:0 28px 90px rgba(0,0,0,.68),0 0 56px color-mix(in srgb,var(--of2811-color,#36e0e6) 25%,transparent);padding:18px;position:relative;overflow:hidden;transform:translateY(16px) scale(.985);transition:transform .18s cubic-bezier(.2,1.05,.25,1);color:var(--ink,#f4f7ff);font-family:Rajdhani,system-ui,sans-serif}.of2811StrikeOverlay.show .of2811StrikeCard{transform:translateY(0) scale(1)}.of2811StrikeCard:before{content:"";position:absolute;inset:-40%;background:radial-gradient(circle at 22% 22%,color-mix(in srgb,var(--of2811-color,#36e0e6) 22%,transparent),transparent 34%),conic-gradient(from 210deg,transparent,color-mix(in srgb,var(--of2811-color,#36e0e6) 12%,transparent),transparent 24%,rgba(255,217,90,.11),transparent 44%);animation:of2811Spin 7s linear infinite;pointer-events:none}.of2811StrikeCard>*{position:relative}.of2811Top{display:grid;grid-template-columns:104px 1fr;gap:16px;align-items:center}.of2811Face{width:104px;height:104px;border-radius:26px;border:2px solid color-mix(in srgb,var(--of2811-color,#36e0e6) 75%,#fff2);background:rgba(255,255,255,.06);display:grid;place-items:center;overflow:hidden;font-family:Orbitron,system-ui;font-size:32px;font-weight:1000;color:#fff;box-shadow:0 0 30px color-mix(in srgb,var(--of2811-color,#36e0e6) 32%,transparent)}.of2811Face img{width:100%;height:100%;object-fit:cover;display:block}.of2811Kicker{font-family:Orbitron,system-ui;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:color-mix(in srgb,var(--of2811-color,#36e0e6) 78%,#fff);font-weight:1000}.of2811Title{font-family:Orbitron,system-ui;font-size:clamp(24px,7vw,42px);line-height:1.02;margin:5px 0;color:#fff;text-shadow:0 0 22px color-mix(in srgb,var(--of2811-color,#36e0e6) 25%,transparent)}.of2811Sub{font-size:17px;color:var(--muted,#aab4c8);font-weight:900;line-height:1.24}.of2811Ultimate{margin-top:16px;border:1px solid color-mix(in srgb,var(--of2811-color,#36e0e6) 38%,rgba(255,255,255,.12));background:linear-gradient(135deg,color-mix(in srgb,var(--of2811-color,#36e0e6) 18%,rgba(255,255,255,.05)),rgba(255,255,255,.045));border-radius:20px;padding:14px}.of2811UltLabel{font-family:Orbitron,system-ui;text-transform:uppercase;letter-spacing:.12em;font-size:10px;color:#ffd95a;font-weight:1000}.of2811UltName{font-family:Orbitron,system-ui;font-weight:1000;font-size:22px;line-height:1.15;margin-top:3px;color:#fff}.of2811Quote{font-size:15px;color:#dbe5ff;font-weight:850;line-height:1.28;margin-top:7px}.of2811Loot{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.of2811Chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.075);padding:8px 10px;font-weight:950;font-size:13px;color:#eef5ff}.of2811Chip.main{border-color:color-mix(in srgb,var(--of2811-color,#36e0e6) 48%,rgba(255,255,255,.12));background:color-mix(in srgb,var(--of2811-color,#36e0e6) 16%,rgba(255,255,255,.065))}.of2811CloseHint{text-align:center;color:rgba(255,255,255,.56);font-size:12px;font-weight:900;margin-top:12px}@keyframes of2811Spin{to{transform:rotate(360deg)}}@media(max-width:460px){.of2811StrikeOverlay{padding:16px}.of2811StrikeCard{border-radius:24px;padding:16px}.of2811Top{grid-template-columns:82px 1fr;gap:13px}.of2811Face{width:82px;height:82px;border-radius:22px}.of2811Sub{font-size:15px}.of2811UltName{font-size:19px}.of2811Quote{font-size:14px}.of2811Chip{font-size:12px;padding:7px 9px}}
+</style>
+<script id="of2811ManualHeroStrikeNoLegacyScript">
+(function(){
+  'use strict';
+  var BUILD='v2.81.1-manual-hero-strike-no-legacy';
+  try{window.APP_BUILD=BUILD;}catch(e){}
+  function qa(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel));}
+  function safe(fn,fb){try{return fn();}catch(e){return fb;}}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function isVisible(n){try{var cs=getComputedStyle(n);return cs.display!=='none'&&cs.visibility!=='hidden'&&cs.opacity!=='0';}catch(e){return true;}}
+  function looksLegacyByText(n){
+    try{
+      if(!n || n.closest && n.closest('.of2811StrikeOverlay,.of2808StrikeOverlay')) return false;
+      var t=(n.textContent||'').slice(0,700).toLowerCase();
+      if(!t) return false;
+      if(t.indexOf('small win banked')>=0) return true;
+      if(t.indexOf('major habit logged')>=0) return true;
+      if(t.indexOf('keystone oath completed')>=0) return true;
+      if(t.indexOf('habit logged')>=0 && t.indexOf('next:')>=0) return true;
+      if(t.indexOf('oath completed')>=0 && t.indexOf('next:')>=0) return true;
+      if(t.indexOf('<img class=')>=0 || t.indexOf('&lt;img class=')>=0 || t.indexOf('src=&quot;data:image')>=0) return true;
+    }catch(e){}
+    return false;
+  }
+  function cleanLegacyCompletion(){
+    try{qa('.qc2684Card,.qc2684Halo,.qc2684Spark,.qc2684Stamp,.ofRewardCeremony26821,#of2787CompletionAttack,.of2787CompletionAttack,#taskBurst,.taskburst,.of2789-sigil-toast').forEach(function(n){try{n.remove();}catch(e){}});}catch(e){}
+    try{qa('body > div, body > span').forEach(function(n){try{if(looksLegacyByText(n)) n.remove();}catch(e){}});}catch(e){}
+  }
+  function unlockIfOnlyStrikeOrNone(){
+    try{
+      var active=qa('.modal.show,#revealModal.show,.scrim.show,.arena.show,.of2811StrikeOverlay.show,.of2808StrikeOverlay.show').filter(function(el){return el&&el.isConnected&&isVisible(el);});
+      if(!active.length){
+        ['modal-open','ofModalOpen','of2807-modal-open','of2809ModalOpen'].forEach(function(c){document.documentElement.classList.remove(c);document.body.classList.remove(c);});
+        document.body.style.overflow=''; document.documentElement.style.overflow='';
+      }
+    }catch(e){}
+  }
+  function domainOfTask(item){var d=safe(function(){return (typeof domainOf==='function'&&domainOf(item))||item.domain||item.affinity||null;},null)||'discipline';return String(d||'discipline').toLowerCase();}
+  function metaFor(d){return safe(function(){return window.DKEY&&DKEY[d]?DKEY[d]:null;},null)||{label:d?d.charAt(0).toUpperCase()+d.slice(1):'Oath',color:'#36e0e6',icon:'✦'};}
+  function pickHero(d){return safe(function(){if(typeof window.of2787PickDomainHero==='function')return window.of2787PickDomainHero(d);return null;},null)||safe(function(){var hs=(S.heroes||[]).filter(function(h){return h&&h.owned!==false;});var pool=hs.filter(function(h){return String(h.domain||'').toLowerCase()===d||(Array.isArray(h.aff)&&h.aff.indexOf(d)>=0);});if(!pool.length)pool=hs;return pool[Math.floor(Math.random()*pool.length)]||null;},null);}
+  function initials(name){return String(name||'?').trim().split(/\s+/).map(function(x){return x[0]||'';}).join('').slice(0,2).toUpperCase()||'?';}
+  function faceHTML(h){return h&&h.img?'<img src="'+esc(h.img)+'" alt="">':esc(initials(h&&h.name));}
+  function ultimate(h,d){return safe(function(){if(typeof ultimateName==='function'){var n=ultimateName(h);if(n)return n;}},null)||safe(function(){if(typeof kitOf==='function'){var k=kitOf(h);if(k&&k.ultimate)return k.ultimate;}},null)||({faith:'Beacon of Resolve',marriage:'Hearthguard Vow',fatherhood:'Protector\'s Rally',fitness:'Iron Will Assault',work:'Strategy Breaker',home:'Steward\'s Guard',discipline:'Chainbreaker',hobbies:'Joyful Focus'})[d]||'Oathstrike';}
+  function quote(h,d){var nm=(h&&h.name)||'Your Fellowship';var by={faith:'Faithful steps become strength.',marriage:'Love is protected by repeated promises.',fatherhood:'Small acts become a legacy your children can feel.',fitness:'Discipline enters the body one rep at a time.',work:'Excellence is forged before anyone sees it.',home:'Order in the home becomes peace in the heart.',discipline:'The chain breaks one kept vow at a time.',hobbies:'Joy becomes healthier when it is chosen with intention.'}; if(/kaladin/i.test(nm))return 'Honor is built by the next kept oath.'; if(/iron man/i.test(nm))return 'Systems clean. Power routed toward the future self.'; if(/aragorn|legolas|gimli/i.test(nm))return 'The day is won one kept promise at a time.'; if(/peter|megan/i.test(nm))return 'Your real life is the raid. This was damage dealt.'; return by[d]||'The oath becomes power.';}
+  function rewardTextItems(item,kind,charged,gains,sigil){
+    var arr=[];
+    try{ if(charged>0) arr.push('🔥 +'+Math.round((typeof momentumPct==='function'?momentumPct():0)*100)+'% idle'); }catch(e){}
+    try{ if(typeof baseRewardItems==='function'){(baseRewardItems((item&&item.diff)||'med',charged)||[]).forEach(function(x){var t=typeof x==='string'?x:x&&x.txt;if(t)arr.push(t);});} }catch(e){}
+    try{(gains||[]).slice(0,1).forEach(function(g){if(g&&g.name)arr.push('💞 '+g.name+' +'+(g.xp||0)+' Bond XP');});}catch(e){}
+    if(sigil&&sigil.amount)arr.push((metaFor(sigil.domain).icon||'✦')+' +'+sigil.amount+' '+metaFor(sigil.domain).label+' Sigil');
+    if(!arr.length)arr.push('Progress sealed');
+    return arr.slice(0,6);
+  }
+  function closeStrike(){
+    var els=qa('.of2811StrikeOverlay,.of2808StrikeOverlay');
+    els.forEach(function(el){try{el.classList.remove('show');setTimeout(function(){try{el.remove();}catch(e){};cleanLegacyCompletion();unlockIfOnlyStrikeOrNone();},160);}catch(e){}});
+  }
+  function showStrike(item,kind,charged,gains){
+    cleanLegacyCompletion(); closeStrike();
+    clearTimeout(window.__of2808StrikeTimer); clearTimeout(window.__of2811StrikeTimer);
+    var d=domainOfTask(item||{}), m=metaFor(d), h=pickHero(d), ult=ultimate(h,d), sigil=null;
+    try{ if(typeof window.of2789AwardDomainSigils==='function') sigil=window.of2789AwardDomainSigils(item||{},kind||'daily'); }catch(e){}
+    var el=document.createElement('div'); el.id='of2811StrikeOverlay'; el.className='of2811StrikeOverlay'; el.style.setProperty('--of2811-color',m.color||'#36e0e6');
+    var rewardItems=rewardTextItems(item||{},kind,charged,gains,sigil).map(function(t,i){return '<span class="of2811Chip '+(i===0?'main':'')+'">'+esc(t)+'</span>';}).join('');
+    el.innerHTML='<div class="of2811StrikeCard" role="dialog" aria-label="Oath completed"><div class="of2811Top"><div class="of2811Face">'+faceHTML(h)+'</div><div><div class="of2811Kicker">'+esc(m.label||'Domain')+' Raid Strike</div><div class="of2811Title">'+esc(h&&h.name?h.name:'Your Fellowship')+'</div><div class="of2811Sub">'+esc((item&&item.title)||'Oath completed')+' complete</div></div></div><div class="of2811Ultimate"><div class="of2811UltLabel">Ultimate</div><div class="of2811UltName">'+esc(ult)+'</div><div class="of2811Quote">“'+esc(quote(h,d,item||{}))+'”</div></div><div class="of2811Loot">'+rewardItems+'</div><div class="of2811CloseHint">Tap outside to continue</div></div>';
+    el.addEventListener('click',function(ev){ if(ev.target===el) closeStrike(); });
+    document.body.appendChild(el);
+    requestAnimationFrame(function(){el.classList.add('show');});
+    try{ if(typeof v171Feedback==='function') v171Feedback('level'); else if(typeof v171Sound==='function') v171Sound('level'); }catch(e){}
+    setTimeout(cleanLegacyCompletion,20); setTimeout(cleanLegacyCompletion,160); setTimeout(cleanLegacyCompletion,500);
+    return {hero:h&&h.name,domain:d,ultimate:ult,sigil:sigil};
+  }
+  function looksLikeTaskCompletion(title){
+    var t=String(title||'').toLowerCase();
+    if(!t) return false;
+    if(/chest|cache|welcome|idle|hero unlocked|weekly review|monthly review|new cycle|founding/.test(t)) return false;
+    return /\b(complete|completed|logged|small win|habit logged|oath completed|major habit|keystone oath)\b/.test(t);
+  }
+  function install(){
+    cleanLegacyCompletion();
+    try{
+      var baseGE=window.gameEvent;
+      var filtered=function(type,payload){
+        if(type==='questCeremony'||type==='questCeremonyTest'||type==='questCompleteCeremony') { cleanLegacyCompletion(); return true; }
+        return baseGE?baseGE.apply(this,arguments):true;
+      };
+      filtered.__of2811=true;
+      window.gameEvent=filtered;
+      try{gameEvent=filtered;}catch(e){}
+    }catch(e){}
+    try{
+      var baseRS=window.rewardSummary;
+      var filteredRS=function(title,items){
+        if(looksLikeTaskCompletion(title)){ cleanLegacyCompletion(); return true; }
+        return baseRS?baseRS.apply(this,arguments):true;
+      };
+      filteredRS.__of2811=true;
+      window.rewardSummary=filteredRS;
+      try{rewardSummary=filteredRS;}catch(e){}
+    }catch(e){}
+    try{
+      var td=function(item,kind,charged,gains){ cleanLegacyCompletion(); return showStrike(item,kind,charged,gains); };
+      td.__of2808=true; td.__of2810=true; td.__of2811=true; td.__qc2684=true; td.__gf2683=true; td.__of2787=true; td.__of2789=true;
+      window.showTaskDopamine=td;
+      try{showTaskDopamine=td;}catch(e){}
+    }catch(e){}
+  }
+  function observe(){
+    try{
+      var mo=new MutationObserver(function(ms){
+        var hit=false;
+        ms.forEach(function(m){Array.prototype.forEach.call(m.addedNodes||[],function(n){if(n&&n.nodeType===1&&(n.matches&&n.matches('.qc2684Card,.qc2684Halo,.qc2684Spark,.qc2684Stamp,.ofRewardCeremony26821,#of2787CompletionAttack,#taskBurst,.taskburst,.of2789-sigil-toast')||looksLegacyByText(n))) hit=true;});});
+        if(hit) setTimeout(cleanLegacyCompletion,0);
+      });
+      mo.observe(document.documentElement,{childList:true,subtree:true});
+      window.__of2811LegacyObserver=mo;
+    }catch(e){}
+  }
+  window.of2811ShowCompletionStrike=showStrike;
+  window.of2811CleanLegacyCompletion=cleanLegacyCompletion;
+  window.of2811CloseStrike=closeStrike;
+  window.of2811Health=function(){return {build:BUILD,appBuild:window.APP_BUILD,showTaskDopamine:!!(window.showTaskDopamine&&window.showTaskDopamine.__of2811),gameEvent:!!(window.gameEvent&&window.gameEvent.__of2811),rewardSummary:!!(window.rewardSummary&&window.rewardSummary.__of2811),legacyCards:qa('.qc2684Card,.qc2684Halo,.qc2684Spark,.qc2684Stamp').length,manualClose:true,scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
+  install(); observe(); cleanLegacyCompletion(); unlockIfOnlyStrikeOrNone();
+  setTimeout(install,80); setTimeout(install,360); setTimeout(install,1200);
+  setInterval(function(){cleanLegacyCompletion();unlockIfOnlyStrikeOrNone();},650);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){setTimeout(install,0);setTimeout(cleanLegacyCompletion,80);}},true);
+  document.addEventListener('click',function(){setTimeout(cleanLegacyCompletion,0);},true);
 })();
 </script>
 
