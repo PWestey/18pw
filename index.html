@@ -2415,7 +2415,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.81.8-rollback-2815-safe-save-settings';
+const APP_BUILD='v2.81.9-settings-stable-no-flicker';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -18371,7 +18371,7 @@ body.of2803HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!im
 <script id="of2815TaskSettingsOpenFixScript">
 (function(){
   'use strict';
-  var BUILD='v2.81.8-rollback-2815-safe-save-settings';
+  var BUILD='v2.81.9-settings-stable-no-flicker';
   try{window.APP_BUILD=BUILD;}catch(e){}
   function q(s,r){return (r||document).querySelector(s);} function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
   function safe(fn,fb){try{return fn();}catch(e){console.warn('[of2815]',e);return fb;}}
@@ -18490,13 +18490,14 @@ body.of2803HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!im
 <style id="of2818RollbackSafeSaveSettingsStyle">
   #of2814TaskOverlay.show{display:flex!important;pointer-events:auto!important;z-index:2147483638!important;}
   #of2814TaskOverlay .of2814Save{display:block!important;visibility:visible!important;opacity:1!important;}
-  #setScrim.of2818SettingsPinned{display:flex!important;pointer-events:auto!important;z-index:2147483500!important;position:fixed!important;inset:0!important;}
-  #setScrim.of2818SettingsPinned .sheet{pointer-events:auto!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;max-height:calc(100dvh - 22px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;}
+  /* v2.81.9: Settings uses a stable data-attribute display instead of fighting old .show watchdogs. */
+  #setScrim[data-of2819-settings-open="true"]{display:flex!important;pointer-events:auto!important;z-index:2147483500!important;position:fixed!important;inset:0!important;align-items:center!important;justify-content:center!important;background:rgba(5,8,17,.86)!important;backdrop-filter:blur(8px)!important;}
+  #setScrim[data-of2819-settings-open="true"] .sheet{display:block!important;pointer-events:auto!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;max-height:calc(100dvh - 22px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;}
 </style>
 <script id="of2818RollbackSafeSaveSettingsScript">
 (function(){
   'use strict';
-  var BUILD='v2.81.8-rollback-2815-safe-save-settings';
+  var BUILD='v2.81.9-settings-stable-no-flicker';
   try{window.APP_BUILD=BUILD;}catch(e){}
   function q(s,r){return (r||document).querySelector(s);} 
   function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
@@ -18613,12 +18614,26 @@ body.of2803HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!im
   function pinSettingsNow(){
     if(!window.__of2818SettingsPinned) return;
     var sc=q('#setScrim'); if(!sc) return;
-    sc.classList.add('show','of2818SettingsPinned'); sc.setAttribute('data-of2818-settings','pinned'); sc.setAttribute('aria-modal','true'); sc.removeAttribute('aria-hidden');
-    var sh=q('.sheet',sc); if(sh){sh.setAttribute('data-modal-content','settings');}
+    /* Keep settings visible without the legacy .show class. Older hero/modal watchdogs
+       repeatedly remove .show from setScrim, which caused the flicker. */
+    sc.classList.remove('show');
+    sc.classList.add('of2818SettingsPinned');
+    sc.setAttribute('data-of2818-settings','pinned');
+    sc.setAttribute('data-of2819-settings-open','true');
+    sc.setAttribute('aria-modal','true'); sc.removeAttribute('aria-hidden');
+    sc.style.pointerEvents=''; sc.style.display='';
+    var sh=q('.sheet',sc); if(sh){sh.setAttribute('data-modal-content','settings'); sh.style.pointerEvents='';}
   }
   function closeSettingsPinned(){
     window.__of2818SettingsPinned=false;
-    var sc=q('#setScrim'); if(sc){sc.classList.remove('show','of2818SettingsPinned'); sc.removeAttribute('data-of2818-settings');}
+    var sc=q('#setScrim'); if(sc){
+      sc.classList.remove('show','of2818SettingsPinned');
+      sc.removeAttribute('data-of2818-settings');
+      sc.removeAttribute('data-of2819-settings-open');
+      sc.removeAttribute('aria-modal');
+      sc.setAttribute('aria-hidden','true');
+      sc.style.pointerEvents=''; sc.style.display='';
+    }
     safe(function(){document.body.classList.remove('of2815OpeningModal','of2807-modal-open','of2809-modal-open','of2809ModalOpen','modal-open','ofModalOpen'); document.body.style.overflow=''; document.documentElement.style.overflow='';});
   }
   function installSettingsCapture(){
@@ -18630,15 +18645,15 @@ body.of2803HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!im
       setTimeout(openSettingsPinned,20);
     },true);
     window.addEventListener('click',function(ev){
-      var sc=q('#setScrim.of2818SettingsPinned'); if(!sc) return;
+      var sc=q('#setScrim[data-of2819-settings-open="true"]'); if(!sc) return;
       if(Date.now()-(window.__of2818SettingsBorn||0)<650) return;
       if(ev.target===sc){ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();closeSettingsPinned();}
     },true);
-    window.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&q('#setScrim.of2818SettingsPinned')) closeSettingsPinned();},true);
-    setInterval(function(){ if(window.__of2818SettingsPinned) pinSettingsNow(); },260);
+    window.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&q('#setScrim[data-of2819-settings-open="true"]')) closeSettingsPinned();},true);
+    /* No persistent re-pin interval: avoiding flicker from legacy watchdog tug-of-war. */
   }
   function boot(){wrapTaskOpen(); installTaskSaveCapture(); installSettingsCapture(); [80,240,700,1500,3000].forEach(function(ms){setTimeout(wrapTaskOpen,ms);});}
-  window.of2818Health=function(){return {build:BUILD,appBuild:window.APP_BUILD,taskWrapped:!!(window.openTaskSheet&&window.openTaskSheet.__of2818Wrapped),taskOverlay:!!q('#of2814TaskOverlay'),settingsPinned:!!window.__of2818SettingsPinned,settingsOpen:!!q('#setScrim.show'),scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
+  window.of2818Health=function(){return {build:BUILD,appBuild:window.APP_BUILD,taskWrapped:!!(window.openTaskSheet&&window.openTaskSheet.__of2818Wrapped),taskOverlay:!!q('#of2814TaskOverlay'),settingsPinned:!!window.__of2818SettingsPinned,settingsOpen:!!q('#setScrim[data-of2819-settings-open="true"]'),scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
 })();
 </script>
