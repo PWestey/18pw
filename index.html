@@ -2415,7 +2415,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.79.2-home-quest-render-rebuild-health-check';
+const APP_BUILD='v2.79.5-home-pass2-of274-retire';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2485,6 +2485,7 @@ function seedStarterDailiesIfEmpty(){
 }
 
 function migrate(){
+  if(!S||typeof S!=='object') return;
   if(S.doneMode===undefined) S.doneMode='bottom';
   S.appBuild=APP_BUILD;
   if(typeof S.lastSavedAt!=='number') S.lastSavedAt=null;
@@ -2690,7 +2691,17 @@ let S=null, view='home', subtab='dailies', tick=null, ambient=null, awayReport=n
 async function load(){
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
   const raw=await Store.get(KEY);
-  S=raw?JSON.parse(raw):seed();
+  let __parsed=null; if(raw){ try{ __parsed=JSON.parse(raw); }catch(e){ __parsed=null; } }
+  let __recovered=false;
+  if(__parsed && typeof __parsed==='object' && !Array.isArray(__parsed)){
+    S=__parsed;
+  } else {
+    /* Corrupt/null save (e.g. a literal "null" written by an earlier bug). Recover, never crash. */
+    S=null;
+    try{ const __bak=await readAutoBackup(); if(__bak && __bak.data){ const __rs=JSON.parse(__bak.data); if(__rs && typeof __rs==='object' && !Array.isArray(__rs)){ S=__rs; __recovered=true; } } }catch(e){}
+    if(!S || typeof S!=='object'){ S=seed(); }
+    if(raw){ const __msg=__recovered?'Save was unreadable \u2014 recovered from your latest backup.':'Save was unreadable \u2014 started fresh. Settings \u2192 Backup tools can restore a copy.'; try{ setTimeout(function(){ try{ if(typeof toast==='function') toast(__msg); }catch(_){} },1000); }catch(e){} }
+  }
   migrate();
   applyTuneOverrides();
   recalcCollection();
@@ -2700,7 +2711,7 @@ async function load(){
   if(graceReport){ const g=graceReport; graceReport=null; setTimeout(()=>toast('🕊️ Grace Day used — your streak'+(g.saved>1?'s are':' is')+' safe. Welcome back.'), awayReport?1800:900); }
   if(albumMsgs&&albumMsgs.length) setTimeout(()=>toast(albumMsgs.join(' · ')), awayReport?1200:600);
 }
-async function save(){if(typeof savePortraits==="function") savePortraits(); if(S){ try{ ensureHeroPortraitVault(); }catch(e){} S.lastSavedAt=Date.now(); S.appBuild=APP_BUILD; } await Store.set(KEY,JSON.stringify(S)); }
+async function save(){if(typeof savePortraits==="function") savePortraits(); if(!S||typeof S!=="object") return; try{ ensureHeroPortraitVault(); }catch(e){} S.lastSavedAt=Date.now(); S.appBuild=APP_BUILD; await Store.set(KEY,JSON.stringify(S)); }
 const BAKKEY=KEY+'__autobak';
 async function autoBackup(reason){ try{ const cur=await Store.get(KEY); if(cur) await Store.set(BAKKEY,JSON.stringify({reason:reason||'',at:Date.now(),data:cur})); }catch(e){} }
 async function readAutoBackup(){ try{ const raw=await Store.get(BAKKEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
@@ -3944,6 +3955,7 @@ const BLOCK_META={
 };
 function blockChipHTML(it){ try{ const m=BLOCK_META[it&&it.block]; if(!m) return ''; return '<span class="blockChip" style="--bc:'+m.c+'">'+m.e+' '+m.l+'</span>'; }catch(e){ return ''; } }
 function renderTasks(v){
+  if(typeof S==='undefined'||!S) return;
   const W=ensureWeek(), poss=weekPossible(), wpts=(W.pts||0), wpct=Math.min(100,wpts), nextC=CHESTS.find(c=>!W.claimed[c.p]), earned=CHESTS.filter(c=>W.claimed[c.p]).length;
   const chest='<div class="stagecard" style="border-color:#ffd95a55;margin-bottom:14px">'+
     '<h3 style="display:flex;justify-content:space-between"><span>'+cicon('chest',18)+' Weekly Chest</span><span style="color:#ffd95a">'+wpts+' pts</span></h3>'+
@@ -5465,7 +5477,7 @@ function openTaskSheet(id){
   if(subtab==='dailies'){ const DOW=['Su','Mo','Tu','We','Th','Fr','Sa']; h+='<label>Active days <span style="color:var(--muted);font-weight:700">(tap to skip)</span></label><div class="segs daysRow" id="f_days">'+DOW.map((dn,di)=>'<button data-day="'+di+'" class="'+(activeDays.indexOf(di)>=0?'on':'')+'">'+dn+'</button>').join('')+'</div>'; }
   if(subtab==='habits') h+='<label>Track</label><div class="segs" id="f_dir"><button data-x="up" class="'+(dir==='up'?'on':'')+'">Good +</button><button data-x="down" class="'+(dir==='down'?'on':'')+'">Bad −</button><button data-x="both" class="'+(dir==='both'?'on':'')+'">Both</button></div>';
   h+='<label>Life domain</label><div class="domSel" id="f_domWrap"><button type="button" class="domSelBtn" id="f_domBtn">'+(domain?DKEY[domain].icon+' '+DKEY[domain].label:'— None —')+'<span class="domCaret">▾</span></button><div class="domSelMenu" id="f_domMenu" hidden><button type="button" class="domOpt" data-dom="">— None —</button>'+DOMAINS.map(d=>'<button type="button" class="domOpt'+(domain===d[0]?' on':'')+'" data-dom="'+d[0]+'">'+DKEY[d[0]].icon+' '+d[1]+'</button>').join('')+'</div></div>';
-  if(taskIsRecurring(subtab)){ h+='<label>Notes <span style="color:var(--muted);font-weight:700">(optional context)</span></label><textarea id="f_notes" maxlength="500" rows="3" class="taskNoteInput" placeholder="Add context, a why, a target...">'+(item&&item.notes?esc(item.notes):'')+'</textarea>'; } h+='<button class="go" id="f_save">'+(id?'Save':'Add')+'</button>'+(id?'<button class="ghost" id="f_del">Delete</button>':'');
+  if(taskIsRecurring(subtab)||subtab==='todos'){ h+='<label>Notes <span style="color:var(--muted);font-weight:700">(optional context)</span></label><textarea id="f_notes" maxlength="500" rows="3" class="taskNoteInput" placeholder="Add context, a why, a target...">'+(item&&item.notes?esc(item.notes):'')+'</textarea>'; } h+='<button class="go" id="f_save">'+(id?'Save':'Add')+'</button>'+(id?'<button class="ghost" id="f_del">Delete</button>':'');
   s.innerHTML=h; showScrim('scrim');
   segPick('f_diff',d=>diff=d); if(subtab==='habits') segPick('f_dir',d=>dir=d,'x'); if(subtab==='dailies'){ const dr=document.getElementById('f_days'); if(dr) dr.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const di=+b.dataset.day, k=activeDays.indexOf(di); if(k>=0){ if(activeDays.length>1) activeDays.splice(k,1); } else activeDays.push(di); b.classList.toggle('on',activeDays.indexOf(di)>=0); }); }
   (function(){var wrap=document.getElementById('f_domWrap');if(!wrap)return;var btn=document.getElementById('f_domBtn'),menu=document.getElementById('f_domMenu');btn.onclick=function(e){e.stopPropagation();menu.hidden=!menu.hidden;};menu.querySelectorAll('.domOpt').forEach(function(b){b.onclick=function(){domain=b.getAttribute('data-dom')||'';btn.innerHTML=(domain?DKEY[domain].icon+' '+DKEY[domain].label:'— None —')+'<span class="domCaret">▾</span>';menu.hidden=true;};});})();
@@ -5474,7 +5486,7 @@ function openTaskSheet(id){
     const dom=domain||null; const nf=document.getElementById('f_notes'); const notesVal=nf?nf.value.trim():'';
     if(taskIsRecurring(subtab)){ const fr=TASK_FREQ_OF[subtab]||'daily', ad=(subtab==='dailies')?activeDays.slice():null; if(item){item.title=title;item.diff=diff;item.domain=dom;item.activeDays=ad; if(item.freq!==fr){item.freq=fr;item.pk=periodKey(fr);item.done=false;}} else S.dailies.push({id:uid(),notes:notesVal,title,diff,freq:fr,domain:dom,streak:0,done:false,pk:periodKey(fr),activeDays:ad}); }
     else if(subtab==='habits'){ const up=dir!=='down',down=dir!=='up'; if(item){item.title=title;item.diff=diff;item.up=up;item.down=down;item.domain=dom; if(item.freq!==freq){item.freq=freq;item.pk=periodKey(freq);item.count=0;}} else S.habits.push({id:uid(),title,diff,freq,up,down,domain:dom,count:0,pk:periodKey(freq)}); }
-    else { if(item){item.title=title;item.diff=diff;item.domain=dom;} else S.todos.push({id:uid(),title,diff,domain:dom,done:false}); }
+    else { if(item){item.title=title;item.diff=diff;item.domain=dom;} else S.todos.push({id:uid(),title,diff,domain:dom,done:false,notes:notesVal}); }
     if(item&&nf) item.notes=notesVal; hideScrim(); render(); save();
   };
   const del=document.getElementById('f_del'); if(del) del.onclick=()=>{ S[subtab]=S[subtab].filter(x=>x.id!==id); hideScrim(); render(); save(); };
@@ -9275,39 +9287,29 @@ function v200CampScene(fh){
    +'</div>';
 }
 function renderHome(v){
-  try{ if(typeof recalcCollection==='function') recalcCollection(); }catch(e){}
-  try{ if(typeof renderHUD==='function') renderHUD(); }catch(e){}
-  const owned=((S&&Array.isArray(S.heroes))?S.heroes:[]).filter(h=>h&&h.owned);
-  const favs=owned.filter(h=>{try{return typeof isFavorite==='function'&&isFavorite(h.id)}catch(e){return false}});
-  let squadIds=[];
-  try{['campaign','tower','raid','clash'].forEach(k=>(typeof squad==='function'?squad(k):[]).forEach(h=>{if(h&&h.id)squadIds.push(h.id)}));}catch(e){}
-  const active=owned.filter(h=>squadIds.includes(h.id));
-  const pool=(favs.length?favs:(active.length?active:(owned.length?owned:((S&&S.heroes)||[]))));
-  const h=pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
-  const heroName=h&&h.name?h.name:'Oathforge';
-  const pwr=(()=>{try{return h&&typeof powerOf==='function'?powerOf(h):0}catch(e){return 0}})();
-  const rank=(()=>{try{return h&&typeof rankIdx==='function'?'Rank '+rankIdx(h):'Hero'}catch(e){return 'Hero'}})();
-  const dom=(()=>{try{return h&&typeof heroPrimaryDomain==='function'?heroPrimaryDomain(h):(h&&h.domain)||'faith'}catch(e){return 'faith'}})();
-  const dLabel=(()=>{try{return typeof domainLabel==='function'?domainLabel(dom):dom}catch(e){return dom}})();
-  const img=(()=>{let u=h&&(h.image||h.img||h.portrait||h.art); if(u)return '<img src="'+esc(u)+'" alt="">'; return '<span>'+esc(heroName.split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase()||'?')+'</span>';})();
-  const stage=S&&S.stage?S.stage:1;
-  const act=((S&&S.dailies)||[]).filter(x=>x&&x.freq==='daily'&&(!window.taskActiveToday||taskActiveToday(x)));
-  const done=act.filter(x=>x.done).length;
-  const pct=act.length?Math.round(done/act.length*100):0;
-  const step=pct<=0?1:pct<35?2:pct<70?3:pct<100?4:5;
-  const line=(()=>{const map={faith:'Power routed toward Faith.',marriage:'Guard the hearth today.',fatherhood:'Lead the home with patience.',fitness:'Discipline becomes strength.',work:'Focus the mission.',home:'Keep the hall in order.',discipline:'Stay the course.'};return map[dom]||'The Fellowship stands ready.'})();
-  const sigils=(()=>{try{return S.domainSigils||{}}catch(e){return {}}})();
-  const sigilRow=['Faith','Marriage','Fatherhood','Fitness','Work Leadership','Home Leadership'].map(k=>'<span>'+({'Faith':'✝️','Marriage':'💍','Fatherhood':'🛡️','Fitness':'💪','Work Leadership':'👑','Home Leadership':'🏠'}[k])+' '+k.replace(' Leadership','')+': '+(sigils[k]||0)+'</span>').join('');
-  v.innerHTML='<div class="of2792Home" data-of2792-home="1">'
-    +'<section class="of2792Anchor"><div class="of2792Hero"><div class="of2792Portrait">'+img+'</div><div class="of2792Copy"><div class="of2792Kicker">Fellowship Anchor</div><h1>'+esc(heroName)+'</h1><p>'+esc(line)+'</p><div class="of2792Chips"><span>'+esc(rank)+'</span><span>'+esc(dLabel)+'</span><span>'+pct+'% daily path</span><span>Power '+(pwr>=1000?Math.round(pwr/1000)+'K':pwr)+'</span></div></div></div>'
-    +'<div class="of2792Path"><div><b>Today\'s Path</b><small>'+done+'/'+act.length+' oaths · Stage '+stage+' waiting</small></div><div class="of2792Steps">'+['Arrive','Oath','Reward','Battle','Seal'].map((x,i)=>'<span class="'+(i+1<=step?'on':'')+'"><b>'+(i===0?'✓':i+1)+'</b>'+x+'</span>').join('')+'</div></div>'
-    +'<button class="of2792CTA" id="of2792Push">⚔️ <b>Push the War Table</b><small>Continue Stage '+stage+'</small></button>'
-    +'<div class="of2792Tiles"><button data-nav="heroes"><b>Fellowship Hall</b><small>Heroes, bonds, identity.</small></button><button data-nav="battles"><b>War Table</b><small>Campaign, Tower, Clash.</small></button><button data-nav="growth"><b>The Forge</b><small>Rank, gear, prestige.</small></button><button data-nav="quests"><b>Oath Ledger</b><small>Dailies, weeklies, monthlies.</small></button></div></section>'
-    +'<div class="of2792Sigils">'+sigilRow+'</div>'
-    +'<div class="of2792Roadmap"><b>Personal Mythology Roadmap</b><p>Next: iconic locations, hero identity cards, and battle backgrounds that feel recognizable to you.</p></div>'
-    +'</div>';
-  const push=document.getElementById('of2792Push'); if(push) push.onclick=()=>navTo('battles');
-  v.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>navTo(b.dataset.nav));
+  v162InjectStyles();
+  v172InjectHomeStage();
+  recalcCollection();
+  const s=v162HomeSnapshot();
+  const hour=new Date().getHours();
+  const hello=hour<5?'Late night':hour<12?'Good morning':hour<17?'Good afternoon':hour<21?'Good evening':'Winding down';
+  const line=s.pct>=100?'Every box checked. Protect the win.':s.pct>=60?'Strong momentum. One more useful action keeps the day moving.':s.pct>0?'You have started. Keep the next step small.':'Start with one real action. The game follows your life.';
+  const setup=!S.onboarded?'<div class="setupcard" id="setupCard"><h3>⚙ Finish setup</h3><p>Make the quests yours, confirm your starter squad, then download a backup before future updates.</p><div class="setuprow"><button id="setupTasks">Customize quests</button><button id="setupSquad">Review squad</button><button id="setupBackup">Open backup</button><button id="setupDone">Done</button></div></div>':'';
+  const nextHTML=s.next?'<div class="homeAction162" id="nextCard162"><div class="eyebrow">Do this next</div><div class="title">'+esc(s.next.title)+'</div><div class="why">'+esc(v162Why(s.next))+'</div><div class="reward">✦ '+esc(v162RewardPreview(s.next))+'</div><div style="margin-top:12px"><button id="doNext162" class="go" style="width:100%;padding:13px 14px">Go to quest</button></div></div>':'<div class="homeAction162"><div class="eyebrow">All clear</div><div class="title">Protect the win</div><div class="why">Your main daily board is clear. Rest is part of the work.</div><div class="reward">✓ Day built</div></div>';
+  const closest=s.closest;
+  const closestHTML='<div class="homeMini162" id="closestWin162"><b>Closest win</b><strong>'+esc(closest?(closest.title||'Reward close'):'No urgent reward')+'</strong><span>'+esc(closest?(closest.sub||'One small action moves this forward.'):'Use the next action to build consistency, not chase noise.')+'</span><span class="spark">'+esc(closest?(closest.icon||'✦'):'🌿')+'</span></div>';
+  const progressHTML='<div class="homeMini162"><b>Today</b><strong>'+s.done.length+' / '+s.dailies.length+' actions</strong><span>'+s.pct+'% complete · '+s.touched.size+'/'+DOMAINS.length+' life areas touched</span><span class="spark">📈</span></div>';
+  const today='<div class="homeProgress162"><div class="top"><b>Today’s progress</b><span>'+s.pct+'%</span></div><div class="dummybar" style="height:12px;margin:10px 0 6px"><i style="width:'+s.pct+'%;background:linear-gradient(90deg,#37d67a,#36e0e6)"></i></div><div class="domains">'+v162DomainRow(s.touched)+'</div><div style="font-size:11px;color:var(--muted);font-weight:750;margin-top:9px;text-align:center">Day resets in '+dayEndsIn()+' · Week resets in '+weekEndsIn()+'</div></div>';
+  const fh=featuredHero();
+  const heroStage=v200CampScene(fh);
+  const oneLine='<div class="homeOneLine162">\ud83d\udccb '+s.done.length+'/'+s.dailies.length+' today \u00b7 '+s.pct+'% \u00b7 '+s.touched.size+'/'+DOMAINS.length+' areas'+(closest&&closest.title?' \u00b7 \ud83c\udfaf '+esc(closest.title):'')+'</div>';
+  v.innerHTML='<div class="head"><h2>'+hello+'</h2><span style="color:var(--muted);font-weight:700;font-size:13px">'+v162DateStamp()+'</span></div><div class="titlebar">🏷 '+esc(currentTitle())+'</div>'+heroStage+setup+'<div style="color:var(--muted);font-weight:700;font-size:13px;margin:-6px 2px 14px">'+line+'</div>'+nextHTML+oneLine+v162LastActionMini()+v162DailyReviewMini()+'<details class="homeMgmt162"><summary>Manage rewards / deeper systems</summary><div class="homeMgmtGrid162"><button id="homeGoQuests162">✓ Quests</button><button id="homeGoHeroes162">🛡 Heroes</button><button id="homeGoBattles162">⚔ Battles</button><button id="homeGoGrowth162">🌱 Growth</button></div><div class="v162DevFieldTestLink">Field Test moved to Settings → Developer tools.</div></details>';
+  v162BindHome();
+  const eb=document.getElementById('homeEnterBattle'); if(eb) eb.onclick=()=>{ campSub='campaign'; navTo('battles'); };
+  const st=document.getElementById('setupTasks'); if(st) st.onclick=()=>{ subtab='dailies'; navTo('quests'); };
+  const ss=document.getElementById('setupSquad'); if(ss) ss.onclick=()=>{ campSub='campaign'; navTo('battles'); };
+  const sb=document.getElementById('setupBackup'); if(sb) sb.onclick=()=>document.getElementById('openSettings').click();
+  const doneBtn=document.getElementById('setupDone'); if(doneBtn) doneBtn.onclick=()=>{ S.onboarded=true; render(); save(); };
 }
 function v162PriorityRewards(title,items){
   const arr=(items||[]).filter(Boolean).map(x=>typeof x==='string'?{txt:x,cls:''}:{txt:String(x.txt||x),cls:x.cls||''});
@@ -9895,6 +9897,7 @@ renderHome=function(v){
 };
 const __renderTasks_v166=renderTasks;
 renderTasks=function(v){
+  if(typeof S==='undefined'||!S) return;
   v166InjectStyles();
   const auto=v166EnsureAutomation();
   if(auto.autoCollapseDone && subtab!=='habits' && (S.doneMode||'keep')==='keep') S.doneMode='bottom';
@@ -14183,9 +14186,9 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
   function shellHTML(){ const h=topHero(); const act=mainAction(); const steps=journeySteps(); let foundNow=false; return '<section class="of274Shell" id="of274VerticalSliceShell"><div class="of274RuneDust"></div><div class="of274HeroRow">'+heroFace(h)+'<div><div class="of274Kicker">Oathforge Vertical Slice</div><div class="of274Title">'+E(hName(h))+' anchors the hall.</div><div class="of274Line">'+E(heroLine(h))+'</div><div class="of274Action"><button id="of274PrimaryAction">'+E(act.label)+'</button><span>'+E(act.sub)+'</span></div></div></div><div class="of274Path">'+steps.map(function(s){ const cls=s.done?'done':(!foundNow?(foundNow=true,'now'):''); return '<div class="of274Step '+cls+'"><span>'+s.i+'</span><b>'+E(s.t)+'</b></div>'; }).join('')+'</div></section>'; }
   function destinationHTML(){ return '<div class="of274Destinations" id="of274DestinationIdentity">'+destinationData().map(function(d){ return '<div class="of274Dest" data-of274-view="'+E(d.view)+'" style="--destGlow:'+d.glow+'"><em class="sig">'+E(d.sig)+'</em><b>'+E(d.name)+'</b><span>'+E(d.sub)+'</span><small>'+E(d.tag)+'</small></div>'; }).join('')+'</div>'; }
   function health(){ const ids={}; qa('[id]').forEach(function(el){ ids[el.id]=(ids[el.id]||0)+1; }); const dupes=Object.keys(ids).filter(function(k){return ids[k]>1;}); const legacy=qa('#view [id]').filter(function(el){ return /of27(0|1|2|3).*Shell|livingWorld|CommandHall/i.test(el.id||''); }).map(function(el){return el.id;}); const modals=qa('.scrim,.modal,.overlay,[class*=Overlay],[id*=Modal],[id*=Scrim]').filter(function(el){return el.id!=='arena';}); return {build:safe(function(){return APP_BUILD;},BUILD),saveVersion:safe(function(){return SAVE_VERSION;},'?'),scripts:document.scripts.length,styles:document.querySelectorAll('style').length,duplicateIds:dupes.length,legacyHomeShells:legacy.length,modalSurfaces:modals.length,heroes:ownedHeroes().length,stage:safe(function(){return S.stage||1;},1),passes:PASS.slice()}; }
-  function healthHTML(){ const h=health(); return '<div class="of274Health" id="of274Health"><h3>v2.74.3 Vertical Slice Health</h3><p>Final polish sequence completed: combat spectacle, Oathforge identity, new-player journey, and consolidation audit.</p><div class="of274HealthGrid"><div class="of274Metric"><b>'+h.scripts+'</b><span>Scripts</span></div><div class="of274Metric"><b>'+h.duplicateIds+'</b><span>Dup IDs</span></div><div class="of274Metric"><b>'+h.legacyHomeShells+'</b><span>Legacy Shells</span></div><div class="of274Metric"><b>'+h.modalSurfaces+'</b><span>Modal Surfaces</span></div></div><div class="of274ParkingLot">Passes: '+h.passes.map(E).join(' · ')+'</div></div>'; }
+  function healthHTML(){ return ''; /* v2.79.2 pass1: dev health card removed from Home */ const h=health(); return '<div class="of274Health" id="of274Health"><h3>v2.74.3 Vertical Slice Health</h3><p>Final polish sequence completed: combat spectacle, Oathforge identity, new-player journey, and consolidation audit.</p><div class="of274HealthGrid"><div class="of274Metric"><b>'+h.scripts+'</b><span>Scripts</span></div><div class="of274Metric"><b>'+h.duplicateIds+'</b><span>Dup IDs</span></div><div class="of274Metric"><b>'+h.legacyHomeShells+'</b><span>Legacy Shells</span></div><div class="of274Metric"><b>'+h.modalSurfaces+'</b><span>Modal Surfaces</span></div></div><div class="of274ParkingLot">Passes: '+h.passes.map(E).join(' · ')+'</div></div>'; }
   function collapseHomeLegacy(root){ if(!root) return; qa('#of2731Shell,#of2715Shell,#of2714Shell,#of2713Shell,#of2720Shell,#of2721Shell,#of2722Shell,#of2723Shell',root).forEach(function(el){ if(el.id!=='of274VerticalSliceShell') el.classList.add('of274LegacyCollapsed'); }); }
-  function installHome(){ const st=appState(); const viewEl=q('#view'); if(!viewEl || safe(function(){return view;},'')!=='home') return; injectStyles(); collapseHomeLegacy(viewEl); if(!q('#of274VerticalSliceShell',viewEl)){ viewEl.insertAdjacentHTML('afterbegin', shellHTML()+destinationHTML()+onboardingHTML()+healthHTML()); } else {
+  function installHome(){ return; /* v2.79.5 pass2: of274 Home shell retired — of2785 Fellowship Anchor owns Home */ const st=appState(); const viewEl=q('#view'); if(!viewEl || safe(function(){return view;},'')!=='home') return; injectStyles(); collapseHomeLegacy(viewEl); if(!q('#of274VerticalSliceShell',viewEl)){ viewEl.insertAdjacentHTML('afterbegin', shellHTML()+destinationHTML()+onboardingHTML()+healthHTML()); } else {
       const old=q('#of274VerticalSliceShell',viewEl); if(old) old.outerHTML=shellHTML(); const dest=q('#of274DestinationIdentity',viewEl); if(dest) dest.outerHTML=destinationHTML(); const ob=q('#of274Onboard',viewEl); if(ob){ const html=onboardingHTML(); if(html) ob.outerHTML=html; else ob.remove(); } else { const html=onboardingHTML(); if(html) q('#of274DestinationIdentity',viewEl).insertAdjacentHTML('afterend',html); } const hp=q('#of274Health',viewEl); if(hp) hp.outerHTML=healthHTML();
     }
     const act=q('#of274PrimaryAction',viewEl); if(act&&!act.dataset.bound){ act.dataset.bound='1'; act.onclick=function(){ const a=mainAction(); try{ view=a.view; render(); }catch(e){ console.warn(e); } }; }
@@ -16353,6 +16356,7 @@ body.of27621BattleFx .of27621Spark{position:absolute;left:var(--tx);top:var(--ty
       el.classList.add('of-domain-carrier');
       const raw=el.textContent.trim();
       el.innerHTML=crestHTML(k)+(raw && !raw.toLowerCase().includes((CRESTS[k]||{}).label.toLowerCase())?' <span>'+esc(raw)+'</span>':'');
+      try{ el.querySelectorAll('*').forEach(function(c){ c.dataset.ofCrested='1'; }); }catch(_e){}
     });
   }
   function enhanceRarity(root){
@@ -16369,15 +16373,13 @@ body.of27621BattleFx .of27621Spark{position:absolute;left:var(--tx);top:var(--ty
     root=root||document;
     const anchors=[...root.querySelectorAll('.worldShell,.commandHall,.destinationGrid,.homeCommand,.tabContent,.panel,.card')].filter(el=>/Command|Forge|War Table|Fellowship|Oath|Destination|Journey/i.test(el.textContent||''));
     anchors.slice(0,3).forEach(el=>{ if(!el.dataset.ofSigilFrame){el.dataset.ofSigilFrame='1'; el.classList.add('of-sigil-frame','of-oath-watermark');} });
-    const home=document.querySelector('#homeView,#home,#tab-home,.homeShell,.worldShell') || document.querySelector('main') || document.body;
-    if(home && !document.getElementById('of2777IdentityStrip')){
-      const strip=document.createElement('div'); strip.id='of2777IdentityStrip'; strip.className='of-identity-strip';
-      strip.innerHTML='<div class="k"><span class="of-sigil-mark">◇</span>Oathforge Identity</div><div class="v">Every domain now carries a crest language: oaths, forge marks, rarity sigils, and life-domain colors. The world should feel less generic and more unmistakably Oathforge.</div><div class="of-forge-divider"></div><div style="display:flex;flex-wrap:wrap;gap:6px">'+Object.keys(CRESTS).filter(k=>k!=='work').map(crestHTML).join('')+'</div>';
-      const target=home.firstElementChild||home; target.parentNode.insertBefore(strip,target.nextSibling);
-    }
+    /* v2.79.2 pass1: Oathforge Identity explainer strip removed from Home; domain crests stay. */
+    var __ofOldStrip=document.getElementById('of2777IdentityStrip'); if(__ofOldStrip){ try{__ofOldStrip.remove();}catch(_e){} }
   }
-  function apply(){ try{enhanceDomainText(document); enhanceRarity(document); addWorldIdentity(document);}catch(e){console.warn('v2.77.7 identity apply skipped',e);} }
-  const mo=new MutationObserver(ms=>{ let should=false; for(const m of ms){ if(m.addedNodes&&m.addedNodes.length){should=true;break;} } if(should) requestAnimationFrame(apply); });
+  let __of2777Applying=false, __of2777Mo=null;
+  function apply(){ if(__of2777Applying) return; __of2777Applying=true; try{ if(__of2777Mo) __of2777Mo.disconnect(); }catch(e){} try{enhanceDomainText(document); enhanceRarity(document); addWorldIdentity(document);}catch(e){console.warn('v2.77.7 identity apply skipped',e);} try{ if(__of2777Mo) __of2777Mo.observe(document.body,{childList:true,subtree:true}); }catch(e){} __of2777Applying=false; }
+  const mo=new MutationObserver(ms=>{ if(__of2777Applying) return; let should=false; for(const m of ms){ if(m.addedNodes&&m.addedNodes.length){should=true;break;} } if(should) requestAnimationFrame(apply); });
+  __of2777Mo=mo;
   function start(){ apply(); try{mo.observe(document.body,{childList:true,subtree:true});}catch(e){} }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start,{once:true}); else start();
   const prev=window.renderHome;
@@ -16799,7 +16801,7 @@ body.of27621BattleFx .of27621Spark{position:absolute;left:var(--tx);top:var(--ty
       '<div class="of2785Path"><h3>Today\'s Path</h3><div style="color:#aeb8d2;font-weight:850;font-size:12px">'+E(pct)+'% daily path · Stage '+E(stage)+' waiting</div><div class="of2785Steps">'+['Arrive','Oath','Reward','Battle','Seal'].map(function(x,i){return '<div class="of2785Step '+(i+1<=path?'on':'')+'"><b>'+(i+1===1?'✓':i+1)+'</b>'+x+'</div>'}).join('')+'</div></div>'+
       '<button class="of2785CTA" id="of2785Push"><span>⚔️</span><span>Push the War Table<small>Continue Stage '+E(stage)+'</small></span></button>'+
       '<div class="of2785Tiles"><button class="of2785Tile" data-of2785-nav="roster"><b>Fellowship Hall</b><span>Heroes, bonds, identity.</span></button><button class="of2785Tile" data-of2785-nav="campaign"><b>War Table</b><span>Campaign, Tower, Clash.</span></button><button class="of2785Tile" data-of2785-nav="growth"><b>The Forge</b><span>Rank, gear, prestige.</span></button><button class="of2785Tile" data-of2785-nav="tasks"><b>Expedition Dock</b><span>Oaths, quests, away gains.</span></button></div></section>'+
-      '<section class="of2785Identity"><b>Personal Mythology Roadmap</b>Next: iconic locations, hero identity cards, and battle backgrounds that feel recognizable to you.</section></div>';
+      '</div>';
   }
   function bindHome(){var p=q('#of2785Push'); if(p)p.onclick=function(){try{if(typeof navTo==='function')navTo('campaign'); else {view='campaign';render();}}catch(e){}}; qa('[data-of2785-nav]').forEach(function(b){b.onclick=function(){var v=b.getAttribute('data-of2785-nav'); try{if(typeof navTo==='function')navTo(v); else {view=v;render();}}catch(e){}}});}
   function patchHome(){try{if(typeof window.renderHome==='function'&&!window.renderHome.__of2785){var prev=window.renderHome; var f=function(v){try{v.innerHTML=homeHTML(); setTimeout(bindHome,0); return v.innerHTML;}catch(e){console.warn('v2.78.5 home fallback',e); return prev.apply(this,arguments)}}; f.__of2785=true; f.__prev=prev; window.renderHome=f; renderHome=f;}}catch(e){}}
@@ -17107,7 +17109,7 @@ body.of2786-away-open{overflow:hidden!important;}
 <script id="domainRewardTracksV2790Script">
 (function(){
   'use strict';
-  var BUILD='v2.79.2-home-quest-render-rebuild-health-check';
+  var BUILD='v2.79.0-domain-reward-tracks-health-check';
   var DOMAINS=['Faith','Marriage','Fatherhood','Fitness','Work Leadership','Home Leadership'];
   var META={
     'Faith':{icon:'✝️',color:'#ffd95a',rewards:[['Title','Oathkeeper'],['Frame','Sanctuary Gold'],['Background','Candlelit Chapel']]},
@@ -17136,160 +17138,6 @@ body.of2786-away-open{overflow:hidden!important;}
   window.of2790DomainTracks=function(){auditUnlocks(false); return {sigils:sigils(),tracks:rewardState(),thresholds:THRESH,domains:DOMAINS};};
   window.of2790RenderTracks=placePanel;
   window.of2790Health=function(){var st=sigils(), rs=rewardState(); var total=0; DOMAINS.forEach(function(d){total+=st[d]||0}); return {build:BUILD,appBuild:safe(function(){return APP_BUILD},null),saveVersion:safe(function(){return SAVE_VERSION},null),domains:DOMAINS.length,totalSigils:total,unlocked:Object.keys(rs.unlocked||{}).length,homePanel:!!document.querySelector('[data-of2790="domain-reward-tracks"]'),sigilAwardHook:!!(window.of2789AwardDomainSigils&&window.of2789AwardDomainSigils.__of2790),scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
-})();
-</script>
-
-
-
-<style id="hardHomeQuestCleanupV2791Style">
-/* v2.79.2 — direct Home/Quest render rebuild
-   Goal: stop legacy Home shells from stacking and kill the runaway quest-card radial/conic art. */
-body.of2791-clean-home #view .of274Shell,
-body.of2791-clean-home #view #of274VerticalSliceShell,
-body.of2791-clean-home #view .of274Onboard,
-body.of2791-clean-home #view #of274Onboard,
-body.of2791-clean-home #view .of274Health,
-body.of2791-clean-home #view #of274Health,
-body.of2791-clean-home #view .of2750FinalShell,
-body.of2791-clean-home #view .of2750FinalShell + *,
-body.of2791-clean-home #view .waPresenceBand,
-body.of2791-clean-home #view .of2777Identity,
-body.of2791-clean-home #view .of2790-track-panel{
-  display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important;pointer-events:none!important;
-}
-body.of2791-clean-home #view .of2785Home{display:grid!important;gap:12px!important;margin:0 0 14px!important;}
-body.of2791-clean-home #view .of2785Identity{display:none!important;}
-body.of2791-clean-home #view .of2785Anchor{margin:10px 10px 14px!important;}
-body.of2791-clean-home #view .of2785Anchor:before{opacity:.55!important;animation:none!important;}
-body.of2791-clean-home #view .of2785Title{font-size:clamp(25px,7vw,36px)!important;}
-body.of2791-clean-home #view .of2785Path{margin-top:12px!important;}
-body.of2791-clean-home #view .of2785Tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-body.of2791-clean-home #view .of2785Tile{min-height:72px!important;}
-body.of2791-clean-home #view .of2791MiniSigils{margin:0 10px 12px!important;border:1px solid rgba(255,217,90,.20);border-radius:18px;background:rgba(255,217,90,.055);padding:10px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;}
-body.of2791-clean-home #view .of2791MiniSigils::-webkit-scrollbar{display:none;}
-body.of2791-clean-home #view .of2791MiniSigils span{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.22);border-radius:999px;padding:6px 9px;font:900 11px/1 Rajdhani,system-ui;color:#eaf2ff;white-space:nowrap;}
-
-/* Quest tab: hard-neutralize rogue decorative children/pseudo-elements inside task cards. */
-body.of2791-clean-quests #list .card,
-body.of2791-clean-quests #view #list .card{
-  position:relative!important;contain:layout paint!important;overflow:hidden!important;isolation:isolate!important;min-height:0!important;transform:none!important;animation:none!important;will-change:auto!important;
-}
-body.of2791-clean-quests #list .card::before,
-body.of2791-clean-quests #list .card::after,
-body.of2791-clean-quests #list .card .body::before,
-body.of2791-clean-quests #list .card .body::after,
-body.of2791-clean-quests #list .card .meta::before,
-body.of2791-clean-quests #list .card .meta::after{
-  content:none!important;display:none!important;background:none!important;animation:none!important;transform:none!important;filter:none!important;opacity:0!important;
-}
-body.of2791-clean-quests #list .card .body > :not(.t):not(.meta):not(.taskNote),
-body.of2791-clean-quests #list .card .body .lqRays,
-body.of2791-clean-quests #list .card .body .revealshine,
-body.of2791-clean-quests #list .card .body .heroChamberStageV159,
-body.of2791-clean-quests #list .card .body .of-legend-card,
-body.of2791-clean-quests #list .card .body [class*="Ray"],
-body.of2791-clean-quests #list .card .body [class*="ray"],
-body.of2791-clean-quests #list .card .body [class*="shine"],
-body.of2791-clean-quests #list .card .body [class*="Aura"],
-body.of2791-clean-quests #list .card .body [class*="aura"]{
-  display:none!important;visibility:hidden!important;width:0!important;height:0!important;max-width:0!important;max-height:0!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important;animation:none!important;transform:none!important;
-}
-body.of2791-clean-quests #list .card .t,
-body.of2791-clean-quests #list .card .meta,
-body.of2791-clean-quests #list .card .taskNote,
-body.of2791-clean-quests #list .card .chk{position:relative!important;z-index:5!important;}
-body.of2791-clean-quests #list .card .body{display:block!important;min-height:0!important;position:relative!important;z-index:2!important;}
-body.of2791-clean-quests #list .card .taskNote{max-height:3.15em!important;overflow:hidden!important;}
-body.of2791-clean-quests #list .card img:not(.cIcon):not(.domIcon){max-width:42px!important;max-height:42px!important;object-fit:cover!important;}
-@media(max-width:520px){
-  body.of2791-clean-home #view .of2785Anchor{border-radius:24px!important;padding:14px!important;}
-  body.of2791-clean-home #view .of2785Hero{grid-template-columns:74px 1fr!important;gap:12px!important;}
-  body.of2791-clean-home #view .of2785Portrait{width:74px!important;height:74px!important;border-radius:20px!important;}
-}
-</style>
-<script id="hardHomeQuestCleanupV2791Script">
-(function(){
-  'use strict';
-  var BUILD='v2.79.2-home-quest-render-rebuild-health-check';
-  function q(s,r){return (r||document).querySelector(s)}
-  function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
-  function safe(fn,fb){try{return fn()}catch(e){return fb}}
-  function n(x){x=Number(x||0);return x>=1000000?Math.round(x/100000)/10+'M':x>=1000?Math.round(x/1000)+'K':String(Math.round(x))}
-  function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-  function liveHeroes(){return safe(function(){return (window.S&&Array.isArray(S.heroes)?S.heroes:[]).filter(Boolean)},[])}
-  function chooseAnchor(){
-    var heroes=liveHeroes(); if(!heroes.length)return null;
-    var favs=heroes.filter(function(h){return safe(function(){return typeof isFavorite==='function'&&isFavorite(h.id)},false)});
-    var squadIds=[]; safe(function(){['campaign','tower','raid','clash'].forEach(function(k){(typeof squad==='function'?squad(k):[]).forEach(function(h){if(h&&h.id)squadIds.push(h.id)})})},null);
-    var active=heroes.filter(function(h){return squadIds.indexOf(h.id)>=0});
-    var owned=heroes.filter(function(h){return h.owned});
-    var pool=[].concat(favs,active,owned.length?owned:heroes).filter(Boolean), seen={}, uniq=[];
-    pool.forEach(function(h){if(h&&h.id&&!seen[h.id]){seen[h.id]=1;uniq.push(h)}});
-    var seed=Date.now()+Math.floor(Math.random()*9999);
-    return uniq[seed%uniq.length]||heroes[0];
-  }
-  function img(h){var url=h&&(h.image||h.img||h.portrait||h.art); if(url)return '<img src="'+E(url)+'" alt="">'; var nm=(h&&h.name)||'?'; return '<span>'+E(nm.split(/\s+/).map(function(x){return x[0]||''}).join('').slice(0,2).toUpperCase())+'</span>'}
-  function domainForHero(h){return safe(function(){return typeof heroFlavorDomain==='function'?heroFlavorDomain(h):null},null)||(h&&h.aff&&h.aff[0])||'faith'}
-  function domainLabel2(k){return safe(function(){return typeof domainLabel==='function'?domainLabel(k):String(k||'Oath')},String(k||'Oath'))}
-  function lineFor(h,dom){var p=safe(function(){return typeof passiveOf==='function'?passiveOf(h):null},null); if(p&&p.name&&Math.random()<.25)return p.name+' is ready.'; var map={faith:'Power routed toward Faith.',marriage:'Guard the hearth today.',fatherhood:'Lead the home with patience.',fitness:'Discipline becomes strength.',work:'Focus the mission.',home:'Keep the hall in order.',discipline:'Stay the course.',hobbies:'Joy fuels the journey.'}; return map[dom]||'The Fellowship stands ready.'}
-  function homeHTML(){
-    var h=chooseAnchor(), dom=domainForHero(h), stage=safe(function(){return S.stage||1},1), pwr=safe(function(){return h&&typeof powerOf==='function'?powerOf(h):0},0), rank=safe(function(){return h&&typeof rankIdx==='function'?'Rank '+rankIdx(h):'Hero'},'Hero');
-    var pct=safe(function(){var act=(S.dailies||[]).filter(function(x){return x&&x.freq==='daily'&&(typeof taskActiveToday!=='function'||taskActiveToday(x))}); return act.length?Math.round(100*act.filter(function(x){return x.done}).length/act.length):0},0);
-    var step=pct<=0?1:pct<35?2:pct<70?3:4;
-    return '<div class="of2785Home of2791OnlyHome" data-of2791-home="1"><section class="of2785Anchor" data-of2785-home="1"><div class="of2785Hero"><div class="of2785Portrait" style="--hc:'+(h&&h.color||'#8bd0ff')+'">'+img(h)+'</div><div><div class="of2785Kicker">Fellowship Anchor</div><div class="of2785Title">'+E(h&&h.name||'Oathforge')+'</div><div class="of2785Line">'+E(lineFor(h,dom))+'</div><div class="of2785Chips"><span>'+E(rank)+'</span><span>'+E(domainLabel2(dom))+'</span><span>'+E(pct+'% daily path')+'</span><span>'+E('Power '+n(pwr))+'</span></div></div></div><div class="of2785Path"><h3>Today\'s Path</h3><div style="color:#aeb8d2;font-weight:850;font-size:12px">'+E(pct)+'% daily path · Stage '+E(stage)+' waiting</div><div class="of2785Steps">'+['Arrive','Oath','Reward','Battle','Seal'].map(function(x,i){return '<div class="of2785Step '+(i+1<=step?'on':'')+'"><b>'+(i===0?'✓':i+1)+'</b>'+x+'</div>'}).join('')+'</div></div><button class="of2785CTA" id="of2791Push"><span>⚔️</span><span>Push the War Table<small>Continue Stage '+E(stage)+'</small></span></button><div class="of2785Tiles"><button class="of2785Tile" data-of2791-nav="heroes"><b>Fellowship Hall</b><span>Heroes, bonds, identity.</span></button><button class="of2785Tile" data-of2791-nav="battles"><b>War Table</b><span>Campaign, Tower, Clash.</span></button><button class="of2785Tile" data-of2791-nav="growth"><b>The Forge</b><span>Rank, gear, prestige.</span></button><button class="of2785Tile" data-of2791-nav="quests"><b>Oath Ledger</b><span>Dailies, weeklies, monthlies.</span></button></div></section>'+miniSigils()+'</div>';
-  }
-  function miniSigils(){
-    var store=safe(function(){return (S&&S.domainSigils)||{}},{}), meta={'Faith':'✝️','Marriage':'💍','Fatherhood':'🛡️','Fitness':'💪','Work Leadership':'👑','Home Leadership':'🏠'};
-    return '<div class="of2791MiniSigils">'+Object.keys(meta).map(function(k){return '<span>'+meta[k]+' '+k.replace(' Leadership','')+': '+(store[k]||0)+'</span>'}).join('')+'</div>';
-  }
-  function bindHome(){
-    var p=q('#of2791Push'); if(p)p.onclick=function(){nav('battles')};
-    qa('[data-of2791-nav]').forEach(function(b){b.onclick=function(){nav(b.getAttribute('data-of2791-nav'))}});
-  }
-  function nav(v){try{if(typeof navTo==='function')navTo(v); else {view=v; if(typeof renderHUD==='function')renderHUD(); if(typeof render==='function')render();}}catch(e){}}
-  function cleanupHome(){
-    try{document.body.classList.add('of2791-clean-home'); if(String(window.view||'')!=='home')return 0; var viewEl=q('#view')||document.body; var keep=q('[data-of2791-home]',viewEl); if(!keep){viewEl.innerHTML=homeHTML(); bindHome(); keep=q('[data-of2791-home]',viewEl);} var removed=0; qa('.of274Shell,#of274VerticalSliceShell,.of274Onboard,#of274Onboard,.of274Health,#of274Health,.of2750FinalShell,.waPresenceBand,.of2790-track-panel,.of2777Identity',viewEl).forEach(function(el){if(!keep.contains(el)){el.remove();removed++;}}); return removed;}catch(e){console.warn('[2791 home cleanup]',e);return 0}
-  }
-  function cleanupQuestCards(){
-    try{document.body.classList.add('of2791-clean-quests'); var list=q('#list'); if(!list)return 0; var killed=0; qa('.card .body',list).forEach(function(body){qa(':scope > *',body).forEach(function(ch){if(!ch.classList.contains('t')&&!ch.classList.contains('meta')&&!ch.classList.contains('taskNote')){ch.remove();killed++;}}); qa('.lqRays,.revealshine,.heroChamberStageV159,.of-legend-card,[class*="Ray"],[class*="ray"],[class*="shine"],[class*="Aura"],[class*="aura"]',body).forEach(function(el){el.remove();killed++;});}); return killed;}catch(e){console.warn('[2791 quest cleanup]',e);return 0}
-  }
-  function patchHome(){try{if(typeof window.renderHome==='function'&&!window.renderHome.__of2791){var f=function(v){try{v.innerHTML=homeHTML(); setTimeout(function(){bindHome(); cleanupHome();},0); return v.innerHTML;}catch(e){console.warn('v2.79.1 home fallback',e);}}; f.__of2791=true; window.renderHome=f; renderHome=f;}}catch(e){}}
-  function patchRender(){try{if(typeof window.render==='function'&&!window.render.__of2791){var old=window.render; window.render=function(){var r=old.apply(this,arguments); setTimeout(function(){cleanupHome();cleanupQuestCards();},0); setTimeout(function(){cleanupHome();cleanupQuestCards();},350); return r;}; window.render.__of2791=true;}}catch(e){}}
-  function observe(){try{if(window.__of2791Observer)return; var mo=new MutationObserver(function(){cleanupHome();cleanupQuestCards();}); mo.observe(document.body,{childList:true,subtree:true}); window.__of2791Observer=mo;}catch(e){}}
-  function boot(){try{window.APP_BUILD=BUILD;}catch(e){} patchHome(); patchRender(); observe(); cleanupHome(); cleanupQuestCards(); window.of2791Cleanup=function(){return {home:cleanupHome(),quests:cleanupQuestCards()}}; window.of2791Health=function(){var list=q('#list');return {build:BUILD,appBuild:window.APP_BUILD||null,saveVersion:window.SAVE_VERSION||null,scripts:document.scripts.length,styles:document.querySelectorAll('style').length,homeShells:qa('#view .of274Shell,#view .of2750FinalShell,#view .of274Onboard,#view .of274Health,#view .of2790-track-panel').length,consolidatedHome:!!q('[data-of2791-home]'),questCards:list?qa('.card',list).length:0,rogueQuestChildren:list?qa('#list .card .body > :not(.t):not(.meta):not(.taskNote)').length:0,questRays:list?qa('#list .lqRays,#list [class*="Ray"],#list [class*="ray"],#list [class*="Aura"],#list [class*="aura"]').length:0};}; }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
-  setTimeout(boot,200); setTimeout(function(){cleanupHome();cleanupQuestCards()},800); setTimeout(function(){cleanupHome();cleanupQuestCards()},1800);
-})();
-</script>
-
-
-<style id="homeQuestRenderRebuildV2792Style">
-/* v2.79.2 direct rebuild: one Home only, no legacy stacks. */
-body #view > *:not(.of2792Home){display:none!important;}
-body #view .of2792Home{display:block!important;margin:0 0 80px;padding:0 10px 18px;}
-.of2792Anchor{position:relative;overflow:hidden;border:1px solid rgba(255,217,90,.34);border-radius:28px;padding:18px;background:radial-gradient(520px 260px at 100% 0%,rgba(54,224,230,.16),transparent 60%),linear-gradient(180deg,rgba(24,38,58,.92),rgba(9,13,23,.94));box-shadow:0 18px 55px rgba(0,0,0,.35)}
-.of2792Hero{display:grid;grid-template-columns:86px 1fr;gap:14px;align-items:center}.of2792Portrait{width:86px;height:86px;border-radius:22px;overflow:hidden;display:grid;place-items:center;background:#102036;border:1px solid rgba(255,255,255,.16);font:900 28px Orbitron;color:#eaf2ff}.of2792Portrait img{width:100%;height:100%;object-fit:cover}.of2792Kicker{font:900 11px Orbitron;text-transform:uppercase;letter-spacing:1.8px;color:#ffd95a}.of2792Copy h1{margin:3px 0;font-size:clamp(29px,8vw,44px);line-height:.95}.of2792Copy p{margin:0;color:#c7d2ee;font-weight:850;line-height:1.25}.of2792Chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.of2792Chips span,.of2792Sigils span{border:1px solid rgba(255,255,255,.13);background:rgba(0,0,0,.24);border-radius:999px;padding:7px 10px;font:900 12px Rajdhani;color:#eaf2ff}.of2792Path{margin-top:18px;border:1px solid rgba(255,255,255,.10);border-radius:20px;padding:13px;background:rgba(0,0,0,.18)}.of2792Path b{display:block;font-size:23px}.of2792Path small{color:#aeb8d2;font-weight:850}.of2792Steps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:11px}.of2792Steps span{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);border-radius:14px;display:grid;place-items:center;min-height:58px;font:800 11px Rajdhani;color:#aeb8d2}.of2792Steps span b{font:900 18px Orbitron;color:#ffd95a}.of2792Steps span.on{border-color:rgba(255,217,90,.42);background:rgba(255,217,90,.12);color:#fff}.of2792CTA{margin-top:16px;width:100%;border:0;border-radius:20px;padding:17px;background:linear-gradient(135deg,#ffd95a,#ff6b4a);color:#120d08;text-align:left;display:flex;gap:12px;align-items:center;font:900 20px Rajdhani}.of2792CTA small{display:block;font-size:13px;opacity:.85}.of2792Tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.of2792Tiles button{border:1px solid rgba(255,255,255,.12);border-radius:17px;background:rgba(255,255,255,.055);color:#f4f7ff;text-align:left;padding:14px;font:900 18px Rajdhani}.of2792Tiles small{display:block;color:#aeb8d2;font-size:13px;margin-top:4px}.of2792Sigils{display:flex;gap:7px;overflow-x:auto;margin:12px 0;padding-bottom:2px;scrollbar-width:none}.of2792Sigils::-webkit-scrollbar{display:none}.of2792Roadmap{border:1px solid rgba(255,217,90,.22);border-radius:19px;background:rgba(255,217,90,.06);padding:14px;margin-top:10px}.of2792Roadmap b{font:900 14px Orbitron;text-transform:uppercase;color:#ffd95a}.of2792Roadmap p{margin:6px 0 0;color:#c7d2ee;font-weight:850;line-height:1.35}
-/* Kill runaway quest card decorations at every possible level. */
-#list .card,#list .card *{animation:none!important;transition:none!important;will-change:auto!important}
-#list .card{contain:layout paint!important;overflow:hidden!important;min-height:0!important;background:linear-gradient(180deg,rgba(14,22,37,.94),rgba(8,12,22,.96))!important;}
-#list .card:before,#list .card:after,#list .card *:before,#list .card *:after{content:none!important;display:none!important;background:none!important;box-shadow:none!important;filter:none!important;animation:none!important;transform:none!important;opacity:0!important;}
-#list .card .lqRays,#list .card .revealshine,#list .card .heroChamberStageV159,#list .card [class*="Ray"],#list .card [class*="ray"],#list .card [class*="Aura"],#list .card [class*="aura"],#list .card [class*="shine"],#list .card [style*="radial-gradient"],#list .card [style*="conic-gradient"]{display:none!important;width:0!important;height:0!important;max-width:0!important;max-height:0!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important;}
-#list .card > :not(.diff):not(.body):not(.chk):not(.btnset){display:none!important}
-#list .card .diff,#list .card .body,#list .card .chk,#list .card .btnset,#list .card .t,#list .card .meta,#list .card .taskNote{display:revert!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:2!important;}
-#list .card .diff{position:absolute!important;left:0!important;top:14px!important;bottom:14px!important;width:6px!important;border-radius:999px!important;z-index:3!important;}
-#list .card .chk{position:absolute!important;right:16px!important;top:50%!important;transform:translateY(-50%)!important;z-index:4!important;}
-#list .card .taskNote{max-height:3.1em!important;overflow:hidden!important;background:rgba(8,18,28,.72)!important;border-left:3px solid rgba(54,224,230,.75)!important;margin-top:9px!important;padding:8px 10px!important;border-radius:0 10px 10px 0!important;color:#aeb8d2!important;}
-</style>
-<script id="homeQuestRenderRebuildV2792Script">
-(function(){
-'use strict';
-var BUILD='v2.79.2-home-quest-render-rebuild-health-check';
-function q(s,r){return (r||document).querySelector(s)}function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
-function killQuestArtifacts(){var list=q('#list'); if(!list)return 0; var killed=0; qa('.card',list).forEach(function(card){qa('.lqRays,.revealshine,.heroChamberStageV159,[class*="Ray"],[class*="ray"],[class*="Aura"],[class*="aura"],[class*="shine"]',card).forEach(function(el){el.remove();killed++}); qa('[style]',card).forEach(function(el){var st=String(el.getAttribute('style')||''); if(/radial-gradient|conic-gradient|inset:\s*-|scale\(/i.test(st) && !el.classList.contains('diff')){el.remove();killed++;}}); qa(':scope > *',card).forEach(function(el){if(!el.classList.contains('diff')&&!el.classList.contains('body')&&!el.classList.contains('chk')&&!el.classList.contains('btnset')){el.remove();killed++;}});}); return killed;}
-function enforceHome(){try{if(String(window.view||'')!=='home')return 0; var v=q('#view'); if(!v)return 0; var h=q('.of2792Home',v); if(!h && typeof renderHome==='function'){renderHome(v); h=q('.of2792Home',v);} if(!h)return 0; var removed=0; qa(':scope > *',v).forEach(function(el){if(!el.classList.contains('of2792Home')){el.remove();removed++;}}); return removed;}catch(e){console.warn('2792 home enforce failed',e);return 0}}
-function wrapRender(){try{if(typeof render==='function'&&!render.__of2792){var old=render; render=function(){var r=old.apply(this,arguments); setTimeout(function(){enforceHome();killQuestArtifacts()},0); setTimeout(function(){enforceHome();killQuestArtifacts()},250); return r}; render.__of2792=true; window.render=render;}}catch(e){}}
-function boot(){try{window.APP_BUILD=BUILD}catch(e){} wrapRender(); enforceHome(); killQuestArtifacts(); if(window.__of2792MO)try{window.__of2792MO.disconnect()}catch(e){} try{window.__of2792MO=new MutationObserver(function(){killQuestArtifacts();enforceHome()}); window.__of2792MO.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});}catch(e){} window.of2792Health=function(){return {build:BUILD,appBuild:window.APP_BUILD||null,view:window.view||null,homeChildren:q('#view')?q('#view').children.length:null,homeRebuilt:!!q('#view .of2792Home'),questArtifacts:qa('#list .lqRays,#list .revealshine,#list [class*="Ray"],#list [class*="ray"],#list [class*="Aura"],#list [class*="aura"],#list [style*="radial-gradient"],#list [style*="conic-gradient"]').length,scripts:document.scripts.length,styles:document.querySelectorAll('style').length}}; window.of2792Cleanup=function(){return {home:enforceHome(),quests:killQuestArtifacts()}};}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot(); setInterval(function(){killQuestArtifacts(); if(String(window.view||'')==='home')enforceHome();},900);
 })();
 </script>
 
