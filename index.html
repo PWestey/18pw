@@ -843,6 +843,22 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
 @media(max-width:430px){.clashBattleOverlay.c7{padding:4px}.clashBattlePanel.c7{height:calc(100dvh - 8px);max-height:calc(100dvh - 8px);border-radius:14px;padding:7px;gap:5px}.clashBattleHead{gap:5px}.clashBattleHead b{font-size:12px}.clashBattleHead span{font-size:9.5px}.clashBattleBtns button{padding:7px 8px;min-width:34px}.clashBattlePattern{max-height:44px}.clashBattlePattern span{font-size:8.5px;padding:2px 5px}.clashArenaGrid.c7{gap:4px}.clashArenaGrid.c7.five{gap:3px}.laneLabel{font-size:7.5px;padding:3px 2px}.enemyTrack{top:27px;bottom:164px}.clashLaneBattle:after{top:27px;bottom:172px}.clashEnemyToken{width:34px}.clashEnemyToken .enemyFace{height:27px;border-radius:8px}.clashEnemyToken.boss{width:42px}.clashEnemyToken.boss .enemyFace{height:37px}.enemyType{display:none}.heroStack{gap:3px}.clashHeroCell{grid-template-columns:1fr;place-items:center;min-height:39px;padding:2px}.heroTile{width:28px;height:28px;border-radius:8px}.heroTags span{display:none}.heroTags{font-size:7px;line-height:1}.heroHp{width:92%}.clashBattleLog{font-size:10px;min-height:24px}.clashResult{padding:15px 12px}.clashResultStats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.clashResultStats div{padding:7px 4px}.clashResultStats b{font-size:12px}.clashResultStats span{font-size:7px}}
 
 </style>
+
+<style id="domainSigilsV2789Style">
+  .of2789-sigil-toast{
+    position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(18px);
+    z-index:99999;min-width:260px;max-width:calc(100vw - 28px);padding:12px 14px;border-radius:18px;
+    background:linear-gradient(135deg,rgba(15,23,42,.96),rgba(38,26,65,.96));
+    border:1px solid rgba(255,255,255,.18);box-shadow:0 20px 50px rgba(0,0,0,.45),0 0 32px rgba(245,158,11,.16);
+    color:#fff;display:flex;align-items:center;gap:12px;pointer-events:none;opacity:0;transition:opacity .28s ease,transform .28s ease;
+    font-family:inherit;
+  }
+  .of2789-sigil-toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .of2789-sigil-orb{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 0 18px rgba(255,255,255,.08)}
+  .of2789-sigil-copy{flex:1;min-width:0}.of2789-sigil-kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#f8d78a;font-weight:800}.of2789-sigil-title{font-size:15px;font-weight:900;line-height:1.15;margin-top:2px}.of2789-sigil-sub{font-size:12px;color:rgba(255,255,255,.72);margin-top:3px}.of2789-sigil-total{font-size:18px;font-weight:950;color:#fff4c7;white-space:nowrap}
+  .of2789-domain-sigil-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.of2789-domain-sigil-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);padding:7px 10px;font-size:12px;font-weight:800;color:rgba(255,255,255,.86)}
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -2399,7 +2415,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.78.4-roster-qa-bug-squash-health-check';
+const APP_BUILD='v2.79.0-domain-reward-tracks-health-check';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -16712,6 +16728,404 @@ body.of27621BattleFx .of27621Spark{position:absolute;left:var(--tx);top:var(--ty
   function boot(){patchDev(); clearGhosts(); window.of2784Audit=audit; window.of2784Report=reportText; window.of2784QA=showQA; window.of2784ClearGhosts=clearGhosts; window.of2784Health=function(){var a=audit(); console.table(a.rows.map(function(r){return {check:r.title,status:r.ok?'OK':(r.level==='bad'?'FIX':'CHECK'),detail:r.msg}})); return a;}; try{if(typeof healthChecks==='function'&&!healthChecks.__of2784){var old=healthChecks; healthChecks=function(){var rows=old.apply(this,arguments)||[]; var a=audit(); rows.push({level:a.bad===0?'ok':'warn',title:'v2.78.4 roster QA gate',msg:a.ok+' ok · '+a.warn+' warnings · '+a.bad+' blocking'}); rows.push({level:a.missing.length===0?'ok':'warn',title:'Full roster kit coverage',msg:a.covered+'/'+a.rosterTotal+' heroes covered'}); rows.push({level:(a.wowPeter>=13&&a.megan===1)?'ok':'warn',title:'WoW Fellowship correction',msg:a.wowPeter+' Peter heroes · '+a.megan+' Megan hero'}); return rows}; healthChecks.__of2784=true;}}catch(e){} }
   document.addEventListener('click',function(e){if(e.target&&e.target.closest&&e.target.closest('#devToolsToggle,#of2784QA,[data-view="heroes"],[data-view="battle"]'))setTimeout(boot,120)},true);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot(); setTimeout(boot,350); setTimeout(boot,1100);
+})();
+</script>
+
+
+
+<style id="personalMythologyV2785Styles">
+/* v2.78.5 — quest performance + Home consolidation + hero requirements strip */
+#list .card.of-sigil-frame::before,
+#list .card.of-oath-watermark::after,
+#list .card[data-of-sigil-frame]::before,
+#list .card[data-of-sigil-frame]::after,
+#list .card .of-sigil-frame::before,
+#list .card .of-oath-watermark::after{display:none!important;content:none!important;background:none!important;}
+#list .card{contain:layout paint;overflow:hidden;isolation:auto!important;will-change:auto!important;min-height:0!important;}
+#list .card::before,#list .card::after{max-width:0!important;max-height:0!important;opacity:0!important;pointer-events:none!important;}
+#list .card .body{position:relative;z-index:2;min-height:0!important;}
+#list .taskNote{position:relative;z-index:3;max-width:100%;}
+.of2785Home{display:grid;gap:14px;padding-bottom:14px}.of2785Anchor{position:relative;overflow:hidden;border:1px solid rgba(139,208,255,.28);border-radius:26px;background:linear-gradient(135deg,rgba(16,29,48,.94),rgba(10,14,24,.94));box-shadow:0 20px 60px rgba(0,0,0,.38),0 0 32px rgba(54,224,230,.06);padding:16px}.of2785Anchor:before{content:"";position:absolute;inset:-1px;background:radial-gradient(520px 240px at 94% 0%,rgba(54,224,230,.18),transparent 62%),linear-gradient(120deg,rgba(255,217,90,.07),transparent 34%);pointer-events:none}.of2785Anchor>*{position:relative}.of2785Hero{display:grid;grid-template-columns:82px 1fr;gap:13px;align-items:center}.of2785Portrait{width:82px;height:82px;border-radius:22px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(160deg,var(--hc,#8bd0ff),#0008);border:1px solid color-mix(in srgb,var(--hc,#8bd0ff) 70%,#ffffff22);font-family:Orbitron;font-size:25px;font-weight:1000;color:#fff}.of2785Portrait img{width:100%;height:100%;object-fit:cover}.of2785Kicker{font:1000 10px/1 Orbitron;text-transform:uppercase;letter-spacing:.12em;color:#ffd95a}.of2785Title{font-family:Orbitron;font-weight:1000;font-size:28px;line-height:1.02;color:#fff;margin:5px 0 4px}.of2785Line{color:#aeb8d2;font-weight:850;line-height:1.25;font-size:15px}.of2785Chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.of2785Chips span{border:1px solid rgba(139,208,255,.22);background:rgba(255,255,255,.06);border-radius:999px;padding:5px 9px;font-weight:900;color:#dceaff;font-size:11px}.of2785Path{margin-top:14px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.20);border-radius:19px;padding:12px}.of2785Path h3{margin:0 0 5px;font-family:Orbitron;font-size:14px;color:#fff}.of2785Steps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:10px}.of2785Step{border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.045);padding:9px 4px;text-align:center;color:#aeb8d2;font-weight:900;font-size:10px}.of2785Step.on{border-color:rgba(255,217,90,.48);background:rgba(255,217,90,.10);color:#fff}.of2785Step b{display:block;font-family:Orbitron;color:#ffd95a;font-size:13px;margin-bottom:3px}.of2785CTA{margin-top:14px;width:100%;border:0;border-radius:18px;padding:15px 14px;background:linear-gradient(135deg,#ffd95a,#ff7c45);color:#1b1208;font-family:Orbitron;font-weight:1000;font-size:16px;text-align:left;display:flex;align-items:center;gap:12px;box-shadow:0 14px 34px rgba(255,124,69,.18)}.of2785CTA small{display:block;font-family:Rajdhani;font-size:13px;font-weight:900;opacity:.84}.of2785Tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.of2785Tile{border:1px solid rgba(255,255,255,.12);background:linear-gradient(135deg,rgba(255,255,255,.065),rgba(255,255,255,.03));border-radius:18px;padding:14px;text-align:left;color:#fff}.of2785Tile b{display:block;font-family:Orbitron;font-size:13px}.of2785Tile span{display:block;color:#aeb8d2;font-size:12px;font-weight:850;line-height:1.2;margin-top:4px}.of2785Identity{border:1px solid rgba(255,217,90,.22);background:rgba(255,217,90,.055);border-radius:18px;padding:12px;color:#aeb8d2;font-weight:800;line-height:1.35}.of2785Identity b{display:block;font-family:Orbitron;color:#ffd95a;font-size:12px;text-transform:uppercase;letter-spacing:.09em;margin-bottom:4px}.of2785ReqPanel{border:1px solid rgba(255,217,90,.24)!important;background:linear-gradient(135deg,rgba(255,217,90,.075),rgba(139,208,255,.045))!important}.of2785Wallet{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:8px}.of2785Wallet div{border:1px solid rgba(139,208,255,.18);background:rgba(0,0,0,.22);border-radius:12px;padding:7px 5px;text-align:center;min-width:0}.of2785Wallet b{display:block!important;font-family:Orbitron!important;font-size:11px!important;color:#8bd0ff!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.of2785Wallet span{display:block!important;font-size:8px!important;color:#9aa7c7!important;text-transform:uppercase!important;letter-spacing:.5px!important;font-family:Orbitron!important;font-weight:900!important}.of2785ReqRows{display:grid;gap:6px;margin-top:9px}.of2785Req{border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.18);border-radius:12px;padding:8px 9px;display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:900;color:#dfe8ff;font-size:12px}.of2785Req.ok{border-color:rgba(125,255,176,.24);background:rgba(125,255,176,.055)}.of2785Req.no{border-color:rgba(255,93,108,.24);background:rgba(255,93,108,.055)}.of2785Req small{color:#9aa7c7;font-weight:850}@media(max-width:430px){.of2785Hero{grid-template-columns:72px 1fr}.of2785Portrait{width:72px;height:72px}.of2785Title{font-size:22px}.of2785Steps{gap:5px}.of2785Step{font-size:9px;padding:8px 2px}.of2785Tiles{grid-template-columns:1fr 1fr}.of2785Wallet{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+<script id="personalMythologyV2785Script">
+(function(){
+  'use strict';
+  var BUILD='v2.78.5-home-quest-performance-health-check';
+  function q(s,r){return (r||document).querySelector(s)}
+  function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
+  function E(v){try{return (typeof esc==='function')?esc(String(v==null?'':v)):String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}catch(e){return String(v||'')}}
+  function n(v){return Number(v||0).toLocaleString()}
+  function initials(name){return String(name||'?').split(/\s+/).filter(Boolean).slice(0,2).map(function(x){return x[0]}).join('').toUpperCase()||'?'}
+  function img(h){return h&&h.img?'<img src="'+h.img+'" alt="">':initials(h&&h.name)}
+  function safe(fn,d){try{return fn()}catch(e){return d}}
+  function liveHeroes(){return ((window.S&&S.heroes)||[]).filter(Boolean)}
+  function currentSquadIds(){var ids=[]; try{['campaign','tower','raid','clash'].forEach(function(k){(typeof squad==='function'?squad(k):[]).forEach(function(h){if(h&&h.id)ids.push(h.id)})})}catch(e){} return Array.from(new Set(ids))}
+  function chooseAnchor(){
+    var heroes=liveHeroes(); if(!heroes.length)return null;
+    var favs=heroes.filter(function(h){return safe(function(){return typeof isFavorite==='function'&&isFavorite(h.id)},false)});
+    var focused=heroes.filter(function(h){return S&&S.focus&&h.id===S.focus});
+    var squadIds=currentSquadIds();
+    var active=heroes.filter(function(h){return squadIds.indexOf(h.id)>=0});
+    var owned=heroes.filter(function(h){return h.owned});
+    var pool=[].concat(favs,focused,active,owned.length?owned:heroes).filter(Boolean);
+    var uniq=[], seen={}; pool.forEach(function(h){if(h&&h.id&&!seen[h.id]){seen[h.id]=1;uniq.push(h)}});
+    return uniq[Math.floor(Math.random()*uniq.length)] || heroes[0];
+  }
+  function domainForHero(h){try{if(typeof heroFlavorDomain==='function')return heroFlavorDomain(h)}catch(e){} var a=(h&&h.aff&&h.aff[0])||'faith'; return a;}
+  function domainLabel2(k){try{return typeof domainLabel==='function'?domainLabel(k):String(k||'Oath')}catch(e){return String(k||'Oath')}}
+  function lineFor(h,dom){
+    var name=h&&h.name? h.name:'The Fellowship';
+    var map={faith:'Power routed toward Faith.',marriage:'Guard the hearth today.',fatherhood:'Lead the home with patience.',fitness:'Discipline becomes strength.',work:'Focus the mission.',home:'Keep the hall in order.',hobbies:'Joy fuels the journey.',discipline:'Stay the course.'};
+    var p=safe(function(){return typeof passiveOf==='function'?passiveOf(h):null},null);
+    if(p&&p.name&&Math.random()<0.35) return p.name+' is ready.';
+    return map[dom]||('Systems clean. '+name+' stands ready.');
+  }
+  function progressStep(){var done=safe(function(){return (S.dailies||[]).filter(function(x){return x&&x.freq==='daily'&&x.done}).length},0); if(done<=0)return 1; if(done<3)return 2; if(safe(function(){return S.stage>1},false))return 4; return 3;}
+  function homeHTML(){
+    var h=chooseAnchor(), dom=domainForHero(h), stage=safe(function(){return S.stage||1},1), pwr=safe(function(){return h&&typeof powerOf==='function'?powerOf(h):0},0), rank=safe(function(){return h&&typeof rankIdx==='function'?'Rank '+rankIdx(h):'Hero'},'Hero'), path=progressStep();
+    var pct=safe(function(){var act=(S.dailies||[]).filter(function(x){return x&&x.freq==='daily'&&(typeof taskActiveToday!=='function'||taskActiveToday(x))}); if(!act.length)return 0; return Math.round(100*act.filter(function(x){return x.done}).length/act.length)},0);
+    return '<div class="of2785Home">'+
+      '<section class="of2785Anchor" data-of2785-home="1"><div class="of2785Hero"><div class="of2785Portrait" style="--hc:'+(h&&h.color||'#8bd0ff')+'">'+img(h)+'</div><div><div class="of2785Kicker">Fellowship Anchor</div><div class="of2785Title">'+E(h&&h.name||'Oathforge')+'</div><div class="of2785Line">'+E(lineFor(h,dom))+'</div><div class="of2785Chips"><span>'+E(rank)+'</span><span>'+E(domainLabel2(dom))+'</span><span>'+E(pct+'% daily path')+'</span><span>'+E('Power '+n(pwr))+'</span></div></div></div>'+
+      '<div class="of2785Path"><h3>Today\'s Path</h3><div style="color:#aeb8d2;font-weight:850;font-size:12px">'+E(pct)+'% daily path · Stage '+E(stage)+' waiting</div><div class="of2785Steps">'+['Arrive','Oath','Reward','Battle','Seal'].map(function(x,i){return '<div class="of2785Step '+(i+1<=path?'on':'')+'"><b>'+(i+1===1?'✓':i+1)+'</b>'+x+'</div>'}).join('')+'</div></div>'+
+      '<button class="of2785CTA" id="of2785Push"><span>⚔️</span><span>Push the War Table<small>Continue Stage '+E(stage)+'</small></span></button>'+
+      '<div class="of2785Tiles"><button class="of2785Tile" data-of2785-nav="roster"><b>Fellowship Hall</b><span>Heroes, bonds, identity.</span></button><button class="of2785Tile" data-of2785-nav="campaign"><b>War Table</b><span>Campaign, Tower, Clash.</span></button><button class="of2785Tile" data-of2785-nav="growth"><b>The Forge</b><span>Rank, gear, prestige.</span></button><button class="of2785Tile" data-of2785-nav="tasks"><b>Expedition Dock</b><span>Oaths, quests, away gains.</span></button></div></section>'+
+      '<section class="of2785Identity"><b>Personal Mythology Roadmap</b>Next: iconic locations, hero identity cards, and battle backgrounds that feel recognizable to you.</section></div>';
+  }
+  function bindHome(){var p=q('#of2785Push'); if(p)p.onclick=function(){try{if(typeof navTo==='function')navTo('campaign'); else {view='campaign';render();}}catch(e){}}; qa('[data-of2785-nav]').forEach(function(b){b.onclick=function(){var v=b.getAttribute('data-of2785-nav'); try{if(typeof navTo==='function')navTo(v); else {view=v;render();}}catch(e){}}});}
+  function patchHome(){try{if(typeof window.renderHome==='function'&&!window.renderHome.__of2785){var prev=window.renderHome; var f=function(v){try{v.innerHTML=homeHTML(); setTimeout(bindHome,0); return v.innerHTML;}catch(e){console.warn('v2.78.5 home fallback',e); return prev.apply(this,arguments)}}; f.__of2785=true; f.__prev=prev; window.renderHome=f; renderHome=f;}}catch(e){}}
+  function cleanupQuestCards(root){try{var list=q('#list',root||document); if(!list)return 0; var count=0; qa('.card',list).forEach(function(c){['of-sigil-frame','of-oath-watermark'].forEach(function(cls){if(c.classList.contains(cls)){c.classList.remove(cls);count++;}}); c.removeAttribute('data-of-sigil-frame'); c.style.willChange='auto'; c.style.contain='layout paint'; c.style.overflow='hidden'; }); return count;}catch(e){return 0}}
+  function patchTasks(){try{if(typeof window.renderTasks==='function'&&!window.renderTasks.__of2785){var prev=window.renderTasks; var f=function(v){var r=prev.apply(this,arguments); setTimeout(function(){cleanupQuestCards(v||document)},0); return r}; f.__of2785=true; window.renderTasks=f; renderTasks=f;}}catch(e){}}
+  function rankReq(h){var i=safe(function(){return rankIdx(h)},0), r=safe(function(){return RANKUP[i]},null); if(!r)return {label:'Rank Max',ok:true,need:'Max rank reached'}; var levelOk=safe(function(){return (h.level||1)>=rankCap(h)},false); var ok=safe(function(){return canRankUp(h)},false); var txt=safe(function(){return rankReqText(r)},''); if(!levelOk) txt='Lv '+(h.level||1)+'/'+safe(function(){return rankCap(h)},'?'); return {label:'Rank Up',ok:ok,need:txt};}
+  function prestigeReq(h){var c=safe(function(){return prestigeCost(h)},null); if(!c)return {label:'Prestige',ok:false,need:'Unavailable'}; var ok=safe(function(){return canPrestige(h)},false); var txt='✦ '+(S.sparks||0)+'/'+c.sparks+' · ⦿ '+n(S.gold||0)+'/'+n(c.gold); var blocker=safe(function(){return prestigeNeedText(h)},''); return {label:'Prestige',ok:ok,need:ok?txt:blocker||txt};}
+  function enhanceHeroRequirements(id){try{var ov=q('#of27616HeroOverlay.show'); if(!ov)return; var dr=q('.of27616Drawer',ov); if(!dr||q('#of2785ReqPanel',dr))return; var h=id&&safe(function(){return typeof heroById==='function'?heroById(id):null},null); if(!h){var nm=(q('.of27616Top b',dr)||{}).textContent||''; h=liveHeroes().find(function(x){return x&&x.name===nm})} if(!h)return; var rr=rankReq(h), pr=prestigeReq(h); var html='<div id="of2785ReqPanel" class="of27616Panel of2785ReqPanel"><h4>Upgrade Readiness <span>wallet + requirements</span></h4><div class="of2785Wallet"><div><b>⦿ '+n(S.gold||0)+'</b><span>Gold</span></div><div><b>❖ '+n(S.dust||0)+'</b><span>Dust</span></div><div><b>◈ '+n(S.heroCores||0)+'</b><span>Cores</span></div><div><b>✦ '+n(S.sparks||0)+'</b><span>Sparks</span></div></div><div class="of2785ReqRows"><div class="of2785Req '+(rr.ok?'ok':'no')+'"><span>'+(rr.ok?'✓':'•')+' '+E(rr.label)+'</span><small>'+E(rr.need)+'</small></div><div class="of2785Req '+(pr.ok?'ok':'no')+'"><span>'+(pr.ok?'✓':'•')+' '+E(pr.label)+'</span><small>'+E(pr.need)+'</small></div></div></div>'; var stats=q('.of27616Stats',dr); if(stats)stats.insertAdjacentHTML('afterend',html); else dr.insertAdjacentHTML('afterbegin',html);}catch(e){console.warn('v2.78.5 req panel skipped',e)}}
+  function patchHeroModal(){try{if(typeof window.openHeroSheet==='function'&&!window.openHeroSheet.__of2785){var prev=window.openHeroSheet; var f=function(id){var r=prev.apply(this,arguments); setTimeout(function(){enhanceHeroRequirements(id)},60); return r}; Object.keys(prev).forEach(function(k){try{f[k]=prev[k]}catch(e){}}); f.__of2785=true; window.openHeroSheet=f; openHeroSheet=f;}}
+    catch(e){} }
+  function observe(){try{var mo=new MutationObserver(function(){cleanupQuestCards(document); enhanceHeroRequirements();}); mo.observe(document.body,{childList:true,subtree:true}); window.__of2785Observer=mo;}catch(e){}}
+  function health(){var list=q('#list'); var bad=list?qa('.card.of-sigil-frame,.card.of-oath-watermark',list).length:0; var report={build:BUILD,appBuild:(typeof APP_BUILD!=='undefined'?APP_BUILD:null),saveVersion:(typeof SAVE_VERSION!=='undefined'?SAVE_VERSION:null),scripts:document.scripts.length,styles:document.querySelectorAll('style').length,homeConsolidated:!!q('[data-of2785-home]'),renderHomeHook:!!(window.renderHome&&window.renderHome.__of2785),renderTasksHook:!!(window.renderTasks&&window.renderTasks.__of2785),questDecorationsRemaining:bad,heroReqPanel:!!q('#of2785ReqPanel'),randomAnchor:true}; try{console.table(report)}catch(e){console.log(report)} return report;}
+  function boot(){try{if(typeof APP_BUILD!=='undefined')window.APP_BUILD=BUILD}catch(e){window.APP_BUILD=BUILD} patchHome(); patchTasks(); patchHeroModal(); cleanupQuestCards(document); observe(); window.of2785Health=health; window.of2785CleanupQuestCards=function(){return cleanupQuestCards(document)}; setTimeout(function(){cleanupQuestCards(document); patchHeroModal();},250);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+})();
+</script>
+
+
+<style id="idleRewardsModalHotfixV2786Styles">
+/* v2.78.6 — idle rewards modal hotfix: always dismissible, mobile-safe */
+#awayModal.show{display:grid!important;z-index:2147483000!important;place-items:center!important;padding:18px!important;overscroll-behavior:contain!important;touch-action:auto!important;}
+#awayModal .obox{position:relative!important;max-height:min(86vh,720px)!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important;pointer-events:auto!important;}
+#awayModal .of2786Close{position:absolute;right:10px;top:10px;z-index:3;width:42px;height:42px;border-radius:14px;border:1px solid var(--line);background:rgba(5,8,17,.92);color:var(--ink);font-size:24px;font-weight:900;line-height:1;display:grid;place-items:center;}
+#awayModal .of2786Close:active{transform:scale(.96)}
+#awayModal .wbCollect{pointer-events:auto!important;position:relative!important;z-index:2!important;}
+#awayModal .of2786SafeRow{display:flex;gap:8px;margin-top:8px;}
+#awayModal .of2786SafeRow button{flex:1;border-radius:12px;min-height:44px;font-family:Orbitron;font-weight:900;border:1px solid var(--line);background:var(--panel2);color:var(--ink);}
+#awayModal .of2786SafeRow .primary{background:linear-gradient(90deg,#37c46e,#36e0e6);color:#04221c;border:none;}
+body.of2786-away-open{overflow:hidden!important;}
+</style>
+<script id="idleRewardsModalHotfixV2786Script">
+/* Oathforge v2.78.6 — Idle Rewards modal hotfix
+   Scope: fixes Welcome Back idle reward overlay trapping input. No quest/home/battle/hero feature changes. */
+(function IdleRewardsModalHotfix2786(){
+  'use strict';
+  if(window.__of2786IdleRewardsHotfixLoaded) return;
+  window.__of2786IdleRewardsHotfixLoaded=true;
+  const BUILD='v2.78.6-idle-rewards-modal-hotfix';
+  function q(s,r){return (r||document).querySelector(s)}
+  function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
+  function safe(fn,fb){try{const v=fn(); return v==null?fb:v}catch(e){return fb}}
+  function closeAwayModal(forceCollect){
+    try{
+      const modal=q('#awayModal');
+      const btn=q('#awayCollect');
+      if(forceCollect && btn && !btn.dataset.done){
+        try{ btn.click(); }catch(e){}
+      }
+      if(modal){ modal.classList.remove('show','open','active','visible'); modal.style.display='none'; modal.setAttribute('aria-hidden','true'); }
+      document.body.classList.remove('of2786-away-open');
+      document.documentElement.classList.remove('of2786-away-open');
+      try{document.body.style.overflow=''; document.documentElement.style.overflow='';}catch(e){}
+    }catch(e){ console.warn('v2.78.6 closeAwayModal failed',e); }
+  }
+  function decorateAwayModal(){
+    const modal=q('#awayModal'), box=q('#awayBox');
+    if(!modal||!box||!modal.classList.contains('show')) return false;
+    modal.style.display='grid';
+    modal.removeAttribute('aria-hidden');
+    document.body.classList.add('of2786-away-open');
+    if(!q('#of2786AwayClose',box)){
+      box.insertAdjacentHTML('afterbegin','<button id="of2786AwayClose" class="of2786Close" type="button" aria-label="Close idle rewards">×</button>');
+      const c=q('#of2786AwayClose',box); if(c)c.onclick=function(e){e.preventDefault(); e.stopPropagation(); closeAwayModal(false);};
+    }
+    const collect=q('#awayCollect',box);
+    if(collect && !collect.__of2786Safe){
+      collect.__of2786Safe=true;
+      const old=collect.onclick;
+      collect.onclick=function(ev){
+        if(ev){ev.preventDefault(); ev.stopPropagation();}
+        try{ if(typeof old==='function') old.call(this,ev); }
+        catch(err){ console.warn('v2.78.6 idle collect recovered after error',err); }
+        setTimeout(function(){ closeAwayModal(false); }, 250);
+      };
+    }
+    if(!q('#of2786AwaySafeRow',box)){
+      box.insertAdjacentHTML('beforeend','<div id="of2786AwaySafeRow" class="of2786SafeRow"><button class="primary" type="button" id="of2786CollectClose">Collect / Close</button><button type="button" id="of2786DismissAway">Dismiss</button></div>');
+      const cc=q('#of2786CollectClose',box); if(cc)cc.onclick=function(e){e.preventDefault();e.stopPropagation(); const b=q('#awayCollect'); if(b&&!b.dataset.done){try{b.click()}catch(_){}} setTimeout(function(){closeAwayModal(false)},300);};
+      const dc=q('#of2786DismissAway',box); if(dc)dc.onclick=function(e){e.preventDefault();e.stopPropagation();closeAwayModal(false);};
+    }
+    return true;
+  }
+  function installModalHandlers(){
+    const modal=q('#awayModal'); if(!modal||modal.__of2786Handlers) return;
+    modal.__of2786Handlers=true;
+    modal.addEventListener('click',function(ev){ if(ev.target===modal) closeAwayModal(false); },true);
+    modal.addEventListener('touchend',function(ev){ if(ev.target===modal) closeAwayModal(false); },true);
+  }
+  function patchShowAway(){
+    if(typeof window.showAway!=='function' || window.showAway.__of2786) return;
+    const prev=window.showAway;
+    const wrapped=function(){
+      let r;
+      try{ r=prev.apply(this,arguments); }
+      catch(e){ console.warn('v2.78.6 showAway recovered',e); try{ if(typeof awayReport!=='undefined') awayReport=null; }catch(_){} }
+      setTimeout(decorateAwayModal,20);
+      setTimeout(decorateAwayModal,250);
+      return r;
+    };
+    wrapped.__of2786=true;
+    window.showAway=wrapped;
+    try{ showAway=wrapped; }catch(e){}
+  }
+  function sweep(){
+    installModalHandlers(); patchShowAway(); decorateAwayModal();
+    const modal=q('#awayModal');
+    if(modal && !modal.classList.contains('show')){
+      document.body.classList.remove('of2786-away-open');
+      if(modal.style.display==='grid') modal.style.display='';
+    }
+  }
+  document.addEventListener('keydown',function(ev){ if(ev.key==='Escape') closeAwayModal(false); },true);
+  document.addEventListener('click',function(ev){
+    const t=ev.target;
+    if(t && t.closest && (t.closest('#of2786AwayClose')||t.closest('#of2786DismissAway'))) closeAwayModal(false);
+  },true);
+  function health(){
+    const modal=q('#awayModal');
+    const box=q('#awayBox');
+    const report={build:BUILD,appBuild:safe(function(){return APP_BUILD},null),scripts:document.scripts.length,styles:document.querySelectorAll('style').length,awayModalExists:!!modal,awayModalShowing:!!(modal&&modal.classList.contains('show')),closeButton:!!q('#of2786AwayClose'),safeRow:!!q('#of2786AwaySafeRow'),bodyLocked:document.body.classList.contains('of2786-away-open'),showAwayPatched:!!(window.showAway&&window.showAway.__of2786)};
+    try{console.table(report)}catch(e){console.log(report)}
+    return report;
+  }
+  window.of2786Health=health;
+  window.of2786CloseAway=function(){closeAwayModal(false);return health();};
+  window.of2786DecorateAway=decorateAwayModal;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){sweep(); setInterval(sweep,1500);},{once:true});
+  else {sweep(); setInterval(sweep,1500);}
+})();
+</script>
+
+
+
+<!-- v2.78.7 hero domain + completion attack foundation -->
+<style id="heroDomainCompletionAttackV2787Style">
+.of2787CompletionAttack{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px);z-index:99995;width:min(430px,calc(100vw - 26px));border:1px solid color-mix(in srgb,var(--of2787-domain,#36e0e6) 55%,rgba(255,255,255,.12));background:linear-gradient(135deg,rgba(8,13,24,.96),rgba(18,23,42,.92));box-shadow:0 18px 50px rgba(0,0,0,.45),0 0 34px color-mix(in srgb,var(--of2787-domain,#36e0e6) 18%,transparent);border-radius:22px;padding:12px;display:flex;gap:12px;align-items:center;opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease;font-weight:900;overflow:hidden}.of2787CompletionAttack.show{opacity:1;transform:translateX(-50%) translateY(0)}.of2787CompletionAttack:before{content:"";position:absolute;inset:-40% -20%;background:radial-gradient(circle at 78% 30%,color-mix(in srgb,var(--of2787-domain,#36e0e6) 24%,transparent),transparent 44%);pointer-events:none}.of2787CompletionAttack .face{position:relative;z-index:1;width:58px;height:58px;border-radius:18px;overflow:hidden;border:2px solid color-mix(in srgb,var(--of2787-domain,#36e0e6) 70%,#fff2);display:grid;place-items:center;background:rgba(255,255,255,.06);font-family:Orbitron;font-size:20px;color:#fff;flex:0 0 auto}.of2787CompletionAttack .face img{width:100%;height:100%;object-fit:cover;display:block}.of2787CompletionAttack .copy{position:relative;z-index:1;min-width:0;flex:1}.of2787CompletionAttack .k{font-family:Orbitron;text-transform:uppercase;letter-spacing:.7px;font-size:10px;color:color-mix(in srgb,var(--of2787-domain,#36e0e6) 82%,#fff)}.of2787CompletionAttack .t{font-family:Orbitron;font-size:16px;color:#fff;line-height:1.12;margin-top:2px}.of2787CompletionAttack .s{font-size:12px;line-height:1.25;color:var(--muted);margin-top:3px}.of2787CompletionAttack .dmg{position:relative;z-index:1;font-family:Orbitron;color:#8bd0ff;text-align:right;font-size:14px;white-space:nowrap}.of2787CompletionAttack .dmg span{display:block;font-size:8px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-top:2px}@media(max-width:460px){.of2787CompletionAttack{bottom:calc(74px + env(safe-area-inset-bottom));padding:10px;border-radius:18px}.of2787CompletionAttack .face{width:50px;height:50px;border-radius:15px}.of2787CompletionAttack .t{font-size:14px}.of2787CompletionAttack .dmg{font-size:12px}}
+</style>
+<script id="heroDomainCompletionAttackV2787Script">
+(function(){
+  'use strict';
+  var BUILD='v2.78.7-hero-domain-completion-attack-health-check';
+  var DOMAIN_KEYS=['faith','marriage','fatherhood','fitness','work','home','discipline','hobbies'];
+  var IP_DOMAIN={
+    'Marvel':'work','DC':'discipline','World of Warcraft':'discipline','WoW':'discipline','Stormlight Archive':'faith','Star Wars':'discipline','Lord of the Rings':'faith','Harry Potter':'hobbies','Baldur\'s Gate 3':'hobbies','Pokemon':'fatherhood','Pokémon':'fatherhood','Disney/Pixar':'fatherhood','Fourth Wing':'fitness','Red Rising':'work','Mass Effect':'work','Critical Role':'hobbies','Witcher':'discipline','League of Legends':'hobbies'
+  };
+  function safe(fn,fb){try{return fn()}catch(e){return fb}}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function hash(s){s=String(s||'');var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}return Math.abs(h)}
+  function validDomain(k){return DOMAIN_KEYS.indexOf(k)>=0}
+  function roleDomain(h){var r=String((h&&h.role)||'').toLowerCase(); if(/support|healer|saint|sage/.test(r))return 'faith'; if(/tank|guardian|protector/.test(r))return 'discipline'; if(/assassin|slayer|melee|bruiser/.test(r))return 'fitness'; if(/mage|caster|scholar|ranged/.test(r))return 'work'; return null}
+  function heroPrimaryDomain(h){
+    if(!h) return 'discipline';
+    if(validDomain(h.domain)) return h.domain;
+    if(Array.isArray(h.aff)){for(var i=0;i<h.aff.length;i++){if(validDomain(h.aff[i])) return h.aff[i];}}
+    var ip=String(h.ip||h.tag||''); if(IP_DOMAIN[ip]) return IP_DOMAIN[ip];
+    var rd=roleDomain(h); if(rd) return rd;
+    return DOMAIN_KEYS[hash(h.id||h.name)%DOMAIN_KEYS.length];
+  }
+  function normalizeHero(h){
+    if(!h||typeof h!=='object') return h;
+    var d=heroPrimaryDomain(h); h.domain=d;
+    if(!Array.isArray(h.aff)) h.aff=[];
+    if(h.aff.indexOf(d)<0) h.aff.unshift(d);
+    h.domainLinked=true;
+    return h;
+  }
+  function normalizeAllHeroes(){
+    safe(function(){ if(Array.isArray(window.ROSTER)) window.ROSTER.forEach(normalizeHero); },0);
+    safe(function(){ if(window.S&&Array.isArray(S.heroes)) S.heroes.forEach(normalizeHero); },0);
+  }
+  function domainMeta(k){return safe(function(){return window.DKEY&&DKEY[k]?DKEY[k]:null},null)||{label:k||'Oath',color:'#36e0e6',icon:'⚡'};}
+  function ownedHeroes(){return safe(function(){return (S.heroes||[]).filter(function(h){return h&&h.owned!==false});},[])}
+  function kitUltimate(h){
+    return safe(function(){ if(typeof ultimateName==='function'){var n=ultimateName(h); if(n) return n;} return null;},null) ||
+           safe(function(){ if(typeof kitOf==='function'){var k=kitOf(h); if(k&&k.ultimate) return k.ultimate;} return null;},null) ||
+           safe(function(){ if(typeof passiveOf==='function'){var p=passiveOf(h); if(p&&p.ultimate) return p.ultimate; if(p&&p.name) return p.name;} return null;},null) ||
+           ({faith:'Beacon Strike',marriage:'Hearthguard',fatherhood:'Protector\'s Rally',fitness:'Iron Will Assault',work:'Strategy Breaker',home:'Steward\'s Guard',discipline:'Chainbreaker',hobbies:'Joyful Focus'})[heroPrimaryDomain(h)] || 'Oathstrike';
+  }
+  function pickHeroForDomain(k){
+    normalizeAllHeroes();
+    var hs=ownedHeroes(); if(!hs.length) return null;
+    var pool=hs.filter(function(h){return heroPrimaryDomain(h)===k});
+    if(!pool.length) pool=hs.filter(function(h){return Array.isArray(h.aff)&&h.aff.indexOf(k)>=0});
+    if(!pool.length) pool=hs;
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  function faceHTML(h){ if(!h) return '⚡'; if(h.img) return '<img src="'+esc(h.img)+'" alt="">'; var nm=String(h.name||'?').trim().split(/\s+/).map(function(x){return x[0]||''}).join('').slice(0,2).toUpperCase(); return esc(nm||'?'); }
+  function dmgForTask(task,h){var diff=(task&&task.diff)||'med'; var base={easy:140,med:330,hard:760}[diff]||330; var p=safe(function(){return typeof powerOf==='function'?powerOf(h):((h.level||1)*25)},100); return Math.max(25,Math.round(base*(1+p/18000)));}
+  function showCompletionAttack(task,kind){
+    try{
+      var d=(task&&((typeof domainOf==='function'&&domainOf(task))||task.domain))||'discipline'; if(!validDomain(d)) d='discipline';
+      var meta=domainMeta(d), h=pickHeroForDomain(d), ult=kitUltimate(h), dmg=dmgForTask(task,h);
+      var box=document.getElementById('of2787CompletionAttack');
+      if(!box){box=document.createElement('div');box.id='of2787CompletionAttack';box.className='of2787CompletionAttack';document.body.appendChild(box);}
+      box.style.setProperty('--of2787-domain',meta.color||'#36e0e6');
+      box.innerHTML='<div class="face">'+faceHTML(h)+'</div><div class="copy"><div class="k">'+esc(meta.label)+' raid strike</div><div class="t">'+esc(h?h.name:'Your Fellowship')+' used '+esc(ult)+'</div><div class="s">'+esc((task&&task.title)||'Oath completed')+' · '+esc(kind||'task')+'</div></div><div class="dmg">'+Number(dmg).toLocaleString()+'<span>damage</span></div>';
+      box.classList.add('show'); clearTimeout(window.__of2787T); window.__of2787T=setTimeout(function(){box.classList.remove('show')},2600);
+      return {hero:h&&h.name,domain:d,ultimate:ult,damage:dmg};
+    }catch(e){try{console.warn('of2787 completion attack failed',e)}catch(_){ } return null;}
+  }
+  function patchExistingTaskFX(){
+    try{
+      if(typeof window.taskHeroFor==='function'&&!window.taskHeroFor.__of2787){ var oldPick=window.taskHeroFor; window.taskHeroFor=function(domain){return pickHeroForDomain(domain)||oldPick.apply(this,arguments)}; window.taskHeroFor.__of2787=true; }
+    }catch(e){}
+    try{
+      if(typeof window.taskActionVerb==='function'&&!window.taskActionVerb.__of2787){ var oldVerb=window.taskActionVerb; window.taskActionVerb=function(h,domain){return kitUltimate(h)||oldVerb.apply(this,arguments)}; window.taskActionVerb.__of2787=true; }
+    }catch(e){}
+    try{
+      if(typeof window.showTaskDopamine==='function'&&!window.showTaskDopamine.__of2787){ var oldShow=window.showTaskDopamine; window.showTaskDopamine=function(item,kind,charged,gains){ var r=oldShow.apply(this,arguments); setTimeout(function(){showCompletionAttack(item,kind)},90); return r; }; window.showTaskDopamine.__of2787=true; }
+    }catch(e){}
+  }
+  function boot(){normalizeAllHeroes();patchExistingTaskFX();}
+  setTimeout(boot,0); setTimeout(boot,400); setTimeout(boot,1400);
+  window.of2787NormalizeHeroDomains=normalizeAllHeroes;
+  window.of2787PickDomainHero=pickHeroForDomain;
+  window.of2787CompletionAttack=showCompletionAttack;
+  window.of2787Health=function(){normalizeAllHeroes(); var all=safe(function(){return (S.heroes||[])},[]); var missing=all.filter(function(h){return h&&!validDomain(h.domain)}); var by={}; all.forEach(function(h){var d=heroPrimaryDomain(h);by[d]=(by[d]||0)+1}); return {build:BUILD,appBuild:safe(function(){return APP_BUILD},null),saveVersion:safe(function(){return SAVE_VERSION},null),heroes:all.length,missingDomain:missing.length,domains:by,completionAttackHook:!!(window.showTaskDopamine&&window.showTaskDopamine.__of2787),taskHeroHook:!!(window.taskHeroFor&&window.taskHeroFor.__of2787),ultimateHook:!!(window.taskActionVerb&&window.taskActionVerb.__of2787),scripts:document.scripts.length,styles:document.querySelectorAll('style').length}; };
+})();
+</script>
+
+
+<script id="domainSigilsV2789Script">
+(function(){
+  'use strict';
+  var BUILD='v2.78.9-domain-sigils-health-check';
+  var DOMAINS=['Faith','Marriage','Fatherhood','Fitness','Work Leadership','Home Leadership'];
+  var ICONS={'Faith':'✝️','Marriage':'💍','Fatherhood':'🛡️','Fitness':'💪','Work Leadership':'👑','Home Leadership':'🏠'};
+  var ALIASES={work:'Work Leadership',leadership:'Work Leadership',home:'Home Leadership',family:'Fatherhood',father:'Fatherhood',dad:'Fatherhood',wife:'Marriage',spouse:'Marriage',marriage:'Marriage',faith:'Faith',fitness:'Fitness',health:'Fitness'};
+  function safe(fn,fb){try{return fn()}catch(e){return fb}}
+  function state(){return safe(function(){return window.S||{}},{});}
+  function saveState(){try{ if(typeof window.save==='function') window.save(); else if(typeof window.saveState==='function') window.saveState(); }catch(e){}}
+  function normDomain(raw){
+    var d=(raw||'').toString().trim(); if(!d) return '';
+    var hit=DOMAINS.find(function(x){return x.toLowerCase()===d.toLowerCase()}); if(hit) return hit;
+    var low=d.toLowerCase();
+    for(var k in ALIASES){ if(low.indexOf(k)>=0) return ALIASES[k]; }
+    return '';
+  }
+  function inferDomain(item){
+    var direct=normDomain(item&&item.domain)||normDomain(item&&item.category)||normDomain(item&&item.area)||normDomain(item&&item.tag);
+    if(direct) return direct;
+    var text=[item&&item.title,item&&item.name,item&&item.notes,item&&item.note,item&&item.description].filter(Boolean).join(' ').toLowerCase();
+    if(/pray|scripture|bible|church|god|christ|gratitude/.test(text)) return 'Faith';
+    if(/wife|megan|marriage|date|check.?in|spouse/.test(text)) return 'Marriage';
+    if(/emmy|emilia|olivia|daughter|kid|child|father|family|play/.test(text)) return 'Fatherhood';
+    if(/gym|workout|lift|cardio|steps|protein|calorie|walk|mobility|sleep/.test(text)) return 'Fitness';
+    if(/work|lead|career|northwestern|meeting|focus|project/.test(text)) return 'Work Leadership';
+    if(/home|chore|clean|budget|finance|house|laundry|meal/.test(text)) return 'Home Leadership';
+    return 'Faith';
+  }
+  function difficulty(item){return ((item&&item.difficulty)||'easy').toString().toLowerCase();}
+  function cadence(kind,item){return ((kind||item&&item.cadence||item&&item.freq||'daily')+'').toLowerCase();}
+  function sigilAmount(item,kind){
+    var d=difficulty(item), c=cadence(kind,item); var base=(d.indexOf('hard')>=0?3:d.indexOf('med')>=0?2:1);
+    if(c.indexOf('month')>=0) return base*8;
+    if(c.indexOf('week')>=0) return base*4;
+    return base;
+  }
+  function ensure(){var s=state(); s.domainSigils=s.domainSigils||{}; DOMAINS.forEach(function(d){ if(typeof s.domainSigils[d]!=='number') s.domainSigils[d]=Number(s.domainSigils[d]||0); }); return s.domainSigils;}
+  function showToast(domain,amount,total){
+    try{document.querySelectorAll('.of2789-sigil-toast').forEach(function(n){n.remove()});}catch(e){}
+    var el=document.createElement('div'); el.className='of2789-sigil-toast';
+    el.innerHTML='<div class="of2789-sigil-orb">'+(ICONS[domain]||'✦')+'</div><div class="of2789-sigil-copy"><div class="of2789-sigil-kicker">Domain Sigil Earned</div><div class="of2789-sigil-title">+'+amount+' '+domain+' Sigil'+(amount===1?'':'s')+'</div><div class="of2789-sigil-sub">Long-term identity progression · cosmetics, frames, titles, backgrounds</div></div><div class="of2789-sigil-total">'+total+'</div>';
+    document.body.appendChild(el); requestAnimationFrame(function(){el.classList.add('on')});
+    setTimeout(function(){el.classList.remove('on'); setTimeout(function(){try{el.remove()}catch(e){}},360);},2600);
+  }
+  function awardDomainSigils(item,kind){
+    var domain=inferDomain(item||{}), amount=sigilAmount(item||{},kind); var store=ensure(); store[domain]=(Number(store[domain]||0)+amount); saveState(); showToast(domain,amount,store[domain]); return {domain:domain,amount:amount,total:store[domain]};
+  }
+  function patchCompletion(){
+    try{
+      if(typeof window.showTaskDopamine==='function'&&!window.showTaskDopamine.__of2789){
+        var old=window.showTaskDopamine;
+        window.showTaskDopamine=function(item,kind,charged,gains){ var r=old.apply(this,arguments); setTimeout(function(){awardDomainSigils(item,kind)},190); return r; };
+        window.showTaskDopamine.__of2789=true;
+      }
+    }catch(e){}
+  }
+  function decorateHomeSigils(){
+    try{
+      var root=document.querySelector('#homeScreen,#home,#screen-home,.home-screen,.tab-home')||document.querySelector('main')||document.body;
+      if(!root||root.querySelector('.of2789-domain-sigil-row')) return;
+      var store=ensure();
+      var row=document.createElement('div'); row.className='of2789-domain-sigil-row'; row.setAttribute('data-of2789','domain-sigils');
+      DOMAINS.forEach(function(d){ var chip=document.createElement('span'); chip.className='of2789-domain-sigil-chip'; chip.textContent=(ICONS[d]||'✦')+' '+d+': '+(store[d]||0); row.appendChild(chip); });
+      var anchor=root.querySelector('.of-command-card,.of-home-hero-anchor,.card,.panel')||root.firstElementChild;
+      if(anchor&&anchor.parentNode) anchor.parentNode.insertBefore(row,anchor.nextSibling); else root.prepend(row);
+    }catch(e){}
+  }
+  function boot(){ensure(); patchCompletion(); setTimeout(decorateHomeSigils,500);}
+  setTimeout(boot,0); setTimeout(boot,650); setTimeout(boot,1800);
+  window.of2789AwardDomainSigils=awardDomainSigils;
+  window.of2789DomainSigils=function(){return ensure();};
+  window.of2789Health=function(){var store=ensure();return {build:BUILD,appBuild:safe(function(){return APP_BUILD},null),saveVersion:safe(function(){return SAVE_VERSION},null),domainSigils:store,completionHook:!!(window.showTaskDopamine&&window.showTaskDopamine.__of2789),scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
+})();
+</script>
+
+
+<style id="domainRewardTracksV2790Style">
+.of2790-track-panel{margin:12px 12px 16px;padding:14px;border:1px solid rgba(255,255,255,.13);border-radius:20px;background:linear-gradient(135deg,rgba(13,17,28,.88),rgba(25,32,50,.78));box-shadow:0 12px 28px rgba(0,0,0,.25);position:relative;overflow:hidden}
+.of2790-track-panel:before{content:"";position:absolute;inset:-30%;background:radial-gradient(circle at 18% 12%,rgba(255,217,90,.13),transparent 32%),radial-gradient(circle at 86% 24%,rgba(54,224,230,.10),transparent 34%);pointer-events:none}
+.of2790-track-head{position:relative;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}.of2790-track-head b{font-size:14px;letter-spacing:.2px}.of2790-track-head span{font-size:11px;color:var(--muted,#aeb7c8);font-weight:800;text-transform:uppercase;letter-spacing:.08em}.of2790-track-grid{position:relative;display:grid;grid-template-columns:1fr;gap:10px}.of2790-track-card{border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:10px;background:rgba(0,0,0,.20)}.of2790-track-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.of2790-track-name{font-size:13px;font-weight:900}.of2790-track-total{font-size:12px;color:#ffd95a;font-weight:900}.of2790-track-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden}.of2790-track-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--of2790-color,#36e0e6),rgba(255,255,255,.72));width:0%;transition:width .35s ease}.of2790-unlocks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.of2790-unlock{font-size:10px;font-weight:900;border-radius:999px;padding:5px 7px;background:rgba(255,255,255,.08);color:var(--muted,#aeb7c8);border:1px solid rgba(255,255,255,.08)}.of2790-unlock.on{color:#0d111c;background:linear-gradient(135deg,#ffd95a,#fff1a9)}.of2790-unlock.next{color:#fff;border-color:rgba(255,217,90,.5);background:rgba(255,217,90,.12)}
+.of2790-reward-toast{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:2147483000;display:flex;gap:10px;align-items:center;padding:12px;border-radius:18px;border:1px solid rgba(255,217,90,.38);background:linear-gradient(135deg,rgba(14,18,30,.96),rgba(47,35,12,.94));box-shadow:0 18px 44px rgba(0,0,0,.42);transform:translateY(18px);opacity:0;pointer-events:none;transition:.28s ease}.of2790-reward-toast.on{transform:translateY(0);opacity:1}.of2790-reward-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:rgba(255,217,90,.16);font-size:22px}.of2790-reward-copy{min-width:0}.of2790-reward-k{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#ffd95a;font-weight:900}.of2790-reward-t{font-size:14px;font-weight:950}.of2790-reward-s{font-size:11px;color:var(--muted,#aeb7c8);font-weight:750;line-height:1.3}
+</style>
+<script id="domainRewardTracksV2790Script">
+(function(){
+  'use strict';
+  var BUILD='v2.79.0-domain-reward-tracks-health-check';
+  var DOMAINS=['Faith','Marriage','Fatherhood','Fitness','Work Leadership','Home Leadership'];
+  var META={
+    'Faith':{icon:'✝️',color:'#ffd95a',rewards:[['Title','Oathkeeper'],['Frame','Sanctuary Gold'],['Background','Candlelit Chapel']]},
+    'Marriage':{icon:'💍',color:'#ff9ecb',rewards:[['Title','Devoted Heart'],['Frame','Covenant Rose'],['Background','Moonlit Garden']]},
+    'Fatherhood':{icon:'🛡️',color:'#8bd0ff',rewards:[['Title','Shield of the Home'],['Frame','Protector Blue'],['Background','Family Hearth']]},
+    'Fitness':{icon:'💪',color:'#7dffb0',rewards:[['Title','Iron Discipline'],['Frame','Forge Steel'],['Background','Training Grounds']]},
+    'Work Leadership':{icon:'👑',color:'#caa7ff',rewards:[['Title','Command Voice'],['Frame','Crownlight Violet'],['Background','Council Table']]},
+    'Home Leadership':{icon:'🏠',color:'#ffb36b',rewards:[['Title','Steward of the Hall'],['Frame','Hearth Ember'],['Background','Warm Hearth']]}
+  };
+  var THRESH=[25,75,150];
+  function safe(fn,fb){try{return fn()}catch(e){return fb}}
+  function state(){return safe(function(){return window.S||{}},{});}
+  function saveState(){try{ if(typeof window.save==='function') window.save(); else if(typeof window.saveState==='function') window.saveState(); }catch(e){}}
+  function sigils(){var s=state(); s.domainSigils=s.domainSigils||{}; DOMAINS.forEach(function(d){s.domainSigils[d]=Number(s.domainSigils[d]||0)}); return s.domainSigils;}
+  function rewardState(){var s=state(); s.domainRewardTracks=s.domainRewardTracks||{unlocked:{},lastToast:0}; s.domainRewardTracks.unlocked=s.domainRewardTracks.unlocked||{}; return s.domainRewardTracks;}
+  function key(domain,i){return domain+'::'+i;}
+  function unlocksFor(domain,total){var meta=META[domain]||META.Faith; return meta.rewards.map(function(r,i){return {idx:i,threshold:THRESH[i],type:r[0],name:r[1],unlocked:total>=THRESH[i]};});}
+  function auditUnlocks(show){var st=sigils(), rs=rewardState(), newly=[]; DOMAINS.forEach(function(d){unlocksFor(d,st[d]||0).forEach(function(u){var k=key(d,u.idx); if(u.unlocked&&!rs.unlocked[k]){rs.unlocked[k]={domain:d,type:u.type,name:u.name,threshold:u.threshold,at:Date.now()}; newly.push(rs.unlocked[k]);}});}); if(newly.length){saveState(); if(show!==false) showUnlockToast(newly[0]);} return newly;}
+  function showUnlockToast(r){try{document.querySelectorAll('.of2790-reward-toast').forEach(function(n){n.remove()});}catch(e){} var m=META[r.domain]||META.Faith; var el=document.createElement('div'); el.className='of2790-reward-toast'; el.innerHTML='<div class="of2790-reward-icon">'+m.icon+'</div><div class="of2790-reward-copy"><div class="of2790-reward-k">Domain Reward Unlocked</div><div class="of2790-reward-t">'+r.name+'</div><div class="of2790-reward-s">'+r.domain+' '+r.type+' · earned through real-life oaths</div></div>'; document.body.appendChild(el); requestAnimationFrame(function(){el.classList.add('on')}); setTimeout(function(){el.classList.remove('on');setTimeout(function(){try{el.remove()}catch(e){}},320)},3100);}
+  function pct(total){var next=THRESH.find(function(t){return total<t})||THRESH[THRESH.length-1]; return Math.min(100,Math.round((total/next)*100));}
+  function renderPanel(){var st=sigils(), rs=rewardState(); return '<div class="of2790-track-panel" data-of2790="domain-reward-tracks"><div class="of2790-track-head"><div><b>Domain Reward Tracks</b><br><span>Sigils unlock titles, frames, and backgrounds</span></div><span>'+Object.keys(rs.unlocked||{}).length+' unlocked</span></div><div class="of2790-track-grid">'+DOMAINS.map(function(d){var m=META[d], total=st[d]||0, unlocks=unlocksFor(d,total); return '<div class="of2790-track-card" style="--of2790-color:'+m.color+'"><div class="of2790-track-top"><div class="of2790-track-name">'+m.icon+' '+d+'</div><div class="of2790-track-total">'+total+' sigils</div></div><div class="of2790-track-bar"><div class="of2790-track-fill" style="width:'+pct(total)+'%"></div></div><div class="of2790-unlocks">'+unlocks.map(function(u){var cls=u.unlocked?'on':(total<u.threshold&&u.threshold===(THRESH.find(function(t){return total<t})||THRESH[2])?'next':'');return '<span class="of2790-unlock '+cls+'">'+u.threshold+' · '+u.type+'</span>';}).join('')+'</div></div>';}).join('')+'</div></div>';}
+  function placePanel(){try{auditUnlocks(false); var old=document.querySelector('[data-of2790="domain-reward-tracks"]'); if(old) old.remove(); var root=document.querySelector('#homeScreen,#home,#screen-home,.home-screen,.tab-home')||document.querySelector('main')||document.body; var anchor=root.querySelector('.of2789-domain-sigil-row')||root.querySelector('.of-command-card,.of-home-hero-anchor,.card,.panel')||root.firstElementChild; var wrap=document.createElement('div'); wrap.innerHTML=renderPanel(); var panel=wrap.firstElementChild; if(anchor&&anchor.parentNode) anchor.parentNode.insertBefore(panel,anchor.nextSibling); else root.prepend(panel);}catch(e){try{console.warn('of2790 panel failed',e)}catch(_){}}}
+  function patchSigilAward(){try{if(typeof window.of2789AwardDomainSigils==='function'&&!window.of2789AwardDomainSigils.__of2790){var old=window.of2789AwardDomainSigils; window.of2789AwardDomainSigils=function(){var r=old.apply(this,arguments); setTimeout(function(){auditUnlocks(true); placePanel();},260); return r;}; window.of2789AwardDomainSigils.__of2790=true;}}catch(e){}}
+  function boot(){sigils();rewardState();patchSigilAward();setTimeout(placePanel,700);setTimeout(function(){auditUnlocks(true)},1100)}
+  setTimeout(boot,0); setTimeout(boot,900); setTimeout(boot,2200);
+  window.of2790DomainTracks=function(){auditUnlocks(false); return {sigils:sigils(),tracks:rewardState(),thresholds:THRESH,domains:DOMAINS};};
+  window.of2790RenderTracks=placePanel;
+  window.of2790Health=function(){var st=sigils(), rs=rewardState(); var total=0; DOMAINS.forEach(function(d){total+=st[d]||0}); return {build:BUILD,appBuild:safe(function(){return APP_BUILD},null),saveVersion:safe(function(){return SAVE_VERSION},null),domains:DOMAINS.length,totalSigils:total,unlocked:Object.keys(rs.unlocked||{}).length,homePanel:!!document.querySelector('[data-of2790="domain-reward-tracks"]'),sigilAwardHook:!!(window.of2789AwardDomainSigils&&window.of2789AwardDomainSigils.__of2790),scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
 })();
 </script>
 
