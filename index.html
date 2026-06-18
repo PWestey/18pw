@@ -2415,7 +2415,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.79.5-home-pass2-of274-retire';
+const APP_BUILD='v2.79.6-home-remove-sigils-tracks';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -17080,17 +17080,7 @@ body.of2786-away-open{overflow:hidden!important;}
       }
     }catch(e){}
   }
-  function decorateHomeSigils(){
-    try{
-      var root=document.querySelector('#homeScreen,#home,#screen-home,.home-screen,.tab-home')||document.querySelector('main')||document.body;
-      if(!root||root.querySelector('.of2789-domain-sigil-row')) return;
-      var store=ensure();
-      var row=document.createElement('div'); row.className='of2789-domain-sigil-row'; row.setAttribute('data-of2789','domain-sigils');
-      DOMAINS.forEach(function(d){ var chip=document.createElement('span'); chip.className='of2789-domain-sigil-chip'; chip.textContent=(ICONS[d]||'✦')+' '+d+': '+(store[d]||0); row.appendChild(chip); });
-      var anchor=root.querySelector('.of-command-card,.of-home-hero-anchor,.card,.panel')||root.firstElementChild;
-      if(anchor&&anchor.parentNode) anchor.parentNode.insertBefore(row,anchor.nextSibling); else root.prepend(row);
-    }catch(e){}
-  }
+  function decorateHomeSigils(){ try{ if(window.of2796RemoveHomeExtras) window.of2796RemoveHomeExtras(); }catch(e){} }
   function boot(){ensure(); patchCompletion(); setTimeout(decorateHomeSigils,500);}
   setTimeout(boot,0); setTimeout(boot,650); setTimeout(boot,1800);
   window.of2789AwardDomainSigils=awardDomainSigils;
@@ -17131,13 +17121,113 @@ body.of2786-away-open{overflow:hidden!important;}
   function showUnlockToast(r){try{document.querySelectorAll('.of2790-reward-toast').forEach(function(n){n.remove()});}catch(e){} var m=META[r.domain]||META.Faith; var el=document.createElement('div'); el.className='of2790-reward-toast'; el.innerHTML='<div class="of2790-reward-icon">'+m.icon+'</div><div class="of2790-reward-copy"><div class="of2790-reward-k">Domain Reward Unlocked</div><div class="of2790-reward-t">'+r.name+'</div><div class="of2790-reward-s">'+r.domain+' '+r.type+' · earned through real-life oaths</div></div>'; document.body.appendChild(el); requestAnimationFrame(function(){el.classList.add('on')}); setTimeout(function(){el.classList.remove('on');setTimeout(function(){try{el.remove()}catch(e){}},320)},3100);}
   function pct(total){var next=THRESH.find(function(t){return total<t})||THRESH[THRESH.length-1]; return Math.min(100,Math.round((total/next)*100));}
   function renderPanel(){var st=sigils(), rs=rewardState(); return '<div class="of2790-track-panel" data-of2790="domain-reward-tracks"><div class="of2790-track-head"><div><b>Domain Reward Tracks</b><br><span>Sigils unlock titles, frames, and backgrounds</span></div><span>'+Object.keys(rs.unlocked||{}).length+' unlocked</span></div><div class="of2790-track-grid">'+DOMAINS.map(function(d){var m=META[d], total=st[d]||0, unlocks=unlocksFor(d,total); return '<div class="of2790-track-card" style="--of2790-color:'+m.color+'"><div class="of2790-track-top"><div class="of2790-track-name">'+m.icon+' '+d+'</div><div class="of2790-track-total">'+total+' sigils</div></div><div class="of2790-track-bar"><div class="of2790-track-fill" style="width:'+pct(total)+'%"></div></div><div class="of2790-unlocks">'+unlocks.map(function(u){var cls=u.unlocked?'on':(total<u.threshold&&u.threshold===(THRESH.find(function(t){return total<t})||THRESH[2])?'next':'');return '<span class="of2790-unlock '+cls+'">'+u.threshold+' · '+u.type+'</span>';}).join('')+'</div></div>';}).join('')+'</div></div>';}
-  function placePanel(){try{auditUnlocks(false); var old=document.querySelector('[data-of2790="domain-reward-tracks"]'); if(old) old.remove(); var root=document.querySelector('#homeScreen,#home,#screen-home,.home-screen,.tab-home')||document.querySelector('main')||document.body; var anchor=root.querySelector('.of2789-domain-sigil-row')||root.querySelector('.of-command-card,.of-home-hero-anchor,.card,.panel')||root.firstElementChild; var wrap=document.createElement('div'); wrap.innerHTML=renderPanel(); var panel=wrap.firstElementChild; if(anchor&&anchor.parentNode) anchor.parentNode.insertBefore(panel,anchor.nextSibling); else root.prepend(panel);}catch(e){try{console.warn('of2790 panel failed',e)}catch(_){}}}
+  function placePanel(){ try{ if(window.of2796RemoveHomeExtras) window.of2796RemoveHomeExtras(); }catch(e){} }
   function patchSigilAward(){try{if(typeof window.of2789AwardDomainSigils==='function'&&!window.of2789AwardDomainSigils.__of2790){var old=window.of2789AwardDomainSigils; window.of2789AwardDomainSigils=function(){var r=old.apply(this,arguments); setTimeout(function(){auditUnlocks(true); placePanel();},260); return r;}; window.of2789AwardDomainSigils.__of2790=true;}}catch(e){}}
   function boot(){sigils();rewardState();patchSigilAward();setTimeout(placePanel,700);setTimeout(function(){auditUnlocks(true)},1100)}
   setTimeout(boot,0); setTimeout(boot,900); setTimeout(boot,2200);
   window.of2790DomainTracks=function(){auditUnlocks(false); return {sigils:sigils(),tracks:rewardState(),thresholds:THRESH,domains:DOMAINS};};
   window.of2790RenderTracks=placePanel;
   window.of2790Health=function(){var st=sigils(), rs=rewardState(); var total=0; DOMAINS.forEach(function(d){total+=st[d]||0}); return {build:BUILD,appBuild:safe(function(){return APP_BUILD},null),saveVersion:safe(function(){return SAVE_VERSION},null),domains:DOMAINS.length,totalSigils:total,unlocked:Object.keys(rs.unlocked||{}).length,homePanel:!!document.querySelector('[data-of2790="domain-reward-tracks"]'),sigilAwardHook:!!(window.of2789AwardDomainSigils&&window.of2789AwardDomainSigils.__of2790),scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
+})();
+</script>
+
+
+<style id="homeRemoveSigilsTracksV2796Style">
+  /* v2.79.6: remove the two Home sections Peter marked: top sigil chips + large reward tracks panel */
+  #homeScreen .of2789-domain-sigil-row,
+  #home .of2789-domain-sigil-row,
+  #screen-home .of2789-domain-sigil-row,
+  .home-screen .of2789-domain-sigil-row,
+  .tab-home .of2789-domain-sigil-row,
+  #homeScreen [data-of2789="domain-sigils"],
+  #home [data-of2789="domain-sigils"],
+  #screen-home [data-of2789="domain-sigils"],
+  .home-screen [data-of2789="domain-sigils"],
+  .tab-home [data-of2789="domain-sigils"],
+  #homeScreen .of2790-track-panel,
+  #home .of2790-track-panel,
+  #screen-home .of2790-track-panel,
+  .home-screen .of2790-track-panel,
+  .tab-home .of2790-track-panel,
+  #homeScreen [data-of2790="domain-reward-tracks"],
+  #home [data-of2790="domain-reward-tracks"],
+  #screen-home [data-of2790="domain-reward-tracks"],
+  .home-screen [data-of2790="domain-reward-tracks"],
+  .tab-home [data-of2790="domain-reward-tracks"]{
+    display:none!important;
+    visibility:hidden!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:0!important;
+    overflow:hidden!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    opacity:0!important;
+    pointer-events:none!important;
+  }
+</style>
+<script id="homeRemoveSigilsTracksV2796Script">
+(function(){
+  window.APP_BUILD='v2.79.6-home-remove-sigils-tracks';
+
+  function homeRoot(){
+    return document.querySelector('#homeScreen,#home,#screen-home,.home-screen,.tab-home') || null;
+  }
+
+  function removeHomeExtras(){
+    try{
+      var root = homeRoot() || document;
+      root.querySelectorAll(
+        '.of2789-domain-sigil-row,[data-of2789="domain-sigils"],.of2790-track-panel,[data-of2790="domain-reward-tracks"]'
+      ).forEach(function(n){ try{ n.remove(); }catch(_){ n.style.display='none'; } });
+    }catch(e){}
+  }
+
+  window.of2796RemoveHomeExtras = removeHomeExtras;
+
+  // Disable older Home injectors instead of only hiding their output.
+  try{ window.decorateHomeSigils = function(){ removeHomeExtras(); }; }catch(e){}
+  try{ window.placePanel = function(){ removeHomeExtras(); }; }catch(e){}
+
+  function boot(){
+    removeHomeExtras();
+    setTimeout(removeHomeExtras, 150);
+    setTimeout(removeHomeExtras, 600);
+    setTimeout(removeHomeExtras, 1600);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot, {once:true});
+  else boot();
+
+  // If an older renderer inserts either section after Home rerenders, remove only those exact sections.
+  try{
+    var mo = new MutationObserver(function(muts){
+      var needs=false;
+      muts.forEach(function(m){
+        (m.addedNodes||[]).forEach(function(n){
+          if(!n || n.nodeType!==1) return;
+          if(
+            (n.matches && n.matches('.of2789-domain-sigil-row,[data-of2789="domain-sigils"],.of2790-track-panel,[data-of2790="domain-reward-tracks"]')) ||
+            (n.querySelector && n.querySelector('.of2789-domain-sigil-row,[data-of2789="domain-sigils"],.of2790-track-panel,[data-of2790="domain-reward-tracks"]'))
+          ){ needs=true; }
+        });
+      });
+      if(needs) requestAnimationFrame(removeHomeExtras);
+    });
+    mo.observe(document.documentElement,{childList:true,subtree:true});
+  }catch(e){}
+
+  window.of2796Health=function(){
+    removeHomeExtras();
+    return {
+      build: window.APP_BUILD,
+      removedHomeSigilRows: document.querySelectorAll('.of2789-domain-sigil-row,[data-of2789="domain-sigils"]').length,
+      removedDomainRewardPanels: document.querySelectorAll('.of2790-track-panel,[data-of2790="domain-reward-tracks"]').length,
+      scripts: document.scripts.length,
+      styles: document.querySelectorAll('style').length
+    };
+  };
 })();
 </script>
 
