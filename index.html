@@ -2415,7 +2415,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.81.4-task-edit-freeze-fix';
+const APP_BUILD='v2.81.5-task-settings-open-fix';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -18354,6 +18354,133 @@ body.of2803HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!im
   window.of2814Health=function(){return {build:BUILD,appBuild:window.APP_BUILD||safe(function(){return APP_BUILD;},null),taskOverlay:!!q('#of2814TaskOverlay'),taskOpen:!!q('#of2814TaskOverlay.show'),openTaskHook:!!(window.openTaskSheet===openTask),legacyScrimOpen:!!q('#scrim.show'),bodyTaskOpen:document.body.classList.contains('of2814TaskOpen'),scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
   install();
   [80,400,1200,2500].forEach(function(ms){setTimeout(install,ms);});
+})();
+</script>
+
+
+
+<!-- v2.81.5 task/settings opener guard: avoid ghost-click modal closes and force stable openers -->
+<style id="of2815TaskSettingsOpenFixStyle">
+  /* Keep the task editor and settings sheet above old scrim layers while preserving outside-tap close. */
+  #of2814TaskOverlay.show{display:flex!important;pointer-events:auto!important;z-index:2147483638!important;}
+  #setScrim.scrim.show{display:flex!important;pointer-events:auto!important;z-index:2147483200!important;}
+  #setScrim.scrim.show .sheet{pointer-events:auto!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;}
+  body.of2815OpeningModal #view,
+  body.of2815OpeningModal nav{pointer-events:auto!important;}
+</style>
+<script id="of2815TaskSettingsOpenFixScript">
+(function(){
+  'use strict';
+  var BUILD='v2.81.5-task-settings-open-fix';
+  try{window.APP_BUILD=BUILD;}catch(e){}
+  function q(s,r){return (r||document).querySelector(s);} function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+  function safe(fn,fb){try{return fn();}catch(e){console.warn('[of2815]',e);return fb;}}
+  function unlockIfNoVisibleModal(){
+    try{
+      var active=qa('#of2814TaskOverlay.show,#setScrim.show,#scrim.show,#revealModal.show,#awayModal.show,.of2813StrikeOverlay.show,.of27616HeroOverlay.show,.of27615HeroOverlay.show,.of27613HeroOverlay.show,.arena.show')
+        .filter(function(el){try{var cs=getComputedStyle(el),r=el.getBoundingClientRect();return cs.display!=='none'&&cs.visibility!=='hidden'&&r.width>2&&r.height>2;}catch(e){return false;}});
+      if(!active.length){
+        ['of2814TaskOpen','of2815OpeningModal','of2807-modal-open','of2809-modal-open','of2809ModalOpen','modal-open','ofModalOpen'].forEach(function(c){document.body.classList.remove(c);document.documentElement.classList.remove(c);});
+        document.body.style.overflow=''; document.documentElement.style.overflow='';
+        document.body.style.touchAction=''; document.documentElement.style.touchAction='';
+      }
+    }catch(e){}
+  }
+  function currentTaskIdFromEvent(ev){
+    try{
+      var body=ev.target&&ev.target.closest&&ev.target.closest('#view .card .body[data-id][data-act="edit"], #list .card .body[data-id][data-act="edit"]');
+      if(body) return body.getAttribute('data-id')||'';
+    }catch(e){}
+    return '';
+  }
+  function openTaskDeferred(id){
+    document.body.classList.add('of2815OpeningModal');
+    setTimeout(function(){
+      try{ if(typeof window.of2814CloseTaskSheet==='function') window.of2814CloseTaskSheet(); }catch(e){}
+      try{ var s=q('#scrim'); if(s) s.classList.remove('show'); }catch(e){}
+      try{ if(typeof window.openTaskSheet==='function') window.openTaskSheet(id||null); }
+      catch(e){ console.warn('[of2815 task open]',e); try{ if(typeof toast==='function') toast('Task editor could not open.'); }catch(_e){} }
+      setTimeout(function(){
+        try{ var ov=q('#of2814TaskOverlay'); if(ov){ ov.classList.add('show'); ov.setAttribute('data-of2815-opened-at',String(Date.now())); document.body.classList.add('of2814TaskOpen'); } }catch(e){}
+        document.body.classList.remove('of2815OpeningModal');
+      },30);
+      setTimeout(unlockIfNoVisibleModal,900);
+    },35);
+  }
+  function installTaskInterceptors(){
+    if(window.__of2815TaskInterceptors) return; window.__of2815TaskInterceptors=true;
+    document.addEventListener('click',function(ev){
+      var id=currentTaskIdFromEvent(ev); if(!id) return;
+      ev.preventDefault(); ev.stopImmediatePropagation();
+      openTaskDeferred(id);
+    },true);
+    document.addEventListener('click',function(ev){
+      var add=ev.target&&ev.target.closest&&ev.target.closest('#addTask,#v170MissionAdd'); if(!add) return;
+      ev.preventDefault(); ev.stopImmediatePropagation();
+      openTaskDeferred(null);
+    },true);
+  }
+  function protectTaskOutsideClose(){
+    if(window.__of2815TaskProtect) return; window.__of2815TaskProtect=true;
+    document.addEventListener('click',function(ev){
+      var ov=q('#of2814TaskOverlay.show'); if(!ov) return;
+      var born=Number(ov.getAttribute('data-of2815-opened-at')||0);
+      if(Date.now()-born<650 && ev.target===ov){ ev.preventDefault(); ev.stopImmediatePropagation(); }
+    },true);
+  }
+  function captureExistingSettingsClick(){
+    var btn=q('#openSettings');
+    if(btn && !window.__of2815SettingsOriginalClick) window.__of2815SettingsOriginalClick=btn.onclick||null;
+  }
+  function forceSettingsOpen(){
+    var btn=q('#openSettings'), scrim=q('#setScrim');
+    document.body.classList.add('of2815OpeningModal');
+    try{ if(typeof window.of2814CloseTaskSheet==='function') window.of2814CloseTaskSheet(); }catch(e){}
+    try{ if(window.__of2815SettingsOriginalClick) window.__of2815SettingsOriginalClick.call(btn||document.body,{preventDefault:function(){},stopPropagation:function(){},target:btn||document.body}); }
+    catch(e){ console.warn('[of2815 settings old click]',e); }
+    try{ if(!scrim && typeof showScrim==='function') showScrim('setScrim'); }catch(e){}
+    [0,60,160,360].forEach(function(ms){setTimeout(function(){
+      try{
+        var sc=q('#setScrim'); if(!sc) return;
+        sc.classList.add('show'); sc.setAttribute('data-of2815-opened-at',String(Date.now()));
+        sc.setAttribute('aria-modal','true'); sc.removeAttribute('aria-hidden');
+        var sh=q('.sheet',sc); if(sh){ sh.setAttribute('data-modal-content','settings'); sh.scrollTop=0; }
+      }catch(e){}
+    },ms);});
+    setTimeout(function(){document.body.classList.remove('of2815OpeningModal');},420);
+  }
+  function installSettingsInterceptor(){
+    if(window.__of2815SettingsInterceptor) return; window.__of2815SettingsInterceptor=true;
+    captureExistingSettingsClick();
+    setTimeout(captureExistingSettingsClick,120);
+    setTimeout(captureExistingSettingsClick,700);
+    document.addEventListener('click',function(ev){
+      var btn=ev.target&&ev.target.closest&&ev.target.closest('#openSettings'); if(!btn) return;
+      ev.preventDefault(); ev.stopImmediatePropagation();
+      setTimeout(forceSettingsOpen,35);
+    },true);
+    document.addEventListener('click',function(ev){
+      var sc=q('#setScrim.show'); if(!sc) return;
+      var born=Number(sc.getAttribute('data-of2815-opened-at')||0);
+      if(Date.now()-born<650 && ev.target===sc){ ev.preventDefault(); ev.stopImmediatePropagation(); }
+    },true);
+  }
+  function health(){return {
+    build:BUILD,
+    appBuild:window.APP_BUILD||safe(function(){return APP_BUILD;},null),
+    taskHook:typeof window.openTaskSheet==='function',
+    taskOverlay:!!q('#of2814TaskOverlay'),
+    taskOpen:!!q('#of2814TaskOverlay.show'),
+    settingsOpen:!!q('#setScrim.show'),
+    settingsOriginalCaptured:!!window.__of2815SettingsOriginalClick,
+    bodyClasses:document.body.className,
+    scripts:document.scripts.length,
+    styles:document.querySelectorAll('style').length
+  };}
+  function boot(){installTaskInterceptors(); protectTaskOutsideClose(); installSettingsInterceptor(); unlockIfNoVisibleModal(); setTimeout(unlockIfNoVisibleModal,250);}
+  window.of2815Health=health;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(unlockIfNoVisibleModal,80);});
 })();
 </script>
 
