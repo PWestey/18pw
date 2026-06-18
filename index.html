@@ -2415,7 +2415,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.79.0-domain-reward-tracks-health-check';
+const APP_BUILD='v2.79.1-home-quest-hard-cleanup-health-check';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -17097,7 +17097,7 @@ body.of2786-away-open{overflow:hidden!important;}
 <script id="domainRewardTracksV2790Script">
 (function(){
   'use strict';
-  var BUILD='v2.79.0-domain-reward-tracks-health-check';
+  var BUILD='v2.79.1-home-quest-hard-cleanup-health-check';
   var DOMAINS=['Faith','Marriage','Fatherhood','Fitness','Work Leadership','Home Leadership'];
   var META={
     'Faith':{icon:'✝️',color:'#ffd95a',rewards:[['Title','Oathkeeper'],['Frame','Sanctuary Gold'],['Background','Candlelit Chapel']]},
@@ -17126,6 +17126,129 @@ body.of2786-away-open{overflow:hidden!important;}
   window.of2790DomainTracks=function(){auditUnlocks(false); return {sigils:sigils(),tracks:rewardState(),thresholds:THRESH,domains:DOMAINS};};
   window.of2790RenderTracks=placePanel;
   window.of2790Health=function(){var st=sigils(), rs=rewardState(); var total=0; DOMAINS.forEach(function(d){total+=st[d]||0}); return {build:BUILD,appBuild:safe(function(){return APP_BUILD},null),saveVersion:safe(function(){return SAVE_VERSION},null),domains:DOMAINS.length,totalSigils:total,unlocked:Object.keys(rs.unlocked||{}).length,homePanel:!!document.querySelector('[data-of2790="domain-reward-tracks"]'),sigilAwardHook:!!(window.of2789AwardDomainSigils&&window.of2789AwardDomainSigils.__of2790),scripts:document.scripts.length,styles:document.querySelectorAll('style').length};};
+})();
+</script>
+
+
+
+<style id="hardHomeQuestCleanupV2791Style">
+/* v2.79.1 — hard Home/Quest cleanup
+   Goal: stop legacy Home shells from stacking and kill the runaway quest-card radial/conic art. */
+body.of2791-clean-home #view .of274Shell,
+body.of2791-clean-home #view #of274VerticalSliceShell,
+body.of2791-clean-home #view .of274Onboard,
+body.of2791-clean-home #view #of274Onboard,
+body.of2791-clean-home #view .of274Health,
+body.of2791-clean-home #view #of274Health,
+body.of2791-clean-home #view .of2750FinalShell,
+body.of2791-clean-home #view .of2750FinalShell + *,
+body.of2791-clean-home #view .waPresenceBand,
+body.of2791-clean-home #view .of2777Identity,
+body.of2791-clean-home #view .of2790-track-panel{
+  display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important;pointer-events:none!important;
+}
+body.of2791-clean-home #view .of2785Home{display:grid!important;gap:12px!important;margin:0 0 14px!important;}
+body.of2791-clean-home #view .of2785Identity{display:none!important;}
+body.of2791-clean-home #view .of2785Anchor{margin:10px 10px 14px!important;}
+body.of2791-clean-home #view .of2785Anchor:before{opacity:.55!important;animation:none!important;}
+body.of2791-clean-home #view .of2785Title{font-size:clamp(25px,7vw,36px)!important;}
+body.of2791-clean-home #view .of2785Path{margin-top:12px!important;}
+body.of2791-clean-home #view .of2785Tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+body.of2791-clean-home #view .of2785Tile{min-height:72px!important;}
+body.of2791-clean-home #view .of2791MiniSigils{margin:0 10px 12px!important;border:1px solid rgba(255,217,90,.20);border-radius:18px;background:rgba(255,217,90,.055);padding:10px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;}
+body.of2791-clean-home #view .of2791MiniSigils::-webkit-scrollbar{display:none;}
+body.of2791-clean-home #view .of2791MiniSigils span{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.22);border-radius:999px;padding:6px 9px;font:900 11px/1 Rajdhani,system-ui;color:#eaf2ff;white-space:nowrap;}
+
+/* Quest tab: hard-neutralize rogue decorative children/pseudo-elements inside task cards. */
+body.of2791-clean-quests #list .card,
+body.of2791-clean-quests #view #list .card{
+  position:relative!important;contain:layout paint!important;overflow:hidden!important;isolation:isolate!important;min-height:0!important;transform:none!important;animation:none!important;will-change:auto!important;
+}
+body.of2791-clean-quests #list .card::before,
+body.of2791-clean-quests #list .card::after,
+body.of2791-clean-quests #list .card .body::before,
+body.of2791-clean-quests #list .card .body::after,
+body.of2791-clean-quests #list .card .meta::before,
+body.of2791-clean-quests #list .card .meta::after{
+  content:none!important;display:none!important;background:none!important;animation:none!important;transform:none!important;filter:none!important;opacity:0!important;
+}
+body.of2791-clean-quests #list .card .body > :not(.t):not(.meta):not(.taskNote),
+body.of2791-clean-quests #list .card .body .lqRays,
+body.of2791-clean-quests #list .card .body .revealshine,
+body.of2791-clean-quests #list .card .body .heroChamberStageV159,
+body.of2791-clean-quests #list .card .body .of-legend-card,
+body.of2791-clean-quests #list .card .body [class*="Ray"],
+body.of2791-clean-quests #list .card .body [class*="ray"],
+body.of2791-clean-quests #list .card .body [class*="shine"],
+body.of2791-clean-quests #list .card .body [class*="Aura"],
+body.of2791-clean-quests #list .card .body [class*="aura"]{
+  display:none!important;visibility:hidden!important;width:0!important;height:0!important;max-width:0!important;max-height:0!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important;animation:none!important;transform:none!important;
+}
+body.of2791-clean-quests #list .card .t,
+body.of2791-clean-quests #list .card .meta,
+body.of2791-clean-quests #list .card .taskNote,
+body.of2791-clean-quests #list .card .chk{position:relative!important;z-index:5!important;}
+body.of2791-clean-quests #list .card .body{display:block!important;min-height:0!important;position:relative!important;z-index:2!important;}
+body.of2791-clean-quests #list .card .taskNote{max-height:3.15em!important;overflow:hidden!important;}
+body.of2791-clean-quests #list .card img:not(.cIcon):not(.domIcon){max-width:42px!important;max-height:42px!important;object-fit:cover!important;}
+@media(max-width:520px){
+  body.of2791-clean-home #view .of2785Anchor{border-radius:24px!important;padding:14px!important;}
+  body.of2791-clean-home #view .of2785Hero{grid-template-columns:74px 1fr!important;gap:12px!important;}
+  body.of2791-clean-home #view .of2785Portrait{width:74px!important;height:74px!important;border-radius:20px!important;}
+}
+</style>
+<script id="hardHomeQuestCleanupV2791Script">
+(function(){
+  'use strict';
+  var BUILD='v2.79.1-home-quest-hard-cleanup-health-check';
+  function q(s,r){return (r||document).querySelector(s)}
+  function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
+  function safe(fn,fb){try{return fn()}catch(e){return fb}}
+  function n(x){x=Number(x||0);return x>=1000000?Math.round(x/100000)/10+'M':x>=1000?Math.round(x/1000)+'K':String(Math.round(x))}
+  function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function liveHeroes(){return safe(function(){return (window.S&&Array.isArray(S.heroes)?S.heroes:[]).filter(Boolean)},[])}
+  function chooseAnchor(){
+    var heroes=liveHeroes(); if(!heroes.length)return null;
+    var favs=heroes.filter(function(h){return safe(function(){return typeof isFavorite==='function'&&isFavorite(h.id)},false)});
+    var squadIds=[]; safe(function(){['campaign','tower','raid','clash'].forEach(function(k){(typeof squad==='function'?squad(k):[]).forEach(function(h){if(h&&h.id)squadIds.push(h.id)})})},null);
+    var active=heroes.filter(function(h){return squadIds.indexOf(h.id)>=0});
+    var owned=heroes.filter(function(h){return h.owned});
+    var pool=[].concat(favs,active,owned.length?owned:heroes).filter(Boolean), seen={}, uniq=[];
+    pool.forEach(function(h){if(h&&h.id&&!seen[h.id]){seen[h.id]=1;uniq.push(h)}});
+    var seed=Date.now()+Math.floor(Math.random()*9999);
+    return uniq[seed%uniq.length]||heroes[0];
+  }
+  function img(h){var url=h&&(h.image||h.img||h.portrait||h.art); if(url)return '<img src="'+E(url)+'" alt="">'; var nm=(h&&h.name)||'?'; return '<span>'+E(nm.split(/\s+/).map(function(x){return x[0]||''}).join('').slice(0,2).toUpperCase())+'</span>'}
+  function domainForHero(h){return safe(function(){return typeof heroFlavorDomain==='function'?heroFlavorDomain(h):null},null)||(h&&h.aff&&h.aff[0])||'faith'}
+  function domainLabel2(k){return safe(function(){return typeof domainLabel==='function'?domainLabel(k):String(k||'Oath')},String(k||'Oath'))}
+  function lineFor(h,dom){var p=safe(function(){return typeof passiveOf==='function'?passiveOf(h):null},null); if(p&&p.name&&Math.random()<.25)return p.name+' is ready.'; var map={faith:'Power routed toward Faith.',marriage:'Guard the hearth today.',fatherhood:'Lead the home with patience.',fitness:'Discipline becomes strength.',work:'Focus the mission.',home:'Keep the hall in order.',discipline:'Stay the course.',hobbies:'Joy fuels the journey.'}; return map[dom]||'The Fellowship stands ready.'}
+  function homeHTML(){
+    var h=chooseAnchor(), dom=domainForHero(h), stage=safe(function(){return S.stage||1},1), pwr=safe(function(){return h&&typeof powerOf==='function'?powerOf(h):0},0), rank=safe(function(){return h&&typeof rankIdx==='function'?'Rank '+rankIdx(h):'Hero'},'Hero');
+    var pct=safe(function(){var act=(S.dailies||[]).filter(function(x){return x&&x.freq==='daily'&&(typeof taskActiveToday!=='function'||taskActiveToday(x))}); return act.length?Math.round(100*act.filter(function(x){return x.done}).length/act.length):0},0);
+    var step=pct<=0?1:pct<35?2:pct<70?3:4;
+    return '<div class="of2785Home of2791OnlyHome" data-of2791-home="1"><section class="of2785Anchor" data-of2785-home="1"><div class="of2785Hero"><div class="of2785Portrait" style="--hc:'+(h&&h.color||'#8bd0ff')+'">'+img(h)+'</div><div><div class="of2785Kicker">Fellowship Anchor</div><div class="of2785Title">'+E(h&&h.name||'Oathforge')+'</div><div class="of2785Line">'+E(lineFor(h,dom))+'</div><div class="of2785Chips"><span>'+E(rank)+'</span><span>'+E(domainLabel2(dom))+'</span><span>'+E(pct+'% daily path')+'</span><span>'+E('Power '+n(pwr))+'</span></div></div></div><div class="of2785Path"><h3>Today\'s Path</h3><div style="color:#aeb8d2;font-weight:850;font-size:12px">'+E(pct)+'% daily path · Stage '+E(stage)+' waiting</div><div class="of2785Steps">'+['Arrive','Oath','Reward','Battle','Seal'].map(function(x,i){return '<div class="of2785Step '+(i+1<=step?'on':'')+'"><b>'+(i===0?'✓':i+1)+'</b>'+x+'</div>'}).join('')+'</div></div><button class="of2785CTA" id="of2791Push"><span>⚔️</span><span>Push the War Table<small>Continue Stage '+E(stage)+'</small></span></button><div class="of2785Tiles"><button class="of2785Tile" data-of2791-nav="heroes"><b>Fellowship Hall</b><span>Heroes, bonds, identity.</span></button><button class="of2785Tile" data-of2791-nav="battles"><b>War Table</b><span>Campaign, Tower, Clash.</span></button><button class="of2785Tile" data-of2791-nav="growth"><b>The Forge</b><span>Rank, gear, prestige.</span></button><button class="of2785Tile" data-of2791-nav="quests"><b>Oath Ledger</b><span>Dailies, weeklies, monthlies.</span></button></div></section>'+miniSigils()+'</div>';
+  }
+  function miniSigils(){
+    var store=safe(function(){return (S&&S.domainSigils)||{}},{}), meta={'Faith':'✝️','Marriage':'💍','Fatherhood':'🛡️','Fitness':'💪','Work Leadership':'👑','Home Leadership':'🏠'};
+    return '<div class="of2791MiniSigils">'+Object.keys(meta).map(function(k){return '<span>'+meta[k]+' '+k.replace(' Leadership','')+': '+(store[k]||0)+'</span>'}).join('')+'</div>';
+  }
+  function bindHome(){
+    var p=q('#of2791Push'); if(p)p.onclick=function(){nav('battles')};
+    qa('[data-of2791-nav]').forEach(function(b){b.onclick=function(){nav(b.getAttribute('data-of2791-nav'))}});
+  }
+  function nav(v){try{if(typeof navTo==='function')navTo(v); else {view=v; if(typeof renderHUD==='function')renderHUD(); if(typeof render==='function')render();}}catch(e){}}
+  function cleanupHome(){
+    try{document.body.classList.add('of2791-clean-home'); if(String(window.view||'')!=='home')return 0; var viewEl=q('#view')||document.body; var keep=q('[data-of2791-home]',viewEl); if(!keep){viewEl.innerHTML=homeHTML(); bindHome(); keep=q('[data-of2791-home]',viewEl);} var removed=0; qa('.of274Shell,#of274VerticalSliceShell,.of274Onboard,#of274Onboard,.of274Health,#of274Health,.of2750FinalShell,.waPresenceBand,.of2790-track-panel,.of2777Identity',viewEl).forEach(function(el){if(!keep.contains(el)){el.remove();removed++;}}); return removed;}catch(e){console.warn('[2791 home cleanup]',e);return 0}
+  }
+  function cleanupQuestCards(){
+    try{document.body.classList.add('of2791-clean-quests'); var list=q('#list'); if(!list)return 0; var killed=0; qa('.card .body',list).forEach(function(body){qa(':scope > *',body).forEach(function(ch){if(!ch.classList.contains('t')&&!ch.classList.contains('meta')&&!ch.classList.contains('taskNote')){ch.remove();killed++;}}); qa('.lqRays,.revealshine,.heroChamberStageV159,.of-legend-card,[class*="Ray"],[class*="ray"],[class*="shine"],[class*="Aura"],[class*="aura"]',body).forEach(function(el){el.remove();killed++;});}); return killed;}catch(e){console.warn('[2791 quest cleanup]',e);return 0}
+  }
+  function patchHome(){try{if(typeof window.renderHome==='function'&&!window.renderHome.__of2791){var f=function(v){try{v.innerHTML=homeHTML(); setTimeout(function(){bindHome(); cleanupHome();},0); return v.innerHTML;}catch(e){console.warn('v2.79.1 home fallback',e);}}; f.__of2791=true; window.renderHome=f; renderHome=f;}}catch(e){}}
+  function patchRender(){try{if(typeof window.render==='function'&&!window.render.__of2791){var old=window.render; window.render=function(){var r=old.apply(this,arguments); setTimeout(function(){cleanupHome();cleanupQuestCards();},0); setTimeout(function(){cleanupHome();cleanupQuestCards();},350); return r;}; window.render.__of2791=true;}}catch(e){}}
+  function observe(){try{if(window.__of2791Observer)return; var mo=new MutationObserver(function(){cleanupHome();cleanupQuestCards();}); mo.observe(document.body,{childList:true,subtree:true}); window.__of2791Observer=mo;}catch(e){}}
+  function boot(){try{window.APP_BUILD=BUILD;}catch(e){} patchHome(); patchRender(); observe(); cleanupHome(); cleanupQuestCards(); window.of2791Cleanup=function(){return {home:cleanupHome(),quests:cleanupQuestCards()}}; window.of2791Health=function(){var list=q('#list');return {build:BUILD,appBuild:window.APP_BUILD||null,saveVersion:window.SAVE_VERSION||null,scripts:document.scripts.length,styles:document.querySelectorAll('style').length,homeShells:qa('#view .of274Shell,#view .of2750FinalShell,#view .of274Onboard,#view .of274Health,#view .of2790-track-panel').length,consolidatedHome:!!q('[data-of2791-home]'),questCards:list?qa('.card',list).length:0,rogueQuestChildren:list?qa('#list .card .body > :not(.t):not(.meta):not(.taskNote)').length:0,questRays:list?qa('#list .lqRays,#list [class*="Ray"],#list [class*="ray"],#list [class*="Aura"],#list [class*="aura"]').length:0};}; }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+  setTimeout(boot,200); setTimeout(function(){cleanupHome();cleanupQuestCards()},800); setTimeout(function(){cleanupHome();cleanupQuestCards()},1800);
 })();
 </script>
 
