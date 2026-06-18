@@ -2415,7 +2415,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.80.5-remove-quest-board-from-quest-tab';
+const APP_BUILD='v2.80.6-welcome-back-no-top-x';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -16864,10 +16864,10 @@ body.of2786-away-open{overflow:hidden!important;}
     modal.style.display='grid';
     modal.removeAttribute('aria-hidden');
     document.body.classList.add('of2786-away-open');
-    if(!q('#of2786AwayClose',box)){
-      box.insertAdjacentHTML('afterbegin','<button id="of2786AwayClose" class="of2786Close" type="button" aria-label="Close idle rewards">×</button>');
-      const c=q('#of2786AwayClose',box); if(c)c.onclick=function(e){e.preventDefault(); e.stopPropagation(); closeAwayModal(false);};
-    }
+    /* v2.80.6: the Welcome Back panel now uses the bottom Collect / Close controls only.
+       Remove the older top-right X if a previous patch inserted it. */
+    const oldTopClose=q('#of2786AwayClose',box);
+    if(oldTopClose) oldTopClose.remove();
     const collect=q('#awayCollect',box);
     if(collect && !collect.__of2786Safe){
       collect.__of2786Safe=true;
@@ -17604,6 +17604,27 @@ body.of2803HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!im
   function appendChronicleToHeroes(v){if(!v||v.querySelector('[data-of2803="chronicle"]')) return; var h=heroList().sort(function(a,b){return hpow(b)-hpow(a)}).slice(0,1)[0]; var stage=safe(function(){return S.campaignStage||S.stage||1},1); var tower=safe(function(){return S.towerFloor||S.tower||0},0); var html='<section class="of2803Chronicle" data-of2803="chronicle"><h3>Fellowship Chronicle</h3><p>The world remembers what you repeat. Bonds, living-world signals, legendary moments, and combat identity now live with the Fellowship instead of cluttering Home.</p><div class="of2803ChronicleGrid"><div class="of2803ChronicleItem"><b>'+E(heroName(h))+'</b><span>'+E(quote(h))+'</span></div><div class="of2803ChronicleItem"><b>Campaign Veteran</b><span>Campaign stage '+E(stage)+' reached. The War Table marks your advance.</span></div><div class="of2803ChronicleItem"><b>Tower Memory</b><span>'+(tower?'Tower floor '+E(tower)+' reached.':'The tower memory will wake as you climb.')+'</span></div></div></section>'; v.insertAdjacentHTML('beforeend',html);}
   function install(){patchFellowship(); render=function(){return hardRender()}; window.render=render; window.renderHome=function(v){renderHomeOnly(true); return v&&v.innerHTML}; window.navTo=function(to){try{ if(String(to)==='home'){view='home'; if(typeof setNavActive==='function') setNavActive('home'); hardRender(); return;} if(previousNav) return previousNav(to); view=to; return hardRender(); }catch(e){console.warn('[of2803 nav]',e)}}; window.of2803Health=function(){var v=viewEl(),txt=v?(v.textContent||''):''; return {build:BUILD,home:isHome(),singleCards:v?v.querySelectorAll('[data-of2803="single-home-card"]').length:0,chronicleOnHome:isHome()&&/Fellowship Chronicle|Living World Signals|Legendary Moments|Combat Identity/i.test(txt),topChildren:v?v.children.length:0,hero:heroName(homeHero),scripts:document.scripts.length,styles:document.querySelectorAll('style').length};}; window.of2803Rerender=function(){homeHero=null; hardRender();}; try{var obs=new MutationObserver(function(){if(isHome()) scheduleClean();}); var v=viewEl(); if(v) obs.observe(v,{childList:true,subtree:true}); document.addEventListener('click',function(){setTimeout(function(){var v=viewEl(); if(v){try{obs.disconnect();obs.observe(v,{childList:true,subtree:true});}catch(e){}} if(isHome()) cleanHome();},0)},true);}catch(e){} if(isHome()) hardRender();}
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install); else install();
+})();
+</script>
+
+
+<style id="welcomeBackNoTopXV2806Styles">
+/* v2.80.6 — Welcome Back cleanup: bottom close/collect controls remain; top-right X is removed. */
+#awayModal #of2786AwayClose,
+#awayModal .of2786Close{display:none!important;visibility:hidden!important;pointer-events:none!important;}
+</style>
+<script id="welcomeBackNoTopXV2806Script">
+(function(){
+  'use strict';
+  var BUILD='v2.80.6-welcome-back-no-top-x';
+  function q(s,r){return (r||document).querySelector(s)}
+  function strip(){try{var x=q('#of2786AwayClose'); if(x) x.remove();}catch(e){}}
+  function health(){var modal=q('#awayModal'), box=q('#awayBox'); var report={build:BUILD,appBuild:(typeof APP_BUILD!=='undefined'?APP_BUILD:window.APP_BUILD),awayModal:!!modal,topXPresent:!!q('#of2786AwayClose'),bottomControls:!!q('#of2786AwaySafeRow'),collectButton:!!q('#awayCollect'),scripts:document.scripts.length,styles:document.querySelectorAll('style').length}; try{console.table(report)}catch(e){console.log(report)} return report;}
+  window.of2806CleanWelcomeBack=strip;
+  window.of2806Health=health;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){strip(); setInterval(strip,1200);},{once:true});
+  else {strip(); setInterval(strip,1200);}
+  document.addEventListener('click',function(){setTimeout(strip,0);},true);
 })();
 </script>
 
