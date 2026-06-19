@@ -2483,7 +2483,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.82.3-hero-panel';
+const APP_BUILD='v2.82.4-hero-clicks';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -15991,6 +15991,21 @@ body.of27621BattleFx .of27621Spark{position:absolute;left:var(--tx);top:var(--ty
   /* lightweight detection: react to user actions (open/close) + a slow safety poll.
      No heavy subtree observer, so battle animations do not thrash this. */
   document.addEventListener('click',soon,true);
+  function ownerWithShow(el){ var n=el; while(n&&n!==document.body){ if(n.classList&&n.classList.contains('show')) return n; n=n.parentElement; } return null; }
+  document.addEventListener('click',function(e){
+    if(!locked) return;
+    var t=e.target; if(!t) return;
+    /* never treat a control tap as a backdrop click -> modal buttons always fire */
+    if(t.closest && t.closest('button,a,input,select,textarea,label,[role="button"],[data-of27616-act],[data-of27616-slot],[data-of27616-close],[onclick]')) return;
+    var ov=topModal(); if(!ov) return;
+    var box=boxFor(ov);
+    var outside=(t===ov)||(box && !box.contains(t) && !(t.closest&&t.closest(BOX_SEL)));
+    if(!outside) return;
+    var owner=ownerWithShow(ov)||ownerWithShow(box)||ov;
+    try{ owner.classList.remove('show','open','active'); }catch(_e){}
+    try{ document.body.classList.remove('of27616HeroOpen'); }catch(_e){}
+    setTimeout(reconcile,0);
+  },true);
   document.addEventListener('touchend',soon,true);
   document.addEventListener('visibilitychange',function(){ if(!document.hidden) soon(); });
   setInterval(reconcile,300);
@@ -17873,6 +17888,7 @@ body.of2803HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!im
   document.addEventListener('click',function(e){
     var t=e.target; if(!t) return;
     if(t.closest && t.closest('#rvCont,#questClose')){ e.preventDefault(); e.stopPropagation(); closeReveal(); return; }
+    if(window.__ofScrollLockUnified) return; /* backdrop-close handled by unified scroll-lock manager */
     var ov=topOverlay(); if(!ov) return;
     var box=boxFor(ov);
     if(t===ov || (box && !box.contains(t))){ e.preventDefault(); e.stopPropagation(); closeOverlay(ov); }
