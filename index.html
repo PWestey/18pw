@@ -2202,6 +2202,74 @@ function setHeroPortraitOverride(heroId,img){
   if(img){ S.heroPortraits[heroId]=img; if(h) h.img=img; savePortraits(); }
   else { delete S.heroPortraits[heroId]; if(h) h.img=null; }
 }
+
+
+/* ===== LOCATIONS (plumbing v1) — battle & modal backgrounds =====
+   Unlock state (ids + timestamps) rides in the main save (S.unlockedLocations) so
+   it is in every backup/export automatically. Art (base64) lives in its OWN IndexedDB
+   vault (LOCATION_ART_KEY) to keep the main save blob small — exactly mirroring the
+   portrait architecture. No unlock TRIGGER is wired yet and no art ships, so this
+   layer is fully INERT (zero visual change) until art is added and something calls
+   unlockLocation(). 16 locations, 2 per Life Domain, locked roster. */
+const LOCATION_ART_KEY=KEY+'__locations';
+let LOCATION_ART={};   // { locId: 'data:image/...' } — module-level, never serialized into S
+const LOCATIONS=[
+  {id:'loc__asgard',         name:'Asgard',          ip:'Marvel',            domain:'faith',      vibe:'Golden realm eternal',          tint:'#d9b25a'},
+  {id:'loc__jedi_temple',    name:'Jedi Temple',     ip:'Star Wars',         domain:'faith',      vibe:'Stillness and the Light',       tint:'#7fb6d9'},
+  {id:'loc__hogsmeade',      name:'Hogsmeade',       ip:'Harry Potter',      domain:'marriage',   vibe:'Snowfall, butterbeer, warmth',  tint:'#e08bb0'},
+  {id:'loc__lumiose_city',   name:'Lumiose City',    ip:'Pokemon',           domain:'marriage',   vibe:'City of light, side by side',   tint:'#f2c14e'},
+  {id:'loc__x_mansion',      name:'X-Mansion',       ip:'Marvel',            domain:'fatherhood', vibe:'A home that raises the gifted',  tint:'#d4a13a'},
+  {id:'loc__pallet_town',    name:'Pallet Town',     ip:'Pokemon',           domain:'fatherhood', vibe:'Where every journey begins',     tint:'#7ec46e'},
+  {id:'loc__quidditch_pitch',name:'Quidditch Pitch', ip:'Harry Potter',      domain:'fitness',    vibe:'Sky, speed, the chase',          tint:'#e06d4f'},
+  {id:'loc__boralus',        name:'Boralus',         ip:'World of Warcraft', domain:'fitness',    vibe:'Salt air and hard decks',        tint:'#4f9fd9'},
+  {id:'loc__avengers_tower', name:'Avengers Tower',  ip:'Marvel',            domain:'work',       vibe:'Command above the city',         tint:'#36c4d0'},
+  {id:'loc__coruscant',      name:'Coruscant',       ip:'Star Wars',         domain:'work',       vibe:'The seat of ambition',           tint:'#5ad0d6'},
+  {id:'loc__stormwind',      name:'Stormwind',       ip:'World of Warcraft', domain:'home',       vibe:'Banners over a kept city',       tint:'#37c46e'},
+  {id:'loc__dalaran',        name:'Dalaran',         ip:'World of Warcraft', domain:'home',       vibe:'A home that floats above',       tint:'#6f9be0'},
+  {id:'loc__tatooine',       name:'Tatooine',        ip:'Star Wars',         domain:'discipline', vibe:'Twin suns, hard quiet',          tint:'#d6a24a'},
+  {id:'loc__paldea_academy', name:'Paldea Academy',  ip:'Pokemon',           domain:'discipline', vibe:'Study, structure, the climb',    tint:'#8a93ff'},
+  {id:'loc__hogwarts',       name:'Hogwarts',        ip:'Harry Potter',      domain:'hobbies',    vibe:'Wonder you return to',           tint:'#c39a3a'},
+  {id:'loc__xandar',         name:'Xandar',          ip:'Marvel',            domain:'hobbies',    vibe:'Bright worlds worth the joy',    tint:'#f0c24e'}
+];
+const LOCATION_BY_ID=(function(){var m={};LOCATIONS.forEach(function(l){m[l.id]=l;});return m;})();
+
+async function loadLocationArt(){ try{ const d=await Store.get(LOCATION_ART_KEY); if(d){ const v=typeof d==='string'?JSON.parse(d):d; if(v&&typeof v==='object') LOCATION_ART=v; } }catch(e){ if(!LOCATION_ART||typeof LOCATION_ART!=='object') LOCATION_ART={}; } }
+async function saveLocationArt(){ try{ await Store.set(LOCATION_ART_KEY, JSON.stringify(LOCATION_ART||{})); }catch(e){} }
+
+function locationById(id){ return LOCATION_BY_ID[id]||null; }
+function locationsForDomain(dom){ return LOCATIONS.filter(function(l){return l.domain===dom;}); }
+function isLocationUnlocked(id){ return !!(S&&S.unlockedLocations&&S.unlockedLocations[id]); }
+function unlockedLocationList(){ return LOCATIONS.filter(function(l){return isLocationUnlocked(l.id);}); }
+
+/* The one public lever — call this from whatever trigger you choose later. */
+function unlockLocation(id){
+  if(!S||!locationById(id)) return false;
+  if(!S.unlockedLocations||typeof S.unlockedLocations!=='object') S.unlockedLocations={};
+  if(S.unlockedLocations[id]) return false;
+  S.unlockedLocations[id]=Date.now();
+  try{ if(typeof save==='function') save(); }catch(e){}
+  return true;
+}
+
+/* Art setter/getter — persists to the vault immediately, like portrait overrides. */
+function setLocationArt(id,dataUrl){ if(!locationById(id)) return false; if(dataUrl){ LOCATION_ART[id]=dataUrl; } else { delete LOCATION_ART[id]; } saveLocationArt(); return true; }
+function locationArt(id){ return (LOCATION_ART&&LOCATION_ART[id])||null; }
+function locationHasArt(id){ return !!locationArt(id); }
+
+/* Consumer read for backgrounds. Returns null until a location in this domain is BOTH
+   unlocked AND has art, so callers safely fall back to current behavior. Rotates daily. */
+function backgroundForDomain(dom){
+  const cands=LOCATIONS.filter(function(l){return l.domain===dom&&isLocationUnlocked(l.id)&&locationHasArt(l.id);});
+  if(!cands.length) return null;
+  let seed=0; try{ seed=parseInt(String(periodKey('daily')).replace(/\D/g,'').slice(-6)||'0',10)||0; }catch(e){ seed=0; }
+  const pick=cands[seed%cands.length]||cands[0];
+  return {id:pick.id,name:pick.name,vibe:pick.vibe,tint:pick.tint,art:locationArt(pick.id)};
+}
+/* Explicit location id (modal backgrounds, previews). */
+function locationBackground(id){ const l=locationById(id); if(!l) return null; return {id:l.id,name:l.name,vibe:l.vibe,tint:l.tint,art:locationArt(l.id),unlocked:isLocationUnlocked(l.id)}; }
+
+try{ if(typeof window!=='undefined'){ window.OATHFORGE_LOCATIONS={catalog:LOCATIONS,unlock:unlockLocation,setArt:setLocationArt,bgForDomain:backgroundForDomain,bgFor:locationBackground,list:unlockedLocationList}; } }catch(e){}
+/* ===== end LOCATIONS plumbing v1 ===== */
 const REMOVED_HERO_IDS_V1=new Set(["marvel__wong","marvel__shuri_black_panther","marvel__maria_hill","marvel__valkyrie","marvel__silver_surfer","marvel__thanos","marvel__kang_the_conqueror","marvel__galactus","marvel__sersi","marvel__ikaris","marvel__thena","marvel__kingo","marvel__makkari","marvel__druig","marvel__phastos","marvel__gilgamesh","marvel__blade","marvel__werewolf_by_night","marvel__man_thing","marvel__h_e_r_b_i_e","marvel__bishop","marvel__x_23_laura_kinney","marvel__negasonic_teenage_warhead","marvel__juggernaut","marvel__sabretooth","marvel__toad","marvel__lady_deathstrike","marvel__apocalypse","marvel__cassandra_nova","marvel__pyro","marvel__angel_archangel","marvel__havok","marvel__banshee","marvel__darwin","marvel__cannonball","marvel__wolfsbane","marvel__sunspot","marvel__venom","marvel__carnage","marvel__kingpin","marvel__bullseye","marvel__killmonger","marvel__red_skull","marvel__ultron","marvel__green_goblin","marvel__doctor_octopus","marvel__mysterio","marvel__vulture","marvel__hela","marvel__abomination","marvel__taskmaster","marvel__baron_zemo","marvel__gorr_the_god_butcher","marvel__high_evolutionary","star_wars__darth_vader","star_wars__cal_kestis","star_wars__kylo_ren","star_wars__darth_maul","star_wars__darth_revan","star_wars__darth_sidious","star_wars__count_dooku","star_wars__boba_fett","star_wars__jango_fett","star_wars__captain_rex","star_wars__commander_cody","star_wars__grand_admiral_thrawn","star_wars__baylan_skoll","star_wars__shin_hati","star_wars__asajj_ventress","star_wars__general_grievous","harry_potter__ginny_weasley","harry_potter__fred_weasley","harry_potter__george_weasley","harry_potter__cedric_diggory","harry_potter__mad_eye_moody","pokemon__mewtwo","pokemon__espeon","pokemon__sylveon","pokemon__tyranitar","pokemon__metagross","pokemon__salamence","pokemon__lugia","pokemon__ho_oh","pokemon__suicune","pokemon__entei","pokemon__raikou","pokemon__zapdos","pokemon__articuno","pokemon__moltres","pokemon__machamp","world_of_warcraft__bolvar_fordragon","world_of_warcraft__medivh","world_of_warcraft__garrosh_hellscream","world_of_warcraft__voljin","world_of_warcraft__cairne_bloodhoof","world_of_warcraft__baine_bloodhoof","world_of_warcraft__rexxar","world_of_warcraft__turalyon","world_of_warcraft__kaelthas_sunstrider","world_of_warcraft__lorthemar_theron","world_of_warcraft__maiev_shadowsong","world_of_warcraft__sargeras","red_rising__ephraim_ti_horn","red_rising__lyria","red_rising__aja_au_grimmus","red_rising__nero_au_augustus","red_rising__octavia_au_lune","red_rising__lysander_au_lune","red_rising__apollonius_au_valii_rath","red_rising__atlas_au_raa","stormlight_archive__wyndle","stormlight_archive__rlain","stormlight_archive__nightblood","stormlight_archive__eshonai","stormlight_archive__venli","stormlight_archive__moash","stormlight_archive__taravangian","game_of_thrones__brienne_of_tarth","disney_pixar__wasabi","disney_pixar__honey_lemon","disney_pixar__fred","disney_pixar__tadashi_hamada","disney_pixar__yokai","disney_pixar__jack_jack","disney_pixar__edna_mode","disney_pixar__syndrome","disney_pixar__randall_boggs","disney_pixar__roz","disney_pixar__mr_waternoose","disney_pixar__bullseye","disney_pixar__rex","disney_pixar__hamm","disney_pixar__slinky_dog","disney_pixar__bo_peep","disney_pixar__laurel_lightfoot","disney_pixar__wilden_lightfoot","disney_pixar__the_manticore_corey","disney_pixar__officer_colt_bronco","disney_pixar__blazey","disney_pixar__carl_fredricksen","disney_pixar__russell","disney_pixar__kevin","disney_pixar__sadness","disney_pixar__anger","disney_pixar__fear","disney_pixar__disgust","disney_pixar__anxiety","disney_pixar__miguel","disney_pixar__hector","disney_pixar__mama_imelda","disney_pixar__ernesto_de_la_cruz","disney_pixar__te_ka","disney_pixar__king_candy","fourth_wing__sloane_mairi","fourth_wing__catriona_cordella","fourth_wing__aaric_graycastle","fourth_wing__jesinia_neilwart","fourth_wing__jack_barlowe","fourth_wing__lilith_sorrengail","fourth_wing__general_melgren","a_court_of_thorns_and_roses__varian","a_court_of_thorns_and_roses__tarquin","a_court_of_thorns_and_roses__kallias","a_court_of_thorns_and_roses__viviane","a_court_of_thorns_and_roses__jurian","a_court_of_thorns_and_roses__vassa","a_court_of_thorns_and_roses__amarantha","a_court_of_thorns_and_roses__king_of_hybern","a_court_of_thorns_and_roses__bryaxis"]);
 function trimRemovedHeroesV1(){ if(!Array.isArray(S.heroes)) return; const ownedRemoved=S.heroes.filter(h=>h&&REMOVED_HERO_IDS_V1.has(h.id)&&h.owned).length; S.heroes=S.heroes.filter(h=>h&&!REMOVED_HERO_IDS_V1.has(h.id)); if(Array.isArray(S.wishlist)) S.wishlist=S.wishlist.filter(x=>!REMOVED_HERO_IDS_V1.has(x)); if(!S._rosterTrimV1){ if(ownedRemoved>0){ S.summonTickets=(S.summonTickets||0)+ownedRemoved; S._removedTicketGrant=ownedRemoved; } S._rosterTrimV1=true; } }
 async function checkPortraitStorage(){
@@ -2415,7 +2483,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.81.9-settings-stable-no-flicker';
+const APP_BUILD='v2.82.1-scroll-lock-unify';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2641,6 +2709,7 @@ function migrate(){
   ensureStarterClashSquad();
   if(S.focus && !(S.heroes||[]).some(h=>h.id===S.focus)) S.focus=null;
   if(typeof S.exp==='number') delete S.exp;  // retired shared EXP wallet
+  if(!S.unlockedLocations||typeof S.unlockedLocations!=='object') S.unlockedLocations={};
   if('importV1' in S) delete S.importV1;
 }
 
@@ -2651,7 +2720,7 @@ function seed(){
     theme:'web', lastSeen:Date.now(), lastDay:todayStr(), doneMode:'bottom', appSettings:{reduceMotion:false,compactMode:false,confirmDanger:true,developerTools:false}, onboarded:false, titlesUnlocked:{Adventurer:true}, activeTitle:'Adventurer', lastActionResult:null, starterDailiesVersion:1,
     lifeWeek:{wk:periodKey('weekly'),domains:{},completed:0,reviewed:false,balanceClaimed:false,holdLine:0}, recoveryDays:{}, holdLine:{day:periodKey('daily'),anchors:{},rewarded:false}, dayStats:{day:periodKey('daily'),completed:0,domains:{}}, questState:{daily:{day:periodKey('daily'),claimed:{}},weekly:{wk:periodKey('weekly'),claimed:{}},chains:{wk:periodKey('weekly'),claimed:{}}}, cards:{owned:['morning_prayer','iron_will','family_shield','deep_work','clean_house','sabbath_rhythm'],loadout:['morning_prayer','iron_will','family_shield']}, research:{points:0,nodes:{}}, assignments:{rooms:{}}, dungeonState:{wk:periodKey('weekly'),claimed:{}}, monthStats:{mo:periodKey('monthly'),domains:{},completed:0,wins:[],reviewed:false}, prestigeHistory:[], heroQuestState:{wk:periodKey('weekly'),claimed:{}}, prestigeMilestonesClaimed:{}, domainStats:{},
     charge:6, chargeLedger:{day:periodKey('daily'),earned:0}, stage:1, maxCleared:0, clash:{chapter:1,stage:1,seed:null,clears:{},lastResult:null}, clashSquad:[],
-    crystals:0, summonTickets:0, ticketShards:0, summonPity:0, wishlist:[], favorites:[], albumsClaimed:{starter_legacy:true}, didAutoStarterSquad:false,
+    crystals:0, summonTickets:0, ticketShards:0, summonPity:0, wishlist:[], favorites:[], albumsClaimed:{starter_legacy:true}, didAutoStarterSquad:false, unlockedLocations:{},
     heroes:[],
     squads:{campaign:[],tower:[],raid:[]},
     dailies:V17_SPECS().map(makeV17Daily),
@@ -2703,6 +2772,7 @@ async function load(){
     if(raw){ const __msg=__recovered?'Save was unreadable \u2014 recovered from your latest backup.':'Save was unreadable \u2014 started fresh. Settings \u2192 Backup tools can restore a copy.'; try{ setTimeout(function(){ try{ if(typeof toast==='function') toast(__msg); }catch(_){} },1000); }catch(e){} }
   }
   migrate();
+  try{ await loadLocationArt(); }catch(e){}
   applyTuneOverrides();
   recalcCollection();
   const albumMsgs=checkAlbums();
@@ -15815,7 +15885,7 @@ body.of27621BattleFx .of27621Spark{position:absolute;left:var(--tx);top:var(--ty
 })();
 </script>
 <script id="scrollLockGuard2770">
-(function(){
+(function(){ return; /* retired v2.82.1 — superseded by ofScrollLock unified manager */
   var MODAL_SEL='.scrim.show,.arena.show,.qc2684Card,#revealModal.show,.revealModal.show,.modal.show,[class*="HeroSheet"].show,[class*="HeroMoment"],.heroSheet.show,[class*="Overlay"].show';
   function blockingVisible(){
     try{
@@ -15856,6 +15926,77 @@ body.of27621BattleFx .of27621Spark{position:absolute;left:var(--tx);top:var(--ty
   setInterval(function(){ try{ if(isLocked() && !blockingVisible()) unlock(); }catch(e){} }, 700);
   // failsafe: tapping the nav always frees scroll
   document.addEventListener('click',function(e){ try{ if(e.target&&e.target.closest&&e.target.closest('.nav')) setTimeout(function(){ if(!blockingVisible()) unlock(); },40); }catch(_){ } }, true);
+})();
+</script>
+<script id="ofScrollLockUnifiedScript">
+(function(){
+  'use strict';
+  /* v2.82.1 — Unified scroll-lock. Single source of truth for modal body-lock.
+     Uses the iOS-safe position:fixed technique (which the legacy class/overflow
+     reconcilers do NOT manage, so they cannot fight it), plus touch containment.
+     Replaces the scrollLockGuard2770 watchdog (retired) and harmonizes the
+     of2809 / of2815 unlockers, which only touched overflow/touchAction/classes. */
+  if(window.__ofScrollLockUnified) return; window.__ofScrollLockUnified=true;
+  var OPEN_SEL='.overlay.show,.scrim.show,.modal.show,.backdrop.show,'
+    +'#revealModal.show,#awayModal.show,#setScrim.show,#scrim.show,#of2814TaskOverlay.show,'
+    +'.of2808StrikeOverlay.show,.of2813StrikeOverlay.show,'
+    +'.of27616HeroOverlay.show,.of27615HeroOverlay.show,.of27613HeroOverlay.show,'
+    +'[role="dialog"].show,[aria-modal="true"]';
+  var BOX_SEL='#revealBox,#awayBox,.obox,.sheet,[data-modal-content],.of2814TaskSheet,'
+    +'.drawer,.panel,.modalCard,.modal-card,.modalContent,.modal-content';
+  function qa(sel,r){return Array.prototype.slice.call((r||document).querySelectorAll(sel));}
+  function vis(el){ if(!el||!el.isConnected) return false; var cs=getComputedStyle(el); if(cs.display==='none'||cs.visibility==='hidden') return false; if(parseFloat(cs.opacity||'1')<=0.02) return false; var r=el.getBoundingClientRect(); return r.width>2&&r.height>2; }
+  function openModals(){ return qa(OPEN_SEL).filter(vis); }
+  function topModal(){ var l=openModals(); if(!l.length) return null; l.sort(function(a,b){return (parseInt(getComputedStyle(b).zIndex,10)||0)-(parseInt(getComputedStyle(a).zIndex,10)||0);}); return l[0]; }
+  function boxFor(ov){ if(!ov) return null; return ov.querySelector(BOX_SEL)||ov.firstElementChild; }
+  var locked=false, savedY=0, busy=false;
+  function lock(){
+    if(locked) return; locked=true; busy=true;
+    try{
+      savedY=window.scrollY||window.pageYOffset||0;
+      var b=document.body;
+      b.style.position='fixed'; b.style.top=(-savedY)+'px'; b.style.left='0'; b.style.right='0'; b.style.width='100%'; b.style.overflow='hidden';
+      b.classList.add('ofScrollLocked');
+    }catch(e){}
+    busy=false;
+  }
+  function unlock(){
+    if(!locked) return; locked=false; busy=true;
+    try{
+      var b=document.body, h=document.documentElement;
+      b.style.position=''; b.style.top=''; b.style.left=''; b.style.right=''; b.style.width=''; b.style.overflow=''; b.style.touchAction='';
+      h.style.overflow=''; h.style.touchAction='';
+      /* clear any leftover lock classes from retired/legacy layers so they cannot re-freeze the page */
+      b.className=(b.className||'').replace(/\bof\d+Hero\w*\b/g,' ').replace(/\s{2,}/g,' ').trim();
+      ['ofScrollLocked','of2814TaskOpen','of2815OpeningModal','of2807-modal-open','of2809-modal-open','of2809ModalOpen','of27611HeroModalOpen','of27612HeroSheetOpen','modal-open','ofModalOpen'].forEach(function(c){ b.classList.remove(c); });
+      window.scrollTo(0,savedY);
+    }catch(e){}
+    busy=false;
+  }
+  function reconcile(){ if(busy) return; if(topModal()) lock(); else unlock(); }
+  function soon(){ requestAnimationFrame(function(){ requestAnimationFrame(reconcile); }); }
+  /* touch containment: scroll inside the modal's box, block the page behind */
+  var lastY=0;
+  document.addEventListener('touchstart',function(e){ if(e.touches&&e.touches.length) lastY=e.touches[0].clientY; },{capture:true,passive:true});
+  document.addEventListener('touchmove',function(e){
+    var ov=topModal(); if(!ov) return;
+    var box=boxFor(ov), t=e.target;
+    if(box && box.contains(t)){
+      var y=(e.touches&&e.touches.length)?e.touches[0].clientY:lastY, dy=y-lastY; lastY=y;
+      var can=box.scrollHeight>box.clientHeight+1, atTop=box.scrollTop<=0, atBot=(box.scrollTop+box.clientHeight)>=box.scrollHeight-1;
+      if(!can||(atTop&&dy>0)||(atBot&&dy<0)) e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+  },{capture:true,passive:false});
+  /* lightweight detection: react to user actions (open/close) + a slow safety poll.
+     No heavy subtree observer, so battle animations do not thrash this. */
+  document.addEventListener('click',soon,true);
+  document.addEventListener('touchend',soon,true);
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) soon(); });
+  setInterval(reconcile,300);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',reconcile,{once:true}); else reconcile();
+  window.ofScrollLock={lock:lock,unlock:unlock,reconcile:reconcile,open:openModals,isLocked:function(){return locked;}};
 })();
 </script>
 <script id="qbWeeklyChest2772">
