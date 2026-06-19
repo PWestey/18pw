@@ -2483,7 +2483,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.82.2-hero-modal-scroll';
+const APP_BUILD='v2.82.3-hero-panel';
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -15518,8 +15518,8 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
       '<div class="of27616Panel"><h4>Edit Hero <span>portrait / role / archetype</span></h4><div class="of27616EditGrid"><button type="button" class="primary" data-of27616-act="upload">'+(h.img?'Replace Image':'Upload Image')+'</button><button type="button" data-of27616-act="removeImg" '+(h.img?'':'disabled')+'>Remove Image</button><div><label>Role</label><select data-of27616-role>'+roleOptions(h)+'</select></div><div><label>Archetype</label><select data-of27616-arch>'+archOptions(h)+'</select></div></div><input type="file" accept="image/*" data-of27616-file style="display:none"></div>'+
       '<div class="of27616Panel"><h4>Progression</h4><p>'+(safe(()=>canPrestige(h),false)?'Ready for Prestige.':'Next: '+E(safe(()=>prestigeNextBlocker(h),'Keep building this hero.')))+'</p><div style="height:9px;border-radius:999px;background:#0008;margin-top:9px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:linear-gradient(90deg,#36e0e6,#37d67a)"></i></div></div>'+
       '<div class="of27616Panel"><h4>Identity <span>'+E(a?a.label:(h.archKey||'Specialist'))+'</span></h4><p>'+(p?'<b>'+E(p.name)+'</b><br>'+E(p.desc||''):E(a?a.desc:'Flexible combat identity.'))+'</p></div>'+
-      '<div class="of27616Actions"><button type="button" class="primary" data-of27616-act="level">Level to Max</button><button type="button" data-of27616-act="focus">'+(S.focus===h.id?'Featured':'Set Featured')+'</button><button type="button" data-of27616-act="favorite">'+(safe(()=>isFavorite(h.id),false)?'♥ Favorite':'♡ Favorite')+'</button><button type="button" class="gold" data-of27616-act="prestige" '+(safe(()=>canPrestige(h),false)?'':'disabled')+'>Prestige</button><button type="button" style="grid-column:1/-1" data-of27616-act="advanced">Show Advanced Details</button></div>';
-    ov.classList.add('show'); document.body.classList.add('of27616HeroOpen'); dr.scrollTop=0;
+      '<div class="of27616Actions"><button type="button" class="primary" data-of27616-act="level">Level to Max</button><button type="button" data-of27616-act="focus">'+(S.focus===h.id?'Featured':'Set Featured')+'</button><button type="button" data-of27616-act="favorite">'+(safe(()=>isFavorite(h.id),false)?'♥ Favorite':'♡ Favorite')+'</button><button type="button" class="gold" data-of27616-act="prestige" '+(safe(()=>canPrestige(h),false)?'':'style="opacity:.55"')+'>Prestige</button><button type="button" style="grid-column:1/-1" data-of27616-act="advanced">Show Advanced Details</button></div>';
+    ov.classList.add('show'); document.body.classList.add('of27616HeroOpen'); dr.scrollTop=0; try{ if(typeof window.of2785Enhance==='function') setTimeout(function(){window.of2785Enhance(id);},0); }catch(e){}
     q('[data-of27616-close]',dr).onclick=closeHero;
     let role=q('[data-of27616-role]',dr); if(role) role.onchange=()=>{h.role=role.value; safe(()=>ensureElementData()); save2(); toast2('Role set: '+h.role); openHero(id);};
     let ar=q('[data-of27616-arch]',dr); if(ar) ar.onchange=()=>{h.archKey=ar.value; h.archetype=ar.value; save2(); toast2('Archetype updated'); openHero(id);};
@@ -15534,7 +15534,7 @@ body.reduce-motion .ofCmdHall26818:before,body.reduce-motion .arena.ofBattleV3 .
       else if(act==='level'){safe(()=>levelToMax(h)); save2(); safe(()=>renderHUD()); toast2('Leveled '+h.name); openHero(id);}
       else if(act==='focus'){S.focus=h.id; save2(); toast2('Featured: '+h.name); openHero(id);}
       else if(act==='favorite'){safe(()=>toggleFavorite(h.id)); save2(); openHero(id);}
-      else if(act==='prestige'){if(safe(()=>canPrestige(h),false)){safe(()=>prestigeHero(h)); save2(); toast2('Prestiged '+h.name); openHero(id);}}
+      else if(act==='prestige'){if(safe(()=>canPrestige(h),false)){safe(()=>prestigeHero(h)); save2(); toast2('Prestiged '+h.name); openHero(id);} else { var pc=safe(()=>prestigeCost(h),{sparks:0,gold:0}); var elig=safe(()=>prestigeEligible(h),false); if(!elig){ toast2('Not ready: '+safe(()=>prestigeNextBlocker(h),'keep building this hero')); } else { var ns=Math.max(0,pc.sparks-(S.sparks||0)), ng=Math.max(0,pc.gold-(S.gold||0)); toast2('Need '+(ns?ns+' more ✦ sparks':'')+((ns&&ng)?' · ':'')+(ng?ng+' more ⦿ gold':'')); } } }
       else if(act==='advanced'){let old=q('#of27616Advanced',dr); if(old){old.scrollIntoView({block:'nearest',behavior:'smooth'});return;} b.closest('.of27616Actions').insertAdjacentHTML('beforebegin','<div id="of27616Advanced" class="of27616Panel"><h4>Advanced Details <span>safe sheet</span></h4><div class="of27616Stats"><div class="of27616Stat"><b>'+pwr(h)+'</b><span>Power</span></div><div class="of27616Stat"><b>'+E((h.level||1)+'/'+cap(h))+'</b><span>Level</span></div><div class="of27616Stat"><b>'+gearScore2(h)+'</b><span>Gear</span></div><div class="of27616Stat"><b>'+E((h.exp||0)+'/'+safe(()=>levelCost(h.level||1),1))+'</b><span>EXP</span></div></div></div>');}
     });
     return true;
@@ -15980,14 +15980,12 @@ body.of27621BattleFx .of27621Spark{position:absolute;left:var(--tx);top:var(--ty
   var lastY=0;
   document.addEventListener('touchstart',function(e){ if(e.touches&&e.touches.length) lastY=e.touches[0].clientY; },{capture:true,passive:true});
   document.addEventListener('touchmove',function(e){
+    if(!locked) return;
     var ov=topModal(); if(!ov) return;
     var box=boxFor(ov), t=e.target;
-    if(box && box.contains(t)){
-      var y=(e.touches&&e.touches.length)?e.touches[0].clientY:lastY, dy=y-lastY; lastY=y;
-      var can=box.scrollHeight>box.clientHeight+1, atTop=box.scrollTop<=0, atBot=(box.scrollTop+box.clientHeight)>=box.scrollHeight-1;
-      if(!can||(atTop&&dy>0)||(atBot&&dy<0)) e.preventDefault();
-      return;
-    }
+    /* inside a scroll box: let native scroll + CSS overscroll-behavior:contain handle it (no over-blocking) */
+    if(box && box.contains(t)) return;
+    /* on the backdrop: page is position:fixed locked anyway, block as belt-and-suspenders */
     e.preventDefault();
   },{capture:true,passive:false});
   /* lightweight detection: react to user actions (open/close) + a slow safety poll.
@@ -16958,7 +16956,7 @@ body.of27621BattleFx .of27621Spark{position:absolute;left:var(--tx);top:var(--ty
     catch(e){} }
   function observe(){try{var mo=new MutationObserver(function(){cleanupQuestCards(document); enhanceHeroRequirements();}); mo.observe(document.body,{childList:true,subtree:true}); window.__of2785Observer=mo;}catch(e){}}
   function health(){var list=q('#list'); var bad=list?qa('.card.of-sigil-frame,.card.of-oath-watermark',list).length:0; var report={build:BUILD,appBuild:(typeof APP_BUILD!=='undefined'?APP_BUILD:null),saveVersion:(typeof SAVE_VERSION!=='undefined'?SAVE_VERSION:null),scripts:document.scripts.length,styles:document.querySelectorAll('style').length,homeConsolidated:!!q('[data-of2785-home]'),renderHomeHook:!!(window.renderHome&&window.renderHome.__of2785),renderTasksHook:!!(window.renderTasks&&window.renderTasks.__of2785),questDecorationsRemaining:bad,heroReqPanel:!!q('#of2785ReqPanel'),randomAnchor:true}; try{console.table(report)}catch(e){console.log(report)} return report;}
-  function boot(){try{if(typeof APP_BUILD!=='undefined')window.APP_BUILD=BUILD}catch(e){window.APP_BUILD=BUILD} patchHome(); patchTasks(); patchHeroModal(); cleanupQuestCards(document); observe(); window.of2785Health=health; window.of2785CleanupQuestCards=function(){return cleanupQuestCards(document)}; setTimeout(function(){cleanupQuestCards(document); patchHeroModal();},250);}
+  function boot(){try{if(typeof APP_BUILD!=='undefined')window.APP_BUILD=BUILD}catch(e){window.APP_BUILD=BUILD} patchHome(); patchTasks(); patchHeroModal(); cleanupQuestCards(document); observe(); window.of2785Enhance=enhanceHeroRequirements; window.of2785Health=health; window.of2785CleanupQuestCards=function(){return cleanupQuestCards(document)}; setTimeout(function(){cleanupQuestCards(document); patchHeroModal();},250);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
 })();
 </script>
@@ -17883,6 +17881,7 @@ body.of2803HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!im
   var lastY=0;
   document.addEventListener('touchstart',function(e){ if(e.touches&&e.touches.length) lastY=e.touches[0].clientY; },{capture:true,passive:true});
   document.addEventListener('touchmove',function(e){
+    if(window.__ofScrollLockUnified) return; /* defer to unified scroll-lock manager */
     var ov=topOverlay(); if(!ov) return;
     var box=boxFor(ov), t=e.target;
     if(box && box.contains(t)){
