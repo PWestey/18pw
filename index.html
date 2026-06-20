@@ -2490,7 +2490,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.82.21-observer-coalesce';
+const APP_BUILD='v2.82.22-coalesce-broad-only';
 /* v2.82.17 Performance: visibility listener + pause system */
 window.GAME_PAUSED=false;
 window.PAUSED_OBSERVERS=[];
@@ -2498,23 +2498,30 @@ window.pauseGame=function(){ window.GAME_PAUSED=true; };
 window.resumeGame=function(){ window.GAME_PAUSED=false; };
 window.__RENDERING={};
 window.guardedRender=function(name,fn){ if(window.__RENDERING[name]) return; window.__RENDERING[name]=true; try{ fn(); } finally{ window.__RENDERING[name]=false; } };
-/* v2.82.21 Performance: coalesce ALL MutationObserver callbacks to once-per-frame.
-   Turns a render's burst of DOM mutations into ONE callback instead of a synchronous
-   storm (the stutter). requestAnimationFrame also pauses while the tab is hidden.
-   Never touches render() — purely intercepts at the observer layer. */
+/* v2.82.22 Performance: coalesce ONLY the broad document.body/documentElement subtree
+   observers (the expensive decorators that cause stutter). Targeted observers that watch
+   a specific element (modals, sheets, scrim, arena) run SYNCHRONOUSLY — coalescing those
+   by a frame broke modal scroll + click handling, so they're exempt.
+   Never touches render(). */
 (function(){ try{
   var Native=window.MutationObserver||window.WebKitMutationObserver;
   if(!Native||Native.__ofCoalesced) return;
   var raf=window.requestAnimationFrame?function(f){return window.requestAnimationFrame(f);}:function(f){return setTimeout(f,16);};
   function Coalesced(cb){
-    var pending=[], scheduled=false;
+    var pending=[], scheduled=false, broad=false;
     var inst=new Native(function(muts){
       if(window.GAME_PAUSED) return;
+      if(!broad){ try{ cb(muts,inst); }catch(e){} return; }   /* targeted observer: run now */
       for(var i=0;i<muts.length;i++) pending.push(muts[i]);
       if(scheduled) return;
       scheduled=true;
       raf(function(){ scheduled=false; if(window.GAME_PAUSED) return; var batch=pending; pending=[]; try{ cb(batch,inst); }catch(e){} });
     });
+    var nativeObserve=inst.observe.bind(inst);
+    inst.observe=function(target,opts){
+      try{ if((target===document.body||target===document.documentElement)&&opts&&opts.subtree) broad=true; }catch(e){}
+      return nativeObserve(target,opts);
+    };
     return inst;
   }
   Coalesced.prototype=Native.prototype; Coalesced.__ofCoalesced=true;
