@@ -2399,7 +2399,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.73.0-clean-rebuild-phase2b-zone-naming';
+const APP_BUILD='v2.76.0-combat-particles';
 const EXPECTED_ROSTER_COUNT=375;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4972,7 +4972,19 @@ const BATTLE_ZONES=[
     bosses:[['Kingsguard Pretender','#d9d0b4','Tank'],['Ironborn Reaver','#5f83a8','DPS'],['Dragon Cultist','#d15b63','Support']]},
   {c:'scene-arcade',n:'Lumiose City',d:'The city of light, together',tower:'Wonder Trial',
     enemies:[['Toy Box Gremlin','#ffb86d','DPS'],['Closet Monster','#6c8cff','Tank'],['Glitch Bug','#ff6bda','DPS'],['Candy Racer','#ff7d7d','DPS'],['Scrap Bot','#7ca3c8','Tank'],['Emotion Wisp','#78e8d4','Support']],
-    bosses:[['Sea Trickster','#5ec0ff','Support'],['Volcano Spirit','#ff6247','DPS'],['Shadow Toy','#7260b0','DPS']]}
+    bosses:[['Sea Trickster','#5ec0ff','Support'],['Volcano Spirit','#ff6247','DPS'],['Shadow Toy','#7260b0','DPS']]},
+  {c:'scene-mansion',n:'X-Mansion',d:'Where the next generation is raised',tower:'Mentor Trial',
+    enemies:[['Sentinel Scout','#7f8799','Tank'],['Brotherhood Zealot','#b06cff','DPS'],['Danger Room Drone','#58d0ff','DPS'],['Morlock Lurker','#6e7a8f','DPS'],['Acolyte Striker','#ff8c58','DPS'],['Rogue Trainee','#9e7cff','Support']],
+    bosses:[['Prime Sentinel','#6cc6ff','Tank'],['Juggernaut Echo','#ff6a4b','Tank']]},
+  {c:'scene-pitch',n:'Quidditch Pitch',d:'Discipline taught in flight',tower:'Keeper Trial',
+    enemies:[['Rogue Bludger','#8fa6c2','Tank'],['Slytherin Chaser','#5fae6a','DPS'],['Beater Brute','#b08762','Tank'],['Bewitched Broom','#c787ff','DPS'],['Pitch Heckler','#ffd24f','Support'],['Snitch Mirage','#ffe9a8','DPS']],
+    bosses:[['Iron Keeper','#9ba7b8','Tank'],['Storm Seeker','#6cb9ff','DPS']]},
+  {c:'scene-academy',n:'Paldea Academy',d:'The hard lessons, learned daily',tower:'Scholar Trial',
+    enemies:[['Truant Student','#9ca6ba','DPS'],['Rival Trainer','#ff8c58','DPS'],['Gym Hopeful','#7bd88b','Support'],['Detention Golem','#8d715f','Tank'],['Academy Drone','#7ab9ff','DPS'],['Exam Phantom','#aa7eff','Support']],
+    bosses:[['Headmaster Construct','#c8b08a','Tank'],['Treasure Hoarder','#e4c26b','DPS']]},
+  {c:'scene-desert',n:'Tatooine',d:'Forged under twin suns',tower:'Survivor Trial',
+    enemies:[['Sand Raider','#c9a06a','DPS'],['Jawa Scavenger','#b47f61','Support'],['Tusken Marauder','#9a7d5f','DPS'],['Womp Rat Pack','#8d715f','DPS'],['Hutt Enforcer','#7ca056','Tank'],['Skiff Guard','#8db3da','Tank']],
+    bosses:[['Krayt Hatchling','#e57d52','DPS'],['Sarlacc Maw','#6a8f4e','Tank']]}
 ];
 function campaignZoneFor(stage){ return BATTLE_ZONES[(Math.max(1,stage)-1)%BATTLE_ZONES.length]; }
 function towerZoneFor(floor){ return BATTLE_ZONES[(Math.max(1,floor)-1)%BATTLE_ZONES.length]; }
@@ -5237,6 +5249,9 @@ function pickTarget(arr,att){
   const pool=(Math.random()<0.15&&back.length)?back:(front.length?front:a);
   return weightedPick(pool,u=>u.boss?1.6:(u.role==='Tank'?1.3:1));
 }
+function ofFxMeta(type){ var m={Flame:{cls:'flame',shot:'#ff6b4a',shot2:'#ffb347'},Tide:{cls:'tide',shot:'#48cfff',shot2:'#a9efff'},Grove:{cls:'grove',shot:'#6fe26a',shot2:'#c8ff8b'},Stone:{cls:'stone',shot:'#caa46a',shot2:'#f0dfbf'},Storm:{cls:'storm',shot:'#ffd94a',shot2:'#fff19a'}}; return m[type]||null; }
+function ofImpact(el,type,fallback){ if(!el) return; try{ var meta=ofFxMeta(type), r=el.getBoundingClientRect(), fx=document.createElement('div'); fx.className='clashImpact '+(meta?meta.cls:''); fx.style.left=(r.left+r.width/2)+'px'; fx.style.top=(r.top+r.height/2)+'px'; if(meta){ fx.style.setProperty('--shot',meta.shot); fx.style.setProperty('--shot2',meta.shot2); } else { fx.style.setProperty('--shot',fallback||'#ff9f43'); fx.style.setProperty('--shot2','#ffffff'); } document.body.appendChild(fx); setTimeout(function(){ try{fx.remove();}catch(e){} },430); }catch(e){} }
+function ofShot(fromEl,toEl,type,fallback){ if(!fromEl||!toEl) return; try{ var meta=ofFxMeta(type), a=fromEl.getBoundingClientRect(), t=toEl.getBoundingClientRect(), p=document.createElement('div'); if(meta){ p.className='clashShot '+meta.cls; p.style.setProperty('--shot',meta.shot); p.style.setProperty('--shot2',meta.shot2); } else { p.className='clashShot'; p.style.background='radial-gradient(circle at 38% 38%,#fff,'+(fallback||'#ff9f43')+' 72%,transparent)'; p.style.borderRadius='50%'; } p.style.left=(a.left+a.width/2-8)+'px'; p.style.top=(a.top+a.height/2-8)+'px'; document.body.appendChild(p); var dx=(t.left+t.width/2)-(a.left+a.width/2), dy=(t.top+t.height/2)-(a.top+a.height/2), ang=Math.atan2(dy,dx)*180/Math.PI; requestAnimationFrame(function(){ p.style.transform='translate('+dx+'px,'+dy+'px) rotate('+ang+'deg)'; }); setTimeout(function(){ ofImpact(toEl,type,fallback); },220); setTimeout(function(){ try{p.remove();}catch(e){} },360); }catch(e){} }
 function strike(att,tgt,sideClass,dmgMod){
   const eff=passiveEffect(att), mult=passiveDmgMult(att,tgt)*(dmgMod||1);
   const crit=Math.random()<(0.10+passiveCritBonus(att));
@@ -5272,7 +5287,7 @@ function strike(att,tgt,sideClass,dmgMod){
     el.classList.add('hit','struck'); setTimeout(()=>el.classList.remove('hit','struck'),320);
     floatDmg(el,actual,crit);
     if(blocked) floatBlock(el,blocked);
-    if(ranged && aEl) projectile(aEl,el,col);
+    if(aEl && el) ofShot(aEl,el,(att&&att.elementType)||null,col);
     spawnFx(el,col,crit);
     setBattleLog((att.side==='p'?att.name:att.name)+(crit?' lands a heavy hit!':' strikes.'));
     if(died){ battleEvent(tgt.name+' defeated','ko'); el.classList.add('dying'); setBattleLog(tgt.name+' falls.'); shakeArena(); }
@@ -5284,7 +5299,7 @@ function strike(att,tgt,sideClass,dmgMod){
       splash.hp-=sa; if(splash.hp<=0){splash.hp=0;splash.dead=true;}
       att.dealt=(att.dealt||0)+sa; splash.taken=(splash.taken||0)+sa;
       const sEl=document.querySelector('#enemySide [data-idx="'+splash._i+'"]');
-      if(sEl){ floatDmg(sEl,sa,false,'splash'); spawnFx(sEl,'#ff9bd7',false); }
+      if(sEl){ floatDmg(sEl,sa,false,'splash'); if(aEl) ofShot(aEl,sEl,(att&&att.elementType)||null,col); spawnFx(sEl,'#ff9bd7',false); }
       if(att.side==='p' && att.passive) passiveBanner(att.passive.name+' · Splash',col);
     }
   }
@@ -8485,6 +8500,10 @@ function v156SceneSvg(kind,p){
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice">${sky}${body}<rect width="960" height="540" fill="none" stroke="${c}" stroke-opacity=".10" stroke-width="6"/></svg>`;
 }
 const V156_SCENES={
+  'scene-mansion':{name:'Westchester Estate',kind:'forest',a:'#0c1a14',b:'#16291d',c:'#7dd3a0',d:'#ffd95a',e:'#070d0a'},
+  'scene-pitch':{name:'Open Pitch',kind:'forest',a:'#0a1a16',b:'#122a1f',c:'#7be0a0',d:'#9fdcff',e:'#060d09'},
+  'scene-academy':{name:'Academy Halls',kind:'road',a:'#101524',b:'#1b2238',c:'#8db3da',d:'#ffd95a',e:'#080a12'},
+  'scene-desert':{name:'Dune Sea',kind:'ruins',a:'#1f1712',b:'#33271a',c:'#ffcf5a',d:'#ff9b57',e:'#0a0805'},
   'scene-city':{name:'Neon Causeway',kind:'road',a:'#0d1424',b:'#14233b',c:'#5bd1ff',d:'#ffcf5a',e:'#07090f'},
   'scene-forest':{name:'Emerald Wilds',kind:'forest',a:'#081a16',b:'#10271d',c:'#37d67a',d:'#d6ff8a',e:'#050b08'},
   'scene-ruins':{name:'Sunken Ruins',kind:'ruins',a:'#1f1712',b:'#302616',c:'#ffcf5a',d:'#ffd95a',e:'#07090f'},
@@ -8530,7 +8549,7 @@ const LOCATION_ART_SEED={"loc__asgard":"art/locations/asgard.webp","loc__jedi_te
 let LOCATION_ART=Object.assign({},LOCATION_ART_SEED);
 const LOCATION_ART_OK={};
 function probeLocationArt(){ try{ if(typeof Image==='undefined') return; Object.keys(LOCATION_ART||{}).forEach(function(id){ var src=LOCATION_ART[id]; if(!src){return;} if(String(src).indexOf('data:')===0){ LOCATION_ART_OK[id]=true; return; } var im=new Image(); im.onload=function(){ LOCATION_ART_OK[id]=true; }; im.onerror=function(){ LOCATION_ART_OK[id]=false; }; im.src=src; }); }catch(e){} }
-const SCENE_LOC={"scene-city":"loc__avengers_tower","scene-starport":"loc__xandar","scene-library":"loc__hogwarts","scene-forest":"loc__pallet_town","scene-bog":"loc__boralus","scene-siege":"loc__stormwind","scene-moon":"loc__jedi_temple","scene-highstorm":"loc__asgard","scene-fellwood":"loc__dalaran","scene-dungeon":"loc__coruscant","scene-keep":"loc__hogsmeade","scene-arcade":"loc__lumiose_city"};
+const SCENE_LOC={"scene-mansion":"loc__x_mansion","scene-pitch":"loc__quidditch_pitch","scene-academy":"loc__paldea_academy","scene-desert":"loc__tatooine","scene-city":"loc__avengers_tower","scene-starport":"loc__xandar","scene-library":"loc__hogwarts","scene-forest":"loc__pallet_town","scene-bog":"loc__boralus","scene-siege":"loc__stormwind","scene-moon":"loc__jedi_temple","scene-highstorm":"loc__asgard","scene-fellwood":"loc__dalaran","scene-dungeon":"loc__coruscant","scene-keep":"loc__hogsmeade","scene-arcade":"loc__lumiose_city"};
 async function loadLocationArt(){ try{ const d=await Store.get(LOCATION_ART_KEY); if(d){ const v=typeof d==='string'?JSON.parse(d):d; if(v&&typeof v==='object') LOCATION_ART=Object.assign({},LOCATION_ART_SEED,v); } }catch(e){} }
 async function saveLocationArt(){ try{ await Store.set(LOCATION_ART_KEY,JSON.stringify(LOCATION_ART||{})); }catch(e){} }
 function setLocationArt(id,dataUrl){ if(!LOCATION_BY_ID[id]) return false; if(dataUrl){ LOCATION_ART[id]=dataUrl; } else { LOCATION_ART[id]=LOCATION_ART_SEED[id]; } saveLocationArt(); return true; }
@@ -11461,5 +11480,82 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
 .ofStrikeChip.main{border-color:color-mix(in srgb,var(--ofsc,#36e0e6) 55%,transparent);background:color-mix(in srgb,var(--ofsc,#36e0e6) 14%,transparent);color:#eaf6ff}
 .ofStrikeHint{font-size:11px;color:#6b7a9c;font-weight:800;letter-spacing:.04em}
 </style>
+<style id="ofHomeV1">
+.ofHome{display:flex;flex-direction:column;gap:14px}
+.ofHomeAnchor{text-align:center;border:1px solid color-mix(in srgb,var(--ofhc,#36e0e6) 30%,var(--line));border-radius:22px;background:radial-gradient(440px 250px at 50% -10%,color-mix(in srgb,var(--ofhc,#36e0e6) 18%,transparent),transparent 70%),var(--panel2,#0d1525);padding:20px 18px 18px}
+.ofHomeKicker{font-family:Orbitron,system-ui;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:14px}
+.ofHomePortrait{width:160px;height:160px;margin:0 auto 14px;border-radius:30px;display:grid;place-items:center;overflow:hidden;font-family:Orbitron,system-ui;font-weight:900;font-size:56px;color:#fff;box-shadow:0 0 0 2px color-mix(in srgb,var(--ofhc,#36e0e6) 60%,rgba(255,255,255,.12)),0 0 52px color-mix(in srgb,var(--ofhc,#36e0e6) 42%,transparent)}
+.ofHomePortrait img{width:100%;height:100%;object-fit:cover}
+.ofHomeName{font-family:Orbitron,system-ui;font-size:30px;font-weight:900;color:#fff;line-height:1.05;margin-bottom:6px}
+.ofHomeTag{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:14px}
+.ofHomeChips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
+.ofHomeChip{font-size:12px;font-weight:900;color:#dbe5ff;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);border-radius:999px;padding:6px 12px}
+.ofHomeChip.gold{border-color:#ffd95a66;color:#ffd95a}
+.ofHomePath{border:1px solid var(--line);border-radius:18px;background:var(--panel2,#0d1525);padding:14px}
+.ofHomePathHead{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.ofHomePathHead b{font-family:Orbitron,system-ui;font-size:17px;color:#fff}
+.ofHomePathHead span{font-size:11px;color:var(--muted);font-weight:700}
+.ofHomeSteps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.ofHomeStep{border:1px solid var(--line);border-radius:13px;padding:10px 4px;text-align:center;background:rgba(255,255,255,.02)}
+.ofHomeStep.done{border-color:#37d67a66;background:#37d67a12}
+.ofHomeStep.active{border-color:#ffd95a88;background:#ffd95a12}
+.ofHomeStepNum{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin:0 auto 6px;font-family:Orbitron,system-ui;font-weight:900;font-size:14px;background:rgba(255,255,255,.06);color:#cdd9f2}
+.ofHomeStep.done .ofHomeStepNum{background:#37d67a;color:#04140b}
+.ofHomeStep.active .ofHomeStepNum{background:#ffd95a;color:#1a1405}
+.ofHomeStepLabel{font-size:11px;font-weight:900;color:#fff;margin-bottom:2px}
+.ofHomeStepSub{font-size:9.5px;color:var(--muted);font-weight:700;line-height:1.2}
+.ofHomeCTA{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:none;border-radius:16px;padding:16px 18px;background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff;cursor:pointer}
+.ofHomeCTAico{font-size:24px;flex:0 0 auto}
+.ofHomeCTA b{font-family:Orbitron,system-ui;font-size:19px}
+.ofHomeCTA small{font-size:12px;opacity:.92;font-weight:700}
+.ofHomeTiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ofHomeTile{text-align:left;border:1px solid var(--line);border-radius:16px;background:var(--panel2,#0d1525);padding:16px;cursor:pointer;color:inherit}
+.ofHomeTileName{font-family:Orbitron,system-ui;font-size:17px;font-weight:900;color:#fff;margin-bottom:5px}
+.ofHomeTileDesc{font-size:12px;color:var(--muted);font-weight:700;line-height:1.3}
+</style>
+<script id="ofHomeV1Script">
+(function(){
+  function esc2(x){ try{ return (typeof esc==='function')?esc(x):String(x==null?'':x); }catch(e){ return String(x==null?'':x); } }
+  function ofHomeHTML(){
+    var fh=null; try{ fh=(typeof featuredHero==='function')?featuredHero():null; }catch(e){}
+    if(!fh){ try{ fh=(S.heroes||[]).filter(function(h){return h&&h.owned;}).sort(function(a,b){return powerOf(b)-powerOf(a);})[0]||null; }catch(e){} }
+    var name=fh?esc2(fh.name):'Your Fellowship';
+    var color=(fh&&fh.color)||'#36e0e6';
+    var face=fh?(fh.img?'<img src="'+esc2(fh.img)+'" alt="">':esc2((typeof initials==='function')?initials(fh.name):'?')):'?';
+    var lvl=fh?(fh.level||1):0;
+    var pow=0; try{ pow=fh?powerOf(fh):0; }catch(e){}
+    var dailies=[]; try{ dailies=(S.dailies||[]).filter(function(d){return d&&d.freq==='daily';}); }catch(e){}
+    var dTotal=dailies.length, dDone=dailies.filter(function(d){return d.done;}).length;
+    var dPct=dTotal?Math.round(dDone/dTotal*100):0;
+    var waiting=Math.max(0,dTotal-dDone);
+    var stage=1; try{ stage=(S&&S.stage)||1; }catch(e){}
+    var oathDone=(dTotal>0&&dDone>=dTotal);
+    function step(n,label,sub,state){ return '<div class="ofHomeStep '+state+'"><div class="ofHomeStepNum">'+(state==='done'?'\u2713':n)+'</div><div class="ofHomeStepLabel">'+label+'</div><div class="ofHomeStepSub">'+sub+'</div></div>'; }
+    var steps=step(1,'Arrive','Enter the Hall','done')+step(2,'Oath',dDone+'/'+dTotal+' complete',oathDone?'done':'active')+step(3,'Reward','Build it','')+step(4,'Battle','Stage '+stage,'')+step(5,'Seal','Waiting','');
+    var chips='<span class="ofHomeChip gold">Level '+lvl+'</span><span class="ofHomeChip">Fellowship</span><span class="ofHomeChip">'+dPct+'% Daily</span><span class="ofHomeChip">Power '+(pow||0).toLocaleString()+'</span>';
+    var ctaSub=waiting>0?(waiting+' vow'+(waiting===1?'':'s')+' waiting to become power.'):'Today\u2019s oaths complete \u2014 well done.';
+    var tiles=[['heroes','Fellowship','Companions, bonds, identity.'],['battles','War Table','Campaign, Tower, Clash.'],['heroes','Forge','Rank, gear, prestige.'],['expeditions','Expeditions','Away teams and idle gains.']].map(function(t){ return '<button class="ofHomeTile" data-ofnav="'+t[0]+'"><div class="ofHomeTileName">'+t[1]+'</div><div class="ofHomeTileDesc">'+t[2]+'</div></button>'; }).join('');
+    return '<div class="ofHome" style="--ofhc:'+color+'">'+
+      '<div class="ofHomeAnchor"><div class="ofHomeKicker">Fellowship Anchor</div>'+
+        '<div class="ofHomePortrait" style="background:linear-gradient(160deg,'+color+',#0008)">'+face+'</div>'+
+        '<div class="ofHomeName">'+name+'</div><div class="ofHomeTag">One completed vow becomes power.</div>'+
+        '<div class="ofHomeChips">'+chips+'</div></div>'+
+      '<div class="ofHomePath"><div class="ofHomePathHead"><b>Today\u2019s Path</b><span>Arrive \u2192 Oath \u2192 Reward \u2192 Battle \u2192 Seal</span></div><div class="ofHomeSteps">'+steps+'</div></div>'+
+      '<button class="ofHomeCTA" data-ofnav="quests"><span class="ofHomeCTAico">\u2726</span><span><b>Complete Next Oath</b><br><small>'+ctaSub+'</small></span></button>'+
+      '<div class="ofHomeTiles">'+tiles+'</div></div>';
+  }
+  function ofBindHome(v){ try{ (v||document).querySelectorAll('[data-ofnav]').forEach(function(b){ b.onclick=function(){ try{ navTo(b.getAttribute('data-ofnav')); }catch(e){} }; }); }catch(e){} }
+  function install(){
+    if(typeof renderHome!=='function' || renderHome.__ofHome){ return; }
+    var _prev=renderHome;
+    renderHome=function(v){ try{ _prev(v); }catch(e){} try{ if(v){ v.innerHTML=ofHomeHTML(); ofBindHome(v); } }catch(e){} };
+    renderHome.__ofHome=true;
+    try{ if(typeof S!=='undefined' && S && typeof view!=='undefined' && view==='home'){ var v=document.getElementById('view'); if(v) renderHome(v); } }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install); else install();
+  setTimeout(function(){ try{ install(); if(typeof S!=='undefined'&&S&&typeof view!=='undefined'&&view==='home'){ var v=document.getElementById('view'); if(v&&renderHome.__ofHome) renderHome(v); } }catch(e){} },700);
+})();
+</script>
+
 </body>
 </html>
