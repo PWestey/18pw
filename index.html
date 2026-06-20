@@ -2490,7 +2490,26 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.82.16-bg-folder-only';
+const APP_BUILD='v2.82.18-debounce-throttle';
+/* v2.82.17 Performance: visibility listener + pause system */
+window.GAME_PAUSED=false;
+window.PAUSED_OBSERVERS=[];
+window.pauseGame=function(){ window.GAME_PAUSED=true; };
+window.resumeGame=function(){ window.GAME_PAUSED=false; };
+/* v2.82.18 Performance: debounced save + render throttle */
+window.SAVE_TIMEOUT=null; window.lastSaveTime=0;
+const originalSave=typeof save==='function'?save:function(){};
+window.scheduleSave=function(immediate){ if(window.GAME_PAUSED&&!immediate) return; clearTimeout(window.SAVE_TIMEOUT); if(immediate){ originalSave(); window.lastSaveTime=Date.now(); } else { window.SAVE_TIMEOUT=setTimeout(function(){ if(!window.GAME_PAUSED){ originalSave(); window.lastSaveTime=Date.now(); } },1500); } };
+window.save=window.scheduleSave;
+window.RENDER_THROTTLE={lastFrame:0,fps:0,homeFrameTarget:1000/10,battleFrameTarget:1000/30};
+window.throttleRender=function(callback,fpsTarget){ const now=Date.now(); const minDelay=fpsTarget||window.RENDER_THROTTLE.homeFrameTarget; if(now-window.RENDER_THROTTLE.lastFrame>=minDelay){ window.RENDER_THROTTLE.lastFrame=now; callback(); return true; } return false; };
+
+window.registerObserver=function(obs){ if(!window.PAUSED_OBSERVERS) window.PAUSED_OBSERVERS=[]; window.PAUSED_OBSERVERS.push(obs); return obs; };
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){ window.GAME_PAUSED=true; if(window.PAUSED_OBSERVERS){ window.PAUSED_OBSERVERS.forEach(function(o){ try{o.disconnect();}catch(e){} }); } }
+  else{ window.GAME_PAUSED=false; if(window.PAUSED_OBSERVERS){ window.PAUSED_OBSERVERS.forEach(function(o){ try{o.observe(document.body,{subtree:true,childList:true,attributes:true,characterData:true});}catch(e){} }); } }
+});
+
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
