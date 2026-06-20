@@ -2490,7 +2490,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.82.25-locked-hero-unlock';
+const APP_BUILD='v2.82.27-save-throttle-flush';
 /* v2.82.17 Performance: visibility listener + pause system */
 window.GAME_PAUSED=false;
 window.PAUSED_OBSERVERS=[];
@@ -2531,16 +2531,25 @@ window.guardedRender=function(name,fn){ if(window.__RENDERING[name]) return; win
 /* v2.82.18 Performance: debounced save + render throttle */
 window.SAVE_TIMEOUT=null; window.lastSaveTime=0;
 const originalSave=typeof save==='function'?save:function(){};
-window.scheduleSave=function(immediate){ if(window.GAME_PAUSED&&!immediate) return; clearTimeout(window.SAVE_TIMEOUT); if(immediate){ originalSave(); window.lastSaveTime=Date.now(); } else { window.SAVE_TIMEOUT=setTimeout(function(){ if(!window.GAME_PAUSED){ originalSave(); window.lastSaveTime=Date.now(); } },1500); } };
+/* v2.82.27 DATA SAFETY: throttle-with-trailing. The old debounce reset its 1500ms timer
+   on every save() call, so in an idle game (constant EXP/momentum ticks) it NEVER fired and
+   nothing persisted; closing then reverted the whole session. This guarantees a real save at
+   least every ~2s, never drops a save when paused, and exposes flushSave() for hide/close. */
+function __doRealSave(){ window.lastSaveTime=Date.now(); if(window.SAVE_TIMEOUT){ clearTimeout(window.SAVE_TIMEOUT); window.SAVE_TIMEOUT=null; } try{ originalSave(); }catch(e){ try{ console.error('save failed',e); }catch(_){} } }
+window.flushSave=function(){ try{ __doRealSave(); }catch(e){} };
+window.scheduleSave=function(immediate){ if(immediate){ __doRealSave(); return; } var since=Date.now()-(window.lastSaveTime||0); if(since>=2000){ __doRealSave(); return; } if(!window.SAVE_TIMEOUT){ window.SAVE_TIMEOUT=setTimeout(__doRealSave, Math.max(0,2000-since)); } };
 window.save=window.scheduleSave;
 window.RENDER_THROTTLE={lastFrame:0,fps:0,homeFrameTarget:1000/10,battleFrameTarget:1000/30};
 window.throttleRender=function(callback,fpsTarget){ const now=Date.now(); const minDelay=fpsTarget||window.RENDER_THROTTLE.homeFrameTarget; if(now-window.RENDER_THROTTLE.lastFrame>=minDelay){ window.RENDER_THROTTLE.lastFrame=now; callback(); return true; } return false; };
 
 window.registerObserver=function(obs){ if(!window.PAUSED_OBSERVERS) window.PAUSED_OBSERVERS=[]; window.PAUSED_OBSERVERS.push(obs); return obs; };
 document.addEventListener('visibilitychange',function(){
-  if(document.hidden){ window.GAME_PAUSED=true; if(window.PAUSED_OBSERVERS){ window.PAUSED_OBSERVERS.forEach(function(o){ try{o.disconnect();}catch(e){} }); } }
+  if(document.hidden){ try{ window.flushSave&&window.flushSave(); }catch(e){} window.GAME_PAUSED=true; if(window.PAUSED_OBSERVERS){ window.PAUSED_OBSERVERS.forEach(function(o){ try{o.disconnect();}catch(e){} }); } }
   else{ window.GAME_PAUSED=false; if(window.PAUSED_OBSERVERS){ window.PAUSED_OBSERVERS.forEach(function(o){ try{o.observe(document.body,{subtree:true,childList:true,attributes:true,characterData:true});}catch(e){} }); } }
 });
+/* v2.82.27: last-ditch flush when the app is backgrounded/closed */
+window.addEventListener('pagehide',function(){ try{ window.flushSave&&window.flushSave(); }catch(e){} });
+window.addEventListener('beforeunload',function(){ try{ window.flushSave&&window.flushSave(); }catch(e){} });
 
 const EXPECTED_ROSTER_COUNT=361;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
@@ -16054,11 +16063,15 @@ body.of27621BattleFx .of27621Spark{position:absolute;left:var(--tx);top:var(--ty
   document.addEventListener('touchstart',function(e){ if(e.touches&&e.touches.length) lastY=e.touches[0].clientY; },{capture:true,passive:true});
   document.addEventListener('touchmove',function(e){
     if(!locked) return;
-    var ov=topModal(); if(!ov) return;
-    var box=boxFor(ov), t=e.target;
-    /* inside a scroll box: let native scroll + CSS overscroll-behavior:contain handle it (no over-blocking) */
-    if(box && box.contains(t)) return;
-    /* on the backdrop: page is position:fixed locked anyway, block as belt-and-suspenders */
+    /* allow the gesture if it begins inside ANY real scroller within a modal — robust to
+       topModal/boxFor mis-resolution on modal re-entry. body stays position:fixed, so the
+       page behind cannot scroll regardless of this belt-and-suspenders block. */
+    var n=e.target;
+    while(n && n.nodeType===1 && n!==document.body){
+      var oy=''; try{ var cs=getComputedStyle(n); oy=cs.overflowY||cs.overflow||''; }catch(_e){}
+      if((oy==='auto'||oy==='scroll') && n.scrollHeight>n.clientHeight+1) return;
+      n=n.parentElement;
+    }
     e.preventDefault();
   },{capture:true,passive:false});
   /* lightweight detection: react to user actions (open/close) + a slow safety poll.
