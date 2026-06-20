@@ -2490,12 +2490,37 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.82.18-debounce-throttle';
+const APP_BUILD='v2.82.21-observer-coalesce';
 /* v2.82.17 Performance: visibility listener + pause system */
 window.GAME_PAUSED=false;
 window.PAUSED_OBSERVERS=[];
 window.pauseGame=function(){ window.GAME_PAUSED=true; };
 window.resumeGame=function(){ window.GAME_PAUSED=false; };
+window.__RENDERING={};
+window.guardedRender=function(name,fn){ if(window.__RENDERING[name]) return; window.__RENDERING[name]=true; try{ fn(); } finally{ window.__RENDERING[name]=false; } };
+/* v2.82.21 Performance: coalesce ALL MutationObserver callbacks to once-per-frame.
+   Turns a render's burst of DOM mutations into ONE callback instead of a synchronous
+   storm (the stutter). requestAnimationFrame also pauses while the tab is hidden.
+   Never touches render() — purely intercepts at the observer layer. */
+(function(){ try{
+  var Native=window.MutationObserver||window.WebKitMutationObserver;
+  if(!Native||Native.__ofCoalesced) return;
+  var raf=window.requestAnimationFrame?function(f){return window.requestAnimationFrame(f);}:function(f){return setTimeout(f,16);};
+  function Coalesced(cb){
+    var pending=[], scheduled=false;
+    var inst=new Native(function(muts){
+      if(window.GAME_PAUSED) return;
+      for(var i=0;i<muts.length;i++) pending.push(muts[i]);
+      if(scheduled) return;
+      scheduled=true;
+      raf(function(){ scheduled=false; if(window.GAME_PAUSED) return; var batch=pending; pending=[]; try{ cb(batch,inst); }catch(e){} });
+    });
+    return inst;
+  }
+  Coalesced.prototype=Native.prototype; Coalesced.__ofCoalesced=true;
+  window.MutationObserver=Coalesced; try{ window.WebKitMutationObserver=Coalesced; }catch(e){}
+}catch(e){} })();
+
 /* v2.82.18 Performance: debounced save + render throttle */
 window.SAVE_TIMEOUT=null; window.lastSaveTime=0;
 const originalSave=typeof save==='function'?save:function(){};
@@ -3554,7 +3579,7 @@ function arenaShowResult(win, info){ injectArenaStyles(); const A=ensureArena();
     const rt=document.getElementById('arRetry'); if(rt) rt.onclick=()=>{ startArenaBattle(A.rank+1); };
   }
   const lv=document.getElementById('arLeave'); if(lv) lv.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} navTo('arena'); }; }
-function renderArena(v){ injectExpStyles(); injectGauntletStyles(); injectArenaStyles(); const A=ensureArena();
+function renderArena(v){ if(window.__RENDERING['{fn}']) return; injectExpStyles(); injectGauntletStyles(); injectArenaStyles(); const A=ensureArena();
   const nextRank=A.rank+1, rv=arenaRival(nextRank), rivP=arenaRivalPower(nextRank);
   const arCond=arenaRivalCondition(nextRank); const myTeam=arenaPlayerTeam(arCond), myPow=myTeam.reduce((s,h)=>s+powerOf(h),0);
   const rivPorts=rv.members.map(h=>'<div class="expPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('')||'<span style="color:var(--muted);font-size:12px">No rival available.</span>';
@@ -3813,7 +3838,7 @@ function applyAppSettings(){
 
 /* ===== HUD ===== */
 function chargeDisplay(){ return S.charge<10 ? (Math.round(S.charge*10)/10).toFixed(1) : Math.floor(S.charge); }
-function renderHUD(){ if(typeof S==="undefined"||!S) return;
+function renderHUD(){  if(typeof S==="undefined"||!S) return;
   recalcCollection();
   document.getElementById('stageNum').textContent=S.stage;
   document.getElementById('charge').textContent=Math.round(momentumPct()*100);
@@ -3829,7 +3854,7 @@ function renderHUD(){ if(typeof S==="undefined"||!S) return;
 }
 
 /* ===== view router ===== */
-function render(){ if(typeof S==="undefined"||!S) return;
+function render(){  if(typeof S==="undefined"||!S) return;
   if(ambient){clearInterval(ambient);ambient=null;}
   clearSpriteLoops();
   try{
@@ -3877,7 +3902,7 @@ function viewAlias(vw){ return ({tasks:'quests',roster:'heroes',campaign:'battle
 function setNavActive(vw){ const cv=viewAlias(vw); document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',viewAlias(x.dataset.view)===cv)); }
 function navTo(vw){ clearTransientUI(); var _ar=document.getElementById('arena'); if(_ar && _ar.classList.contains('show')){ try{clearAuto();}catch(e){} if(battleTimer){clearInterval(battleTimer);battleTimer=null;} battleState=null; _ar.classList.remove('show','arenaEnded'); } view=viewAlias(vw); setNavActive(view); render(); }
 function renderQuests(v){ renderTasks(v); }
-function renderHeroes(v){ renderRoster(v); }
+function renderHeroes(v){ if(window.__RENDERING['{fn}']) return; renderRoster(v); }
 function renderBattles(v){ renderCampaign(v); }
 function growthCardHTML(icon,title,tag,body,summary,buttonId,buttonText){ return '<div class="lifecard"><h3><span>'+icon+' '+title+'</span><span>'+tag+'</span></h3><p>'+body+'</p>'+(summary||'')+'<div class="lifeactions"><button class="primary" id="'+buttonId+'">'+buttonText+'</button></div></div>'; }
 
@@ -4050,7 +4075,7 @@ const BLOCK_META={
   monthEnd:{e:'🔚',l:'Month End',c:'#ff6b9e'}
 };
 function blockChipHTML(it){ try{ const m=BLOCK_META[it&&it.block]; if(!m) return ''; return '<span class="blockChip" style="--bc:'+m.c+'">'+m.e+' '+m.l+'</span>'; }catch(e){ return ''; } }
-function renderTasks(v){
+function renderTasks(v){ 
   if(typeof S==='undefined'||!S) return;
   const W=ensureWeek(), poss=weekPossible(), wpts=(W.pts||0), wpct=Math.min(100,wpts), nextC=CHESTS.find(c=>!W.claimed[c.p]), earned=CHESTS.filter(c=>W.claimed[c.p]).length;
   const chest='<div class="stagecard" style="border-color:#ffd95a55;margin-bottom:14px">'+
@@ -4420,7 +4445,7 @@ function squadPickerToolsHTML(allCount,shownCount){
 }
 
 let campSub='campaign';
-function renderCampaign(v){
+function renderCampaign(v){ 
   const isClash=campSub==='clash';
   const tp=isClash?clashTeamPower():teamPower(campSub);
   const sq=isClash?clashSquad():squad(campSub);
@@ -6916,7 +6941,7 @@ let rosterViewMode='standard';
 function rosterViewToggleHTML(){
   return '<div class="rosterTopbar"><div class="rosterCount" id="rosterShownCount">Tap a hero to manage details and gear.</div><div class="rosterViewToggle" id="rosterViewToggle"><button data-mode="standard" class="'+(rosterViewMode==='standard'?'on':'')+'">Cards</button><button data-mode="compact" class="'+(rosterViewMode==='compact'?'on':'')+'">Compact</button></div></div>';
 }
-function renderRoster(v){
+function renderRoster(v){ 
   recalcCollection();
   const total=S.heroes.length, owned=ownedCount(), favN=(S.favorites||[]).filter(id=>S.heroes.some(h=>h.id===id&&h.owned)).length, readyN=S.heroes.filter(heroReadyState).length, lineupN=activeIds().size, wishN=(S.wishlist||[]).length, bonus=Math.round((collectionMult()-1)*100);
   const nextCP=cpForLevel(gCL+1), curBase=cpForLevel(gCL), clPct=Math.min(100,Math.max(0,(gCP-curBase)/(nextCP-curBase)*100));
@@ -9396,7 +9421,7 @@ function v200CampScene(fh){
    +'<button class="homeHeroBtn" id="homeEnterBattle">\u2694 Enter Battle</button>'
    +'</div>';
 }
-function renderHome(v){
+function renderHome(v){ 
   v162InjectStyles();
   v172InjectHomeStage();
   recalcCollection();
@@ -18858,18 +18883,21 @@ body.of2803HomeLocked #view [data-of2790="domain-reward-tracks"]{display:none!im
 </script>
 
 <style id="ofBattleAntiOverlapV28213">
-/* v2.82.14 — portrait-forward battle: big faces, small names, transparent cards so the
-   location background shows through. Rows fit content (no overlap). HP bars kept. */
-body.of2769BattleFix #arena.show .side,#arena.show #enemySide,#arena.show #playerSide{grid-auto-rows:auto!important;align-content:center!important;gap:7px!important}
-body.of2769BattleFix #arena.show .side .unit,#arena.show #enemySide .unit,#arena.show #playerSide .unit{height:auto!important;min-height:0!important;max-height:none!important;align-self:start!important;overflow:visible!important;background:rgba(6,9,18,.20)!important;border-color:rgba(255,255,255,.07)!important;box-shadow:none!important;padding:4px 4px 5px!important}
-/* big portraits */
-#arena.show #enemySide .unit .face,#arena.show #playerSide .unit .face{width:clamp(66px,22vw,96px)!important;height:clamp(66px,22vw,96px)!important;min-width:0!important;min-height:0!important;border-radius:16px!important;margin:0 auto 4px!important}
+/* v2.82.20 — clean portrait-forward battle: NO panel/card fills so the location
+   background shows sharp. Only portraits + names + HP bars float over the scene.
+   Rows fit content (no overlap). Names show in full (no clipping). */
+/* kill the group panels behind offense/defense (the washed-out boxes) */
+#arena.show #enemySide,#arena.show #playerSide{grid-auto-rows:auto!important;align-content:center!important;gap:7px!important;background:none!important;border:none!important;box-shadow:none!important;backdrop-filter:none!important}
+/* kill the per-unit card box entirely — transparent, no border, no shadow */
+#arena.show #enemySide .unit,#arena.show #playerSide .unit{height:auto!important;min-height:0!important;max-height:none!important;align-self:start!important;overflow:visible!important;background:none!important;border:none!important;box-shadow:none!important;backdrop-filter:none!important;padding:2px!important}
+/* big portraits — these keep a frame so they read against the scene */
+#arena.show #enemySide .unit .face,#arena.show #playerSide .unit .face{width:clamp(66px,22vw,96px)!important;height:clamp(66px,22vw,96px)!important;min-width:0!important;min-height:0!important;border-radius:16px!important;margin:0 auto 4px!important;box-shadow:0 2px 10px rgba(0,0,0,.5)!important}
 #arena.show .unit .face img{object-fit:cover!important}
-/* names: smaller, single line, de-emphasised */
-#arena.show #enemySide .unit .nm,#arena.show #playerSide .unit .nm{font-size:9px!important;line-height:1.05!important;font-weight:800!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;max-height:none!important;opacity:.82!important}
+/* names: full text (up to 2 lines, no clipping), shadowed so they read on the scene */
+#arena.show #enemySide .unit .nm,#arena.show #playerSide .unit .nm{font-size:10px!important;line-height:1.12!important;font-weight:900!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;-webkit-line-clamp:unset!important;max-width:none!important;max-height:none!important;min-height:0!important;opacity:1!important;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 6px rgba(0,0,0,.7)!important;text-align:center!important}
 #arena.show .unit .enemyRoleChip{display:none!important}
 /* HP bars stay prominent */
-#arena.show .unit .hpbar{display:block!important;width:84%!important;margin:3px auto 0!important}
+#arena.show .unit .hpbar{display:block!important;width:84%!important;margin:3px auto 0!important;box-shadow:0 1px 4px rgba(0,0,0,.6)!important}
 </style>
 </body>
 </html>
