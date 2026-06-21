@@ -2399,7 +2399,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=26;
-const APP_BUILD='v2.76.0-combat-particles';
+const APP_BUILD='v2.78.0-combat-kits-v1';
 const EXPECTED_ROSTER_COUNT=375;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2685,6 +2685,10 @@ async function load(){
   if(albumMsgs&&albumMsgs.length) setTimeout(()=>toast(albumMsgs.join(' · ')), awayReport?1200:600);
 }
 async function save(){if(typeof savePortraits==="function") savePortraits(); if(S){ try{ ensureHeroPortraitVault(); }catch(e){} S.lastSavedAt=Date.now(); S.appBuild=APP_BUILD; } await Store.set(KEY,JSON.stringify(S)); }
+let _saveSoonT=null,_saveSoonPending=false;
+function saveSoon(){ _saveSoonPending=true; if(_saveSoonT) clearTimeout(_saveSoonT); _saveSoonT=setTimeout(function(){ _saveSoonT=null; _saveSoonPending=false; try{ save(); }catch(e){} },650); }
+function flushSaveSoon(){ if(_saveSoonT){ clearTimeout(_saveSoonT); _saveSoonT=null; } if(_saveSoonPending){ _saveSoonPending=false; try{ save(); }catch(e){} } }
+try{ document.addEventListener('visibilitychange',function(){ if(document.hidden) flushSaveSoon(); }); window.addEventListener('pagehide',flushSaveSoon); }catch(e){}
 const BAKKEY=KEY+'__autobak';
 async function autoBackup(reason){ try{ const cur=await Store.get(KEY); if(cur) await Store.set(BAKKEY,JSON.stringify({reason:reason||'',at:Date.now(),data:cur})); }catch(e){} }
 async function readAutoBackup(){ try{ const raw=await Store.get(BAKKEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
@@ -4501,6 +4505,7 @@ function enemyTurn(u,players,enemies){
   if(enemyHealerTurn(u,enemies)) return;
   if(enemyShieldTurn(u,enemies)) return;
   if(bossSpecialTurn(u,players)) return;
+  if(kitTauntRedirect(u,players)) return;
   let t=null;
   if(u.enemyRole==='assassin'){
     const back=players.filter(p=>!p.dead&&p.row==='back');
@@ -4927,10 +4932,28 @@ function canDoubleStrike(att){
   if(e==='reckless') return Math.random()<0.12;
   return false;
 }
+/* ===== Combat v1: round-based kit engine (durations + cooldowns + role kits) ===== */
+const KIT_TAUNT_DUR=2, KIT_TAUNT_CD=3, KIT_HEAL_CD=2, KIT_HEAL_FACTOR=0.9, KIT_TAUNT_REDIRECT=0.72, KIT_TANK_MIT=0.42, KIT_EXEC_THRESH=0.30, KIT_EXEC_MULT=1.25;
+function kitSt(u){ if(!u.st) u.st=[]; return u.st; }
+function kitAddSt(u,type,dur,val){ const s=kitSt(u),ex=s.find(x=>x.type===type); if(ex){ ex.dur=Math.max(ex.dur,dur); if(val!=null)ex.val=val; } else s.push({type:type,dur:dur,val:(val==null?1:val)}); }
+function kitHasSt(u,type){ return !!(u&&u.st&&u.st.find(x=>x.type===type&&x.dur>0)); }
+function kitTickSt(u){ if(!u||!u.st)return; for(const x of u.st)x.dur--; u.st=u.st.filter(x=>x.dur>0); }
+function kitCd(u){ if(!u.cd)u.cd={}; return u.cd; }
+function kitReady(u,k){ return !(u.cd&&u.cd[k]>0); }
+function kitSetCd(u,k,t){ kitCd(u)[k]=t; }
+function kitTickCd(u){ if(!u||!u.cd)return; for(const k in u.cd){ if(u.cd[k]>0)u.cd[k]--; } }
+function kitExecMul(att,tgt){ return (att&&att.role==='DPS'&&att.side==='p'&&tgt&&tgt.max&&(tgt.hp/tgt.max)<KIT_EXEC_THRESH)?KIT_EXEC_MULT:1; }
+function kitTauntRedirect(u,players){ const tnt=players.filter(p=>!p.dead&&kitHasSt(p,'taunting')); if(tnt.length&&Math.random()<KIT_TAUNT_REDIRECT){ const t=tnt[Math.floor(Math.random()*tnt.length)]; strike(u,t,'player',u.enemyRole==='brute'?1.12:1); return true; } return false; }
+function kitRoundStart(players,enemies){ if(!battleState)return; const pa=players.filter(u=>!u.dead);
+  pa.filter(u=>u.role==='Tank').forEach(u=>{ if(kitReady(u,'taunt')){ kitAddSt(u,'taunting',KIT_TAUNT_DUR,1); kitSetCd(u,'taunt',KIT_TAUNT_CD); try{passiveBanner('\uD83D\uDEE1 '+(u.name||'Tank')+' \u00B7 Taunt',(ROLECOLOR&&ROLECOLOR.Tank)||'#5bd1ff');}catch(e){} } });
+  pa.filter(u=>u.role==='Support').forEach(u=>{ if(kitReady(u,'heal')){ const inj=pa.filter(x=>x.hp<x.max).sort((a,b)=>(a.hp/a.max)-(b.hp/b.max))[0]; if(inj){ const amt=Math.max(1,Math.round(u.atk*KIT_HEAL_FACTOR)); inj.hp=Math.min(inj.max,inj.hp+amt); kitSetCd(u,'heal',KIT_HEAL_CD); try{ if(inj.hp/inj.max<0.85) passiveBanner('\u271A '+(u.name||'Support')+' \u00B7 Heal',(ROLECOLOR&&ROLECOLOR.Support)||'#37d67a'); }catch(e){} } } });
+}
+function kitRoundEnd(players,enemies){ players.concat(enemies).forEach(u=>{ kitTickSt(u); kitTickCd(u); }); }
 function applyIncomingMitigation(tgt,dmg){
   let out=dmg, e=passiveEffect(tgt);
   if(tgt.side==='p') out*=1-teamDR();
   if(e==='taunt') out*=0.90;
+  if(kitHasSt(tgt,'taunting')) out*=(1-KIT_TANK_MIT);
   if(e==='protector' && teamLowAlly()) out*=0.94;
   if(e==='frontline' && tgt.row==='front') out*=0.96;
   return Math.max(1,Math.round(out));
@@ -5227,11 +5250,13 @@ function battleStep(){
   const {players,enemies}=battleState;
   battleState.turn++;
   try{ v21OnTurnStart(players,enemies); }catch(e){ console.error(e); }
+  try{ kitRoundStart(players,enemies); }catch(e){ console.error(e); }
   try{ v21Ultimates(players,enemies); }catch(e){ console.error(e); }
   maybeKaladinShield();
   players.filter(u=>!u.dead).forEach(u=>{ const t=pickTarget(enemies,u); if(t){ strike(u,t,'enemy'); if(!t.dead && canDoubleStrike(u)){ passiveBanner((u.passive&&u.passive.name?u.passive.name:'Follow-Up')+' · Extra Strike', ROLECOLOR[u.role]||'#ffb01f'); setBattleLog(u.name+' follows up!'); strike(u,t,'enemy'); } } });
   enemies.filter(u=>!u.dead).forEach(u=>enemyTurn(u,players,enemies));
   refreshBars('enemySide',enemies); refreshBars('playerSide',players);
+  try{ kitRoundEnd(players,enemies); }catch(e){}
   const pAlive=players.some(u=>!u.dead), eAlive=enemies.some(u=>!u.dead);
   if(!eAlive||!pAlive||battleState.turn>40){ clearInterval(battleTimer); battleTimer=null; setTimeout(()=>endBattle(!eAlive&&pAlive),450); }
 }
@@ -5239,6 +5264,7 @@ function pickTarget(arr,att){
   const a=arr.filter(u=>!u.dead); if(!a.length) return null;
   const targetingPlayers=a[0].side==='p';
   if(targetingPlayers){
+    const _tnt=a.filter(u=>!u.dead&&kitHasSt(u,'taunting')); if(_tnt.length&&Math.random()<KIT_TAUNT_REDIRECT) return _tnt[Math.floor(Math.random()*_tnt.length)];
     const ralph=a.find(u=>u.id==='disney_pixar__wreck_it_ralph'&&!u.dead);
     if(ralph && Math.random()<0.22) return ralph;
     const back=a.filter(u=>u.row==='back'), front=a.filter(u=>u.row!=='back');
@@ -5253,7 +5279,7 @@ function ofFxMeta(type){ var m={Flame:{cls:'flame',shot:'#ff6b4a',shot2:'#ffb347
 function ofImpact(el,type,fallback){ if(!el) return; try{ var meta=ofFxMeta(type), r=el.getBoundingClientRect(), fx=document.createElement('div'); fx.className='clashImpact '+(meta?meta.cls:''); fx.style.left=(r.left+r.width/2)+'px'; fx.style.top=(r.top+r.height/2)+'px'; if(meta){ fx.style.setProperty('--shot',meta.shot); fx.style.setProperty('--shot2',meta.shot2); } else { fx.style.setProperty('--shot',fallback||'#ff9f43'); fx.style.setProperty('--shot2','#ffffff'); } document.body.appendChild(fx); setTimeout(function(){ try{fx.remove();}catch(e){} },430); }catch(e){} }
 function ofShot(fromEl,toEl,type,fallback){ if(!fromEl||!toEl) return; try{ var meta=ofFxMeta(type), a=fromEl.getBoundingClientRect(), t=toEl.getBoundingClientRect(), p=document.createElement('div'); if(meta){ p.className='clashShot '+meta.cls; p.style.setProperty('--shot',meta.shot); p.style.setProperty('--shot2',meta.shot2); } else { p.className='clashShot'; p.style.background='radial-gradient(circle at 38% 38%,#fff,'+(fallback||'#ff9f43')+' 72%,transparent)'; p.style.borderRadius='50%'; } p.style.left=(a.left+a.width/2-8)+'px'; p.style.top=(a.top+a.height/2-8)+'px'; document.body.appendChild(p); var dx=(t.left+t.width/2)-(a.left+a.width/2), dy=(t.top+t.height/2)-(a.top+a.height/2), ang=Math.atan2(dy,dx)*180/Math.PI; requestAnimationFrame(function(){ p.style.transform='translate('+dx+'px,'+dy+'px) rotate('+ang+'deg)'; }); setTimeout(function(){ ofImpact(toEl,type,fallback); },220); setTimeout(function(){ try{p.remove();}catch(e){} },360); }catch(e){} }
 function strike(att,tgt,sideClass,dmgMod){
-  const eff=passiveEffect(att), mult=passiveDmgMult(att,tgt)*(dmgMod||1);
+  const eff=passiveEffect(att), mult=passiveDmgMult(att,tgt)*(dmgMod||1)*kitExecMul(att,tgt);
   const crit=Math.random()<(0.10+passiveCritBonus(att));
   let dmg=Math.max(1,Math.round(att.atk*(0.9+Math.random()*0.2)*(crit?1.55:1)*mult));
   if(att.id==='critical_role__grog_strongjaw' && Math.random()<0.12){ dmg=Math.round(dmg*1.45); passiveBanner('Reckless Swing · Heavy Hit',ROLECOLOR[att.role]||'#ffb01f'); }
@@ -7260,6 +7286,7 @@ function grantGear(g){
   if(RARITY.indexOf(g.rarity)>=RARITY.indexOf('epic')) gp.taskNoDrop=0;
   return g;
 }
+function gearUpgradeAllForHero(h){ if(!h||!h.gear) return {n:0}; ensureGearLevels(h); var n=0,guard=0; SLOTS.forEach(function(slot){ var g=h.gear[slot]; if(!g) return; while(g.level<gearMaxLvl(g)){ var c=gearCostOf(g); if(S.gold<c.gold||S.dust<c.dust) break; S.gold-=c.gold; S.dust-=c.dust; g.level++; n++; if(++guard>50000) break; } h.gearLevels[slot]=Math.max(h.gearLevels[slot]||0,g.level); }); return {n:n}; }
 function openGearSheet(heroId){
   lqInjectGearExcitement();
   const h=S.heroes.find(x=>x.id===heroId); if(!h) return;
@@ -7298,13 +7325,14 @@ function openGearSheet(heroId){
       html+='<button class="ghost" id="g_back" style="color:var(--ink)">Back</button>';
     }else{
       html+='<div class="gearQuickActions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px"><button class="go" id="g_autobest" style="margin:0;background:linear-gradient(135deg,var(--accent),var(--accent2))">⚙ Auto-equip best</button><button class="go" id="g_unequipall" style="margin:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">↩ Unequip all</button></div>'+
-        '<div class="lqSectionHeader"><b>Equipped Gear</b><span>tap a slot</span></div><div class="gearSlotsV146">'+SLOTS.map(equippedSlotHTML).join('')+'</div><button class="ghost" id="g_close" style="color:var(--ink)">Done</button>';
+        '<button class="go" id="g_upall" style="width:100%;margin:0 0 10px;background:linear-gradient(135deg,#3ad07a,#1d9e57);color:#04130b;font-weight:900">⬆ Upgrade All Gear</button><div class="lqSectionHeader"><b>Equipped Gear</b><span>tap a slot</span></div><div class="gearSlotsV146">'+SLOTS.map(equippedSlotHTML).join('')+'</div><button class="ghost" id="g_close" style="color:var(--ink)">Done</button>';
     }
     sheet.innerHTML=html;
     const ab=document.getElementById('g_autobest'); if(ab) ab.onclick=()=>{ const r=autoEquipBestGear(h); toast(r.changed?('Auto-equipped '+r.changed+' slot'+(r.changed===1?'':'s')+' · +'+Math.max(0,r.after-r.before)+' gear score'):'Best gear already equipped'); renderHUD(); gearRender(); save(); };
     const ua=document.getElementById('g_unequipall'); if(ua) ua.onclick=()=>{ const n=unequipAllGear(h); toast(n?('Unequipped '+n+' item'+(n===1?'':'s')+' to inventory'):'No gear equipped'); renderHUD(); gearRender(); save(); };
     sheet.querySelectorAll('[data-pick]').forEach(el=>el.onclick=()=>{ pickSlot=el.dataset.pick; gearRender(); });
-    sheet.querySelectorAll('[data-up]').forEach(el=>el.onclick=()=>{ const slot=el.dataset.up,g=h.gear[slot],c=gearCostOf(g); if(g.level>=gearMaxLvl(g)){toast('Maxed — promote it');return;} if(S.gold<c.gold||S.dust<c.dust){toast('Not enough Gold/Dust');return;} S.gold-=c.gold; S.dust-=c.dust; g.level++; ensureGearLevels(h); h.gearLevels[slot]=Math.max(h.gearLevels[slot]||0,g.level); renderHUD(); gearRender(); save(); });
+    {const upall=document.getElementById('g_upall'); if(upall) upall.onclick=()=>{ const r=gearUpgradeAllForHero(h); toast(r.n?('Upgraded '+r.n+' level'+(r.n===1?'':'s')+' across gear'):'Maxed or not enough Gold/Dust'); renderHUD(); gearRender(); saveSoon(); };}
+    sheet.querySelectorAll('[data-up]').forEach(el=>el.onclick=()=>{ const slot=el.dataset.up,g=h.gear[slot],c=gearCostOf(g); if(g.level>=gearMaxLvl(g)){toast('Maxed — promote it');return;} if(S.gold<c.gold||S.dust<c.dust){toast('Not enough Gold/Dust');return;} S.gold-=c.gold; S.dust-=c.dust; g.level++; ensureGearLevels(h); h.gearLevels[slot]=Math.max(h.gearLevels[slot]||0,g.level); renderHUD(); gearRender(); saveSoon(); });
     sheet.querySelectorAll('[data-promo]').forEach(el=>el.onclick=()=>{ const slot=el.dataset.promo,g=h.gear[slot],p=PROMO[g.rarity]; if(!p){toast('Top rarity');return;} if(g.level<gearMaxLvl(g)){toast('Max the level first');return;} if(!canPromote(g)){toast('Need '+p.dust+'❖ '+p.stones+'◇ '+p.gold+'⦿');return;} S.dust-=p.dust; S.stones-=p.stones; S.gold-=p.gold; g.rarity=p.to; toast('Promoted to '+cap(p.to)+'!'); renderHUD(); gearRender(); save(); });
     sheet.querySelectorAll('[data-equip]').forEach(el=>el.onclick=()=>{ const it=(S.inventory||[]).find(x=>x.id===el.dataset.equip); if(!it)return; if(h.gear[pickSlot]) S.inventory.push(h.gear[pickSlot]); S.inventory=S.inventory.filter(x=>x.id!==it.id); ensureGearLevels(h); const _wm=Math.max(h.gearLevels[pickSlot]||0,it.level||0); it.level=Math.min(gearMaxLvl(it),_wm); h.gearLevels[pickSlot]=Math.max(_wm,it.level); h.gear[pickSlot]=it; pickSlot=null; renderHUD(); gearRender(); save(); });
     sheet.querySelectorAll('[data-salvage]').forEach(el=>el.onclick=()=>{ const it=(S.inventory||[]).find(x=>x.id===el.dataset.salvage); if(!it)return; const v=salvageValue(it); if(RARITY.indexOf(it.rarity)>=2 && !confirm('Salvage '+gearName(it)+' for '+v+' dust? This is permanent.')) return; S.inventory=S.inventory.filter(x=>x.id!==it.id); S.dust+=v; toast('Salvaged · +'+v+'❖'); renderHUD(); gearRender(); save(); });
