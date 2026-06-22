@@ -1266,7 +1266,7 @@ const TASKEXP={easy:10,med:25,hard:50};
 function applyLevels(h){ let c; while(h.level<rankCap(h) && (h.exp||0)>=(c=TUNE.levelCost(h.level))){ h.exp-=c; h.level++; } }
 function catchUpPct(lvl,hi){ if(lvl>=hi) return 0; const r=lvl/hi; if(r<0.5) return 0.5; if(r<0.8) return 0.25; return 0.1; }
 function gainExp(amount){ if(S&&S.expBank>0){ amount=(amount||0)+S.expBank; S.expBank=0; } if(!S.heroes.length || !(amount>0)) return;
-  sanitizeHeroes(); amount*=collXpMult();
+  sanitizeHeroes(); amount*=collXpMult()*forgeGainMult();
   const owned=S.heroes.filter(h=>h&&h.owned); if(!owned.length) return;
   const hi=Math.max(1,...owned.map(h=>h.level));
   const active=activeIds();
@@ -2397,6 +2397,55 @@ window.getClashChapterData=getClashChapterData;
 window.clashIsFirstClear=clashIsFirstClear;
 window.getClashRewardPreview=getClashRewardPreview;
 
+/* ===== The Forge — account-wide domain power from habits (Phase 1: schema+faucet) ===== */
+const FORGE_TUNE={ xpByDiff:{easy:1,med:2,hard:3}, dailyCapPerDomain:18, costBase:8, costGrowth:1.10, bonusPerLevel:{ faith:0.003, fitness:0.003, discipline:0.001, hobbies:0.003, fatherhood:0.0015, marriage:0.005, work:0.004, home:0.002 } };
+function forgeLvCost(lv){ return Math.max(1,Math.round(FORGE_TUNE.costBase*Math.pow(FORGE_TUNE.costGrowth,Math.max(0,lv)))); }
+function ensureForgeState(){
+  if(!S.forge||typeof S.forge!=='object') S.forge={};
+  if(!S.forge.domains||typeof S.forge.domains!=='object') S.forge.domains={};
+  var dk=(typeof periodKey==='function'?periodKey('daily'):'');
+  if(typeof S.forge.day!=='string') S.forge.day=dk;
+  if(!S.forge.dayXp||typeof S.forge.dayXp!=='object') S.forge.dayXp={};
+  if(S.forge.day!==dk){ S.forge.day=dk; S.forge.dayXp={}; }
+  try{ DOMAINS.forEach(function(d){ var k=d[0]; var t=S.forge.domains[k]; if(!t||typeof t!=='object'){ S.forge.domains[k]={xp:0,lv:0}; } else { if(typeof t.xp!=='number'||!isFinite(t.xp)||t.xp<0) t.xp=0; if(typeof t.lv!=='number'||!isFinite(t.lv)||t.lv<0) t.lv=0; } if(typeof S.forge.dayXp[k]!=='number') S.forge.dayXp[k]=0; }); }catch(e){}
+}
+function forgeLevelOf(domain){ try{ ensureForgeState(); var t=S.forge.domains[domain]; return t?t.lv:0; }catch(e){ return 0; } }
+function forgeBonus(domain){ try{ var t=S.forge&&S.forge.domains&&S.forge.domains[domain]; var lv=t?t.lv:0; return ((FORGE_TUNE.bonusPerLevel&&FORGE_TUNE.bonusPerLevel[domain])||0)*lv; }catch(e){ return 0; } }
+function forgeAtkMult(){ return 1+forgeBonus('fitness'); }
+function forgeHpMult(){ return 1+forgeBonus('faith'); }
+function forgeCritBonus(){ return forgeBonus('discipline'); }
+function forgeGainMult(){ return 1+forgeBonus('hobbies'); }
+function forgeDR(){ return Math.min(0.35, forgeBonus('fatherhood')); }
+function forgeHealMult(){ return 1+forgeBonus('marriage'); }
+function forgeUltMult(){ return 1+forgeBonus('work'); }
+function forgeStartShield(){ return forgeBonus('home'); }
+const FORGE_BONUS_LABEL={ faith:'team Max HP', fitness:'team ATK', fatherhood:'team damage reduction', marriage:'healing & shields', work:'ult charge rate', home:'starting shield', discipline:'crit chance', hobbies:'XP gain' };
+function forgeBonusPctText(domain){ var b=forgeBonus(domain); if(domain==='fatherhood') b=Math.min(0.35,b); var pct=b*100; var s; if(pct>=10||Math.abs(pct-Math.round(pct))<0.05) s=String(Math.round(pct)); else s=pct.toFixed(1); return '+'+s+'% '+(FORGE_BONUS_LABEL[domain]||domain); }
+function forgePanelHTML(){
+  try{ ensureForgeState(); }catch(e){ return ''; }
+  var rows=DOMAINS.map(function(d){ var k=d[0],lab=d[1],color=d[2],emoji=d[3]; var t=(S.forge.domains&&S.forge.domains[k])||{xp:0,lv:0}; var cost=forgeLvCost(t.lv); var pct=Math.max(0,Math.min(100,Math.round((t.xp/cost)*100))); var today=(S.forge.dayXp&&S.forge.dayXp[k])||0, cap=FORGE_TUNE.dailyCapPerDomain;
+    return '<div style="margin:0 0 11px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:800;margin-bottom:3px"><span>'+emoji+' '+esc(lab)+'</span><span style="color:'+color+'">Lv '+t.lv+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px"><span style="color:'+color+'">'+esc(forgeBonusPctText(k))+'</span><span>'+t.xp+' / '+cost+(today>=cap?' \u00b7 capped today':'')+'</span></div>'
+      +'<div class="xpbar"><i style="width:'+pct+'%;background:'+color+'"></i></div>'
+      +'</div>'; }).join('');
+  return '<div class="stagecard"><h3>\u2692 The Forge</h3><p style="margin-bottom:12px">Every habit forges permanent, account-wide power into its life domain \u2014 uncapped, no decay. Your real priorities shape your roster over time.</p>'+rows+'</div>';
+}
+function grantForgeXp(domain,diff){
+  try{
+    ensureForgeState();
+    if(!domain||!S.forge.domains[domain]) return {gain:0,levels:0};
+    var amt=FORGE_TUNE.xpByDiff[diff]||FORGE_TUNE.xpByDiff.med;
+    var room=Math.max(0,(FORGE_TUNE.dailyCapPerDomain||0)-(S.forge.dayXp[domain]||0));
+    var grant=Math.min(amt,room);
+    if(grant<=0) return {gain:0,levels:0};
+    var t=S.forge.domains[domain];
+    t.xp+=grant; S.forge.dayXp[domain]=(S.forge.dayXp[domain]||0)+grant;
+    var levels=0; while(t.xp>=forgeLvCost(t.lv) && levels<100){ t.xp-=forgeLvCost(t.lv); t.lv++; levels++; }
+    return {gain:grant,levels:levels};
+  }catch(e){ return {gain:0,levels:0}; }
+}
+function forgeXpTag(domain,res){ if(!res||!res.gain) return ''; var s=' \u00b7 \u2692 +'+res.gain+' Forge'; if(res.levels){ var lab=((typeof DKEY!=='undefined'&&DKEY[domain]&&DKEY[domain].label)||domain); s+=' \u00b7 \u2b06 '+lab+' Lv '+(S.forge.domains[domain].lv); } return s; }
 function ensureLegendaryState(){ if(typeof S.legendShards!=='number') S.legendShards=0; if(!Array.isArray(S.legendaries)) S.legendaries=[]; var k=(typeof periodKey==='function'?periodKey('daily'):''); if(!S.legendShardDay||typeof S.legendShardDay!=='object'||typeof S.legendShardDay.earned!=='number') S.legendShardDay={day:k,earned:0}; }
 function ensureClashState(){ if(!S.clash||typeof S.clash!=='object') S.clash={chapter:1,stage:1,seed:null,clears:{},lastResult:null}; if(!S.clash.seed) S.clash.seed=createRandomSeed(); if(typeof S.clash.chapter!=='number'||!isFinite(S.clash.chapter)) S.clash.chapter=1; if(typeof S.clash.stage!=='number'||!isFinite(S.clash.stage)) S.clash.stage=1; S.clash.chapter=Math.max(1,Math.floor(S.clash.chapter)); S.clash.stage=Math.max(1,Math.min(80,Math.floor(S.clash.stage))); if(!S.clash.clears||typeof S.clash.clears!=='object') S.clash.clears={}; if(!Array.isArray(S.clashSquad)) S.clashSquad=[]; S.clashSquad=S.clashSquad.filter(id=>(S.heroes||[]).some(h=>h.id===id&&h.owned)).slice(0,12); return S.clash; }
 function clashSquad(){ ensureClashState(); return S.clashSquad; }
@@ -2412,8 +2461,8 @@ function domainChip(it){ const k=domainOf(it); if(!k) return ''; const d=DKEY[k]
 function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:'+DKEY[k].color+'22;color:'+DKEY[k].color+';margin:0 6px 6px 0">'+DKEY[k].icon+' '+DKEY[k].label+'</span>':'').join(''); }
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
-const SAVE_VERSION=27;
-const APP_BUILD='v2.89.1-archetype-kits-leadershield';
+const SAVE_VERSION=28;
+const APP_BUILD='v2.95.0-forge-ui-crucible-rename';
 const EXPECTED_ROSTER_COUNT=375;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2632,6 +2681,7 @@ function migrate(){
   ensureElementData();
   ensureClashState();
   ensureLegendaryState();
+  ensureForgeState();
   trimRemovedHeroesV1();
   if(!S.squads) S.squads={campaign:(S.team||[]).slice(0,TUNE.teamSize), tower:[], raid:[]};
   SQUADS.forEach(s=>{ if(!Array.isArray(S.squads[s[0]])) S.squads[s[0]]=[]; S.squads[s[0]]=S.squads[s[0]].filter(id=>S.heroes.some(h=>h.id===id&&h.owned)); });
@@ -2688,13 +2738,20 @@ let S=null, view='home', subtab='dailies', tick=null, ambient=null, awayReport=n
 
 async function load(){
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
-  const raw=await Store.get(KEY);
+  let raw=null, recovered=false;
+  try{ raw=await Store.get(KEY); }catch(e){ raw=null; }
+  if(raw==null){ try{ const bk=await Store.get(BAKKEY); if(bk){ const o=JSON.parse(bk); if(o&&o.data){ raw=o.data; recovered=true; } } }catch(e){} }
+  if(raw==null){ try{ const ls=localStorage.getItem(KEY); if(ls){ raw=ls; recovered=true; } }catch(e){} }
+  const freshStart=(raw==null);
   S=raw?JSON.parse(raw):seed();
   migrate();
   applyTuneOverrides();
   recalcCollection();
   const albumMsgs=checkAlbums();
-  applyTheme(); accrueOffline(); rollover(); ensureLifeWeek(); renderHUD(); render(); save(); startTicker();
+  applyTheme(); accrueOffline(); rollover(); ensureLifeWeek(); renderHUD(); render();
+  if(!freshStart) save();
+  startTicker();
+  if(recovered){ try{ setTimeout(function(){ if(typeof toast==='function') toast('\u2705 Recovered your save from backup'); },900); }catch(e){} }
   if(awayReport) showAway();
   if(graceReport){ const g=graceReport; graceReport=null; setTimeout(()=>toast('🕊️ Grace Day used — your streak'+(g.saved>1?'s are':' is')+' safe. Welcome back.'), awayReport?1800:900); }
   if(albumMsgs&&albumMsgs.length) setTimeout(()=>toast(albumMsgs.join(' · ')), awayReport?1200:600);
@@ -2836,8 +2893,8 @@ function chargeCapText(){
 function roleBaseOf(role){ return TUNE.roleBase[normalizeRole(role)] || TUNE.roleBase.DPS; }
 function legendAtkMult(h){ try{ var li=legendOfHero(h); if(!li) return 1; return 1+((legendStats(li).atkPct||0)/100); }catch(e){ return 1; } }
 function legendHpMult(h){ try{ var li=legendOfHero(h); if(!li) return 1; return 1+((legendStats(li).hpPct||0)/100); }catch(e){ return 1; } }
-function hpOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.hp*TUNE.heroScale(effLevel(h))+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()*legendHpMult(h)); }
-function atkOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.atk*TUNE.heroScale(effLevel(h))+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()*legendAtkMult(h)); }
+function hpOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.hp*TUNE.heroScale(effLevel(h))+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()*legendHpMult(h)*forgeHpMult()); }
+function atkOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.atk*TUNE.heroScale(effLevel(h))+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()*legendAtkMult(h)*forgeAtkMult()); }
 function powerOf(h){ if(!h) return 0; return Math.round(hpOf(h)/8+atkOf(h)*2); }
 const SQUADS=[['campaign','Campaign','⚔'],['tower','Tower','⛰'],['raid','Raid','☠']];
 function squad(mode){ if(!S.squads) S.squads={campaign:[],tower:[],raid:[]}; if(!Array.isArray(S.squads[mode])) S.squads[mode]=[]; return S.squads[mode]; }
@@ -4237,7 +4294,7 @@ function legendOpenForge(){ try{hideScrim();}catch(e){} view='forge'; render(); 
 function legendUnequipHero(id){ var h=S.heroes.find(function(x){return x&&x.id===id;}); var li=h?legendOfHero(h):null; if(li){ legendUnequip(li.iid); toast('Unequipped'); try{save();}catch(e){} try{ if(typeof openHeroSheet==='function') openHeroSheet(id); }catch(e){} } }
 function injectForgeStyles(){ if(document.getElementById('ofForgeStyles')) return; var st=document.createElement('style'); st.id='ofForgeStyles'; st.textContent='.ofForge{display:flex;flex-direction:column;gap:12px;padding:2px 0 20px}.ofForgeHead{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #cdbcff44;background:linear-gradient(135deg,rgba(205,188,255,.12),rgba(255,255,255,.02));border-radius:16px;padding:14px 16px}.ofForgeHead b{font-family:Orbitron;font-size:15px;color:#f1ecff;display:block}.ofForgeHead span{font-size:11px;color:var(--muted);font-weight:700;display:block;margin-top:2px}.ofShardBal{font-family:Orbitron;font-weight:900;font-size:20px;color:#d7a8ff;text-align:right;white-space:nowrap}.ofShardBal small{display:block;font-size:9px;letter-spacing:.1em;color:var(--muted)}.ofSecHead{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.7px;color:#bfa8ff;margin:6px 2px 0}.ofBp,.ofInst{border:1px solid var(--line);background:var(--panel2,#0d1525);border-radius:14px;padding:12px}.ofBp{border-left:3px solid #c98bff77}.ofBpTop{display:flex;align-items:center;gap:10px}.ofBpIcon{font-size:22px;width:30px;text-align:center}.ofBpName{font-weight:900;color:#fff;font-size:13px}.ofBpDom{font-size:10px;color:#bfa8ff;font-weight:800;text-transform:uppercase;letter-spacing:.4px}.ofBpFlav{font-size:11px;color:var(--muted);font-weight:600;font-style:italic;margin:7px 0 4px}.ofBpStats{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.ofChip{font-size:10px;font-weight:900;border:1px solid #ffffff1a;background:#ffffff08;border-radius:999px;padding:3px 8px;color:#dbe5ff}.ofChip.atk{color:#ff9aa4;border-color:#ff5d6c44}.ofChip.hp{color:#7ee6a4;border-color:#37d67a44}.ofSig{font-size:10.5px;color:#9fb0d0;font-weight:700;margin:4px 0 8px}.ofSig b{color:#ffd27a;font-weight:900}.ofForgeBtn{width:100%;border:0;border-radius:10px;padding:10px;font-family:Orbitron;font-weight:900;font-size:12px;background:linear-gradient(135deg,#a06bff,#6b46e0);color:#fff}.ofForgeBtn:disabled{opacity:.4;filter:grayscale(.6)}.ofInstTop{display:flex;align-items:center;justify-content:space-between;gap:8px}.ofInstName{font-weight:900;color:#fff;font-size:13px}.ofInstLv{font-size:11px;color:#d7a8ff;font-weight:900}.ofInstEq{font-size:11px;font-weight:800;margin:6px 0}.ofInstEq.on{color:#7ee6a4}.ofInstEq.off{color:var(--muted)}.ofInstBtns{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.ofInstBtns button{border-radius:9px;padding:9px;font-family:Orbitron;font-weight:900;font-size:11px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)}.ofInstBtns button.up{background:linear-gradient(135deg,#3ad07a,#1d9e57);color:#04130b;border:0}.ofInstBtns button.eq{background:linear-gradient(135deg,#5b9dff,#3b6fe0);color:#fff;border:0}.ofPickHero{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);background:var(--panel2);border-radius:11px;padding:10px 12px;margin-bottom:7px;width:100%;text-align:left;color:var(--ink)}.ofPickHero b{font-size:12px}.ofPickHero span{font-size:10px;color:var(--muted)}'; document.head.appendChild(st); }
 function renderForge(v){ injectForgeStyles(); ensureLegendaryState(); var sh=S.legendShards||0;
-  var html='<div class="ofForge"><div class="ofForgeHead"><div><b>\u2692 Legendary Forge</b><span>Forge domain legendaries with shards from your habits</span></div><div class="ofShardBal">\u2726 '+sh+'<small>SHARDS</small></div></div>';
+  var html='<div class="ofForge"><div class="ofForgeHead"><div><b>\u2692 The Crucible</b><span>Forge legendaries from the shards your habits earn</span></div><div class="ofShardBal">\u2726 '+sh+'<small>SHARDS</small></div></div>';
   if(forgePickIid){ var inst=legendInst(forgePickIid);
     if(!inst){ forgePickIid=null; }
     else { var bp=legendBp(inst.key); html+='<div class="ofSecHead">Equip '+esc(bp?bp.name:'Legendary')+' \u00b7 Lv '+(inst.level||1)+' \u2014 choose a hero</div>';
@@ -4282,7 +4339,7 @@ function onTaskClick(e){
       let msg='Idle Momentum +'+Math.round(momentumPct()*100)+'%';
       const pk=periodKey(d.freq), extraMsgs=[]; let bu=[], tu=[];
       if(d.lootedPk!==pk){
-        msg+=taskLoot(d.diff,d.domain); msg+=legendShardTag(grantLegendaryShards(d.diff)); trackLifeAction(d.domain,d.diff,'daily'); try{ const _tk=todayStr(); if(S.dailyOathChestClaimedDate!==_tk){ const _act=(S.dailies||[]).filter(x=>x&&x.freq==='daily'&&taskActiveToday(x)); const _dn=_act.filter(x=>x.done).length; if(_act.length>0 && _dn/_act.length>=0.8){ S.dailyOathChestClaimedDate=_tk; grantTicket(1); S.gold=(S.gold||0)+120; S.dust=(S.dust||0)+60; S.heroCores=(S.heroCores||0)+3; msg+='  🏆 Daily Oath Chest: +1 Hero Ticket  +120g +60 dust +3 cores'; } } }catch(_e){} bu=gainBond(d.domain,BONDXP[d.diff]||0); tu=unlockTitles(d.domain,d.diff); gainBond._last=bu; gainBond._titles=tu; msg+=bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); d.lootedPk=pk;
+        msg+=taskLoot(d.diff,d.domain); msg+=legendShardTag(grantLegendaryShards(d.diff)); trackLifeAction(d.domain,d.diff,'daily'); var _fxD=grantForgeXp(d.domain,d.diff); msg+=forgeXpTag(d.domain,_fxD); try{ const _tk=todayStr(); if(S.dailyOathChestClaimedDate!==_tk){ const _act=(S.dailies||[]).filter(x=>x&&x.freq==='daily'&&taskActiveToday(x)); const _dn=_act.filter(x=>x.done).length; if(_act.length>0 && _dn/_act.length>=0.8){ S.dailyOathChestClaimedDate=_tk; grantTicket(1); S.gold=(S.gold||0)+120; S.dust=(S.dust||0)+60; S.heroCores=(S.heroCores||0)+3; msg+='  🏆 Daily Oath Chest: +1 Hero Ticket  +120g +60 dust +3 cores'; } } }catch(_e){} bu=gainBond(d.domain,BONDXP[d.diff]||0); tu=unlockTitles(d.domain,d.diff); gainBond._last=bu; gainBond._titles=tu; msg+=bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); d.lootedPk=pk;
         if(d.freq==='daily'){ var _W=ensureWeek(); _W.done++; _W.pts=(_W.pts||0)+((d.diff==='hard')?3:((d.diff==='med')?2:1)); const cm=checkChests(); if(cm.length){ extraMsgs.push(...cm); msg+=' · '+cm.join(' · '); } }
       }
       msg+=checkStreakMilestone(d);
@@ -4299,7 +4356,7 @@ function onTaskClick(e){
     const h=f(S.habits); if(!h)return; const undoSnap=taskSnapshot(); lastTaskLoot=null; lastDomainGain=null;
     h.count++; const pk=periodKey(h.freq);
     if(h.chgPk!==pk){ h.chgPk=pk; h.chg=0; }
-    if(h.chg<TUNE.habitChargeCap){ h.chg++; const hg=(h.diff==='hard'?40:(h.diff==='med'?20:8)), hd=(h.diff==='hard'?14:(h.diff==='med'?7:3)); S.gold=(S.gold||0)+hg; S.dust=(S.dust||0)+hd; var _lsH=grantLegendaryShards(h.diff); trackLifeAction(h.domain,h.diff,'habit'); const bu=gainBond(h.domain,BONDXP[h.diff]||0); const tu=unlockTitles(h.domain,h.diff); flash(el); const txt='+'+hg+'⦿ +'+hd+'❖'+legendShardTag(_lsH)+(h.chg>=TUNE.habitChargeCap?' · daily cap reached':'')+bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); toast(txt); recordLastAction(h,'habit',0,bu,tu,[]); rewardSummary(h.title+' logged', [{txt:'+'+hg+'⦿ gold',cls:'main'},{txt:'+'+hd+'❖ dust',cls:'bonus'}].concat(bondItems(bu,h.domain),titleItems(tu))); showTaskDopamine(h,'habit',0,bu); showUndoBar(undoSnap,h.title,false); }
+    if(h.chg<TUNE.habitChargeCap){ h.chg++; const hg=(h.diff==='hard'?40:(h.diff==='med'?20:8)), hd=(h.diff==='hard'?14:(h.diff==='med'?7:3)); S.gold=(S.gold||0)+hg; S.dust=(S.dust||0)+hd; var _lsH=grantLegendaryShards(h.diff); trackLifeAction(h.domain,h.diff,'habit'); var _fxH=grantForgeXp(h.domain,h.diff); const bu=gainBond(h.domain,BONDXP[h.diff]||0); const tu=unlockTitles(h.domain,h.diff); flash(el); const txt='+'+hg+'⦿ +'+hd+'❖'+legendShardTag(_lsH)+forgeXpTag(h.domain,_fxH)+(h.chg>=TUNE.habitChargeCap?' · daily cap reached':'')+bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); toast(txt); recordLastAction(h,'habit',0,bu,tu,[]); rewardSummary(h.title+' logged', [{txt:'+'+hg+'⦿ gold',cls:'main'},{txt:'+'+hd+'❖ dust',cls:'bonus'}].concat(bondItems(bu,h.domain),titleItems(tu))); showTaskDopamine(h,'habit',0,bu); showUndoBar(undoSnap,h.title,false); }
     else { flash(el); toast('Logged ✓ · charge maxed for today'); }
   }
   else if(act==='hminus'){ const h=f(S.habits); if(!h)return; h.count--; flash(el); toast('Logged a slip'); }
@@ -4308,7 +4365,7 @@ function onTaskClick(e){
     if(!t.done){
       const undoSnap=taskSnapshot(); lastTaskLoot=null; lastDomainGain=null;
       t.done=true; const charged=0; let msg='✓ '+t.title; let bu=[], tu=[], extraMsgs=[];
-      if(!t.looted){ msg+=taskLoot(t.diff,t.domain); msg+=legendShardTag(grantLegendaryShards(t.diff)); trackLifeAction(t.domain,t.diff,'quest'); bu=gainBond(t.domain,BONDXP[t.diff]||0); tu=unlockTitles(t.domain,t.diff); t._titles=tu; msg+=bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); t.looted=true; }
+      if(!t.looted){ msg+=taskLoot(t.diff,t.domain); msg+=legendShardTag(grantLegendaryShards(t.diff)); trackLifeAction(t.domain,t.diff,'quest'); var _fxT=grantForgeXp(t.domain,t.diff); msg+=forgeXpTag(t.domain,_fxT); bu=gainBond(t.domain,BONDXP[t.diff]||0); tu=unlockTitles(t.domain,t.diff); t._titles=tu; msg+=bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); t.looted=true; }
       const blocked=majorRewardBlocked(lastTaskLoot,extraMsgs);
       recordLastAction(t,'quest',charged,bu,tu,extraMsgs);
       flash(el); toast(msg); rewardSummary(t.title+' complete', baseRewardItems(t.diff,charged).concat(bondItems(bu,t.domain),titleItems(t._titles||[]),[{txt:chargeCapText(),cls:''}, blocked?{txt:'Undo unavailable: major reward claimed',cls:'warn'}:null])); showTaskDopamine(t,'quest',charged,bu); showUndoBar(undoSnap,t.title,blocked);
@@ -4935,6 +4992,21 @@ function normArchKey(key,role){ role=normalizeRole(role); var valid=ROLE_ARCH[ro
 function generatedArchetype(h){ if(!h)return null; const opts=ROLE_ARCH[normalizeRole(h.role)]||ROLE_ARCH.DPS; const key=opts[v21Hash(h.id)%opts.length]; return {key,...(ARCHETYPE_DEFS[key]||{})}; }
 function heroArchetype(h){ if(!h)return null; var ak=h.archKey?normArchKey(h.archKey,h.role):null; if(ak&&ARCHETYPE_DEFS[ak]) return {key:ak,...ARCHETYPE_DEFS[ak]}; var c=CUSTOM_HERO_ARCHETYPES[h.id]; if(c){ var ck=normArchKey(c.key,h.role); if(ARCHETYPE_DEFS[ck]) return {key:ck,...ARCHETYPE_DEFS[ck]}; } return generatedArchetype(h); }
 function archetypeColor(h){ const a=heroArchetype(h); return a&&a.color?a.color:'#8bd0ff'; }
+function archAbilityText(key){
+  var T=(typeof ARCH_TUNE!=='undefined')?ARCH_TUNE:{}; var P=function(x){ return Math.round((x||0)*100)+'%'; };
+  var execT=(typeof KIT_EXEC_THRESH!=='undefined')?KIT_EXEC_THRESH:0.30, execM=(typeof KIT_EXEC_MULT!=='undefined')?KIT_EXEC_MULT:1.25;
+  var mit=(typeof KIT_TANK_MIT!=='undefined')?KIT_TANK_MIT:0.42, tdr=(typeof KIT_TEAM_DR!=='undefined')?KIT_TEAM_DR:0.09;
+  switch(key){
+    case 'Guardian': return 'Taunts enemies to soak hits, takes '+P(mit)+' less from redirected attacks, and gives the whole team '+P(tdr)+' damage reduction while alive.';
+    case 'Healer': return 'Restores HP to the most wounded ally on cooldown \u2014 keeps the squad standing through long fights.';
+    case 'Leader': return 'Rallies the squad for +'+P(T.leaderAtk)+' attack and shields the lowest-HP ally each round.';
+    case 'Bruiser': return 'Heals for '+P(T.bruiserLS)+' of all damage it deals \u2014 a frontline fighter that sustains itself.';
+    case 'Striker': return 'Deals a reliable +'+P(T.strikerDmg)+' damage on every strike \u2014 dependable single-target DPS.';
+    case 'Assassin': return 'Executes weakened foes for +'+P(execM-1)+' damage when they drop below '+P(execT)+' HP.';
+    case 'Caster': return 'Splashes '+P(T.casterSplash)+' of its damage to every other enemy \u2014 true area damage.';
+    case 'Marksman': return '+'+P(T.marksmanBoss)+' damage against bosses \u2014 punishes priority targets.';
+    default: return 'Flexible combat identity.';
+  } }
 function archetypeOptions(){ return Object.keys(ARCHETYPE_DEFS); }
 function passiveEffect(u){ return u&&u.passive?u.passive.effect:null; }
 function enemyKindText(u){ return (u.name||'').toLowerCase(); }
@@ -5085,7 +5157,7 @@ function kitTickCd(u){ if(!u||!u.cd)return; for(const k in u.cd){ if(u.cd[k]>0)u
 const ARCH_TUNE={ leaderAtk:0.08, bruiserLS:0.18, strikerDmg:0.12, marksmanBoss:0.35, casterSplash:0.25, leaderShield:0.6, leaderShieldCap:0.35 };
 function unitArch(u){ return (u && u.archetype && u.archetype.key) || null; }
 function archLeaderAura(){ try{ return (((battleState&&battleState.players)||[]).some(function(u){return !u.dead && unitArch(u)==='Leader';}))?(1+ARCH_TUNE.leaderAtk):1; }catch(e){ return 1; } }
-function archRoundStart(pa){ try{ pa.filter(function(u){return unitArch(u)==='Leader';}).forEach(function(u){ var inj=pa.filter(function(x){return !x.dead;}).sort(function(a,b){return (a.hp/a.max)-(b.hp/b.max);})[0]; if(inj){ var cap=Math.round((inj.max||inj.hp)*ARCH_TUNE.leaderShieldCap); var grant=Math.max(1,Math.round(u.atk*ARCH_TUNE.leaderShield)); inj.shield=Math.min(cap,(inj.shield||0)+grant); } }); }catch(e){} }
+function archRoundStart(pa){ try{ pa.filter(function(u){return unitArch(u)==='Leader';}).forEach(function(u){ var inj=pa.filter(function(x){return !x.dead;}).sort(function(a,b){return (a.hp/a.max)-(b.hp/b.max);})[0]; if(inj){ var cap=Math.round((inj.max||inj.hp)*ARCH_TUNE.leaderShieldCap); var grant=Math.max(1,Math.round(u.atk*ARCH_TUNE.leaderShield*forgeHealMult())); inj.shield=Math.min(cap,(inj.shield||0)+grant); } }); }catch(e){} }
 function archAtkMod(att,tgt){ if(!att||att.side!=='p') return 1; var a=unitArch(att), m=archLeaderAura(); if(a==='Striker') m*=(1+ARCH_TUNE.strikerDmg); if(a==='Marksman'&&tgt&&tgt.boss) m*=(1+ARCH_TUNE.marksmanBoss); return m; }
 function archOnDealt(att,actual){ if(!att||att.side!=='p'||!actual) return; if(unitArch(att)==='Bruiser'){ att.hp=Math.min(att.max,att.hp+Math.round(actual*ARCH_TUNE.bruiserLS)); } }
 function archCasterSplash(att,tgt,actual){ try{ if(!att||att.side!=='p'||unitArch(att)!=='Caster'||!battleState) return; var sp=Math.max(1,Math.round(actual*ARCH_TUNE.casterSplash)); battleState.enemies.forEach(function(e){ if(e&&!e.dead&&e!==tgt){ e.hp-=sp; if(e.hp<=0){e.hp=0;e.dead=true;} } }); }catch(e){} }
@@ -5100,15 +5172,15 @@ function legPlayersWithSig(sig){ try{ return ((battleState&&battleState.players)
 function legRallyMult(){ var n=legPlayersWithSig('rally').length; return n?(1+Math.min(LEGSIG_TUNE.rallyCap,n*LEGSIG_TUNE.rallyAtkPer)):1; }
 function legBackDR(tgt){ if(!tgt||tgt.side!=='p'||tgt.row!=='back') return 1; return legPlayersWithSig('bulwark').length?(1-LEGSIG_TUNE.bulwarkBackDR):1; }
 function legAtkMod(att){ if(!att||att.side!=='p') return 1; var m=legRallyMult(); if(att._temper) m*=(1+att._temper); if(att.legSig==='ignite' && !att._ignited){ att._ignited=true; m*=(1+LEGSIG_TUNE.igniteBonus); try{ if(typeof passiveBanner==='function') passiveBanner('\u2726 Ignite \u00b7 '+(att.name||'Hero'),att.color||'#ffd27a'); }catch(e){} } return m; }
-function legRoundStart(pa){ try{ pa.forEach(function(u){ if(unitHasSig(u,'tempered')) u._temper=Math.min(LEGSIG_TUNE.temperedCap,(u._temper||0)+LEGSIG_TUNE.temperedPerRound); }); pa.filter(function(u){return unitHasSig(u,'hearthlight');}).forEach(function(u){ var inj=pa.filter(function(x){return !x.dead&&x.hp<x.max;}).sort(function(a,b){return (a.hp/a.max)-(b.hp/b.max);})[0]; if(inj){ var amt=Math.max(1,Math.round(u.atk*LEGSIG_TUNE.hearthHealFactor)); inj.hp=Math.min(inj.max,inj.hp+amt); } }); }catch(e){} }
-function kitRoundStart(players,enemies){ if(!battleState)return; const pa=players.filter(u=>!u.dead); legRoundStart(pa); archRoundStart(pa);
+function legRoundStart(pa){ try{ pa.forEach(function(u){ if(unitHasSig(u,'tempered')) u._temper=Math.min(LEGSIG_TUNE.temperedCap,(u._temper||0)+LEGSIG_TUNE.temperedPerRound); }); pa.filter(function(u){return unitHasSig(u,'hearthlight');}).forEach(function(u){ var inj=pa.filter(function(x){return !x.dead&&x.hp<x.max;}).sort(function(a,b){return (a.hp/a.max)-(b.hp/b.max);})[0]; if(inj){ var amt=Math.max(1,Math.round(u.atk*LEGSIG_TUNE.hearthHealFactor*forgeHealMult())); inj.hp=Math.min(inj.max,inj.hp+amt); } }); }catch(e){} }
+function kitRoundStart(players,enemies){ if(!battleState)return; const pa=players.filter(u=>!u.dead); legRoundStart(pa); archRoundStart(pa); if(!battleState._forgeHome){ battleState._forgeHome=true; var _fss=forgeStartShield(); if(_fss>0) pa.forEach(function(u){ u.shield=(u.shield||0)+Math.round((u.max||u.hp)*_fss); }); }
   pa.filter(u=>u.role==='Tank').forEach(u=>{ if(kitReady(u,'taunt')){ kitAddSt(u,'taunting',KIT_TAUNT_DUR,1); kitSetCd(u,'taunt',KIT_TAUNT_CD); try{passiveBanner('\uD83D\uDEE1 '+(u.name||'Tank')+' \u00B7 Taunt',(ROLECOLOR&&ROLECOLOR.Tank)||'#5bd1ff');}catch(e){} } });
-  pa.filter(u=>unitArch(u)==='Healer').forEach(u=>{ if(kitReady(u,'heal')){ const inj=pa.filter(x=>x.hp<x.max).sort((a,b)=>(a.hp/a.max)-(b.hp/b.max))[0]; if(inj){ const amt=Math.max(1,Math.round(u.atk*KIT_HEAL_FACTOR)); inj.hp=Math.min(inj.max,inj.hp+amt); kitSetCd(u,'heal',KIT_HEAL_CD); try{ if(inj.hp/inj.max<0.85) passiveBanner('\u271A '+(u.name||'Support')+' \u00B7 Heal',(ROLECOLOR&&ROLECOLOR.Support)||'#37d67a'); }catch(e){} } } });
+  pa.filter(u=>unitArch(u)==='Healer').forEach(u=>{ if(kitReady(u,'heal')){ const inj=pa.filter(x=>x.hp<x.max).sort((a,b)=>(a.hp/a.max)-(b.hp/b.max))[0]; if(inj){ const amt=Math.max(1,Math.round(u.atk*KIT_HEAL_FACTOR*forgeHealMult())); inj.hp=Math.min(inj.max,inj.hp+amt); kitSetCd(u,'heal',KIT_HEAL_CD); try{ if(inj.hp/inj.max<0.85) passiveBanner('\u271A '+(u.name||'Support')+' \u00B7 Heal',(ROLECOLOR&&ROLECOLOR.Support)||'#37d67a'); }catch(e){} } } });
 }
 function kitRoundEnd(players,enemies){ players.concat(enemies).forEach(u=>{ kitTickSt(u); kitTickCd(u); }); }
 function applyIncomingMitigation(tgt,dmg){
   let out=dmg, e=passiveEffect(tgt);
-  if(tgt.side==='p') out*=1-teamDR();
+  if(tgt.side==='p') out*=1-teamDR(); if(tgt.side==='p') out*=(1-forgeDR());
   if(e==='taunt') out*=0.90;
   if(kitHasSt(tgt,'taunting')) out*=(1-KIT_TANK_MIT);
   if(tgt.side==='p' && kitTankAlive()) out*=(1-KIT_TEAM_DR);
@@ -5346,8 +5418,8 @@ function castUltimate(u,allies,enemies){
   try{ ultimateMoment(u,name,col); }catch(e){ try{ passiveBanner('\u2726 '+u.name+' \u2014 '+name+'!', col); }catch(_){} }
   const aliveE=()=>enemies.filter(e=>!e.dead), aliveA=()=>allies.filter(a=>!a.dead);
   const hit=(t,m,tag)=>{ if(!t||t.dead)return; let d=Math.max(1,Math.round((u.atk||10)*m)); if(t.shield){const b=Math.min(t.shield,d);t.shield-=b;d-=b;} const act=Math.min(t.hp,d); t.hp-=act; if(t.hp<=0){t.hp=0;t.dead=true;} u.dealt=(u.dealt||0)+act; t.taken=(t.taken||0)+act; v21Float('enemySide',t._i,act,tag||'ult'); };
-  const shield=(a,amt)=>{ amt=Math.round(amt); a.shield=(a.shield||0)+amt; v21Float('playerSide',a._i,amt,'heal'); };
-  const heal=(a,amt)=>{ const before=a.hp; a.hp=Math.min(a.max||a.hp,a.hp+Math.round(amt)); const got=Math.round(a.hp-before); if(got>0){ u.support=(u.support||0)+got; v21Float('playerSide',a._i,got,'heal'); } };
+  const shield=(a,amt)=>{ amt=Math.round(amt*forgeHealMult()); a.shield=(a.shield||0)+amt; v21Float('playerSide',a._i,amt,'heal'); };
+  const heal=(a,amt)=>{ const before=a.hp; a.hp=Math.min(a.max||a.hp,a.hp+Math.round(amt*forgeHealMult())); const got=Math.round(a.hp-before); if(got>0){ u.support=(u.support||0)+got; v21Float('playerSide',a._i,got,'heal'); } };
   switch(cls){
     case 'Healer': aliveA().forEach(a=>heal(a,(a.max||a.hp)*0.30)); break;
     case 'Guardian': aliveA().forEach(a=>shield(a,(u.max||u.hp)*0.20)); break;
@@ -5367,7 +5439,7 @@ function v21Ultimates(players,enemies){
   players.filter(u=>!u.dead).forEach(u=>{
     if(u.energy==null) u.energy=(v21Hash(u.id)%28)+fxEnergyStart();
     if(u.ultCast) return;
-    u.energy+=ULT_ENERGY_PER_TURN*fxEnergyMult();
+    u.energy+=ULT_ENERGY_PER_TURN*fxEnergyMult()*forgeUltMult();
     if(u.energy>=100){ u.ultCast=true; u.energy=0; castUltimate(u,players,enemies); }
   });
 }
@@ -5462,7 +5534,7 @@ function ofImpact(el,type,fallback){ if(!el) return; try{ var meta=ofFxMeta(type
 function ofShot(fromEl,toEl,type,fallback){ if(!fromEl||!toEl) return; try{ var meta=ofFxMeta(type), a=fromEl.getBoundingClientRect(), t=toEl.getBoundingClientRect(), p=document.createElement('div'); if(meta){ p.className='clashShot '+meta.cls; p.style.setProperty('--shot',meta.shot); p.style.setProperty('--shot2',meta.shot2); } else { p.className='clashShot'; p.style.background='radial-gradient(circle at 38% 38%,#fff,'+(fallback||'#ff9f43')+' 72%,transparent)'; p.style.borderRadius='50%'; } p.style.left=(a.left+a.width/2-8)+'px'; p.style.top=(a.top+a.height/2-8)+'px'; document.body.appendChild(p); var dx=(t.left+t.width/2)-(a.left+a.width/2), dy=(t.top+t.height/2)-(a.top+a.height/2), ang=Math.atan2(dy,dx)*180/Math.PI; requestAnimationFrame(function(){ p.style.transform='translate('+dx+'px,'+dy+'px) rotate('+ang+'deg)'; }); setTimeout(function(){ ofImpact(toEl,type,fallback); },220); setTimeout(function(){ try{p.remove();}catch(e){} },360); }catch(e){} }
 function strike(att,tgt,sideClass,dmgMod){
   const eff=passiveEffect(att), mult=passiveDmgMult(att,tgt)*(dmgMod||1)*kitExecMul(att,tgt)*legAtkMod(att)*archAtkMod(att,tgt);
-  const crit=Math.random()<(0.10+passiveCritBonus(att));
+  const crit=Math.random()<(0.10+passiveCritBonus(att)+(att&&att.side==='p'?forgeCritBonus():0));
   let dmg=Math.max(1,Math.round(att.atk*(0.9+Math.random()*0.2)*(crit?1.55:1)*mult));
   if(att.id==='critical_role__grog_strongjaw' && Math.random()<0.12){ dmg=Math.round(dmg*1.45); passiveBanner('Reckless Swing · Heavy Hit',ROLECOLOR[att.role]||'#ffb01f'); }
   dmg=applyIncomingMitigation(tgt,dmg);
@@ -5660,14 +5732,23 @@ function wireAuto(){ let n=6; const cd=document.getElementById('cdn');
   const al=document.getElementById('arenaLineup'); if(al) al.onclick=battleChangeLineup;
   const ah=document.getElementById('arenaHome'); if(ah) ah.onclick=closeArenaToHome;
 }
+function battleEndFallback(win,err){
+  try{ console.error('endBattle recovered from error:',err); }catch(e){}
+  try{ if(battleState) battleState.over=true; }catch(e){}
+  try{ var r=document.getElementById('arenaResult'); if(r){ r.style.display='block'; r.className='result '+(win?'win':'lose'); r.innerHTML='<h2>'+(win?'VICTORY':'BATTLE OVER')+'</h2><p>Wrapped up after a hiccup \u2014 your progress is safe.</p><button class="go wide" onclick="closeArenaToHome()">Return Home</button>'; } }catch(e){}
+  try{ if(typeof wireAuto==='function') wireAuto(); }catch(e){}
+  try{ if(typeof clearAuto==='function') clearAuto(); }catch(e){}
+  try{ if(typeof wireBattleControls==='function') wireBattleControls(); }catch(e){}
+}
 function endBattle(win){
   if(!battleState || battleState.over){ return; }
   battleState.over=true;
   clearAuto();
-  if(battleSiege){ try{ siegeEndBattle(win); }catch(e){ console.error(e); } return; }
-  if(battleGauntlet){ try{ gauntletEndBattle(win); }catch(e){ console.error(e); } return; }
-  if(battleArena){ try{ arenaEndBattle(win); }catch(e){ console.error(e); } return; }
-  if(battleConquest){ try{ conquestEndBattle(win); }catch(e){ console.error(e); } return; }
+  try{
+  if(battleSiege){ try{ siegeEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
+  if(battleGauntlet){ try{ gauntletEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
+  if(battleArena){ try{ arenaEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
+  if(battleConquest){ try{ conquestEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
   const r=document.getElementById('arenaResult'); r.style.display='block'; r.className='result '+(win?'win':'lose'); try{var _ae=document.querySelector('.arena'); if(_ae) _ae.classList.add('arenaEnded');}catch(e){}
   if(battleReplay){
     document.querySelectorAll('#playerSide .unit:not(.dead)').forEach(u=>u.classList.toggle('cheer',!!win));
@@ -5706,6 +5787,7 @@ function endBattle(win){
     document.getElementById('arenaNext').onclick=nextBattle; document.getElementById('arenaLineup').onclick=battleChangeLineup; document.getElementById('arenaUpgrade').onclick=battleUpgradeHeroes; document.getElementById('arenaHome').onclick=closeArenaToHome;
   }
   save();
+  }catch(e){ battleEndFallback(win,e); }
 }
 
 /* ===== task sheet ===== */
@@ -6984,7 +7066,7 @@ function openHeroSheet(id){
     currencyWallet() + '<div class="heroActionsV141"><button class="go" id="h_levelone"'+((!atCap&&(h.exp||0)>=cost)?'':' disabled style="filter:grayscale(.55);opacity:.75"')+'>Level Up</button><button class="go" id="h_levelmax" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Level to Max</button>'+ 
       (rankIdx(h)>=RANKUP.length?'<button class="go wide" disabled style="filter:grayscale(.55);opacity:.75">Eternal Rank · MAX</button>':'<button class="go wide" id="h_rankup"'+(canRankUp(h)?' style="background:var(--gold);color:#1a1205"':' disabled style="filter:grayscale(.55);opacity:.75"')+'>Rank Up → '+RANKS[rankIdx(h)+1].name+' · '+rankReqText(RANKUP[rankIdx(h)])+'</button>')+ 
       '<button class="go wide" id="h_prestige"'+(canPrestige(h)?' style="background:linear-gradient(135deg,#ffb01f,#ff5d9e);color:#1a1205"':' disabled style="filter:grayscale(.55);opacity:.75"')+'>★ Begin New Cycle → ★'+(plv+1)+'</button></div>'+ 
-    (function(){ var li=legendOfHero(h); var bp=li?legendBp(li.key):null; var st=li?legendStats(li):null; var body=li?('<div><b style="color:#fff;font-size:13px">'+(bp?bp.icon+' '+esc(bp.name):'Legendary')+'</b><div style="font-size:11px;color:#d7a8ff;font-weight:800;margin-top:2px">Lv '+(li.level||1)+' \u00b7 +'+st.atkPct+'% ATK \u00b7 +'+st.hpPct+'% HP</div></div><div class="heroUtilityV141" style="margin-top:10px"><button class="go" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)" onclick="legendUnequipHero(\''+h.id+'\')">\u21a9 Unequip</button><button class="go" style="background:linear-gradient(135deg,#a06bff,#6b46e0);color:#fff" onclick="legendOpenForge()">\u2692 Open Forge</button></div>'):('<p style="margin-bottom:9px">No legendary equipped. Forge domain legendaries with \u2726 shards from your habits, then equip one here.</p><button class="go" style="width:100%;background:linear-gradient(135deg,#a06bff,#6b46e0);color:#fff" onclick="legendOpenForge()">\u2692 Open Forge</button>'); return '<div class="heroPanelV141"><h4>\u2726 Legendary <span>'+(S.legendShards||0)+' \u2726 shards</span></h4>'+body+'</div>'; })()+'<div class="heroPanelV141"><h4>Gear Loadout <span>score '+gearScore(h)+'</span></h4><p>Gear slots now live around the portrait. Use Auto-equip to quickly fit the best available pieces or Unequip all to transfer gear.</p><div class="heroUtilityV141" style="margin-top:10px"><button class="go" id="h_gear_auto" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">Auto-equip best</button><button class="go" id="h_gear_empty" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Unequip all</button></div><button class="go" id="h_gear" style="margin-top:8px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Open full gear manager</button></div>'+ 
+    (function(){ var li=legendOfHero(h); var bp=li?legendBp(li.key):null; var st=li?legendStats(li):null; var body=li?('<div><b style="color:#fff;font-size:13px">'+(bp?bp.icon+' '+esc(bp.name):'Legendary')+'</b><div style="font-size:11px;color:#d7a8ff;font-weight:800;margin-top:2px">Lv '+(li.level||1)+' \u00b7 +'+st.atkPct+'% ATK \u00b7 +'+st.hpPct+'% HP</div></div><div class="heroUtilityV141" style="margin-top:10px"><button class="go" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)" onclick="legendUnequipHero(\''+h.id+'\')">\u21a9 Unequip</button><button class="go" style="background:linear-gradient(135deg,#a06bff,#6b46e0);color:#fff" onclick="legendOpenForge()">\u2692 Open Crucible</button></div>'):('<p style="margin-bottom:9px">No legendary equipped. Forge legendaries in the Crucible with \u2726 shards from your habits, then equip one here.</p><button class="go" style="width:100%;background:linear-gradient(135deg,#a06bff,#6b46e0);color:#fff" onclick="legendOpenForge()">\u2692 Open Crucible</button>'); return '<div class="heroPanelV141"><h4>\u2726 Legendary <span>'+(S.legendShards||0)+' \u2726 shards</span></h4>'+body+'</div>'; })()+'<div class="heroPanelV141"><h4>Gear Loadout <span>score '+gearScore(h)+'</span></h4><p>Gear slots now live around the portrait. Use Auto-equip to quickly fit the best available pieces or Unequip all to transfer gear.</p><div class="heroUtilityV141" style="margin-top:10px"><button class="go" id="h_gear_auto" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">Auto-equip best</button><button class="go" id="h_gear_empty" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Unequip all</button></div><button class="go" id="h_gear" style="margin-top:8px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Open full gear manager</button></div>'+ 
     (()=>{
     const roleArchMap={Tank:['Guardian'],Support:['Healer','Leader'],DPS:['Bruiser','Striker','Assassin','Caster','Marksman']};
     const validArchs=roleArchMap[h.role]||Object.keys(ARCHETYPE_DEFS);
@@ -6995,7 +7077,7 @@ function openHeroSheet(id){
       return '<button type="button" data-archpick="'+k+'" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:800;border:2px solid '+(active?'var(--accent)':'var(--line)')+';background:'+(active?'var(--accent)':'var(--panel2)')+';color:'+(active?'#04222a':'var(--ink)')+';cursor:pointer;margin:2px">'+esc(ad.label)+'</button>';
     }).join('');
     const resetChip=archKey?'<button type="button" data-archpick="__default" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;border:2px dashed var(--line);background:var(--panel2);color:var(--muted);cursor:pointer;margin:2px">↺ Default</button>':'';
-    return '<div class="heroPanelV141"><h4>Ability & Identity <span id="archLabelSpan">'+esc(h.role)+' · '+esc(curKey&&ARCHETYPE_DEFS[curKey]?ARCHETYPE_DEFS[curKey].label:'Specialist')+'</span></h4><p id="archDescP" style="margin-bottom:8px">'+esc(curKey&&ARCHETYPE_DEFS[curKey]?ARCHETYPE_DEFS[curKey].desc:'Flexible combat identity.')+'</p><div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">'+chips+resetChip+'</div>'+(p?'<div class="passivebox" style="margin-top:6px"><div class="pt">Passive · '+esc(p.name)+'</div><div class="pd">'+esc(p.desc)+'</div></div>':'')+'<div style="margin-top:8px">'+(metaChips(h)||'')+'</div></div>';
+    return '<div class="heroPanelV141"><h4>Ability & Identity <span id="archLabelSpan">'+esc(h.role)+' · '+esc(curKey&&ARCHETYPE_DEFS[curKey]?ARCHETYPE_DEFS[curKey].label:'Specialist')+'</span></h4><p id="archDescP" style="margin-bottom:8px">'+esc(curKey&&ARCHETYPE_DEFS[curKey]?ARCHETYPE_DEFS[curKey].desc:'Flexible combat identity.')+'</p>'+'<div style="margin:0 0 9px;padding:8px 10px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)"><div style="font-size:10px;font-weight:900;letter-spacing:.5px;color:var(--accent);margin-bottom:3px">\u2694 BATTLE ABILITY</div><div id="archAbilityP" style="font-size:12px;color:var(--ink);font-weight:600;line-height:1.45">'+esc(archAbilityText(curKey))+'</div></div>'+'<div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">'+chips+resetChip+'</div>'+(p?'<div class="passivebox" style="margin-top:6px"><div class="pt">Passive · '+esc(p.name)+'</div><div class="pd">'+esc(p.desc)+'</div></div>':'')+'<div style="margin-top:8px">'+(metaChips(h)||'')+'</div></div>';
   })()+ 
     '<div class="heroPanelV141"><h4>Bond & Domains <span>Bond Lv '+bondLevel(h)+'</span></h4><div>'+affChips(h.aff)+'</div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:var(--muted);margin:9px 2px 4px"><span>+'+(bondLevel(h)*2)+'% power</span><span>'+((h.bondXp||0)-bondCum(bondLevel(h)))+' / '+(bondCum(bondLevel(h)+1)-bondCum(bondLevel(h)))+'</span></div><div class="xpbar"><i style="width:'+Math.min(100,((h.bondXp||0)-bondCum(bondLevel(h)))/(bondCum(bondLevel(h)+1)-bondCum(bondLevel(h)))*100)+'%;background:linear-gradient(90deg,#ff5d9e,#ffb01f)"></i></div><button class="go" id="h_bond" style="margin-top:10px;background:linear-gradient(135deg,#ff5d9e,#ffb01f);color:#1a0714">Open Bond Journal</button></div>'+ 
     ''+ 
@@ -7022,6 +7104,7 @@ function openHeroSheet(id){
       const ad=archKey&&ARCHETYPE_DEFS[archKey]?ARCHETYPE_DEFS[archKey]:null;
       const dp=document.getElementById('archDescP'); if(dp) dp.textContent=ad?ad.desc:'Flexible combat identity.';
       const ls=document.getElementById('archLabelSpan'); if(ls) ls.textContent=h.role+' · '+(ad?ad.label:'Default');
+      const ap=document.getElementById('archAbilityP'); if(ap){ var effK=archKey||((typeof generatedArchetype==='function'&&generatedArchetype(h)||{}).key); ap.textContent=archAbilityText(effK); }
     };
   });
   var _hc141=document.getElementById('h_color'); if(_hc141) _hc141.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; color=b.dataset.c; document.getElementById('h_color').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); const prev=document.getElementById('hPrev'); if(prev) prev.style.background='linear-gradient(160deg,'+color+',#0008)'; };
@@ -7765,7 +7848,7 @@ function growthToolsV2(){ return '<div class="growthQuickV148"><button id="v2Rev
 
 function renderGrowth(v){
   injectGrowthHubStyles(); injectLifeBaseVisualStylesV148(); injectDomainGrowthStylesV2();
-  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I’m becoming</span></div>'+growthHeaderV2()+domainGrowthPanelV2()+growthFocusV2()+growthToolsV2();
+  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I’m becoming</span></div>'+growthHeaderV2()+domainGrowthPanelV2()+forgePanelHTML()+growthFocusV2()+growthToolsV2();
   const bind=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
   bind('v2Review',showWeeklyReview); bind('v2Recovery',showRecoveryModal); bind('v2Monthly',showMonthlyReview); bind('v2Sanctuary',showSanctuary);
 }
@@ -10639,7 +10722,7 @@ renderGrowth = function(v){
   try{ injectGrowthHubStyles(); }catch(e){}
   try{ injectLifeBaseVisualStylesV148(); }catch(e){}
   try{ injectDomainGrowthStylesV2(); }catch(e){}
-  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I\u2019m becoming</span></div>'+growthHeaderV2()+domainGrowthPanelV2()+growthFocusV2()+growthToolsV2();
+  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I\u2019m becoming</span></div>'+growthHeaderV2()+domainGrowthPanelV2()+forgePanelHTML()+growthFocusV2()+growthToolsV2();
   const bind=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
   bind('v2Review',showWeeklyReview); bind('v2Recovery',showRecoveryModal); bind('v2Monthly',showMonthlyReview); bind('v2Sanctuary',showSanctuary);
   try{ v170InjectStyles(); v.classList.add('v170GameShell','v170Growth'); }catch(e){}
