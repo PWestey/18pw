@@ -2462,7 +2462,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.95.0-forge-ui-crucible-rename';
+const APP_BUILD='v2.96.0-archetype-balance-pass';
 const EXPECTED_ROSTER_COUNT=375;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -5142,7 +5142,7 @@ function canDoubleStrike(att){
   return false;
 }
 /* ===== Combat v1: round-based kit engine (durations + cooldowns + role kits) ===== */
-const KIT_TAUNT_DUR=2, KIT_TAUNT_CD=3, KIT_HEAL_CD=2, KIT_HEAL_FACTOR=0.9, KIT_TAUNT_REDIRECT=0.72, KIT_TANK_MIT=0.42, KIT_EXEC_THRESH=0.30, KIT_EXEC_MULT=1.25;
+const KIT_TAUNT_DUR=2, KIT_TAUNT_CD=3, KIT_HEAL_CD=2, KIT_HEAL_FACTOR=0.9, KIT_TAUNT_REDIRECT=0.72, KIT_TANK_MIT=0.42, KIT_EXEC_THRESH=0.35, KIT_EXEC_MULT=1.55;
 const KIT_TEAM_DR=0.09;
 function kitTankAlive(){ try{ return !!(battleState && battleState.players && battleState.players.some(function(u){ return u.role==='Tank' && !u.dead; })); }catch(e){ return false; } }
 function kitSt(u){ if(!u.st) u.st=[]; return u.st; }
@@ -5154,11 +5154,11 @@ function kitReady(u,k){ return !(u.cd&&u.cd[k]>0); }
 function kitSetCd(u,k,t){ kitCd(u)[k]=t; }
 function kitTickCd(u){ if(!u||!u.cd)return; for(const k in u.cd){ if(u.cd[k]>0)u.cd[k]--; } }
 /* ===== Archetype combat identities (Phase 2) ===== */
-const ARCH_TUNE={ leaderAtk:0.08, bruiserLS:0.18, strikerDmg:0.12, marksmanBoss:0.35, casterSplash:0.25, leaderShield:0.6, leaderShieldCap:0.35 };
+const ARCH_TUNE={ leaderAtk:0.08, bruiserLS:0.18, strikerDmg:0.12, marksmanBoss:0.35, marksmanPriority:0.12, casterSplash:0.25, leaderShield:0.6, leaderShieldCap:0.35 };
 function unitArch(u){ return (u && u.archetype && u.archetype.key) || null; }
 function archLeaderAura(){ try{ return (((battleState&&battleState.players)||[]).some(function(u){return !u.dead && unitArch(u)==='Leader';}))?(1+ARCH_TUNE.leaderAtk):1; }catch(e){ return 1; } }
 function archRoundStart(pa){ try{ pa.filter(function(u){return unitArch(u)==='Leader';}).forEach(function(u){ var inj=pa.filter(function(x){return !x.dead;}).sort(function(a,b){return (a.hp/a.max)-(b.hp/b.max);})[0]; if(inj){ var cap=Math.round((inj.max||inj.hp)*ARCH_TUNE.leaderShieldCap); var grant=Math.max(1,Math.round(u.atk*ARCH_TUNE.leaderShield*forgeHealMult())); inj.shield=Math.min(cap,(inj.shield||0)+grant); } }); }catch(e){} }
-function archAtkMod(att,tgt){ if(!att||att.side!=='p') return 1; var a=unitArch(att), m=archLeaderAura(); if(a==='Striker') m*=(1+ARCH_TUNE.strikerDmg); if(a==='Marksman'&&tgt&&tgt.boss) m*=(1+ARCH_TUNE.marksmanBoss); return m; }
+function archAtkMod(att,tgt){ if(!att||att.side!=='p') return 1; var a=unitArch(att), m=archLeaderAura(); if(a==='Striker') m*=(1+ARCH_TUNE.strikerDmg); if(a==='Marksman'){ if(tgt&&tgt.boss){ m*=(1+ARCH_TUNE.marksmanBoss); } else if(tgt&&battleState){ var _tough=((battleState.enemies)||[]).filter(function(e){return !e.dead;}).sort(function(x,y){return (y.max||0)-(x.max||0);})[0]; if(_tough&&tgt===_tough) m*=(1+ARCH_TUNE.marksmanPriority); } } return m; }
 function archOnDealt(att,actual){ if(!att||att.side!=='p'||!actual) return; if(unitArch(att)==='Bruiser'){ att.hp=Math.min(att.max,att.hp+Math.round(actual*ARCH_TUNE.bruiserLS)); } }
 function archCasterSplash(att,tgt,actual){ try{ if(!att||att.side!=='p'||unitArch(att)!=='Caster'||!battleState) return; var sp=Math.max(1,Math.round(actual*ARCH_TUNE.casterSplash)); battleState.enemies.forEach(function(e){ if(e&&!e.dead&&e!==tgt){ e.hp-=sp; if(e.hp<=0){e.hp=0;e.dead=true;} } }); }catch(e){} }
 function kitExecMul(att,tgt){ return (att&&unitArch(att)==='Assassin'&&att.side==='p'&&tgt&&tgt.max&&(tgt.hp/tgt.max)<KIT_EXEC_THRESH)?KIT_EXEC_MULT:1; }
