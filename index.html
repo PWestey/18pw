@@ -2485,7 +2485,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.102.0-autoequip-slot-level-aware';
+const APP_BUILD='v2.104.0-ult-portrait-banner';
 const EXPECTED_ROSTER_COUNT=377;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -5450,14 +5450,29 @@ function ultimateName(u){ return (u&&u.id&&HERO_ULTIMATES[u.id])||generatedUltim
 function questUltimateFlair(){ try{ const pool=(S.heroes||[]).filter(h=>h&&h.owned); if(!pool.length) return; const h=pool[Math.floor(Math.random()*pool.length)]; const nm=ultimateName(h); lq53Moment('\u2726 '+(h.name||'Hero')+' \u2014 '+nm+'!', h.color||'#ffd24a'); }catch(e){} }
 function signatureName(h){ const p=passiveOf(h); return (p&&p.name)||'Signature'; }
 function v21Float(sel,idx,amt,kind){ try{ const el=document.querySelector('#'+sel+' [data-idx="'+idx+'"]'); if(!el)return; if(kind==='heal'){ pulseUnit(el,'healpulse','heal'); floatSupport(el,amt);} else { floatDmg(el,amt,true,kind); spawnFx(el,'#ffd24a',true);} }catch(e){} }
+function ultPortraitBanner(u,name,color){
+  try{
+    if(typeof lq53Reduced==='function' && lq53Reduced()) return false;
+    color=color||(u&&u.color)||'#ffd24a';
+    const img=(u&&u.img)?'<img src="'+u.img+'" alt="">':'';
+    const b=document.createElement('div'); b.className='ultPortraitBanner';
+    b.style.setProperty('--ultc',color);
+    b.innerHTML='<div class="ultPbPort">'+img+'</div><div class="ultPbInfo"><div class="ultPbTag">\u2605 ULTIMATE</div><div class="ultPbName">'+esc((u&&u.name)||'Hero')+'</div><div class="ultPbUlt">'+esc(name||'')+'</div></div>';
+    document.body.appendChild(b);
+    setTimeout(function(){ try{ b.remove(); }catch(e){} }, 1250);
+    return true;
+  }catch(e){ return false; }
+}
 function ultimateMoment(u,name,color){
   color=color||(u&&u.color)||'#ffd24a';
   const heroName=(u&&u.name)||'Hero';
   try{ var _q=(typeof HERO_ULT_QUOTES!=='undefined'&&u&&u.id&&HERO_ULT_QUOTES[u.id])||''; if(_q){ setTimeout(function(){ try{ if(typeof lq53Moment==='function') lq53Moment('“'+_q+'”', color); else passiveBanner('“'+_q+'”', color); }catch(e){} }, 380); } }catch(e){}
   const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   try{
-    if(typeof lq53Banner==='function') lq53Banner('\u2726 '+heroName+'  \u2014  '+name+'!', color);
-    else passiveBanner('\u2726 '+heroName+' \u2014 '+name+'!', color);
+    if(!ultPortraitBanner(u,name,color)){
+      if(typeof lq53Banner==='function') lq53Banner('\u2726 '+heroName+'  \u2014  '+name+'!', color);
+      else passiveBanner('\u2726 '+heroName+' \u2014 '+name+'!', color);
+    }
   }catch(e){ try{ passiveBanner('\u2726 '+heroName+' \u2014 '+name+'!', color); }catch(_){} }
   if(!reduced){
     try{ const fl=document.createElement('div'); fl.className='lq53ScreenFlash ultFlash'; fl.style.setProperty('--fx-x','50%'); fl.style.setProperty('--fx-y','40%'); fl.style.setProperty('--fx-color',color); document.body.appendChild(fl); setTimeout(()=>fl.remove(),420); }catch(e){}
@@ -6972,6 +6987,51 @@ function autoEquipAllOwned(){
   owned.forEach(h=>{ const r=autoEquipBestGear(h); if(r.changed){ totalChanged+=r.changed; heroesImproved++; } });
   return {totalChanged,heroesImproved,count:owned.length};
 }
+// Coverage-spread distribution for multi-team modes: raise the roster FLOOR instead of the ceiling.
+// Phase 1 fills empty slots round-robin, neediest hero first. Phase 2 spreads remaining surplus as
+// strict upgrades, weakest hero first. A piece only leaves a hero when a strictly better one replaces
+// it, so every hero is Pareto-improved (never stripped to feed another). Slot-level inheritance applies.
+function distributeGearSpread(){
+  const owned=(S.heroes||[]).filter(h=>h&&h.owned);
+  if(!Array.isArray(S.inventory)) S.inventory=[];
+  owned.forEach(h=>{ if(!h.gear) h.gear={weapon:null,armor:null,boots:null,relic:null}; ensureGearLevels(h); });
+  const emptyCount=h=>SLOTS.reduce((n,s)=>n+(h.gear[s]?0:1),0);
+  const wmOf=(h,slot)=>{ let wm=h.gearLevels[slot]||0; const c=h.gear[slot]; if(c) wm=Math.max(wm,c.level||0); h.gearLevels[slot]=wm; return wm; };
+  const equipInto=(h,slot,piece,wm)=>{ const top=Math.max(wm,piece.level||0); piece.level=Math.min(gearMaxLvl(piece),top); h.gearLevels[slot]=Math.max(top,piece.level); h.gear[slot]=piece; };
+  let filled=0,upgraded=0; const touched=new Set();
+  // Phase 1 — coverage: one empty slot per needy hero per round, neediest first.
+  let progress=true;
+  while(progress){
+    progress=false;
+    const needy=owned.filter(h=>emptyCount(h)>0).sort((a,b)=>emptyCount(b)-emptyCount(a)||gearScore(a)-gearScore(b));
+    for(const h of needy){
+      let pick=null;
+      SLOTS.filter(s=>!h.gear[s]).forEach(slot=>{
+        const wm=wmOf(h,slot), best=bestInventoryGearForSlot(slot,null,wm);
+        if(best){ const v=gearCompareValueWm(best,wm); if(!pick||v>pick.v) pick={slot,best,wm,v}; }
+      });
+      if(pick){ S.inventory=S.inventory.filter(g=>g&&g.id!==pick.best.id); equipInto(h,pick.slot,pick.best,pick.wm); filled++; touched.add(h.id); progress=true; }
+    }
+  }
+  // Phase 2 — spread surplus as strict upgrades, weakest hero first. Monotonic: global equipped value
+  // strictly rises each step, so it terminates; guard is a backstop.
+  let guard=0; progress=true;
+  while(progress && guard++<20000){
+    progress=false;
+    const ranked=owned.slice().sort((a,b)=>gearScore(a)-gearScore(b));
+    for(const h of ranked){
+      let pick=null;
+      SLOTS.forEach(slot=>{
+        const wm=wmOf(h,slot), cur=h.gear[slot]||null, best=bestInventoryGearForSlot(slot,cur,wm);
+        if(!best||best===cur) return;
+        const gain=gearCompareValueWm(best,wm)-gearCompareValueWm(cur,wm);
+        if(gain>0 && (!pick||gain>pick.gain)) pick={slot,best,cur,wm,gain};
+      });
+      if(pick){ if(pick.cur) S.inventory.push(pick.cur); S.inventory=S.inventory.filter(g=>g&&g.id!==pick.best.id); equipInto(h,pick.slot,pick.best,pick.wm); upgraded++; touched.add(h.id); progress=true; }
+    }
+  }
+  return {filled,upgraded,heroes:touched.size,count:owned.length};
+}
 function unequipAllGear(h){
   if(!h.gear) return 0;
   let n=0;
@@ -7218,7 +7278,9 @@ function renderRoster(v){
     '<div class="rosterstats"><span>♥ '+favN+' favorites</span><span>⬆ '+readyN+' ready</span><span>⚔ '+lineupN+' in lineups</span><span>★ '+wishN+' wishlist</span><span>✦ '+totalPrestigeStars()+' prestige</span></div>'+
     '' + currencyWallet() + '<button class="go" id="summonBtn" style="background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a;margin:0 0 8px">🎲 Summon a hero · '+randomCostText()+'</button>'+
     '<button class="go" id="albumsBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin:0 0 13px">Collection Albums · '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+'</button>'+
-    '<button class="go" id="autoEquipAllBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin:0 0 13px">⚙️ Auto-Equip ALL Heroes</button>'+
+    '<button class="go" id="autoEquipAllBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin:0 0 8px">⚙️ Auto-Equip ALL Heroes</button>'+
+    '<button class="go" id="spreadGearBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin:0 0 13px">🧩 Spread Gear · roster coverage</button>'+
+    '<div class="rosterHint" style="margin:-6px 0 13px">Auto-Equip stacks the best gear on your strongest hero (single-team power). Spread Gear lifts the whole roster — fills empty slots and hands surplus down to weaker heroes (multi-team modes). Neither strips a hero of gear it already has.</div>'+
     rosterViewToggleHTML()+
     '<div class="rosterHint">Use <b>Cards</b> when browsing hero details. Use <b>Compact</b> when managing a large roster, checking upgrade badges, or moving fast.</div>'+
     '<input type="text" id="rosSearch" placeholder="🔎 Search name, archetype, passive, tag, domain…" value="'+esc(rosState.q)+'" style="width:100%;box-sizing:border-box;padding:11px 13px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;margin-bottom:10px">'+
@@ -7250,6 +7312,7 @@ function renderRoster(v){
   document.getElementById('summonBtn').onclick=()=>{ const h=randomUnlock(); if(h){ showReveal(h,{fromSummon:true}); } };
   document.getElementById('albumsBtn').onclick=openAlbumsSheet;
   {const ae=document.getElementById('autoEquipAllBtn'); if(ae) ae.onclick=()=>{ const r=autoEquipAllOwned(); toast(r.totalChanged?('Auto-equipped '+r.totalChanged+' slot'+(r.totalChanged===1?'':'s')+' across '+r.heroesImproved+' hero'+(r.heroesImproved===1?'':'es')):('All '+r.count+' heroes already have their best gear')); rerender(); renderHUD(); recalcCollection(); save(); };}
+  {const sg=document.getElementById('spreadGearBtn'); if(sg) sg.onclick=()=>{ const r=distributeGearSpread(); const bits=[]; if(r.filled) bits.push('filled '+r.filled+' empty slot'+(r.filled===1?'':'s')); if(r.upgraded) bits.push('spread '+r.upgraded+' upgrade'+(r.upgraded===1?'':'s')); toast(bits.length?('Coverage · '+bits.join(' · ')+' across '+r.heroes+' hero'+(r.heroes===1?'':'es')):('Roster already evenly geared — no surplus to spread')); rerender(); renderHUD(); recalcCollection(); save(); };}
   document.getElementById('rosterViewToggle').onclick=e=>{ const b=e.target.closest('button[data-mode]'); if(!b)return; rosterViewMode=b.dataset.mode; document.querySelectorAll('#rosterViewToggle button').forEach(x=>x.classList.toggle('on',x===b)); fillGrid(); };
   const sb=document.getElementById('rosSearch'); sb.oninput=()=>{ rosState.q=sb.value; fillGrid(); };
   document.getElementById('rosTabs').onclick=e=>{ const b=e.target.closest('button[data-t]'); if(!b)return; rosState.tab=b.dataset.t; renderRoster(v); };
@@ -8456,6 +8519,13 @@ function lq53InjectBattleStyles(){
     .arena.lq53Arena .vs-head{background:linear-gradient(90deg,transparent,rgba(0,0,0,.42),transparent);border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);padding:9px 6px;border-radius:12px;text-shadow:0 0 18px color-mix(in srgb,var(--accent) 28%,transparent)}
     .arena.lq53Arena .vs-mid{font-size:30px;letter-spacing:4px;animation:lq53VsPulse 1.8s ease-in-out infinite;text-shadow:0 0 22px color-mix(in srgb,var(--accent) 58%,transparent),0 0 44px color-mix(in srgb,var(--accent2) 26%,transparent)}
     @keyframes lq53VsPulse{0%,100%{transform:scale(1);opacity:.88}50%{transform:scale(1.045);opacity:1}}
+    .ultPortraitBanner{position:fixed;left:50%;top:20%;transform:translateX(-50%);z-index:107;pointer-events:none;display:flex;align-items:center;gap:11px;padding:9px 15px 9px 9px;border-radius:16px;background:linear-gradient(135deg,rgba(11,16,28,.97),rgba(5,8,17,.97));border:1px solid color-mix(in srgb,var(--ultc,#ffd24a) 60%,rgba(255,255,255,.25));box-shadow:0 20px 50px rgba(0,0,0,.55),0 0 34px color-mix(in srgb,var(--ultc,#ffd24a) 38%,transparent);animation:ultPbPop 1.2s cubic-bezier(.15,.85,.2,1) forwards;max-width:88vw}
+    .ultPortraitBanner .ultPbPort{width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0;border:2px solid var(--ultc,#ffd24a);background:#0c0e16;display:grid;place-items:center}
+    .ultPortraitBanner .ultPbPort img{width:100%;height:100%;object-fit:cover;object-position:top center}
+    .ultPortraitBanner .ultPbTag{font-family:Orbitron;font-size:9px;font-weight:1000;letter-spacing:1.5px;color:var(--ultc,#ffd24a)}
+    .ultPortraitBanner .ultPbName{font-family:Orbitron;font-size:13px;font-weight:1000;color:#fff;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw}
+    .ultPortraitBanner .ultPbUlt{font-size:11px;font-weight:850;color:color-mix(in srgb,var(--ultc,#ffd24a) 85%,#fff);letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw}
+    @keyframes ultPbPop{0%{opacity:0;transform:translateX(-50%) translateY(-10px) scale(.86)}14%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.02)}26%{transform:translateX(-50%) translateY(0) scale(1)}82%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-6px) scale(.98)}}
     .arena.lq53Arena .side{position:relative}.arena.lq53Arena .side:before{content:"";position:absolute;left:8%;right:8%;top:50%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);pointer-events:none}
     .arena.lq53Arena .unit{position:relative;border:1px solid rgba(255,255,255,.055);background:linear-gradient(90deg,rgba(255,255,255,.035),transparent);border-radius:15px;padding:6px 7px;box-shadow:0 8px 20px rgba(0,0,0,.16)}
     .arena.lq53Arena .unit.enemy{background:linear-gradient(270deg,rgba(255,93,108,.07),transparent)}
@@ -8491,7 +8561,7 @@ function lq53InjectBattleStyles(){
     .arena .result.win:after,.arena .result.lose:after{content:"";position:absolute;inset:-40%;pointer-events:none;background:conic-gradient(from 0deg,transparent,color-mix(in srgb,var(--accent) 14%,transparent),transparent,color-mix(in srgb,var(--accent2) 12%,transparent),transparent);animation:lq53ResultSpin 3.2s linear infinite;opacity:.55}.arena .result>*{position:relative;z-index:2}@keyframes lq53ResultSpin{to{transform:rotate(360deg)}}
     @media(prefers-reduced-motion:reduce){.arena.lq53Arena .vs-mid,.lq53ClashBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.unit.lq53Telegraph .face,.unit.lq53Heavy .face,.unit.lq53Support .face,.unit.lq53Tank .face,.arena .result.win:after,.arena .result.lose:after{animation:none!important}}
     @media (max-width:600px){
-      .lq53HeroMoment,.lq53ClashBanner,.passiveToast,.lq53ScreenFlash,.lq53ImpactRing{display:none!important}
+      .lq53HeroMoment,.lq53ClashBanner,.ultPortraitBanner,.passiveToast,.lq53ScreenFlash,.lq53ImpactRing{display:none!important}
     }
   `;
   document.head.appendChild(st);
@@ -10147,7 +10217,7 @@ function clearTransientUI(){
     var wl=document.getElementById('v171WorldLayer'); if(wl) wl.classList.remove('show');
     var ts=document.getElementById('toast'); if(ts) ts.classList.remove('show');
     var n=document.getElementById('v165ActFirst'); if(n) n.remove();
-    document.querySelectorAll('.passiveToast,.lq53ClashBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.v171MeaningFlash,.v171WorldReward,.v171Orb,.battleFloat,.dmg,.critdmg,.shieldnum,.blocknum,.supportnum').forEach(function(e){ e.remove(); });
+    document.querySelectorAll('.passiveToast,.lq53ClashBanner,.ultPortraitBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.v171MeaningFlash,.v171WorldReward,.v171Orb,.battleFloat,.dmg,.critdmg,.shieldnum,.blocknum,.supportnum').forEach(function(e){ e.remove(); });
   }catch(e){}
 }
 function v165ActFirstNudge(){
