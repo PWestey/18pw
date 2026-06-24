@@ -2485,7 +2485,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.100.2-devtools-diag-header';
+const APP_BUILD='v2.102.0-autoequip-slot-level-aware';
 const EXPECTED_ROSTER_COUNT=377;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -5047,11 +5047,11 @@ function archAbilityText(key){
     case 'Guardian': return 'Taunts enemies to soak hits, takes '+P(mit)+' less from redirected attacks, and gives the whole team '+P(tdr)+' damage reduction while alive.';
     case 'Healer': return 'Restores HP to the most wounded ally on cooldown \u2014 keeps the squad standing through long fights.';
     case 'Leader': return 'Rallies the squad for +'+P(T.leaderAtk)+' attack and shields the lowest-HP ally each round.';
-    case 'Bruiser': return 'Heals for '+P(T.bruiserLS)+' of all damage it deals \u2014 a frontline fighter that sustains itself.';
+    case 'Bruiser': return 'Deals +'+P(T.bruiserDmg)+' damage and heals for '+P(T.bruiserLS)+' of all damage dealt \u2014 a frontline fighter that sustains itself.';
     case 'Striker': return 'Deals a reliable +'+P(T.strikerDmg)+' damage on every strike \u2014 dependable single-target DPS.';
     case 'Assassin': return 'Executes weakened foes for +'+P(execM-1)+' damage when they drop below '+P(execT)+' HP.';
     case 'Caster': return 'Splashes '+P(T.casterSplash)+' of its damage to every other enemy \u2014 true area damage.';
-    case 'Marksman': return '+'+P(T.marksmanBoss)+' damage against bosses \u2014 punishes priority targets.';
+    case 'Marksman': return '+'+P(T.marksmanBase)+' damage on every shot, rising to +'+P((1+T.marksmanBase)*(1+T.marksmanBoss)-1)+' against bosses \u2014 punishes priority targets.';
     default: return 'Flexible combat identity.';
   } }
 function archetypeOptions(){ return Object.keys(ARCHETYPE_DEFS); }
@@ -5201,26 +5201,32 @@ function kitReady(u,k){ return !(u.cd&&u.cd[k]>0); }
 function kitSetCd(u,k,t){ kitCd(u)[k]=t; }
 function kitTickCd(u){ if(!u||!u.cd)return; for(const k in u.cd){ if(u.cd[k]>0)u.cd[k]--; } }
 /* ===== Archetype combat identities (Phase 2) ===== */
-const ARCH_TUNE={ leaderAtk:0.08, bruiserLS:0.18, strikerDmg:0.12, marksmanBoss:0.35, marksmanPriority:0.12, casterSplash:0.25, leaderShield:0.6, leaderShieldCap:0.35 };
+const ARCH_TUNE={ leaderAtk:0.08, bruiserLS:0.18, bruiserDmg:0.06, strikerDmg:0.12, marksmanBase:0.08, marksmanBoss:0.28, marksmanPriority:0.12, casterSplash:0.25, leaderShield:0.6, leaderShieldCap:0.35 };
 function unitArch(u){ return (u && u.archetype && u.archetype.key) || null; }
 function archLeaderAura(){ try{ return (((battleState&&battleState.players)||[]).some(function(u){return !u.dead && unitArch(u)==='Leader';}))?(1+ARCH_TUNE.leaderAtk):1; }catch(e){ return 1; } }
 function archRoundStart(pa){ try{ pa.filter(function(u){return unitArch(u)==='Leader';}).forEach(function(u){ var inj=pa.filter(function(x){return !x.dead;}).sort(function(a,b){return (a.hp/a.max)-(b.hp/b.max);})[0]; if(inj){ var cap=Math.round((inj.max||inj.hp)*ARCH_TUNE.leaderShieldCap); var grant=Math.max(1,Math.round(u.atk*ARCH_TUNE.leaderShield*forgeHealMult())); inj.shield=Math.min(cap,(inj.shield||0)+grant); } }); }catch(e){} }
-function archAtkMod(att,tgt){ if(!att||att.side!=='p') return 1; var a=unitArch(att), m=archLeaderAura(); if(a==='Striker') m*=(1+ARCH_TUNE.strikerDmg); if(a==='Marksman'){ if(tgt&&tgt.boss){ m*=(1+ARCH_TUNE.marksmanBoss); } else if(tgt&&battleState){ var _tough=((battleState.enemies)||[]).filter(function(e){return !e.dead;}).sort(function(x,y){return (y.max||0)-(x.max||0);})[0]; if(_tough&&tgt===_tough) m*=(1+ARCH_TUNE.marksmanPriority); } } return m; }
+function archAtkMod(att,tgt){ if(!att||att.side!=='p') return 1; var a=unitArch(att), m=archLeaderAura(); if(a==='Striker') m*=(1+ARCH_TUNE.strikerDmg); if(a==='Bruiser') m*=(1+ARCH_TUNE.bruiserDmg); if(a==='Marksman'){ m*=(1+ARCH_TUNE.marksmanBase); if(tgt&&tgt.boss){ m*=(1+ARCH_TUNE.marksmanBoss); } else if(tgt&&battleState){ var _tough=((battleState.enemies)||[]).filter(function(e){return !e.dead;}).sort(function(x,y){return (y.max||0)-(x.max||0);})[0]; if(_tough&&tgt===_tough) m*=(1+ARCH_TUNE.marksmanPriority); } } return m; }
 function archOnDealt(att,actual){ if(!att||att.side!=='p'||!actual) return; if(unitArch(att)==='Bruiser'){ att.hp=Math.min(att.max,att.hp+Math.round(actual*ARCH_TUNE.bruiserLS)); } }
 function archCasterSplash(att,tgt,actual){ try{ if(!att||att.side!=='p'||unitArch(att)!=='Caster'||!battleState) return; var sp=Math.max(1,Math.round(actual*ARCH_TUNE.casterSplash)); battleState.enemies.forEach(function(e){ if(e&&!e.dead&&e!==tgt){ e.hp-=sp; if(e.hp<=0){e.hp=0;e.dead=true;} } }); }catch(e){} }
 function kitExecMul(att,tgt){ return (att&&unitArch(att)==='Assassin'&&att.side==='p'&&tgt&&tgt.max&&(tgt.hp/tgt.max)<KIT_EXEC_THRESH)?KIT_EXEC_MULT:1; }
 function kitTauntRedirect(u,players){ const tnt=players.filter(p=>!p.dead&&kitHasSt(p,'taunting')); if(tnt.length&&Math.random()<KIT_TAUNT_REDIRECT){ const t=tnt[Math.floor(Math.random()*tnt.length)]; strike(u,t,'player',u.enemyRole==='brute'?1.12:1); return true; } return false; }
 /* ===== Legendary signatures (Phase 4 batch 1: buff/heal/DR) ===== */
 const LEG_SIG={faith:'ignite',marriage:'steadfast',fatherhood:'bulwark',fitness:'tempered',work:'rally',home:'hearthlight',discipline:'honed',hobbies:'renewal'};
-const LEGSIG_TUNE={ rallyAtkPer:0.05, rallyCap:0.15, temperedPerRound:0.03, temperedCap:0.30, hearthHealFactor:0.5, bulwarkBackDR:0.08, igniteBonus:0.40 };
+const LEGSIG_TUNE={ rallyAtkPer:0.05, rallyCap:0.15, temperedPerRound:0.03, temperedCap:0.30, hearthHealFactor:0.5, bulwarkBackDR:0.08, igniteBonus:0.40, steadfastHealPct:0.30, honedCritBonus:0.12, honedExecThresh:0.30, honedExecMult:1.35, renewalShieldPct:0.12 };
 function legendSigOf(h){ try{ var li=legendOfHero(h); if(!li) return null; var bp=legendBp(li.key); return bp?LEG_SIG[bp.key]:null; }catch(e){ return null; } }
 function unitHasSig(u,sig){ return !!(u && u.legSig===sig && !u.dead); }
 function legPlayersWithSig(sig){ try{ return ((battleState&&battleState.players)||[]).filter(function(u){ return unitHasSig(u,sig); }); }catch(e){ return []; } }
 function legRallyMult(){ var n=legPlayersWithSig('rally').length; return n?(1+Math.min(LEGSIG_TUNE.rallyCap,n*LEGSIG_TUNE.rallyAtkPer)):1; }
 function legBackDR(tgt){ if(!tgt||tgt.side!=='p'||tgt.row!=='back') return 1; return legPlayersWithSig('bulwark').length?(1-LEGSIG_TUNE.bulwarkBackDR):1; }
 function legAtkMod(att){ if(!att||att.side!=='p') return 1; var m=legRallyMult(); if(att._temper) m*=(1+att._temper); if(att.legSig==='ignite' && !att._ignited){ att._ignited=true; m*=(1+LEGSIG_TUNE.igniteBonus); try{ if(typeof passiveBanner==='function') passiveBanner('\u2726 Ignite \u00b7 '+(att.name||'Hero'),att.color||'#ffd27a'); }catch(e){} } return m; }
+/* Phase 4 batch 2: Honed (crit+execute), Steadfast (death-save), Renewal (battle-start shield) */
+function legHonedCritBonus(att){ return (att&&att.side==='p'&&att.legSig==='honed')?LEGSIG_TUNE.honedCritBonus:0; }
+function legExecMul(att,tgt){ if(!att||att.side!=='p'||att.legSig!=='honed'||!tgt||!tgt.max) return 1; return ((tgt.hp/tgt.max)<LEGSIG_TUNE.honedExecThresh)?LEGSIG_TUNE.honedExecMult:1; }
+function legSteadfastSave(tgt,incoming){ try{ if(!tgt||tgt.side!=='p'||tgt.legSig!=='steadfast'||tgt._steadfastUsed) return false; if(tgt.hp>0 && (tgt.hp-incoming)<=0){ tgt._steadfastUsed=true; tgt.hp=1; var heal=Math.max(1,Math.round((tgt.max||1)*LEGSIG_TUNE.steadfastHealPct*(typeof forgeHealMult==='function'?forgeHealMult():1))); tgt.hp=Math.min(tgt.max,tgt.hp+heal); try{ if(typeof passiveBanner==='function') passiveBanner('\ud83d\udd25 Steadfast \u00b7 '+(tgt.name||'Hero')+' endures',tgt.color||'#ff8a5c'); }catch(e){} return true; } }catch(e){} return false; }
+function legRenewalShield(pa){ try{ pa.forEach(function(u){ if(u && !u.dead && u.legSig==='renewal'){ var sh=Math.max(1,Math.round((u.max||u.hp)*LEGSIG_TUNE.renewalShieldPct)); u.shield=(u.shield||0)+sh; } }); }catch(e){} }
+function legRenewalVictory(){ try{ var any=legPlayersWithSig('renewal').length; if(any && typeof passiveBanner==='function') passiveBanner('\ud83c\udf43 Renewal \u00b7 the squad recovers',' #8fd9a8'); }catch(e){} }
 function legRoundStart(pa){ try{ pa.forEach(function(u){ if(unitHasSig(u,'tempered')) u._temper=Math.min(LEGSIG_TUNE.temperedCap,(u._temper||0)+LEGSIG_TUNE.temperedPerRound); }); pa.filter(function(u){return unitHasSig(u,'hearthlight');}).forEach(function(u){ var inj=pa.filter(function(x){return !x.dead&&x.hp<x.max;}).sort(function(a,b){return (a.hp/a.max)-(b.hp/b.max);})[0]; if(inj){ var amt=Math.max(1,Math.round(u.atk*LEGSIG_TUNE.hearthHealFactor*forgeHealMult())); inj.hp=Math.min(inj.max,inj.hp+amt); } }); }catch(e){} }
-function kitRoundStart(players,enemies){ if(!battleState)return; const pa=players.filter(u=>!u.dead); legRoundStart(pa); archRoundStart(pa); if(!battleState._forgeHome){ battleState._forgeHome=true; var _fss=forgeStartShield(); if(_fss>0) pa.forEach(function(u){ u.shield=(u.shield||0)+Math.round((u.max||u.hp)*_fss); }); }
+function kitRoundStart(players,enemies){ if(!battleState)return; const pa=players.filter(u=>!u.dead); legRoundStart(pa); archRoundStart(pa); if(!battleState._forgeHome){ battleState._forgeHome=true; var _fss=forgeStartShield(); if(_fss>0) pa.forEach(function(u){ u.shield=(u.shield||0)+Math.round((u.max||u.hp)*_fss); }); legRenewalShield(pa); }
   pa.filter(u=>u.role==='Tank').forEach(u=>{ if(kitReady(u,'taunt')){ kitAddSt(u,'taunting',KIT_TAUNT_DUR,1); kitSetCd(u,'taunt',KIT_TAUNT_CD); try{passiveBanner('\uD83D\uDEE1 '+(u.name||'Tank')+' \u00B7 Taunt',(ROLECOLOR&&ROLECOLOR.Tank)||'#5bd1ff');}catch(e){} } });
   pa.filter(u=>unitArch(u)==='Healer').forEach(u=>{ if(kitReady(u,'heal')){ const inj=pa.filter(x=>x.hp<x.max).sort((a,b)=>(a.hp/a.max)-(b.hp/b.max))[0]; if(inj){ const amt=Math.max(1,Math.round(u.atk*KIT_HEAL_FACTOR*forgeHealMult())); inj.hp=Math.min(inj.max,inj.hp+amt); kitSetCd(u,'heal',KIT_HEAL_CD); try{ if(inj.hp/inj.max<0.85) passiveBanner('\u271A '+(u.name||'Support')+' \u00B7 Heal',(ROLECOLOR&&ROLECOLOR.Support)||'#37d67a'); }catch(e){} } } });
 }
@@ -5370,7 +5376,7 @@ function silentStrike(att,tgt){
   const actual=Math.min(tgt.hp,Math.max(0,dmg));
   att.dealt=(att.dealt||0)+actual; tgt.taken=(tgt.taken||0)+actual;
   if(att.role==='Support') att.support=(att.support||0)+Math.round(actual*(att.supportMult||1));
-  tgt.hp-=actual; if(tgt.hp<=0){tgt.hp=0;tgt.dead=true;}
+  if(!legSteadfastSave(tgt,actual)){ tgt.hp-=actual; if(tgt.hp<=0){tgt.hp=0;tgt.dead=true;} }
 }
 function skipBattle(){
   if(!battleState || battleState.over) return;
@@ -5581,8 +5587,8 @@ function ofFxMeta(type){ var m={Flame:{cls:'flame',shot:'#ff6b4a',shot2:'#ffb347
 function ofImpact(el,type,fallback){ if(!el) return; try{ var meta=ofFxMeta(type), r=el.getBoundingClientRect(), fx=document.createElement('div'); fx.className='clashImpact '+(meta?meta.cls:''); fx.style.left=(r.left+r.width/2)+'px'; fx.style.top=(r.top+r.height/2)+'px'; if(meta){ fx.style.setProperty('--shot',meta.shot); fx.style.setProperty('--shot2',meta.shot2); } else { fx.style.setProperty('--shot',fallback||'#ff9f43'); fx.style.setProperty('--shot2','#ffffff'); } document.body.appendChild(fx); setTimeout(function(){ try{fx.remove();}catch(e){} },430); }catch(e){} }
 function ofShot(fromEl,toEl,type,fallback){ if(!fromEl||!toEl) return; try{ var meta=ofFxMeta(type), a=fromEl.getBoundingClientRect(), t=toEl.getBoundingClientRect(), p=document.createElement('div'); if(meta){ p.className='clashShot '+meta.cls; p.style.setProperty('--shot',meta.shot); p.style.setProperty('--shot2',meta.shot2); } else { p.className='clashShot'; p.style.background='radial-gradient(circle at 38% 38%,#fff,'+(fallback||'#ff9f43')+' 72%,transparent)'; p.style.borderRadius='50%'; } p.style.left=(a.left+a.width/2-8)+'px'; p.style.top=(a.top+a.height/2-8)+'px'; document.body.appendChild(p); var dx=(t.left+t.width/2)-(a.left+a.width/2), dy=(t.top+t.height/2)-(a.top+a.height/2), ang=Math.atan2(dy,dx)*180/Math.PI; requestAnimationFrame(function(){ p.style.transform='translate('+dx+'px,'+dy+'px) rotate('+ang+'deg)'; }); setTimeout(function(){ ofImpact(toEl,type,fallback); },220); setTimeout(function(){ try{p.remove();}catch(e){} },360); }catch(e){} }
 function strike(att,tgt,sideClass,dmgMod){
-  const eff=passiveEffect(att), mult=passiveDmgMult(att,tgt)*(dmgMod||1)*kitExecMul(att,tgt)*legAtkMod(att)*archAtkMod(att,tgt);
-  const crit=Math.random()<(0.10+passiveCritBonus(att)+(att&&att.side==='p'?forgeCritBonus():0));
+  const eff=passiveEffect(att), mult=passiveDmgMult(att,tgt)*(dmgMod||1)*kitExecMul(att,tgt)*legAtkMod(att)*legExecMul(att,tgt)*archAtkMod(att,tgt);
+  const crit=Math.random()<(0.10+passiveCritBonus(att)+legHonedCritBonus(att)+(att&&att.side==='p'?forgeCritBonus():0));
   let dmg=Math.max(1,Math.round(att.atk*(0.9+Math.random()*0.2)*(crit?1.55:1)*mult));
   if(att.id==='critical_role__grog_strongjaw' && Math.random()<0.12){ dmg=Math.round(dmg*1.45); passiveBanner('Reckless Swing · Heavy Hit',ROLECOLOR[att.role]||'#ffb01f'); }
   dmg=applyIncomingMitigation(tgt,dmg);
@@ -5593,8 +5599,9 @@ function strike(att,tgt,sideClass,dmgMod){
   if(crit){ att.crits=(att.crits||0)+1; battleEvent(att.name+' crit','crit'); }
   const supportOut=att.role==='Support'?Math.round(actual*(att.supportMult||1)):0;
   if(supportOut) att.support=(att.support||0)+supportOut;
-  const died = tgt.hp>0 && (tgt.hp-actual)<=0;
-  tgt.hp-=actual; if(tgt.hp<=0){tgt.hp=0;tgt.dead=true;} archCasterSplash(att,tgt,actual);
+  const _saved = legSteadfastSave(tgt,actual);
+  const died = !_saved && tgt.hp>0 && (tgt.hp-actual)<=0;
+  if(!_saved){ tgt.hp-=actual; if(tgt.hp<=0){tgt.hp=0;tgt.dead=true;} } archCasterSplash(att,tgt,actual);
   if(died && att.side==='p' && battleState && !battleState.enemies.some(u=>!u.dead)){ try{ siegeKillFlash(att); }catch(e){} }
 
   const ranged = att.side==='p' && (att.role==='DPS'||att.role==='Support');
@@ -5791,6 +5798,7 @@ function battleEndFallback(win,err){
 function endBattle(win){
   if(!battleState || battleState.over){ return; }
   battleState.over=true;
+  if(win){ try{ legRenewalVictory(); }catch(e){} }
   clearAuto();
   try{
   if(battleSiege){ try{ siegeEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
@@ -6928,20 +6936,30 @@ function taskLoot(diff,domain){
 
 /* ===== v1.40.2 Gear + Hero Convenience Helpers ===== */
 function gearCompareValue(g){ return g ? gearPower(g)*1000 + Math.max(0,RARITY.indexOf(g.rarity))*100 + (g.level||0) : -1; }
-function bestInventoryGearForSlot(slot,current){
+// Effective level a piece would reach if equipped into a slot that has been leveled to watermark `wm` (slot-level transfer).
+function gearEffLevelForSlot(g,wm){ if(!g) return 0; return Math.min(gearMaxLvl(g),Math.max(g.level||0,wm||0)); }
+// Compare value AS IF equipped into this slot — so a fresh high-stage piece is judged at its post-transfer level, not level 0.
+function gearCompareValueWm(g,wm){ if(!g) return -1; const eff=gearEffLevelForSlot(g,wm); return gearCompareValue(eff!==(g.level||0)?Object.assign({},g,{level:eff}):g); }
+function bestInventoryGearForSlot(slot,current,wm){
   const candidates=(S.inventory||[]).filter(g=>g&&g.slot===slot).concat(current?[current]:[]);
   if(!candidates.length) return null;
-  return candidates.sort((a,b)=>gearCompareValue(b)-gearCompareValue(a))[0];
+  wm=wm||0;
+  return candidates.sort((a,b)=>gearCompareValueWm(b,wm)-gearCompareValueWm(a,wm))[0];
 }
 function autoEquipBestGear(h){
   if(!h.gear) h.gear={weapon:null,armor:null,boots:null,relic:null};
+  ensureGearLevels(h);
   const before=gearScore(h); let changed=0;
   SLOTS.forEach(slot=>{
     const current=h.gear[slot]||null;
-    const best=bestInventoryGearForSlot(slot,current);
-    if(!best || best===current || (current && gearCompareValue(current)>=gearCompareValue(best))) return;
+    let wm=h.gearLevels[slot]||0; if(current) wm=Math.max(wm,current.level||0); h.gearLevels[slot]=wm;
+    const best=bestInventoryGearForSlot(slot,current,wm);
+    if(!best || best===current || (current && gearCompareValueWm(current,wm)>=gearCompareValueWm(best,wm))) return;
     if(current) S.inventory.push(current);
     S.inventory=(S.inventory||[]).filter(g=>g&&g.id!==best.id);
+    const top=Math.max(wm,best.level||0);
+    best.level=Math.min(gearMaxLvl(best),top);
+    h.gearLevels[slot]=Math.max(top,best.level);
     h.gear[slot]=best; changed++;
   });
   const after=gearScore(h);
@@ -10212,15 +10230,22 @@ function v166AutoEquipActiveClear(){
   let changed=0,gain=0;
   v166BestActiveHeroes().forEach(h=>{
     if(!h.gear) h.gear={weapon:null,armor:null,boots:null,relic:null};
+    ensureGearLevels(h);
     const before=gearScore(h); let local=false;
     SLOTS.forEach(slot=>{
       const cur=h.gear[slot]||null;
-      const best=bestInventoryGearForSlot(slot,cur);
+      let wm=h.gearLevels[slot]||0; if(cur) wm=Math.max(wm,cur.level||0); h.gearLevels[slot]=wm;
+      const best=bestInventoryGearForSlot(slot,cur,wm);
       if(!best||best===cur) return;
-      const delta=gearPower(best)-(cur?gearPower(cur):0);
+      const bestEff=gearEffLevelForSlot(best,wm);
+      const bestPow=gearPower(bestEff!==(best.level||0)?Object.assign({},best,{level:bestEff}):best);
+      const delta=bestPow-(cur?gearPower(cur):0);
       if(!cur || delta>=10 || RARITY.indexOf(best.rarity)>RARITY.indexOf(cur.rarity)){
         if(cur) S.inventory.push(cur);
         S.inventory=(S.inventory||[]).filter(g=>g&&g.id!==best.id);
+        const top=Math.max(wm,best.level||0);
+        best.level=Math.min(gearMaxLvl(best),top);
+        h.gearLevels[slot]=Math.max(top,best.level);
         h.gear[slot]=best; changed++; local=true;
       }
     });
