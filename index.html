@@ -2572,7 +2572,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.114.0-prestige-blockers';
+const APP_BUILD='v2.117.0-idle-gear-flood';
 const EXPECTED_ROSTER_COUNT=377;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2911,11 +2911,12 @@ function afkLoot(hours, mom, apply){
   const gold=Math.round(hours*afkGoldRate()*mom);
   const dust=Math.round(hours*afkDustRate()*mom);
   const cores=Math.floor(hours*st*(TUNE.afkCorePerStage||0.03)*mom);
-  const perHr=Math.min((TUNE.afkGearMaxChance||0.6),((TUNE.afkGearBaseChance||0.12)+st*(TUNE.afkGearStageChance||0.002))*mom);
-  let gearCount=0; const whole=Math.floor(hours), frac=hours-whole;
-  for(let i=0;i<whole;i++){ if(Math.random()<perHr) gearCount++; }
-  if(Math.random()<perHr*frac) gearCount++;
+  // v2.117: idle gear is a per-hour PIECE RATE (stage- & momentum-scaled), live-tunable via TUNE.gearDropMult
+  const _gpHr=((TUNE.afkGearPerHour||1.2)+st*(TUNE.afkGearStagePerHour||0.01))*mom*(TUNE.gearDropMult||1);
+  const _exp=Math.max(0,hours*_gpHr);
+  let gearCount=Math.floor(_exp); if(Math.random()<(_exp-gearCount)) gearCount++;
   if(hours>=6 && gearCount<1) gearCount=1; // guaranteed find after a long rest
+  gearCount=Math.min(gearCount,(TUNE.afkGearHardCap||300));
   const gearObjs=[];
   for(let i=0;i<gearCount;i++){ const slot=SLOTS[Math.floor(Math.random()*SLOTS.length)]; gearObjs.push(newGear(slot,rollRarity(st||1))); }
   if(apply){
@@ -4216,7 +4217,7 @@ function renderTasks(v){
     if(taskIsRecurring(subtab)){ const _u=({daily:'day',weekly:'week',monthly:'month'})[it.freq]||''; meta=cap(it.freq)+(it.streak>0?(' · '+it.streak+(_u?' '+_u:'')+' streak'):''); }
     else if(subtab==='habits') meta=cap(it.freq)+' · '+(it.up?'+'+(it.diff==='hard'?40:(it.diff==='med'?20:8))+'⦿ ':'')+(it.down?'slip ':'')+'· '+(it.count>=0?'+':'')+it.count;
     else meta=it.diff+' · +'+(CRYSTALS[it.diff]||CRYSTALS.med)+'◆ +'+(it.diff==='hard'?5:(it.diff==='med'?3:1))+'◈';
-    c.innerHTML='<div class="diff" style="background:'+((domainOf(it)&&DKEY[domainOf(it)])?DKEY[domainOf(it)].color:'#3a4254')+'"></div><div class="body" data-act="edit" data-id="'+it.id+'"><div class="t">'+esc(it.title)+'</div><div class="meta">'+((blockChipHTML(it)+domainChip(it))?'<div class="metaChips">'+blockChipHTML(it)+domainChip(it)+'</div>':'')+'<div class="metaInfo">'+meta+'</div></div>'+(it.notes?'<div class="taskNote">'+esc(it.notes)+'</div>':'')+'</div>'+right;
+    c.innerHTML='<div class="diff" style="background:'+((domainOf(it)&&DKEY[domainOf(it)])?DKEY[domainOf(it)].color:'#3a4254')+'"></div><div class="body" data-act="edit" data-id="'+it.id+'"><div class="t">'+esc(it.title)+'</div><div class="meta">'+((blockChipHTML(it)+domainChip(it))?'<div class="metaChips">'+blockChipHTML(it)+domainChip(it)+'</div>':'')+'<div class="metaInfo">'+meta+'</div></div>'+(it.notes?'<div class="taskNote">'+esc(it.notes)+'</div>':'')+'</div>'+right+(safeTaskLink(it.link)?'<a class="taskOpen" href="'+esc(safeTaskLink(it.link))+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:grid;place-items:center;min-width:34px;align-self:stretch;margin-left:4px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);font-size:15px;text-decoration:none;flex:0 0 auto">↗</a>':'');
     L.appendChild(c);
   });
   L.onclick=onTaskClick;
@@ -4463,6 +4464,7 @@ function renderForge(v){ injectForgeStyles(); ensureLegendaryState(); var sh=S.l
   var pc=document.getElementById('forgePickCancel'); if(pc) pc.onclick=function(){ forgePickIid=null; renderForge(v); };
 }
 
+function safeTaskLink(u){ u=(u||'').trim(); if(!u) return ''; if(/^(javascript|data|vbscript):/i.test(u)) return ''; if(/^[a-z][a-z0-9+.\-]*:/i.test(u)) return u; return 'https://'+u; }
 function onTaskClick(e){
   const el=e.target.closest('[data-act]'); if(!el) return;
   const act=el.dataset.act,id=el.dataset.id;
@@ -5967,17 +5969,17 @@ function openTaskSheet(id){
   if(subtab==='dailies'){ const DOW=['Su','Mo','Tu','We','Th','Fr','Sa']; h+='<label>Active days <span style="color:var(--muted);font-weight:700">(tap to skip)</span></label><div class="segs daysRow" id="f_days">'+DOW.map((dn,di)=>'<button data-day="'+di+'" class="'+(activeDays.indexOf(di)>=0?'on':'')+'">'+dn+'</button>').join('')+'</div>'; }
   if(subtab==='habits') h+='<label>Track</label><div class="segs" id="f_dir"><button data-x="up" class="'+(dir==='up'?'on':'')+'">Good +</button><button data-x="down" class="'+(dir==='down'?'on':'')+'">Bad −</button><button data-x="both" class="'+(dir==='both'?'on':'')+'">Both</button></div>';
   h+='<label>Life domain</label><div class="domSel" id="f_domWrap"><button type="button" class="domSelBtn" id="f_domBtn">'+(domain?DKEY[domain].icon+' '+DKEY[domain].label:'— None —')+'<span class="domCaret">▾</span></button><div class="domSelMenu" id="f_domMenu" hidden><button type="button" class="domOpt" data-dom="">— None —</button>'+DOMAINS.map(d=>'<button type="button" class="domOpt'+(domain===d[0]?' on':'')+'" data-dom="'+d[0]+'">'+DKEY[d[0]].icon+' '+d[1]+'</button>').join('')+'</div></div>';
-  if(taskIsRecurring(subtab)){ h+='<label>Notes <span style="color:var(--muted);font-weight:700">(optional context)</span></label><textarea id="f_notes" maxlength="500" rows="3" class="taskNoteInput" placeholder="Add context, a why, a target...">'+(item&&item.notes?esc(item.notes):'')+'</textarea>'; } h+='<button class="go" id="f_save">'+(id?'Save':'Add')+'</button>'+(id?'<button class="ghost" id="f_del">Delete</button>':'');
+  if(taskIsRecurring(subtab)){ h+='<label>Notes <span style="color:var(--muted);font-weight:700">(optional context)</span></label><textarea id="f_notes" maxlength="500" rows="3" class="taskNoteInput" placeholder="Add context, a why, a target...">'+(item&&item.notes?esc(item.notes):'')+'</textarea>'; } h+='<label>Open-app link <span style="color:var(--muted);font-weight:700">(optional · URL or app scheme)</span></label><input type="text" id="f_link" maxlength="300" class="taskNoteInput" placeholder="https://… or appname://" value="'+(item&&item.link?esc(item.link):'')+'">';h+='<button class="go" id="f_save">'+(id?'Save':'Add')+'</button>'+(id?'<button class="ghost" id="f_del">Delete</button>':'');
   s.innerHTML=h; showScrim('scrim');
   segPick('f_diff',d=>diff=d); if(subtab==='habits') segPick('f_dir',d=>dir=d,'x'); if(subtab==='dailies'){ const dr=document.getElementById('f_days'); if(dr) dr.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const di=+b.dataset.day, k=activeDays.indexOf(di); if(k>=0){ if(activeDays.length>1) activeDays.splice(k,1); } else activeDays.push(di); b.classList.toggle('on',activeDays.indexOf(di)>=0); }); }
   (function(){var wrap=document.getElementById('f_domWrap');if(!wrap)return;var btn=document.getElementById('f_domBtn'),menu=document.getElementById('f_domMenu');btn.onclick=function(e){e.stopPropagation();menu.hidden=!menu.hidden;};menu.querySelectorAll('.domOpt').forEach(function(b){b.onclick=function(){domain=b.getAttribute('data-dom')||'';btn.innerHTML=(domain?DKEY[domain].icon+' '+DKEY[domain].label:'— None —')+'<span class="domCaret">▾</span>';menu.hidden=true;};});})();
   document.getElementById('f_save').onclick=()=>{
     const title=document.getElementById('f_title').value.trim(); if(!title)return;
-    const dom=domain||null; const nf=document.getElementById('f_notes'); const notesVal=nf?nf.value.trim():'';
+    const dom=domain||null; const nf=document.getElementById('f_notes'); const notesVal=nf?nf.value.trim():''; const lf=document.getElementById('f_link'); const linkVal=lf?lf.value.trim():'';
     if(taskIsRecurring(subtab)){ const fr=TASK_FREQ_OF[subtab]||'daily', ad=(subtab==='dailies')?activeDays.slice():null; if(item){item.title=title;item.diff=diff;item.domain=dom;item.activeDays=ad; if(item.freq!==fr){item.freq=fr;item.pk=periodKey(fr);item.done=false;}} else S.dailies.push({id:uid(),notes:notesVal,title,diff,freq:fr,domain:dom,streak:0,done:false,pk:periodKey(fr),activeDays:ad}); }
     else if(subtab==='habits'){ const up=dir!=='down',down=dir!=='up'; if(item){item.title=title;item.diff=diff;item.up=up;item.down=down;item.domain=dom; if(item.freq!==freq){item.freq=freq;item.pk=periodKey(freq);item.count=0;}} else S.habits.push({id:uid(),title,diff,freq,up,down,domain:dom,count:0,pk:periodKey(freq)}); }
     else { if(item){item.title=title;item.diff=diff;item.domain=dom;} else S.todos.push({id:uid(),title,diff,domain:dom,done:false}); }
-    if(item&&nf) item.notes=notesVal; hideScrim(); render(); save();
+    if(item&&nf) item.notes=notesVal; if(item&&lf) item.link=linkVal; hideScrim(); render(); save();
   };
   const del=document.getElementById('f_del'); if(del) del.onclick=()=>{ S[subtab]=S[subtab].filter(x=>x.id!==id); hideScrim(); render(); save(); };
 }
@@ -7772,7 +7774,7 @@ function grantGear(g){
   if(RARITY.indexOf(g.rarity)>=RARITY.indexOf('epic')) gp.taskNoDrop=0;
   return g;
 }
-function gearUpgradeAllForHero(h){ if(!h||!h.gear) return {n:0}; ensureGearLevels(h); var n=0,guard=0; SLOTS.forEach(function(slot){ var g=h.gear[slot]; if(!g) return; while(g.level<gearMaxLvl(g)){ var c=gearCostOf(g); if(S.gold<c.gold||S.dust<c.dust) break; S.gold-=c.gold; S.dust-=c.dust; g.level++; n++; if(++guard>50000) break; } h.gearLevels[slot]=Math.max(h.gearLevels[slot]||0,g.level); }); return {n:n}; }
+function gearUpgradeAllForHero(h){ if(!h||!h.gear) return {n:0,promos:0}; ensureGearLevels(h); var n=0,promos=0,guard=0; SLOTS.forEach(function(slot){ var g=h.gear[slot]; if(!g) return; while(guard++<50000){ if(g.level<gearMaxLvl(g)){ var c=gearCostOf(g); if(S.gold<c.gold||S.dust<c.dust) break; S.gold-=c.gold; S.dust-=c.dust; g.level++; n++; } else { var p=PROMO[g.rarity]; if(!p) break; if((S.dust||0)<p.dust||(S.stones||0)<p.stones||(S.gold||0)<p.gold) break; S.dust-=p.dust; S.stones-=p.stones; S.gold-=p.gold; g.rarity=p.to; promos++; } } h.gearLevels[slot]=Math.max(h.gearLevels[slot]||0,g.level); }); return {n:n,promos:promos}; }
 function openGearSheet(heroId){
   lqInjectGearExcitement();
   const h=S.heroes.find(x=>x.id===heroId); if(!h) return;
@@ -7817,7 +7819,7 @@ function openGearSheet(heroId){
     const ab=document.getElementById('g_autobest'); if(ab) ab.onclick=()=>{ const r=autoEquipBestGear(h); toast(r.changed?('Auto-equipped '+r.changed+' slot'+(r.changed===1?'':'s')+' · +'+Math.max(0,r.after-r.before)+' gear score'):'Best gear already equipped'); renderHUD(); gearRender(); save(); };
     const ua=document.getElementById('g_unequipall'); if(ua) ua.onclick=()=>{ const n=unequipAllGear(h); toast(n?('Unequipped '+n+' item'+(n===1?'':'s')+' to inventory'):'No gear equipped'); renderHUD(); gearRender(); save(); };
     sheet.querySelectorAll('[data-pick]').forEach(el=>el.onclick=()=>{ pickSlot=el.dataset.pick; gearRender(); });
-    {const upall=document.getElementById('g_upall'); if(upall) upall.onclick=()=>{ const r=gearUpgradeAllForHero(h); toast(r.n?('Upgraded '+r.n+' level'+(r.n===1?'':'s')+' across gear'):'Maxed or not enough Gold/Dust'); renderHUD(); gearRender(); saveSoon(); };}
+    {const upall=document.getElementById('g_upall'); if(upall) upall.onclick=()=>{ const r=gearUpgradeAllForHero(h); toast((r.n||r.promos)?('Upgraded '+r.n+' level'+(r.n===1?'':'s')+(r.promos?' \u00b7 '+r.promos+' promotion'+(r.promos===1?'':'s'):'')+' across gear'):'Maxed (Lv40) or not enough Gold/Dust/Stones'); renderHUD(); gearRender(); saveSoon(); };}
     sheet.querySelectorAll('[data-up]').forEach(el=>el.onclick=()=>{ const slot=el.dataset.up,g=h.gear[slot],c=gearCostOf(g); if(g.level>=gearMaxLvl(g)){toast('Maxed — promote it');return;} if(S.gold<c.gold||S.dust<c.dust){toast('Not enough Gold/Dust');return;} S.gold-=c.gold; S.dust-=c.dust; g.level++; ensureGearLevels(h); h.gearLevels[slot]=Math.max(h.gearLevels[slot]||0,g.level); renderHUD(); gearRender(); saveSoon(); });
     sheet.querySelectorAll('[data-promo]').forEach(el=>el.onclick=()=>{ const slot=el.dataset.promo,g=h.gear[slot],p=PROMO[g.rarity]; if(!p){toast('Top rarity');return;} if(g.level<gearMaxLvl(g)){toast('Max the level first');return;} if(!canPromote(g)){toast('Need '+p.dust+'❖ '+p.stones+'◇ '+p.gold+'⦿');return;} S.dust-=p.dust; S.stones-=p.stones; S.gold-=p.gold; g.rarity=p.to; toast('Promoted to '+cap(p.to)+'!'); renderHUD(); gearRender(); save(); });
     sheet.querySelectorAll('[data-equip]').forEach(el=>el.onclick=()=>{ const it=(S.inventory||[]).find(x=>x.id===el.dataset.equip); if(!it)return; if(h.gear[pickSlot]) S.inventory.push(h.gear[pickSlot]); S.inventory=S.inventory.filter(x=>x.id!==it.id); ensureGearLevels(h); const _wm=Math.max(h.gearLevels[pickSlot]||0,it.level||0); it.level=Math.min(gearMaxLvl(it),_wm); h.gearLevels[pickSlot]=Math.max(_wm,it.level); h.gear[pickSlot]=it; pickSlot=null; renderHUD(); gearRender(); save(); });
