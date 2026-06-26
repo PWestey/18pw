@@ -2668,7 +2668,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.124.0-gear-where-to-farm';
+const APP_BUILD='v2.125.0-home-random-growth-fix';
 const EXPECTED_ROSTER_COUNT=377;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -8109,7 +8109,7 @@ function injectLifeBaseVisualStylesV148(){
     .roomNodeV148 .rHint{position:relative;display:inline-flex;margin-top:7px;border-radius:999px;border:1px solid color-mix(in srgb,var(--roomColor,#8bd0ff) 38%,var(--line));background:#0007;color:var(--ink);padding:3px 7px;font-size:9px;font-weight:1000;text-transform:uppercase;letter-spacing:.4px}
     .domainFocusV148{display:grid;grid-template-columns:1.2fr .8fr;gap:9px;margin:12px 0 14px}.domainFocusV148 .focusCard{border-radius:16px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),color-mix(in srgb,var(--panel2) 75%,#050811));padding:12px;box-shadow:0 12px 28px rgba(0,0,0,.22)}.domainFocusV148 .focusCard b{display:block;font-family:Orbitron;font-size:12px;margin-bottom:5px}.domainFocusV148 .focusCard p{margin:0;color:var(--muted);font-size:12px;font-weight:800;line-height:1.35}.domainFocusV148 .focusCard .ask{color:var(--gold);margin-top:8px;font-weight:1000;font-size:12px}
     .growthModeGrid.v148{margin-top:2px}.growthQuickV148{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 13px}.growthQuickV148 button{border:1px solid var(--line);border-radius:14px;padding:11px;background:var(--panel2);color:var(--ink);text-align:left}.growthQuickV148 b{display:block;font-family:Orbitron;font-size:11px}.growthQuickV148 span{display:block;color:var(--muted);font-size:10px;font-weight:850;margin-top:2px;line-height:1.2}
-    @media(max-width:520px){.growthSanctuaryV148 p{max-width:100%}.growthSanctuaryV148 .gsvTop{display:block}.growthSanctuaryV148 .focusOrb{position:absolute;right:12px;top:12px;min-width:68px;min-height:68px;border-radius:18px}.growthSanctuaryV148 .focusOrb b{font-size:20px}.sanctuaryMapV148{grid-template-columns:repeat(2,minmax(0,1fr))}.roomNodeV148{min-height:112px}.domainFocusV148{grid-template-columns:1fr}.growthQuickV148{grid-template-columns:1fr}}
+    @media(max-width:520px){.growthSanctuaryV148 p{max-width:100%}.growthSanctuaryV148 .gsvTop{display:block}.growthSanctuaryV148 .gsvTop>div:first-child{padding-right:84px}.growthSanctuaryV148 .focusOrb{position:absolute;right:12px;top:12px;min-width:68px;min-height:68px;border-radius:18px}.growthSanctuaryV148 .focusOrb b{font-size:20px}.sanctuaryMapV148{grid-template-columns:repeat(2,minmax(0,1fr))}.roomNodeV148{min-height:112px}.domainFocusV148{grid-template-columns:1fr}.growthQuickV148{grid-template-columns:1fr}}
   `;
   document.head.appendChild(st);
 }
@@ -12183,8 +12183,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
 (function(){
   function esc2(x){ try{ return (typeof esc==='function')?esc(x):String(x==null?'':x); }catch(e){ return String(x==null?'':x); } }
   function ofHomeHTML(){
-    var fh=null; try{ fh=(typeof featuredHero==='function')?featuredHero():null; }catch(e){}
-    if(!fh){ try{ fh=(S.heroes||[]).filter(function(h){return h&&h.owned;}).sort(function(a,b){return powerOf(b)-powerOf(a);})[0]||null; }catch(e){} }
+    var fh=null; try{ var _ow=(S.heroes||[]).filter(function(h){return h&&h.owned;}); fh=_ow.length?_ow[Math.floor(Math.random()*_ow.length)]:null; }catch(e){}
     var name=fh?esc2(fh.name):'Your Fellowship';
     var color=(fh&&fh.color)||'#36e0e6';
     var face=fh?(fh.img?'<img src="'+esc2(fh.img)+'" alt="">':esc2((typeof initials==='function')?initials(fh.name):'?')):'?';
