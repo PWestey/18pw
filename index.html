@@ -2673,7 +2673,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.138.0-daily-rift-trials';
+const APP_BUILD='v2.139.0-oath-rift-wartable';
 const EXPECTED_ROSTER_COUNT=379;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2956,12 +2956,16 @@ let S=null, view='home', subtab='dailies', tick=null, ambient=null, awayReport=n
 
 async function load(){
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
-  let raw=null, recovered=false;
+  let raw=null, recovered=false, freshFallback=false;
   try{ raw=await Store.get(KEY); }catch(e){ raw=null; }
   if(raw==null){ try{ const bk=await Store.get(BAKKEY); if(bk){ const o=JSON.parse(bk); if(o&&o.data){ raw=o.data; recovered=true; } } }catch(e){} }
   if(raw==null){ try{ const ls=localStorage.getItem(KEY); if(ls){ raw=ls; recovered=true; } }catch(e){} }
   const freshStart=(raw==null);
-  S=raw?JSON.parse(raw):seed();
+  if(raw){ try{ S=JSON.parse(raw); }catch(perr){ console.error('Primary save unreadable — recovering from backup',perr); S=null;
+      try{ const bk=await Store.get(BAKKEY); if(bk){ const o=JSON.parse(bk); if(o&&o.data) S=JSON.parse(o.data); } }catch(e2){}
+      if(!S){ try{ const ls=localStorage.getItem(KEY); if(ls) S=JSON.parse(ls); }catch(e3){} }
+      if(!S){ S=seed(); recovered=false; freshFallback=true; } else { recovered=true; } } }
+    else { S=seed(); }
   migrate();
   applyTuneOverrides();
   recalcCollection();
@@ -2970,6 +2974,7 @@ async function load(){
   if(!freshStart) save();
   startTicker();
   if(recovered){ try{ setTimeout(function(){ if(typeof toast==='function') toast('\u2705 Recovered your save from backup'); },900); }catch(e){} }
+  if(freshFallback){ try{ setTimeout(function(){ if(typeof toast==='function') toast('\u26a0\ufe0f Save was unreadable \u2014 check Settings backups'); },1100); }catch(e){} }
   if(awayReport) showAway();
   if(graceReport){ const g=graceReport; graceReport=null; setTimeout(()=>toast('🕊️ Grace Day used — your streak'+(g.saved>1?'s are':' is')+' safe. Welcome back.'), awayReport?1800:900); }
   if(albumMsgs&&albumMsgs.length) setTimeout(()=>toast(albumMsgs.join(' · ')), awayReport?1200:600);
@@ -3543,9 +3548,13 @@ const RIFT_MILESTONES=[
 function ensureRift(){ const day=periodKey('daily'); if(!S.rift||typeof S.rift!=='object') S.rift={day:day,best:{},bestScore:{},run:null,claimedMs:{},totalRuns:0};
   const R=S.rift; if(!R.best)R.best={}; if(!R.bestScore)R.bestScore={}; if(!R.claimedMs)R.claimedMs={};
   if(R.day!==day){ R.day=day; R.run=null; R.claimedMs={}; } return R; }
-function riftTodayElement(){ const d=new Date().getDay(); const k=RIFT_ROTATION[d]||'Open'; return {key:k,label:k+' Rift',all:(k==='Chaos'||k==='Open')}; }
+const RIFT_DOMAINS=['faith','marriage','fatherhood','fitness','work','home','discipline','hobbies'];
+function riftWeeklyDomain(){ var wk=(typeof weekHash==='function'?weekHash():0); var n=RIFT_DOMAINS.length; var i=((wk%n)+n)%n; return RIFT_DOMAINS[i]; }
+function riftTodayElement(){ const d=new Date().getDay();
+  if(d===0){ const dk=riftWeeklyDomain(); const short=((typeof DKEY!=='undefined'&&DKEY[dk]&&DKEY[dk].label)||dk); return {key:'oath_'+dk,label:short+' Oath Rift',all:false,mode:'domain',domain:dk,short:short}; }
+  const k=RIFT_ROTATION[d]||'Open'; return {key:k,label:k+' Rift',all:(k==='Chaos'||k==='Open'),mode:(k==='Chaos'||k==='Open')?'open':'element',short:k}; }
 function riftHeroElement(h){ return (h&&h.elementType)||(typeof conqElement==='function'?conqElement(h):null); }
-function riftEligibleAll(){ const t=riftTodayElement(); const owned=(S.heroes||[]).filter(h=>h&&h.owned); return t.all?owned:owned.filter(h=>riftHeroElement(h)===t.key); }
+function riftEligibleAll(){ const t=riftTodayElement(); const owned=(S.heroes||[]).filter(h=>h&&h.owned); if(t.mode==='domain'){ return owned.filter(h=>Array.isArray(h.aff)&&h.aff.includes(t.domain)); } return t.all?owned:owned.filter(h=>riftHeroElement(h)===t.key); }
 function riftEligible(){ const R=ensureRift(); const ex=(R.run&&R.run.exhausted)||{}; return riftEligibleAll().filter(h=>!ex[h.id]); }
 function riftBuildSquad(){ return riftEligible().slice().sort((a,b)=>powerOf(b)-powerOf(a)).slice(0,RIFT_TUNE.squadSize).map(h=>h.id); }
 function riftDailiesDone(){ try{ return (S.dailies||[]).filter(d=>d&&d.done).length; }catch(e){ return 0; } }
@@ -3601,7 +3610,9 @@ function riftApplyBlessing(key){ const R=ensureRift().run; if(!R||!R.alive) retu
   else if(key==='overcharge'){ R.atkMult*=1.40; R.hpMult*=0.80; }
   R.pendingBless=null; startRiftBattle(); return {ok:true}; }
 function riftApplyReward(r){ try{ siegeApplyReward({gold:0,dust:r.dust||0,cores:r.cores||0,cry:r.cry||0}); }catch(e){} if(r.stones) S.stones=(S.stones||0)+r.stones; }
-function riftCheckMilestone(clearedStage){ const R=ensureRift(); let got=null; RIFT_MILESTONES.forEach(m=>{ if(clearedStage>=m.s && !R.claimedMs[m.s]){ R.claimedMs[m.s]=1; riftApplyReward(m.r); got=m; } }); return got; }
+function riftCheckMilestone(clearedStage){ const R=ensureRift(); let got=null; RIFT_MILESTONES.forEach(m=>{ if(clearedStage>=m.s && !R.claimedMs[m.s]){ R.claimedMs[m.s]=1; riftApplyReward(m.r);
+    try{ const run=R.run; if(run && typeof run.element==='string' && run.element.indexOf('oath_')===0 && typeof gainBond==='function'){ gainBond(run.element.slice(5), Math.max(3,Math.round(m.s*1.4))); } }catch(e){}
+    got=m; } }); return got; }
 function riftDeployNext(){ const R=ensureRift().run; if(!R||!R.alive) return false; const next=riftBuildSquad(); if(next.length<1) return false;
   const heroes=next.map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean); if(!heroes.length) return false;
   R.squad=heroes.map(h=>h.id); R.hp={}; R.dead={};
@@ -3669,18 +3680,18 @@ function renderRift(v){ injectExpStyles(); injectGauntletStyles(); injectRiftSty
   const claimed=ensureRift().claimedMs||{};
   const msChips=RIFT_MILESTONES.map(m=>'<span class="riftMsChip'+(claimed[m.s]?' got':'')+'">St '+m.s+'</span>').join('');
   const fieldable=squad.length>=2;
-  const purity=t.all?'<b>Open</b> \u2014 any element, but spread wide for diversity score.':('Only <b>'+t.key+'</b> heroes can enter today.');
+  const purity=(t.mode==='domain')?('Only heroes devoted to <b>'+esc(t.short)+'</b> can answer this oath \u2014 the part of your roster tied to that part of your life.'):(t.all?'<b>Open</b> \u2014 any element, but spread wide for diversity score.':('Only <b>'+t.key+'</b> heroes can enter today.'));
   v.innerHTML='<div class="modesWrap"><div class="head"><h2>Daily Rift</h2><button class="backBtn" id="riftBack">\u2039 Modes</button></div>'+
     '<div class="stagecard" style="--rc:'+col+'">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px"><span class="riftBadge">'+t.label+'</span><span style="font-size:11px;color:var(--muted);font-weight:800">new element tomorrow</span></div>'+
-      '<p style="color:var(--muted);font-size:12px;font-weight:700;line-height:1.45;margin:0 0 8px">'+purity+' Squads fight stage after stage carrying their wounds \u2014 no healing. When a squad falls it is spent for the day, and your next-best '+RIFT_TUNE.squadSize+' step up. Push until your '+(t.all?'roster':t.key+' roster')+' is spent. Boss every '+RIFT_TUNE.bossEvery+', a blessing every '+RIFT_TUNE.blessEvery+'.</p>'+
+      '<p style="color:var(--muted);font-size:12px;font-weight:700;line-height:1.45;margin:0 0 8px">'+purity+' Squads fight stage after stage carrying their wounds \u2014 no healing. When a squad falls it is spent for the day, and your next-best '+RIFT_TUNE.squadSize+' step up. Push until your '+(t.all?'roster':(esc(t.short)+' roster'))+' is spent. Boss every '+RIFT_TUNE.bossEvery+', a blessing every '+RIFT_TUNE.blessEvery+'.</p>'+
       '<div class="expMeta"><div class="sm"><b>'+eligible.length+'</b><span>eligible</span></div><div class="sm"><b>'+best+'</b><span>best stage</span></div><div class="sm"><b>'+v168Num(bestSc)+'</b><span>best score</span></div></div>'+
       '<div class="riftHabit">'+(dailies>0?('Today\u2019s habits power the Rift: <b>+'+atkPct+'%</b> squad ATK \u00b7 <b>\u00d7'+scoreMult+'</b> score.'):'Complete today\u2019s dailies to power your Rift squads (up to +'+Math.round(RIFT_TUNE.habitAtkMax*100)+'% ATK and a score boost).')+'</div>'+
       '<div class="riftMs">'+msChips+'</div>'+
     '</div>'+
     '<div class="expSection">Lead squad ('+squad.length+')</div>'+
     '<div class="stagecard"><div class="expPorts">'+ports+'</div>'+
-      (fieldable?'<button class="expField" id="riftStart" style="margin-top:8px">Enter the '+t.key+' Rift</button>':'<button class="expField out" disabled>Need at least 2 eligible heroes</button>')+
+      (fieldable?'<button class="expField" id="riftStart" style="margin-top:8px">Enter the '+esc(t.label)+'</button>':'<button class="expField out" disabled>Need at least 2 eligible heroes</button>')+
     '</div>'+
   '</div>';
   const st=document.getElementById('riftStart'); if(st) st.onclick=()=>{ const res=riftStartRun(); if(!res||!res.ok){ try{toast('Need at least 2 eligible heroes today');}catch(e){} } };
@@ -3744,7 +3755,7 @@ function renderModes(v){ injectExpStyles();
     card(cicon('expeditions',40),'Expeditions','Idle · send teams, collect over time',expStatus,'exp','expeditions',false)+
     card(cicon('conquest',40),'Conquest','Boss ladder · modifiers force variety',(ensureConquest().tier?'Conquered '+ensureConquest().tier+' · '+v168Num(ensureConquest().tokens||0)+' ⬡':'Modifier boss ladder'),'cq','conquest',false)+
     card(cicon('gauntlet',40),'Endless Gauntlet','Roguelike climb · draft boons',(ensureGauntlet().best?'Best depth '+ensureGauntlet().best+' · '+v168Num(ensureGauntlet().shards||0)+' ✷':'One run, climb as far as you can'),'gaunt','gauntlet',false)+
-    (function(){ try{ var t=riftTodayElement(); var rb=ensureRift(); var st=(rb.best&&rb.best[t.key])||0; return card('🌀','Daily Rift','Daily · '+t.key+'-locked survival ladder',(st?(t.key+' best · Stage '+st):'Today: '+t.label),'rift','rift',false); }catch(e){ return ''; } })()+
+    (function(){ try{ var t=riftTodayElement(); var rb=ensureRift(); var st=(rb.best&&rb.best[t.key])||0; return card('🌀','Daily Rift','Daily · '+t.short+'-locked survival ladder',(st?(t.short+' best · Stage '+st):'Today: '+t.label),'rift','rift',false); }catch(e){ return ''; } })()+
 
     card(cicon('arena',40),'Rival Arena','Climb vs themed hero teams',(ensureArena().rank?arenaTierName(ensureArena().rank)+' · Rank '+ensureArena().rank:'Climb the ladder of rivals'),'arena','arena',false)+
     card(cicon('bonds',40),'Bonds','Relationships that grow with your habits',(bondStats().bonded?bondStats().bonded+' heroes bonded':'No combat — pure connection'),'bonds','bonds',false)+
@@ -10458,6 +10469,7 @@ function battleModesPanelHTML(){ injectExpStyles(); injectBmPanelStyles();
   const expStatus=activeN?(activeN+' running'+(ready?' · '+ready+' ready ✓':'')):'Field teams for idle rewards';
   const cqS=(ensureConquest().tier?'Conquered '+ensureConquest().tier+' · '+v168Num(ensureConquest().tokens||0)+' ⬡':'Modifier boss ladder');
   const gaS=(ensureGauntlet().best?'Best depth '+ensureGauntlet().best+' · '+v168Num(ensureGauntlet().shards||0)+' ✷':'One run, climb as far as you can');
+  const riS=(function(){ try{ var t=riftTodayElement(); var rb=ensureRift(); var st=(rb.best&&rb.best[t.key])||0; return st?(t.key.replace('oath_','')+' best · Stage '+st):('Today: '+t.label); }catch(e){ return 'Daily element trial'; } })();
   const arS=(ensureArena().rank?arenaTierName(ensureArena().rank)+' · Rank '+ensureArena().rank:'Climb the ladder of rivals');
   const boS=(bondStats().bonded?bondStats().bonded+' heroes bonded':'No combat — pure connection');
   const raidIcon=(typeof cicon==='function')?cicon('raidboss',30):'☠';
@@ -10468,6 +10480,7 @@ function battleModesPanelHTML(){ injectExpStyles(); injectBmPanelStyles();
     node((typeof cicon==='function'&&cicon('expeditions',34))||'\u26f0\ufe0f','Expeditions',expStatus,'expeditions')+
     node((typeof cicon==='function'&&cicon('conquest',34))||'\ud83d\udc79','Conquest',cqS,'conquest')+
     node((typeof cicon==='function'&&cicon('gauntlet',34))||'\ud83d\uddfc','Endless Gauntlet',gaS,'gauntlet')+
+    node('\ud83c\udf00','Daily Rift',riS,'rift')+
     node((typeof cicon==='function'&&cicon('arena',34))||'\ud83c\udfdf\ufe0f','Rival Arena',arS,'arena')+
     node((typeof cicon==='function'&&cicon('bonds',34))||'\ud83d\udc9e','Bonds',boS,'bonds')+
   '</div></div>';
@@ -10479,6 +10492,7 @@ function wireBattleModesPanel(root){ if(!root||!root.querySelectorAll) return; r
   else if(m==='conquest'){ navTo('conquest'); }
   else if(m==='gauntlet'){ navTo('gauntlet'); }
   else if(m==='arena'){ navTo('arena'); }
+  else if(m==='rift'){ navTo('rift'); }
   else if(m==='bonds'){ navTo('bonds'); }
 }; }); }
 const __bmp_renderCampaign = (typeof renderCampaign==='function')?renderCampaign:null;
@@ -11348,7 +11362,7 @@ function v170GoToTask(it){
   navTo('quests');
   setTimeout(()=>{ try{ const el=document.querySelector('[data-id="'+(it&&it.id?it.id:'')+'"]'); if(el){ const card=el.closest('.card')||el; card.scrollIntoView({behavior:'smooth',block:'center'}); card.classList.add('lqShimmer'); setTimeout(()=>card.classList.remove('lqShimmer'),1200); } }catch(e){} },80);
 }
-function v170RenderHome(v){
+function v170RenderHome(v){ if(typeof S==='undefined'||!S) return;
   v170InjectStyles();
   recalcCollection();
   const dailies=(S.dailies||[]).filter(d=>d.freq==='daily');
@@ -11529,6 +11543,7 @@ function v171HomeHeroes(){
   return hs.slice(0,3);
 }
 function v171RenderHome(v){
+  if(typeof S==='undefined'||!S) return;
   v171InjectStyles(); v171EnsureSettings(); recalcCollection();
   const dailies=(S.dailies||[]).filter(d=>d.freq==='daily'), doneN=dailies.filter(d=>d.done).length, totN=dailies.length, pct=totN?Math.round(doneN/totN*100):0;
   const next=suggestNext(), k=(next&&domainOf(next))||'discipline', d=DKEY[k]||DKEY.discipline, win=(typeof v170ClosestWin==='function'?v170ClosestWin():{icon:'◆',title:'Closest Win',tag:'Ready'});
@@ -12889,7 +12904,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     '.rmHomeCard .rmTxt span{font-size:11.5px;color:var(--muted);font-weight:700}';
     document.head.appendChild(st); }
 
-  function rosterMgmtAppendCard(v){ if(!v) return; rmInjectStyles(); if(v.querySelector('.rmHomeCard')) return;
+  function rosterMgmtAppendCard(v){ if(!v) return; if(typeof S==='undefined'||!S) return; rmInjectStyles(); if(v.querySelector('.rmHomeCard')) return;
     var ready=rmRankReady();
     var card=document.createElement('button'); card.className='rmHomeCard';
     card.innerHTML='<div class="rmIcon">⚔</div><div class="rmTxt"><b>Roster Management</b><span>Bulk rank-up, gear upgrade &amp; equip'+(ready?(' · '+ready+' ready to rank'):'')+'</span></div>';
