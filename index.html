@@ -2673,7 +2673,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.143.1-github-pages-index';
+const APP_BUILD='v2.144.0-gauntlet8-healthcheck';
 const EXPECTED_ROSTER_COUNT=379;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3778,7 +3778,7 @@ function homeInjectModes(v){ try{ if(!v||v.querySelector('.homeModesCard')) retu
 
 /* ===== Endless Gauntlet — roguelike climb engine (v2.30.0) ===== */
 let battleGauntlet=null;
-const GAUNTLET_TUNE={ esc:1.165, baseFactor:0.115, bossEvery:5, squadSize:6, fatigueMult:0.75, freshBonus:1.25, usedTwice:0.65, lockAt:3 };
+const GAUNTLET_TUNE={ esc:1.165, baseFactor:0.115, bossEvery:5, squadSize:8, fatigueMult:0.75, freshBonus:1.25, usedTwice:0.65, lockAt:3 };
 const GAUNTLET_BOONS=[
   /* common — reliable stabilizers */
   {key:'heal',name:'Field Medic',desc:'Heal living heroes 30% HP',icon:'✚',tier:'common',w:12},
