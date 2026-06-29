@@ -2673,7 +2673,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.145.2-alive-optimized';
+const APP_BUILD='v2.149.0-navigation-shell';
 const EXPECTED_ROSTER_COUNT=379;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3958,7 +3958,7 @@ function renderGauntlet(v){ injectExpStyles(); injectGauntletStyles(); const G=e
 
 /* ===== Rival Arena — themed ladder engine (v2.32.0) ===== */
 let battleArena=null;
-const ARENA_TUNE={ growth:1.105, anchorFactor:0.45, tierSize:10, bossEvery:5, teamSize:6, outshine:0.75 };
+const ARENA_TUNE={ growth:1.105, anchorFactor:0.45, tierSize:10, bossEvery:5, teamSize:8, outshine:0.75 };
 const ARENA_TEAM_NAMES={
   "Marvel":"Earth's Mightiest","Star Wars":"The Jedi Order","Harry Potter":"The Order of the Phoenix",
   "Pokemon":"The Elite Four","The Witcher":"The Wolf School","World of Warcraft":"Champions of Azeroth",
@@ -6672,7 +6672,7 @@ async function showFieldTestMode(){
 function v1ChecklistItems(autoBackupInfo){
   const checks=healthChecks(), sum=healthSummary(checks), bs=backupSummary();
   const expectedRoster=(typeof EXPECTED_ROSTER_COUNT==='number'?EXPECTED_ROSTER_COUNT:361);
-  const saveOk=(S.saveVersion===SAVE_VERSION), buildOk=(APP_BUILD&&APP_BUILD.startsWith('v2.12.10-clash-clean'));
+  const saveOk=(S.saveVersion===SAVE_VERSION), buildOk=(typeof APP_BUILD==='string'&&/^v2\./.test(APP_BUILD));
   const rosterOk=(S.heroes||[]).length===expectedRoster;
   const systemsOk=sum.bad===0;
   const autoOk=!!autoBackupInfo;
@@ -10589,7 +10589,7 @@ function lq64StabilitySweep(){
 function lq64Check(label,ok,detail,level){ return {label,ok:!!ok,detail:detail||'',level:level||(!ok?'bad':'good')}; }
 function lq64RegressionChecks(){
   const rows=[]; let validIds=lq64ValidHeroIds();
-  rows.push(lq64Check('Build label',/^v2\.12\.10-clash-clean/.test(APP_BUILD),APP_BUILD));
+  rows.push(lq64Check('Build label',typeof APP_BUILD==='string'&&/^v2\./.test(APP_BUILD),APP_BUILD));
   rows.push(lq64Check('Primary app containers',!!document.getElementById('view')&&!!document.getElementById('hud')&&!!document.getElementById('toast'),'view / HUD / toast present'));
   rows.push(lq64Check('Five-tab navigation',[...document.querySelectorAll('.nav button')].map(b=>b.dataset.view).filter(Boolean).length>=5,'Home / Quests / Heroes / Battles / Growth'));
   rows.push(lq64Check('Core render functions',['renderHome','renderTasks','renderRoster','renderCampaign','renderGrowth'].every(fn=>typeof window[fn]==='function'), 'major screens callable'));
@@ -12563,7 +12563,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function install(){
     if(typeof renderHome!=='function' || renderHome.__ofHome){ return; }
     var _prev=renderHome;
-    renderHome=function(v){ try{ _prev(v); }catch(e){} try{ if(v){ v.innerHTML=ofHomeHTML(); ofBindHome(v); } }catch(e){} };
+    renderHome=function(v){ try{ if(v){ v.innerHTML=ofHomeHTML(); ofBindHome(v); } }catch(e){ try{ _prev(v); }catch(_e){} } };
     renderHome.__ofHome=true;
     try{ if(typeof S!=='undefined' && S && typeof view!=='undefined' && view==='home'){ var v=document.getElementById('view'); if(v) renderHome(v); } }catch(e){}
   }
@@ -14277,6 +14277,762 @@ function rerender(){
       render.__of2145Stable=true;
     }
   }catch(e){}
+})();
+/* ===== v2.146.0 Missed Daily Flow ===== */
+(function(){
+  if(window.__of2146MissedDailyFlow) return;
+  window.__of2146MissedDailyFlow=true;
+
+  function of2146Esc(x){
+    if(typeof esc==='function'){ try{return esc(x);}catch(e){} }
+    return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+  }
+  function of2146DayKey(){
+    try{ if(typeof periodKey==='function') return periodKey('daily'); }catch(e){}
+    try{ if(typeof dateStamp==='function') return dateStamp(); }catch(e){}
+    return new Date().toISOString().slice(0,10);
+  }
+  function of2146State(){
+    var key=of2146DayKey();
+    if(typeof S==='undefined'||!S) return {day:key,items:{}};
+    if(!S.dailyMisses||typeof S.dailyMisses!=='object'||S.dailyMisses.day!==key) S.dailyMisses={day:key,items:{}};
+    if(!S.dailyMisses.items||typeof S.dailyMisses.items!=='object') S.dailyMisses.items={};
+    return S.dailyMisses;
+  }
+  function of2146DailyById(id){ try{return (S.dailies||[]).find(function(d){return d&&d.id===id;})||null;}catch(e){return null;} }
+  function of2146IsDailyId(id){ return !!of2146DailyById(id); }
+  function of2146IsMissed(id){ var st=of2146State(); return !!(id&&st.items&&st.items[id]); }
+  function of2146Misses(){ var st=of2146State(); return Object.keys(st.items||{}).map(function(k){return st.items[k];}).filter(Boolean); }
+  function of2146DailyOpen(d){
+    if(!d||(d.freq||'daily')!=='daily'||d.done||of2146IsMissed(d.id)) return false;
+    try{ if(typeof taskActiveToday==='function'&&!taskActiveToday(d)) return false; }catch(e){}
+    return true;
+  }
+  function of2146DomainColor(d){
+    try{ var k=(typeof domainOf==='function'?domainOf(d):null)||d.domain; return (k&&DKEY&&DKEY[k])?DKEY[k].color:'#8bd0ff'; }catch(e){ return '#8bd0ff'; }
+  }
+  function of2146DomainLabel(d){
+    try{ var k=(typeof domainOf==='function'?domainOf(d):null)||d.domain; return (k&&DKEY&&DKEY[k])?DKEY[k].label:'Daily'; }catch(e){ return 'Daily'; }
+  }
+  function of2146InjectStyles(){
+    if(document.getElementById('of2146MissedDailyStyles')) return;
+    var st=document.createElement('style');
+    st.id='of2146MissedDailyStyles';
+    st.textContent=[
+      '.ofMissBtn{align-self:center;margin-left:6px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.045);color:#aebbd7;font-size:11px;font-weight:900;padding:8px 9px;min-width:68px;white-space:nowrap;}',
+      '.ofMissBtn:active{transform:translateY(1px) scale(.99)}',
+      '.ofMissSummary{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid color-mix(in srgb,#8bd0ff 28%,var(--line));border-radius:14px;background:linear-gradient(135deg,rgba(139,208,255,.095),rgba(255,255,255,.035));padding:11px 12px;margin:0 0 10px;}',
+      '.ofMissSummary b{display:block;color:var(--ink);font-size:13px;font-weight:1000}.ofMissSummary span{display:block;color:var(--muted);font-size:11px;font-weight:800;line-height:1.3;margin-top:2px}',
+      '.ofMissSummary button{border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--ink);font-size:11px;font-weight:1000;padding:8px 10px;white-space:nowrap}',
+      '.ofMissOverlay{position:fixed;inset:0;z-index:2147483605;display:grid;place-items:end center;background:rgba(2,5,12,.74);backdrop-filter:blur(5px);padding:16px;opacity:0;transition:opacity .15s ease;}',
+      '.ofMissOverlay.show{opacity:1}.ofMissSheet{width:min(520px,100%);max-height:88vh;overflow:auto;border:1px solid color-mix(in srgb,var(--missColor,#8bd0ff) 40%,var(--line));border-radius:22px;background:linear-gradient(180deg,rgba(14,21,36,.98),rgba(6,10,19,.99));box-shadow:0 -18px 60px rgba(0,0,0,.54),0 0 36px color-mix(in srgb,var(--missColor,#8bd0ff) 13%,transparent);padding:16px;}',
+      '.ofMissK{font-family:Orbitron,system-ui;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--missColor,#8bd0ff);font-weight:1000;margin-bottom:7px}.ofMissTitle{font-family:Orbitron,system-ui;font-size:22px;line-height:1.08;color:#fff;font-weight:1000;margin-bottom:5px}.ofMissSub{color:#aebbd7;font-size:12px;font-weight:800;line-height:1.35;margin-bottom:13px}',
+      '.ofMissTask{border:1px solid rgba(255,255,255,.11);border-left:3px solid var(--missColor,#8bd0ff);border-radius:13px;background:rgba(255,255,255,.04);padding:10px 11px;margin-bottom:12px}.ofMissTask b{display:block;color:#fff;font-size:13px;line-height:1.15}.ofMissTask span{display:block;color:var(--muted);font-size:11px;font-weight:850;margin-top:4px}',
+      '.ofMissLabel{display:block;color:var(--muted);font-size:10px;font-weight:1000;letter-spacing:.1em;text-transform:uppercase;margin:12px 0 7px}.ofMissReasons{display:flex;gap:7px;flex-wrap:wrap}.ofMissReason{border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.045);color:#dce6fb;font-size:12px;font-weight:900;padding:8px 10px}.ofMissReason.on{border-color:color-mix(in srgb,var(--missColor,#8bd0ff) 70%,#fff);background:color-mix(in srgb,var(--missColor,#8bd0ff) 18%,rgba(255,255,255,.04));color:#fff}',
+      '.ofMissInput{width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.14);border-radius:13px;background:rgba(0,0,0,.28);color:#fff;font:inherit;font-size:13px;font-weight:800;padding:11px 12px;outline:none}.ofMissInput:focus{border-color:color-mix(in srgb,var(--missColor,#8bd0ff) 62%,#fff)}',
+      '.ofMissActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.ofMissActions button{border-radius:13px;padding:12px 10px;font-family:Orbitron,system-ui;font-size:12px;font-weight:1000}.ofMissActions .clear{border:0;background:linear-gradient(135deg,var(--missColor,#8bd0ff),#37d67a);color:#06111f}.ofMissActions .ghost{border:1px solid var(--line);background:var(--panel2);color:var(--ink)}',
+      '.ofMissList{display:grid;gap:8px;margin-top:10px}.ofMissRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid rgba(255,255,255,.11);border-radius:13px;background:rgba(255,255,255,.04);padding:10px}.ofMissRow b{display:block;color:#fff;font-size:13px}.ofMissRow span{display:block;color:var(--muted);font-size:11px;font-weight:800;line-height:1.25;margin-top:3px}.ofMissRow button{border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--ink);font-size:11px;font-weight:1000;padding:8px 10px}',
+      '@media(min-width:700px){.ofMissOverlay{place-items:center}.ofMissSheet{border-radius:22px}}',
+      '@media(max-width:420px){.ofMissActions{grid-template-columns:1fr}.ofMissBtn{min-width:60px;padding:7px 8px}.ofMissSummary{align-items:flex-start;flex-direction:column}.ofMissSummary button{width:100%}}'
+    ].join('');
+    document.head.appendChild(st);
+  }
+  function of2146Overlay(html,color){
+    of2146InjectStyles();
+    document.querySelectorAll('.ofMissOverlay').forEach(function(n){ try{n.remove();}catch(e){} });
+    var el=document.createElement('div');
+    el.className='ofMissOverlay';
+    el.innerHTML='<div class="ofMissSheet" style="--missColor:'+(color||'#8bd0ff')+'">'+html+'</div>';
+    el.addEventListener('click',function(ev){ if(ev.target===el) of2146CloseOverlay(el); });
+    document.body.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    return el;
+  }
+  function of2146CloseOverlay(el){
+    try{ (el||document.querySelector('.ofMissOverlay')).classList.remove('show'); setTimeout(function(){ try{(el||document.querySelector('.ofMissOverlay')).remove();}catch(e){} },160); }catch(e){}
+  }
+  function of2146MarkMissed(id,reason,note){
+    var d=of2146DailyById(id); if(!d) return;
+    var st=of2146State();
+    st.items[id]={id:id,title:d.title||'Daily',domain:(typeof domainOf==='function'?domainOf(d):null)||d.domain||null,diff:d.diff||'med',reason:reason||'Time passed',note:String(note||'').trim().slice(0,240),at:Date.now()};
+    try{
+      var n=st.items[id].note;
+      if(n&&typeof v151EnsureReview==='function'){
+        var r=v151EnsureReview();
+        if(r&&!r.tomorrowFocus) r.tomorrowFocus=n;
+        if(typeof v151TodayReview==='function') v151TodayReview().note='Tomorrow setup: '+n;
+      }
+    }catch(e){}
+    try{ if(typeof ftLog==='function') ftLog('missed-daily',(d.title||'Daily')+' missed: '+st.items[id].reason+(st.items[id].note?' | '+st.items[id].note:'')); }catch(e){}
+    try{ toast('Cleared for today. No rewards, no shame.'); }catch(e){}
+    try{ renderHUD(); }catch(e){}
+    try{ render(); }catch(e){}
+    try{ save(); }catch(e){}
+  }
+  function of2146UndoMissed(id){
+    var st=of2146State();
+    if(st.items&&st.items[id]) delete st.items[id];
+    try{ toast('Daily restored for today.'); }catch(e){}
+    try{ renderHUD(); }catch(e){}
+    try{ render(); }catch(e){}
+    try{ save(); }catch(e){}
+  }
+  function of2146OpenMiss(id){
+    var d=of2146DailyById(id); if(!d) return;
+    var color=of2146DomainColor(d), reasons=['Time passed','Forgot','Chose rest','Too big today','Not relevant today'], selected=reasons[0];
+    var html='<div class="ofMissK">'+of2146Esc(of2146DomainLabel(d))+' daily</div>'+
+      '<div class="ofMissTitle">Clear this for today?</div>'+
+      '<div class="ofMissSub">This hides the daily until tomorrow. It does not give rewards, streak credit, weekly points, or punishment.</div>'+
+      '<div class="ofMissTask"><b>'+of2146Esc(d.title||'Daily')+'</b><span>'+of2146Esc((d.diff||'med').toUpperCase())+' · No rewards will be granted</span></div>'+
+      '<label class="ofMissLabel">What happened?</label><div class="ofMissReasons">'+reasons.map(function(r,i){return '<button type="button" class="ofMissReason '+(i===0?'on':'')+'" data-mreason="'+of2146Esc(r)+'">'+of2146Esc(r)+'</button>';}).join('')+'</div>'+
+      '<label class="ofMissLabel" for="ofMissNote">Tiny setup for tomorrow, optional</label><input id="ofMissNote" class="ofMissInput" maxlength="180" placeholder="Example: Put Bible on desk, move workout earlier, make task smaller">'+
+      '<div class="ofMissActions"><button type="button" class="clear" id="ofMissConfirm">Clear for today</button><button type="button" class="ghost" id="ofMissCancel">Keep visible</button></div>';
+    var el=of2146Overlay(html,color);
+    el.querySelectorAll('[data-mreason]').forEach(function(b){
+      b.onclick=function(){
+        selected=b.getAttribute('data-mreason')||selected;
+        el.querySelectorAll('[data-mreason]').forEach(function(x){x.classList.toggle('on',x===b);});
+      };
+    });
+    var cancel=el.querySelector('#ofMissCancel'); if(cancel) cancel.onclick=function(){ of2146CloseOverlay(el); };
+    var confirm=el.querySelector('#ofMissConfirm'); if(confirm) confirm.onclick=function(){ var note=(el.querySelector('#ofMissNote')||{}).value||''; of2146CloseOverlay(el); of2146MarkMissed(id,selected,note); };
+  }
+  function of2146OpenReview(){
+    var misses=of2146Misses();
+    if(!misses.length){ try{toast('No missed dailies today.');}catch(e){} return; }
+    var html='<div class="ofMissK">Today</div><div class="ofMissTitle">Missed dailies</div><div class="ofMissSub">These are hidden for today only. Restore one if you still want to complete it.</div><div class="ofMissList">'+
+      misses.map(function(m){
+        return '<div class="ofMissRow"><div><b>'+of2146Esc(m.title||'Daily')+'</b><span>'+of2146Esc(m.reason||'Missed')+(m.note?' · '+of2146Esc(m.note):'')+'</span></div><button type="button" data-mundo="'+of2146Esc(m.id)+'">Restore</button></div>';
+      }).join('')+'</div><div class="ofMissActions"><button type="button" class="ghost" id="ofMissReviewClose">Close</button></div>';
+    var el=of2146Overlay(html,'#8bd0ff');
+    el.querySelectorAll('[data-mundo]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-mundo'); of2146CloseOverlay(el); of2146UndoMissed(id); }; });
+    var close=el.querySelector('#ofMissReviewClose'); if(close) close.onclick=function(){ of2146CloseOverlay(el); };
+  }
+  function of2146DecorateTasks(v){
+    try{
+      if(typeof S==='undefined'||!S||typeof subtab==='undefined'||subtab!=='dailies') return;
+      of2146InjectStyles();
+      var root=(v&&v.querySelector)?v:document, list=root.querySelector('#list')||document.getElementById('list');
+      if(!list) return;
+      var old=root.querySelector('.ofMissSummary'); if(old) old.remove();
+      Array.prototype.slice.call(list.querySelectorAll('.card')).forEach(function(card){
+        var body=card.querySelector('.body[data-id], [data-act="edit"][data-id]');
+        var id=body&&body.getAttribute('data-id'), d=id&&of2146DailyById(id);
+        if(!d||(d.freq||'daily')!=='daily') return;
+        if(of2146IsMissed(id)){ try{card.remove();}catch(e){} return; }
+        if(of2146DailyOpen(d)&&!card.querySelector('.ofMissBtn')){
+          var btn=document.createElement('button');
+          btn.type='button'; btn.className='ofMissBtn'; btn.textContent='Missed';
+          btn.onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); of2146OpenMiss(id); };
+          var chk=card.querySelector('.chk[data-act="daily"]');
+          if(chk&&chk.parentNode) chk.parentNode.insertBefore(btn,chk); else card.appendChild(btn);
+        }
+      });
+      var misses=of2146Misses();
+      if(misses.length&&list.parentNode){
+        var summary=document.createElement('div');
+        summary.className='ofMissSummary';
+        summary.innerHTML='<div><b>'+misses.length+' missed daily'+(misses.length===1?'':'ies')+' cleared</b><span>No rewards were granted. They will return tomorrow.</span></div><button type="button" id="ofMissReview">Review / Undo</button>';
+        list.parentNode.insertBefore(summary,list);
+        var rb=summary.querySelector('#ofMissReview'); if(rb) rb.onclick=of2146OpenReview;
+      }
+      if(!list.querySelector('.card')&&!list.querySelector('.empty')) list.innerHTML='<div class="empty">All active dailies are handled for today.<br>Review missed items or protect the win.</div>';
+    }catch(e){ try{console.warn('Missed daily decoration skipped',e);}catch(_e){} }
+  }
+  function of2146FirstOpen(){
+    try{
+      var arr=(typeof openActionItems==='function'?openActionItems():[]).slice();
+      if(typeof taskPriorityScore==='function') arr.sort(function(a,b){return taskPriorityScore(a)-taskPriorityScore(b);});
+      return arr[0]||null;
+    }catch(e){ return null; }
+  }
+  function of2146DecorateHome(v){
+    try{
+      var dailies=(S.dailies||[]).filter(function(d){return d&&(d.freq||'daily')==='daily'&&(typeof taskActiveToday!=='function'||taskActiveToday(d));});
+      var open=dailies.filter(of2146DailyOpen).length, missed=of2146Misses().length;
+      var cta=(v||document).querySelector('.ofHomeCTA small');
+      if(cta){
+        cta.textContent=open>0?(open+' vow'+(open===1?'':'s')+' waiting to become power.'):(missed>0?'Visible oaths handled. '+missed+' cleared without rewards.':'Today\'s oaths complete. Well done.');
+      }
+      var sub=(v||document).querySelector('.ofHomeStep:nth-child(2) .ofHomeStepSub');
+      if(sub&&missed>0) sub.textContent=sub.textContent+' · '+missed+' cleared';
+    }catch(e){}
+  }
+
+  try{
+    if(typeof renderTasks==='function'&&!renderTasks.__of2146Missed){
+      var __of2146_renderTasks=renderTasks;
+      renderTasks=function(v){ var ret=__of2146_renderTasks.apply(this,arguments); of2146DecorateTasks(v); return ret; };
+      renderTasks.__of2146Missed=true;
+    }
+  }catch(e){}
+  try{
+    if(typeof openActionItems==='function'&&!openActionItems.__of2146Missed){
+      var __of2146_openActionItems=openActionItems;
+      openActionItems=function(){
+        var out=(__of2146_openActionItems.apply(this,arguments)||[]).filter(function(it){
+          if(!it||!it.id||!of2146IsDailyId(it.id)) return true;
+          var d=of2146DailyById(it.id);
+          return of2146DailyOpen(d);
+        });
+        return out;
+      };
+      openActionItems.__of2146Missed=true;
+    }
+  }catch(e){}
+  try{
+    if(typeof suggestNext==='function'&&!suggestNext.__of2146Missed){
+      var __of2146_suggestNext=suggestNext;
+      suggestNext=function(){
+        var n=__of2146_suggestNext.apply(this,arguments);
+        if(n&&n.id&&of2146IsDailyId(n.id)&&!of2146DailyOpen(of2146DailyById(n.id))) return of2146FirstOpen();
+        return n;
+      };
+      suggestNext.__of2146Missed=true;
+    }
+  }catch(e){}
+  try{
+    if(typeof v151DailySnapshot==='function'&&!v151DailySnapshot.__of2146Missed){
+      var __of2146_v151DailySnapshot=v151DailySnapshot;
+      v151DailySnapshot=function(){
+        var s=__of2146_v151DailySnapshot.apply(this,arguments)||{};
+        var missed=of2146Misses();
+        s.missed=missed;
+        if(Array.isArray(s.open)) s.open=s.open.filter(function(d){return !of2146IsMissed(d&&d.id);});
+        if(s.next&&s.next.id&&of2146IsDailyId(s.next.id)&&!of2146DailyOpen(of2146DailyById(s.next.id))) s.next=of2146FirstOpen();
+        return s;
+      };
+      v151DailySnapshot.__of2146Missed=true;
+    }
+  }catch(e){}
+  try{
+    if(typeof v162HomeSnapshot==='function'&&!v162HomeSnapshot.__of2146Missed){
+      var __of2146_v162HomeSnapshot=v162HomeSnapshot;
+      v162HomeSnapshot=function(){
+        var s=__of2146_v162HomeSnapshot.apply(this,arguments)||{};
+        s.missed=of2146Misses();
+        if(s.next&&s.next.id&&of2146IsDailyId(s.next.id)&&!of2146DailyOpen(of2146DailyById(s.next.id))) s.next=of2146FirstOpen();
+        return s;
+      };
+      v162HomeSnapshot.__of2146Missed=true;
+    }
+  }catch(e){}
+  function of2146InstallHomeWrap(){
+    try{
+      if(typeof renderHome==='function'&&!renderHome.__of2146MissedHome){
+        var old=renderHome;
+        renderHome=function(v){ var ret=old.apply(this,arguments); of2146DecorateHome(v); return ret; };
+        renderHome.__of2146MissedHome=true;
+      }
+    }catch(e){}
+  }
+  of2146InstallHomeWrap();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){ setTimeout(of2146InstallHomeWrap,80); setTimeout(of2146InstallHomeWrap,900); });
+  setTimeout(of2146InstallHomeWrap,900);
+  setTimeout(of2146InstallHomeWrap,1700);
+  window.of2146IsMissedDaily=of2146IsMissed;
+  window.of2146OpenMissedDailyReview=of2146OpenReview;
+})();
+
+/* ===== v2.147.0 Stability Foundation ===== */
+(function(){
+  'use strict';
+  var OF2147_FX_SELECTOR='.clashShot,.clashImpact,.battleFloat,.dmg,.critdmg,.shieldnum,.blocknum,.supportnum,.v171Orb,.v171WorldReward,.v171MeaningFlash,.lq53ClashBanner,.ultPortraitBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.v176Gold,.v176GoldFlash';
+  function of2147FxMax(){
+    try{ return (S&&S.reduceMotion)?12:44; }catch(e){ return 44; }
+  }
+  function of2147TrimFx(max){
+    try{
+      if(!document.body) return;
+      var limit=(typeof max==='number')?max:of2147FxMax();
+      var nodes=[].slice.call(document.querySelectorAll(OF2147_FX_SELECTOR));
+      if(nodes.length<=limit) return;
+      nodes.slice(0,nodes.length-limit).forEach(function(n){ try{ n.remove(); }catch(e){} });
+    }catch(e){}
+  }
+  function of2147InjectStyles(){
+    try{
+      if(document.getElementById('of2147Styles')) return;
+      var st=document.createElement('style'); st.id='of2147Styles';
+      st.textContent='.of2147Panel{background:linear-gradient(180deg,rgba(12,18,32,.96),rgba(8,12,22,.96));border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line));border-radius:14px;padding:12px;margin:12px 0;box-shadow:0 14px 34px rgba(0,0,0,.24)}.of2147Panel b{display:block;font-family:Orbitron;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--ink)}.of2147Panel p{margin:6px 0 10px;color:var(--muted);font-size:12px;font-weight:800;line-height:1.35}.of2147Panel button{width:100%;border-radius:11px;border:1px solid color-mix(in srgb,var(--accent) 34%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 25%,#172033),#111827);color:var(--ink);font-weight:1000;padding:10px}.of2147Panel button:disabled{opacity:.65}.of2147Out{margin-top:8px;color:var(--muted);font-size:11px;font-weight:800;line-height:1.35;white-space:pre-wrap}.clashShot,.clashImpact,.battleFloat,.dmg,.critdmg,.shieldnum,.blocknum,.supportnum,.v171Orb,.v171WorldReward,.v171MeaningFlash,.lq53ClashBanner,.ultPortraitBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash{pointer-events:none;will-change:transform,opacity}';
+      document.head.appendChild(st);
+    }catch(e){}
+  }
+  function of2147InstallSaveCoalescer(){
+    try{
+      if(typeof save!=='function'||save.__of2147) return;
+      var baseSave=save, saveTimer=null, saveInFlight=null, saveDirty=false, waiters=[];
+      function settle(batch,ok,val){
+        batch.forEach(function(w){ try{ (ok?w.resolve:w.reject)(val); }catch(e){} });
+      }
+      function schedule(ms){
+        if(saveTimer) return;
+        saveTimer=setTimeout(runSave,ms||180);
+      }
+      function runSave(){
+        if(saveTimer){ clearTimeout(saveTimer); saveTimer=null; }
+        if(saveInFlight){ if(saveDirty||waiters.length) schedule(140); return saveInFlight; }
+        var batch=waiters.splice(0);
+        saveDirty=false;
+        saveInFlight=Promise.resolve().then(function(){ return baseSave(); }).then(function(v){
+          settle(batch,true,v); return v;
+        }).catch(function(err){
+          try{ console.warn('Oathforge save delayed/fell back',err); }catch(e){}
+          settle(batch,false,err); return false;
+        }).finally(function(){
+          saveInFlight=null;
+          if(saveDirty||waiters.length) schedule(120);
+        });
+        return saveInFlight;
+      }
+      save=function(opts){
+        saveDirty=true;
+        var p=new Promise(function(resolve,reject){ waiters.push({resolve:resolve,reject:reject}); });
+        if(opts&&opts.immediate) runSave(); else schedule(180);
+        return p;
+      };
+      save.flush=runSave;
+      save.__of2147=true;
+      if(typeof flushSaveSoon==='function'&&!flushSaveSoon.__of2147){
+        var oldFlush=flushSaveSoon;
+        flushSaveSoon=function(){ try{ oldFlush(); }catch(e){} return runSave(); };
+        flushSaveSoon.__of2147=true;
+      }
+      window.addEventListener('pagehide',function(){ try{ runSave(); }catch(e){} },{capture:true});
+    }catch(e){}
+  }
+  function of2147ActiveBattle(){
+    try{
+      if(typeof battleTimer!=='undefined'&&battleTimer) return true;
+      if(typeof autoNext!=='undefined'&&autoNext) return true;
+      if(document.querySelector('.arena.show,#clashBattleOverlay')) return true;
+    }catch(e){}
+    return false;
+  }
+  function of2147Sleep(ms){ return new Promise(function(resolve){ setTimeout(resolve,ms); }); }
+  async function of2147RunPressureTest(){
+    var oldView=(typeof view!=='undefined'?view:'home'), oldSub=(typeof campSub!=='undefined'?campSub:null);
+    var screens=['home','quests','heroes','battles','growth','progress','modes','expeditions','gauntlet','arena','conquest','rift'];
+    var report={build:(typeof APP_BUILD!=='undefined'?APP_BUILD:''),ok:true,screens:[],startedAt:Date.now()};
+    var startNodes=document.querySelectorAll('*').length, startFx=document.querySelectorAll(OF2147_FX_SELECTOR).length;
+    try{
+      for(var i=0;i<screens.length;i++){
+        var s=screens[i], row={screen:s,ok:true,msg:'ok'};
+        try{
+          view=s;
+          if(typeof setNavActive==='function') setNavActive(s);
+          if(typeof render==='function') render();
+          await of2147Sleep(35);
+          var v=document.getElementById('view'), html=v?v.innerHTML:'';
+          if(!v||!html||/Screen could not load|Repair save/i.test(html)){ row.ok=false; row.msg='screen did not render cleanly'; report.ok=false; }
+        }catch(err){
+          row.ok=false; row.msg=(err&&err.message)||String(err); report.ok=false;
+        }
+        report.screens.push(row);
+      }
+    }finally{
+      try{ view=oldView; if(oldSub!==null&&typeof campSub!=='undefined') campSub=oldSub; if(typeof setNavActive==='function') setNavActive(oldView); if(typeof render==='function') render(); }catch(e){}
+      await of2147Sleep(45);
+      of2147TrimFx();
+    }
+    report.endedAt=Date.now();
+    report.nodeDelta=document.querySelectorAll('*').length-startNodes;
+    report.fxBefore=startFx;
+    report.fxAfter=document.querySelectorAll(OF2147_FX_SELECTOR).length;
+    report.activeBattle=of2147ActiveBattle();
+    window.__of2147LastPressureReport=report;
+    return report;
+  }
+  function of2147ReportLine(r){
+    try{
+      var good=(r.screens||[]).filter(function(x){return x.ok;}).length;
+      var total=(r.screens||[]).length;
+      var bad=(r.screens||[]).filter(function(x){return !x.ok;}).map(function(x){return x.screen+': '+x.msg;}).join('\n');
+      return (r.ok?'Passed':'Needs attention')+' - '+good+'/'+total+' screens clean\nNodes: '+(r.nodeDelta>=0?'+':'')+r.nodeDelta+' | FX after cleanup: '+r.fxAfter+' | Active battle: '+(r.activeBattle?'yes':'no')+(bad?'\n'+bad:'');
+    }catch(e){ return 'Pressure test finished.'; }
+  }
+  function of2147InjectPanel(){
+    try{
+      of2147InjectStyles();
+      var host=document.getElementById('sheet');
+      if(!host||document.getElementById('of2147Panel')) return;
+      host.insertAdjacentHTML('beforeend','<div class="of2147Panel" id="of2147Panel"><b>Stability Check</b><p>Quickly cycles core screens, trims leftover battle effects, and reports anything that fails to render.</p><button type="button" id="of2147Run">Run Stability Pressure Test</button><div class="of2147Out" id="of2147Out"></div></div>');
+      var btn=document.getElementById('of2147Run'), out=document.getElementById('of2147Out');
+      if(btn) btn.onclick=async function(){
+        btn.disabled=true; if(out) out.textContent='Running...';
+        try{
+          var r=await of2147RunPressureTest();
+          if(out) out.textContent=of2147ReportLine(r);
+          if(typeof toast==='function') toast(r.ok?'Stability check passed':'Stability check found an issue');
+        }catch(e){
+          if(out) out.textContent='Pressure test failed: '+((e&&e.message)||String(e));
+        }
+        btn.disabled=false;
+      };
+    }catch(e){}
+  }
+  function of2147Install(){
+    of2147InjectStyles();
+    of2147InstallSaveCoalescer();
+    of2147TrimFx();
+    if(typeof clearTransientUI==='function'&&!clearTransientUI.__of2147){
+      var oldClear=clearTransientUI;
+      clearTransientUI=function(){ var r=oldClear.apply(this,arguments); of2147TrimFx(0); return r; };
+      clearTransientUI.__of2147=true;
+    }
+    document.addEventListener('click',function(e){
+      try{ if(e.target&&e.target.closest&&e.target.closest('#openSettings,#devToolsToggle')){ setTimeout(of2147InjectPanel,80); setTimeout(of2147InjectPanel,420); } }catch(_e){}
+    },true);
+    setInterval(function(){ of2147TrimFx(); },900);
+    setTimeout(of2147InjectPanel,1200);
+  }
+  window.of2147TrimFx=of2147TrimFx;
+  window.of2147RunPressureTest=of2147RunPressureTest;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',of2147Install); else of2147Install();
+})();
+
+/* ===== v2.148.0 War Table Roster Depth ===== */
+(function(){
+  'use strict';
+  if(window.__of2148WarDepth) return;
+  window.__of2148WarDepth=true;
+
+  function of2148Esc(s){ try{ return (typeof esc==='function')?esc(s):String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }catch(e){ return ''; } }
+  function of2148Tune(){
+    try{ if(typeof ARENA_TUNE==='object'&&ARENA_TUNE) ARENA_TUNE.teamSize=8; }catch(e){}
+    try{ if(typeof GAUNTLET_TUNE==='object'&&GAUNTLET_TUNE){ GAUNTLET_TUNE.squadSize=8; GAUNTLET_TUNE.squadUseLimit=3; GAUNTLET_TUNE.lockAt=3; GAUNTLET_TUNE.freshBonus=1.15; GAUNTLET_TUNE.usedTwice=0.55; } }catch(e){}
+    try{ if(typeof RIFT_TUNE==='object'&&RIFT_TUNE) RIFT_TUNE.squadSize=8; }catch(e){}
+    try{ if(typeof CONQUEST_TUNE==='object'&&CONQUEST_TUNE) CONQUEST_TUNE.teamSize=8; }catch(e){}
+    try{ if(typeof SIEGE_TUNE==='object'&&SIEGE_TUNE) SIEGE_TUNE.teamSize=8; }catch(e){}
+  }
+  function of2148Owned(){ try{ return (S.heroes||[]).filter(function(h){return h&&h.owned;}); }catch(e){ return []; } }
+  function of2148Pow(h,multFn){ try{ return Math.max(0,powerOf(h)*(multFn?multFn(h):1)); }catch(e){ return 0; } }
+  function of2148Asc(pool,multFn){ return (pool||[]).slice().sort(function(a,b){ return of2148Pow(a,multFn)-of2148Pow(b,multFn)||String(a.name||'').localeCompare(String(b.name||'')); }); }
+  function of2148Desc(pool,multFn){ return (pool||[]).slice().sort(function(a,b){ return of2148Pow(b,multFn)-of2148Pow(a,multFn)||String(a.name||'').localeCompare(String(b.name||'')); }); }
+  function of2148TeamPower(team,multFn){ return (team||[]).reduce(function(s,h){return s+of2148Pow(h,multFn);},0); }
+  function of2148WeakestViable(pool,size,multFn,minPower){
+    size=Math.max(1,Math.floor(size||8));
+    var sorted=of2148Asc(pool,multFn);
+    if(sorted.length<=size) return sorted.slice(0,size);
+    var best=null, bestPow=Infinity, fallback=null, fallbackPow=-1;
+    for(var i=0;i+size<=sorted.length;i++){
+      var team=sorted.slice(i,i+size), p=of2148TeamPower(team,multFn);
+      if(p>fallbackPow){ fallback=team; fallbackPow=p; }
+      if(p>=minPower&&p<bestPow){ best=team; bestPow=p; }
+    }
+    return (best||fallback||sorted.slice(0,size)).slice(0,size);
+  }
+  function of2148DepthAnchor(pool,size,multFn){
+    size=Math.max(1,Math.floor(size||8));
+    var sorted=of2148Desc(pool,multFn), chunks=[];
+    for(var i=0;i+size<=sorted.length;i+=size) chunks.push(of2148TeamPower(sorted.slice(i,i+size),multFn));
+    if(!chunks.length) chunks.push(of2148TeamPower(sorted.slice(0,size),multFn));
+    chunks=chunks.filter(function(x){return x>0;}).sort(function(a,b){return a-b;});
+    if(!chunks.length) return 1000;
+    return Math.max(1,Math.round(chunks[Math.max(0,Math.min(chunks.length-1,Math.floor(chunks.length*0.40)))]));
+  }
+  function of2148TopBond(){
+    try{ return Math.max(1,...of2148Owned().map(function(h){return bondLevel(h);})); }catch(e){ return 1; }
+  }
+  function of2148CatchupMult(h){
+    try{
+      var gap=Math.max(0,of2148TopBond()-bondLevel(h));
+      return Math.min(5,Math.round((1+gap*0.45)*100)/100);
+    }catch(e){ return 1; }
+  }
+  function of2148OwnedHero(id){ try{ return of2148Owned().find(function(h){return h.id===id;})||null; }catch(e){ return null; } }
+  function of2148GrantSet(ids,base,source,pct,bench){
+    var used={}, gains=[];
+    (ids||[]).forEach(function(id){ if(id) used[id]=1; });
+    var list=bench?of2148Owned().filter(function(h){return !used[h.id];}):(ids||[]).map(of2148OwnedHero).filter(Boolean);
+    list.forEach(function(h){
+      try{
+        var mult=of2148CatchupMult(h), xp=Math.max(1,Math.round(base*(pct||1)*mult));
+        var g=targetBondXp(h,xp,(source||'War Table')+(bench?' bench':''));
+        if(g){ g.catchup=mult; gains.push(g); }
+      }catch(e){}
+    });
+    return gains;
+  }
+  window.of2148GrantWarTableBond=function(ids,base,source,opts){
+    try{
+      opts=opts||{}; if(!(base>0)||typeof targetBondXp!=='function') return {used:[],bench:[]};
+      var benchPct=(opts.benchPct==null?0.25:opts.benchPct);
+      var used=of2148GrantSet(ids,base,source,1,false);
+      var bench=of2148GrantSet(ids,base,source,benchPct,true);
+      S.lastModeBond={at:Date.now(),source:source||'War Table',gains:used.slice(0,12),count:used.length,catchupMax:5};
+      S.lastModeBenchBond={at:Date.now(),source:source||'War Table',pct:benchPct,gains:bench.slice(0,12),count:bench.length,catchupMax:5};
+      var ups=used.concat(bench).filter(function(g){return g&&g.levelUp;});
+      if(ups.length&&typeof toast==='function') toast('Bond level up: '+ups.slice(0,2).map(function(g){return g.name;}).join(', ')+(ups.length>2?' +'+(ups.length-2):''));
+      try{ if(typeof save==='function') save(); }catch(e){}
+      return {used:used,bench:bench};
+    }catch(e){ try{ console.warn('War Table bond grant failed',e); }catch(_e){} return {used:[],bench:[]}; }
+  };
+  window.of2140GrantWarTableBond=window.of2148GrantWarTableBond;
+
+  if(typeof gauntletDefaultSquad==='function'){
+    gauntletDefaultSquad=function(){
+      of2148Tune();
+      var size=(GAUNTLET_TUNE&&GAUNTLET_TUNE.squadSize)||8, pool=gauntletEligible();
+      var anchor=of2148DepthAnchor(gauntletOwned(),size,function(h){return gauntletUseMult(h.id);});
+      var min=anchor*((GAUNTLET_TUNE&&GAUNTLET_TUNE.baseFactor)||0.13)*1.05;
+      return of2148WeakestViable(pool,size,function(h){return gauntletUseMult(h.id);},min).map(function(h){return h.id;});
+    };
+    gauntletDefaultSquad.__of2148Depth=true;
+  }
+  if(typeof arenaPlayerTeam==='function'){
+    arenaPlayerTeam=function(cond){
+      of2148Tune();
+      var n=(ARENA_TUNE&&ARENA_TUNE.teamSize)||8, pool=of2148Owned();
+      pool.sort(cond?function(a,b){return (powerOf(b)*cond.mult(b))-(powerOf(a)*cond.mult(a));}:function(a,b){return powerOf(b)-powerOf(a);});
+      return pool.slice(0,n);
+    };
+    arenaPlayerTeam.__of2148Size=true;
+  }
+  if(typeof conquestBestTeam==='function'){
+    conquestBestTeam=function(mod){
+      of2148Tune();
+      var full=(CONQUEST_TUNE&&CONQUEST_TUNE.teamSize)||8, tier=(mod&&mod.tier)||((ensureConquest().tier||0)+1);
+      var champ=(typeof conquestChampion==='function')?conquestChampion(mod):null, pool=conquestEligiblePool(mod), fixed=[];
+      if(champ){ fixed=[champ]; pool=pool.filter(function(h){return h.id!==champ.id;}); }
+      var aura=champ?((CONQUEST_TUNE&&CONQUEST_TUNE.champAura)||1.2):1;
+      function mult(h){ return ((mod&&mod.mult)?mod.mult(h):1)*(champ&&h.id!==champ.id?aura:1); }
+      var fixedPower=of2148TeamPower(fixed,mult), need=Math.max(1,full-fixed.length);
+      var target=1;
+      try{ target=conquestBossPower(tier,mod)*0.96; }catch(e){ target=of2148TeamPower(of2148Desc(pool,mult).slice(0,need),mult); }
+      var reserves=of2148WeakestViable(pool,need,mult,Math.max(1,target-fixedPower));
+      var team=fixed.concat(reserves).slice(0,full);
+      if(team.length<full){
+        var have={}; team.forEach(function(h){have[h.id]=1;});
+        of2148Desc(pool,mult).forEach(function(h){ if(team.length<full&&!have[h.id]) team.push(h); });
+      }
+      return team;
+    };
+    conquestBestTeam.__of2148Depth=true;
+  }
+
+  function of2148DepthPanelHTML(){
+    var used=S&&S.lastModeBond, bench=S&&S.lastModeBenchBond, owned=of2148Owned().length;
+    var usedLine=used&&used.gains&&used.gains.length?used.gains.slice(0,3).map(function(g){return of2148Esc(g.name)+' +'+g.xp+' XP'+(g.catchup&&g.catchup>1?' x'+g.catchup:'');}).join(' | '):'No recent War Table bond gain yet.';
+    var benchLine=bench?('Bench: '+(bench.count||0)+' heroes at '+Math.round((bench.pct||0.25)*100)+'% base, with catch-up up to x5.'):'Bench catch-up is ready.';
+    return '<div class="of2148DepthPanel"><b>War Table Depth Rules</b><p>Roster modes field the weakest viable squads first, use 8-hero teams where the mode supports it, and rotate Gauntlet squads after 3 cleared floors.</p><div class="of2148DepthStats"><span>'+owned+' owned</span><span>Bench XP 25%</span><span>Catch-up up to x5</span></div><small>'+usedLine+'<br>'+benchLine+'</small></div>';
+  }
+  function of2148InjectStyles(){
+    if(document.getElementById('of2148DepthStyles')) return;
+    var st=document.createElement('style'); st.id='of2148DepthStyles';
+    st.textContent='.of2148DepthPanel{border:1px solid color-mix(in srgb,#5bd9a0 34%,var(--line));background:linear-gradient(180deg,rgba(91,217,160,.10),rgba(8,12,22,.94));border-radius:14px;padding:11px 12px;margin:10px 0 12px;box-shadow:0 14px 30px rgba(0,0,0,.22)}.of2148DepthPanel b{display:block;font-family:Orbitron;font-size:12px;letter-spacing:.7px;text-transform:uppercase;color:#8dffc3}.of2148DepthPanel p{margin:5px 0 8px;color:var(--muted);font-size:11.5px;font-weight:800;line-height:1.38}.of2148DepthPanel small{display:block;color:var(--muted);font-size:10.5px;font-weight:800;line-height:1.4}.of2148DepthStats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.of2148DepthStats span{font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.45px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:#dfffea}';
+    document.head.appendChild(st);
+  }
+  function of2148Decorate(v){
+    try{
+      of2148Tune(); of2148InjectStyles();
+      if(!v||v.querySelector('.of2148DepthPanel')) return;
+      var head=v.querySelector('.head');
+      if(head) head.insertAdjacentHTML('afterend',of2148DepthPanelHTML());
+      else v.insertAdjacentHTML('afterbegin',of2148DepthPanelHTML());
+      var sec=[].slice.call(v.querySelectorAll('.expSection')).find(function(x){return /lead squad/i.test(x.textContent||'');});
+      if(sec){ var n=(gauntletDefaultSquad&&gauntletDefaultSquad()||[]).length; sec.textContent='Vanguard squad ('+n+'/8)'; }
+    }catch(e){}
+  }
+  ['renderModes','renderGauntlet','renderRift','renderConquest','renderExpeditions'].forEach(function(fn){
+    try{
+      if(typeof window[fn]==='function'&&!window[fn].__of2148DepthPanel){
+        var old=window[fn];
+        window[fn]=function(v){ var ret=old.apply(this,arguments); of2148Decorate(v); return ret; };
+        window[fn].__of2148DepthPanel=true;
+      }
+    }catch(e){}
+  });
+  of2148Tune();
+})();
+/* ===== v2.149.0 Navigation Shell ===== */
+(function(){
+  'use strict';
+  if(window.__of2149NavigationShell) return;
+  window.__of2149NavigationShell=true;
+
+  function of2149Esc(s){
+    try{ return (typeof esc==='function')?esc(s):String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+    catch(e){ return ''; }
+  }
+  function of2149Fmt(n){
+    try{ return (typeof fmt==='function')?fmt(Math.round(n||0)):String(Math.round(n||0)); }
+    catch(e){ return String(Math.round(n||0)); }
+  }
+  function of2149Safe(fn, fallback){
+    try{ var v=fn(); return (v==null||v==='')?fallback:v; }catch(e){ return fallback; }
+  }
+  function of2149InjectStyles(){
+    if(document.getElementById('of2149NavStyles')) return;
+    var st=document.createElement('style'); st.id='of2149NavStyles';
+    st.textContent='.of2149NavLabel{display:block;font-size:10.5px;line-height:1.05;font-weight:1000;letter-spacing:.35px;text-transform:uppercase;white-space:nowrap}.of2149WarHero{margin:0 0 12px;padding:14px 14px 13px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:linear-gradient(180deg,rgba(91,217,160,.09),rgba(8,12,22,.92));box-shadow:0 16px 34px rgba(0,0,0,.26)}.of2149WarHero h2{margin:2px 0 5px;font-family:Orbitron;font-size:26px;letter-spacing:.6px}.of2149WarHero p{margin:0;color:var(--muted);font-size:12px;font-weight:850;line-height:1.35}.of2149WarBand{margin:13px 0 7px;font-family:Orbitron;font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.8px;color:#aebcff}.of2149WarGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.of2149WarCard{position:relative;text-align:left;min-height:126px;border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:10px 10px 42px;background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(8,12,22,.94));box-shadow:0 14px 28px rgba(0,0,0,.20);overflow:hidden}.of2149WarCard:active{transform:translateY(1px)}.of2149WarCard:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--of2149-accent,#62d6ff);opacity:.92}.of2149WarKicker{font-size:9.5px;font-weight:1000;text-transform:uppercase;letter-spacing:.5px;color:var(--of2149-accent,#62d6ff);margin-bottom:5px}.of2149WarTitle{font-family:Orbitron;font-size:14px;line-height:1.13;color:#f4f6ff;margin-bottom:5px}.of2149WarDesc{font-size:10.8px;font-weight:800;line-height:1.3;color:var(--muted)}.of2149WarStatus{position:absolute;left:10px;right:10px;bottom:9px;display:flex;align-items:center;justify-content:space-between;gap:7px;font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.35px;color:#d9e5ff}.of2149WarStatus span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.of2149WarGo{flex:0 0 auto;width:24px;height:24px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);color:#fff}.of2149SubBar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}.of2149SubBar button{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.055);color:#eaf0ff;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.45px}.of2149SubBar span{font-family:Orbitron;font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}@media(max-width:380px){.of2149WarGrid{gap:8px}.of2149WarCard{min-height:132px;padding:9px 9px 41px}.of2149WarHero h2{font-size:23px}.of2149WarTitle{font-size:13px}.of2149NavLabel{font-size:9.5px;letter-spacing:.2px}}';
+    document.head.appendChild(st);
+  }
+  function of2149ApplyNavLabels(){
+    try{
+      of2149InjectStyles();
+      var labels={home:'Home',quests:'Oaths',heroes:'Fellowship',battles:'War Table',growth:'Growth'};
+      document.querySelectorAll('.nav button[data-view]').forEach(function(btn){
+        var key=btn.getAttribute('data-view'), label=labels[key];
+        if(!label) return;
+        Array.prototype.slice.call(btn.childNodes).forEach(function(n){ if(n.nodeType===3) btn.removeChild(n); });
+        var span=btn.querySelector('.of2149NavLabel');
+        if(!span){ span=document.createElement('span'); span.className='of2149NavLabel'; btn.appendChild(span); }
+        span.textContent=label;
+        btn.setAttribute('aria-label',label);
+      });
+    }catch(e){}
+  }
+  function of2149NavRoot(vw){
+    var v=String(vw||'home');
+    if(/^(tasks|oaths)$/.test(v)) return 'quests';
+    if(/^(roster|fellowship|forge|bonds)$/.test(v)) return 'heroes';
+    if(/^(war|warTable|war-table|campaign|modes|expeditions|gauntlet|arena|conquest|rift)$/.test(v)) return 'battles';
+    if(v==='progress') return 'growth';
+    return v;
+  }
+  function of2149Card(target,kicker,title,desc,status,accent){
+    return '<button class="of2149WarCard" type="button" data-war-target="'+of2149Esc(target)+'" style="--of2149-accent:'+of2149Esc(accent||'#62d6ff')+'"><div class="of2149WarKicker">'+of2149Esc(kicker)+'</div><div class="of2149WarTitle">'+of2149Esc(title)+'</div><div class="of2149WarDesc">'+of2149Esc(desc)+'</div><div class="of2149WarStatus"><span>'+of2149Esc(status)+'</span><b class="of2149WarGo">></b></div></button>';
+  }
+  function of2149CoreCards(){
+    var clash=of2149Safe(function(){ var c=ensureClashState(); return 'C'+(c.chapter||1)+' - S'+(c.stage||1); },'Ready');
+    var raid=of2149Safe(function(){ var r=ensureRaid(); return 'Boss '+Math.max(0,Math.floor(((r.bossHp||0)/(raidBossMaxHp()*1))*100))+'%'; },'Weekly');
+    return [
+      of2149Card('campaign','Core Push','Campaign','Push the main road, stages, and AFK identity of the game.','Stage '+(S.stage||1),'#62d6ff'),
+      of2149Card('tower','Ascend','Tower','Climb focused floors for scaling pressure and clean milestones.','Floor '+(S.tower||1),'#a78bfa'),
+      of2149Card('clash','Boss Line','Clash','Chapter fights for burst progress, crystals, and campaign rhythm.',clash,'#f97316'),
+      of2149Card('raid','Weekly','Raid','Longer boss pressure with higher weekly stakes and roster payoff.',raid,'#fb7185')
+    ].join('');
+  }
+  function of2149RosterCards(){
+    var siege=of2149Safe(function(){ var s=ensureSiege(); return (s.totalWaves||0)+' waves'; },'Roster push');
+    var exp=of2149Safe(function(){ var e=ensureExpeditions(); var active=(e.runs||[]).filter(function(r){return r&&r.endAt>Date.now();}).length; var done=(e.runs||[]).filter(function(r){return r&&r.endAt<=Date.now();}).length; return active+' active / '+done+' ready'; },'Dispatch');
+    var conquest=of2149Safe(function(){ var c=ensureConquest(); return 'Tier '+((c.tier||0)+1); },'Boss run');
+    var gauntlet=of2149Safe(function(){ var g=ensureGauntlet(); return 'Floor '+(g.floor||1); },'Endless');
+    var rift=of2149Safe(function(){ var r=ensureRift(); return 'Heat '+(r.heat||0); },'Daily');
+    var arena=of2149Safe(function(){ var a=ensureArena(); return (a.tickets||0)+' tickets'; },'8 heroes');
+    return [
+      of2149Card('siege','Depth','Siege','Weakest viable squads go first so the whole roster matters.',siege,'#5bd9a0'),
+      of2149Card('expeditions','Away Teams','Expeditions','Send unused heroes for passive gains and bond catch-up.',exp,'#38bdf8'),
+      of2149Card('conquest','Roster Check','Conquest','Field deep teams against scaling weekly bosses.',conquest,'#c084fc'),
+      of2149Card('gauntlet','Rotation','Gauntlet','Endless floors with squad use limits and boon decisions.',gauntlet,'#34d399'),
+      of2149Card('rift','Daily Burst','Rift','Fast daily combat for focused rewards and mode variety.',rift,'#f472b6'),
+      of2149Card('arena','Rivalry','Arena','Eight-hero teams fight rival squads for ranking energy.',arena,'#60a5fa')
+    ].join('');
+  }
+  function of2149RenderWarTable(v){
+    try{
+      of2149ApplyNavLabels();
+      window.__of2149WarSub=null;
+      v.innerHTML='<div class="of2149WarHero"><div class="eyebrow">Modes</div><h2>War Table</h2><p>All combat and roster-pressure modes live here. Campaign is the main push; roster modes are where unused heroes gain purpose.</p></div><div class="of2149WarBand">Core Push</div><div class="of2149WarGrid">'+of2149CoreCards()+'</div><div class="of2149WarBand">Roster Modes</div><div class="of2149WarGrid">'+of2149RosterCards()+'</div>';
+      v.querySelectorAll('[data-war-target]').forEach(function(btn){
+        btn.addEventListener('click',function(){ of2149OpenWarTarget(btn.getAttribute('data-war-target')); });
+      });
+    }catch(e){
+      try{ v.innerHTML='<div class="card">War Table could not render. Try reloading.</div>'; }catch(_e){}
+    }
+  }
+  function of2149SubLabel(key){
+    var labels={campaign:'Campaign',tower:'Tower',clash:'Clash',raid:'Raid',siege:'Siege'};
+    return labels[key]||'War Table';
+  }
+  function of2149DecorateSub(v){
+    try{
+      if(!v||v.querySelector('.of2149SubBar')) return;
+      var label=of2149SubLabel(window.__of2149WarSub);
+      v.insertAdjacentHTML('afterbegin','<div class="of2149SubBar"><button type="button" id="of2149WarBack">< War Table</button><span>'+of2149Esc(label)+'</span></div>');
+      var b=v.querySelector('#of2149WarBack');
+      if(b) b.addEventListener('click',function(){ window.__of2149WarSub=null; view='battles'; render(); });
+    }catch(e){}
+  }
+  window.of2149OpenWarTarget=function(target){
+    try{
+      var t=String(target||'');
+      var sub={campaign:'campaign',tower:'tower',clash:'clash',raid:'raid',siege:'siege'};
+      if(sub[t]){
+        window.__of2149WarSub=t;
+        try{ campSub=sub[t]; }catch(e){}
+        view='battles';
+        render();
+        return;
+      }
+      window.__of2149WarSub=null;
+      var direct={expeditions:'expeditions',conquest:'conquest',gauntlet:'gauntlet',rift:'rift',arena:'arena'};
+      if(direct[t]) navTo(direct[t]);
+    }catch(e){ try{ toast('War Table route failed'); }catch(_e){} }
+  };
+
+  try{
+    var __of2149ViewAlias=viewAlias;
+    viewAlias=function(vw){
+      var raw=String(vw||'home');
+      var mapped={tasks:'quests',oaths:'quests',roster:'heroes',fellowship:'heroes',war:'battles',warTable:'battles','war-table':'battles',campaign:'battles'}[raw];
+      return mapped||__of2149ViewAlias(raw);
+    };
+  }catch(e){}
+  try{
+    setNavActive=function(vw){
+      try{
+        var cv=of2149NavRoot(viewAlias(vw));
+        document.querySelectorAll('.nav button').forEach(function(b){ b.classList.toggle('active',of2149NavRoot(viewAlias(b.dataset.view))===cv); });
+        of2149ApplyNavLabels();
+      }catch(e){}
+    };
+  }catch(e){}
+  try{
+    var __of2149NavTo=navTo;
+    navTo=function(vw){
+      try{
+        var raw=String(vw||'');
+        if(raw==='campaign'){
+          var sub=String(typeof campSub!=='undefined'&&campSub?campSub:'campaign');
+          window.__of2149WarSub=(sub==='tower'||sub==='clash'||sub==='raid'||sub==='siege')?sub:'campaign';
+        }else if(of2149NavRoot(viewAlias(vw))==='battles'){
+          window.__of2149WarSub=null;
+        }
+      }catch(e){}
+      return __of2149NavTo.apply(this,arguments);
+    };
+  }catch(e){}
+  try{
+    var __of2149RenderBattles=renderBattles;
+    renderBattles=function(v){
+      of2149ApplyNavLabels();
+      if(window.__of2149WarSub){
+        var ret=__of2149RenderBattles.apply(this,arguments);
+        of2149DecorateSub(v);
+        return ret;
+      }
+      return of2149RenderWarTable(v);
+    };
+  }catch(e){}
+  try{ renderModes=function(v){ return of2149RenderWarTable(v); }; }catch(e){}
+  try{
+    var __of2149RenderQuests=renderQuests;
+    renderQuests=function(v){ var ret=__of2149RenderQuests.apply(this,arguments); try{ var h=v&&v.querySelector('.head h2,h2'); if(h&&/quests/i.test(h.textContent||'')) h.textContent='Oaths'; }catch(e){} return ret; };
+  }catch(e){}
+  try{
+    var __of2149RenderHeroes=renderHeroes;
+    renderHeroes=function(v){ var ret=__of2149RenderHeroes.apply(this,arguments); try{ var h=v&&v.querySelector('.head h2,h2'); if(h&&/heroes/i.test(h.textContent||'')) h.textContent='Fellowship'; }catch(e){} return ret; };
+  }catch(e){}
+  try{
+    var __of2149RenderHome=renderHome;
+    renderHome=function(v){
+      var ret=__of2149RenderHome.apply(this,arguments);
+      try{
+        var title=v&&v.querySelector('.homeModesCard .hmTitle');
+        var sub=v&&v.querySelector('.homeModesCard .hmSub');
+        if(title) title.textContent='War Table';
+        if(sub) sub.textContent='Campaign, roster modes, arena, rift.';
+      }catch(e){}
+      return ret;
+    };
+  }catch(e){}
+  document.addEventListener('click',function(e){
+    try{ if(e.target&&e.target.closest&&e.target.closest('.nav button[data-view="battles"]')) window.__of2149WarSub=null; }catch(_e){}
+  },true);
+  of2149InjectStyles();
+  of2149ApplyNavLabels();
 })();
 /* ===== end Roster Management ===== */
 
