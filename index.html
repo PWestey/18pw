@@ -3950,7 +3950,7 @@ function renderGauntlet(v){ injectExpStyles(); injectGauntletStyles(); const G=e
      '<div class="expMeta"><div class="sm"><b>'+G.best+'</b><span>best depth</span></div><div class="sm"><b>'+v168Num(G.shards||0)+'</b><span>✷ shards</span></div><div class="sm"><b>'+owned+'</b><span>reserves</span></div></div>'+
      (bonus>0?'<div class="expHint good">Today\'s dailies grant +'+bonus+'% starting ATK.</div>':'<div class="expHint">Complete dailies today for a starting ATK boost (up to +30%).</div>')+
    '</div><div class="expSection">Your lead squad ('+squad.length+')</div>'+
-   '<div class="stagecard">'+constraintBannerHTML({color:'#ff9f6b',label:'Fatigue escalates',desc:'Fresh heroes fight +25%. Each run tires a hero: 2nd run \u221235%, 3rd locks them out until Monday. Spread the load to climb deeper.'})+'<div class="expPorts">'+ports+'</div>'+optLine+'<button class="expField" id="gStart" style="margin-top:10px">Start Run</button></div></div>';
+   '<div class="stagecard">'+constraintBannerHTML({color:'#ff9f6b',label:'Depth matters',desc:'Fresh heroes fight +15%. Squads serve 3 floors, then fresh reserves step in. Third weekly use locks a hero until Monday.'})+'<div class="expPorts">'+ports+'</div>'+optLine+'<button class="expField" id="gStart" style="margin-top:10px">Start Run</button></div></div>';
   const st=document.getElementById('gStart'); if(st) st.onclick=()=>{ const res=gauntletStartRun(gauntletDefaultSquad()); if(!res||!res.ok){ try{toast('Need at least 2 heroes to run');}catch(e){} } };
   const bk=document.getElementById('gBack'); if(bk) bk.onclick=()=>navTo('modes');
 }
@@ -12417,7 +12417,22 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     }finally{ if(battle7) battle7._ticking=false; }
   }
 
-  function c7ApplyRewards(win){ if(!win) return {first:false,reward:{gold:0,dust:0,bondXp:0,extra:[]}}; const c=S.clash, key=c.chapter+'-'+c.stage, kind=battle7.kind, first=!S.clash.clears[key], reward=getClashRewardPreview(c.chapter,c.stage,kind,first); S.gold=(S.gold||0)+(reward.gold||0); S.dust=(S.dust||0)+(reward.dust||0); S.stones=(S.stones||0)+(reward.stones||0); const denom=Math.max(1,battle7.heroes.length); battle7.heroes.forEach(h=>{ const real=(S.heroes||[]).find(x=>x.id===h.id); if(real) real.bondXp=(real.bondXp||0)+Math.max(1,Math.round((reward.bondXp||0)/denom)); }); if(first){ if(kind==='boss'){ if(typeof grantTicket==='function') grantTicket(1); S.bossCores=(S.bossCores||0)+1; } if(kind==='chapterBoss'){ if(typeof grantTicket==='function') grantTicket(3); S.bossCores=(S.bossCores||0)+3; if(Math.random()<.35) S.sparks=(S.sparks||0)+1; } S.clash.clears[key]=true; } return {first,reward}; }
+  function c7ApplyRewards(win){
+    const c=S.clash, key=c.chapter+'-'+c.stage, kind=battle7.kind, denom=Math.max(1,battle7.heroes.length), ids=battle7.heroes.map(h=>h.id);
+    if(!win){
+      const training=getClashRewardPreview(c.chapter,c.stage,kind,true), perHeroBond=Math.max(1,Math.round((training.bondXp||0)/denom));
+      if(window.of2140GrantWarTableBond) window.of2140GrantWarTableBond(ids,perHeroBond,'Clash Training '+c.chapter+'-'+c.stage,{benchPct:0.25});
+      else battle7.heroes.forEach(h=>{ const real=(S.heroes||[]).find(x=>x.id===h.id); if(real) real.bondXp=(real.bondXp||0)+perHeroBond; });
+      return {first:false,reward:{gold:0,dust:0,stones:0,bondXp:training.bondXp||0,extra:['bond training']}};
+    }
+    const first=!S.clash.clears[key], reward=getClashRewardPreview(c.chapter,c.stage,kind,first);
+    S.gold=(S.gold||0)+(reward.gold||0); S.dust=(S.dust||0)+(reward.dust||0); S.stones=(S.stones||0)+(reward.stones||0);
+    const perHeroBond=Math.max(1,Math.round((reward.bondXp||0)/denom));
+    if(window.of2140GrantWarTableBond) window.of2140GrantWarTableBond(ids,perHeroBond,'Clash '+c.chapter+'-'+c.stage,{benchPct:0.25});
+    else battle7.heroes.forEach(h=>{ const real=(S.heroes||[]).find(x=>x.id===h.id); if(real) real.bondXp=(real.bondXp||0)+perHeroBond; });
+    if(first){ if(kind==='boss'){ if(typeof grantTicket==='function') grantTicket(1); S.bossCores=(S.bossCores||0)+1; } if(kind==='chapterBoss'){ if(typeof grantTicket==='function') grantTicket(3); S.bossCores=(S.bossCores||0)+3; if(Math.random()<.35) S.sparks=(S.sparks||0)+1; } S.clash.clears[key]=true; }
+    return {first,reward};
+  }
   function c7AdvanceStage(){ if(S.clash.stage>=80){ S.clash.chapter=(S.clash.chapter||1)+1; S.clash.stage=1; } else S.clash.stage=(S.clash.stage||1)+1; }
   function c7AutoStopReason(prevCh,prevStage,nextCh,nextStage){ if(!S||!S.clash||!S.clash.autoBattle) return 'Auto off'; try{ if(prevCh!==nextCh) return 'New chapter — set your lane squad'; }catch(e){} return ''; }
   function c7ScheduleAutoNext(){ if(!battle7||!battle7.result||!battle7.result.win||!S.clash||!S.clash.autoBattle||battle7.result.autoStop) return; battle7.log='Auto battle: next stage starts in 3 seconds.'; c7RenderBattle(); battle7.autoTimer=setTimeout(function(){ try{ if(battle7&&battle7.result&&battle7.result.win&&S.clash&&S.clash.autoBattle) startClashBattle(); }catch(e){ console.error('Clash auto battle failed',e); } },3000); }
@@ -12924,6 +12939,1074 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     renderHome=wrapped; window.__rosterMgmtInstalled=true;
     try{ if(typeof view!=='undefined' && view==='home'){ var vv=document.getElementById('view'); if(vv) renderHome(vv); } }catch(e){}
   })();
+})();
+
+/* ===== Oathforge Stability + War Table Depth (v2.140.0) ===== */
+(function(){
+  if(window.__of2140Installed) return;
+  window.__of2140Installed=true;
+
+  function of2140ErrMsg(err){
+    try{ return (err&&err.stack)||((err&&err.message)?err.message:String(err||'Unknown error')); }
+    catch(e){ return 'Unknown error'; }
+  }
+  function of2140Record(area,err,extra){
+    try{
+      if(typeof S!=='undefined'&&S){
+        if(!S.stabilityLog||typeof S.stabilityLog!=='object') S.stabilityLog={crashes:[]};
+        if(!Array.isArray(S.stabilityLog.crashes)) S.stabilityLog.crashes=[];
+        S.stabilityLog.crashes.unshift({
+          at:Date.now(), area:area||'unknown', view:(typeof view!=='undefined'?view:''),
+          build:(typeof APP_BUILD!=='undefined'?APP_BUILD:''), message:of2140ErrMsg(err).slice(0,900),
+          extra:extra||null
+        });
+        S.stabilityLog.crashes=S.stabilityLog.crashes.slice(0,30);
+      }
+    }catch(e){}
+    try{ console.error('Oathforge recovered: '+(area||'unknown'),err); }catch(e){}
+  }
+  function of2140Toast(msg){ try{ if(typeof toast==='function') toast(msg); }catch(e){} }
+  function of2140SoftRecover(area,err){
+    of2140Record(area,err);
+    try{ if(typeof clearAuto==='function') clearAuto(); }catch(e){}
+    try{ if(typeof renderHUD==='function') renderHUD(); }catch(e){}
+    try{ if(typeof save==='function') save(); }catch(e){}
+    try{ if(typeof render==='function') render(); }
+    catch(e2){
+      of2140Record(area+' render fallback',e2);
+      try{
+        var v=document.getElementById('view');
+        if(v) v.innerHTML='<div class="empty"><b>Action saved safely</b><span>The screen hit a display error, but Oathforge kept your progress.</span><button class="go" id="of2140Home">Return Home</button></div>';
+        var b=document.getElementById('of2140Home');
+        if(b) b.onclick=function(){ try{ view='home'; render(); }catch(e3){ location.reload(); } };
+      }catch(e3){}
+    }
+  }
+  function of2140HardBattleFallback(win,err){
+    of2140Record('battle hard fallback',err,{win:!!win});
+    try{
+      var r=document.getElementById('arenaResult');
+      if(r){
+        r.style.display='block'; r.className='result '+(win?'win':'lose');
+        r.innerHTML='<h2>'+(win?'VICTORY':'BATTLE ENDED')+'</h2><p>The battle result was recovered safely.</p><button class="go wide" id="of2140BattleHome">Return Home</button>';
+        var b=document.getElementById('of2140BattleHome');
+        if(b) b.onclick=function(){ try{ closeArenaToHome(); }catch(e){ try{ view='home'; render(); }catch(_e){} } };
+      }
+    }catch(e){}
+  }
+
+  window.addEventListener('error',function(e){
+    of2140Record('window error',e&&(e.error||e.message),{file:e&&e.filename,line:e&&e.lineno,col:e&&e.colno});
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    of2140Record('promise rejection',e&&e.reason);
+  });
+
+  if(typeof rewardSummary==='function'&&!rewardSummary.__of2140Safe){
+    var __of2140_rewardSummary=rewardSummary;
+    rewardSummary=function(title,items){
+      try{ return __of2140_rewardSummary.apply(this,arguments); }
+      catch(e){ of2140Record('reward summary',e,{title:title}); of2140Toast((title||'Reward')+' saved.'); return null; }
+    };
+    rewardSummary.__of2140Safe=true;
+  }
+  if(typeof showTaskDopamine==='function'&&!showTaskDopamine.__of2140Safe){
+    var __of2140_showTaskDopamine=showTaskDopamine;
+    showTaskDopamine=function(){
+      try{ return __of2140_showTaskDopamine.apply(this,arguments); }
+      catch(e){ of2140Record('task completion effects',e); return null; }
+    };
+    showTaskDopamine.__of2140Safe=true;
+  }
+  if(typeof showUndoBar==='function'&&!showUndoBar.__of2140Safe){
+    var __of2140_showUndoBar=showUndoBar;
+    showUndoBar=function(){
+      try{ return __of2140_showUndoBar.apply(this,arguments); }
+      catch(e){ of2140Record('undo bar',e); return null; }
+    };
+    showUndoBar.__of2140Safe=true;
+  }
+  if(typeof onTaskClick==='function'&&!onTaskClick.__of2140Safe){
+    var __of2140_onTaskClick=onTaskClick;
+    onTaskClick=function(e){
+      try{ return __of2140_onTaskClick.apply(this,arguments); }
+      catch(err){ of2140Toast('Action saved safely. Screen repaired.'); of2140SoftRecover('task action',err); return null; }
+    };
+    onTaskClick.__of2140Safe=true;
+  }
+  if(typeof battleEndFallback==='function'&&!battleEndFallback.__of2140Safe){
+    var __of2140_battleEndFallback=battleEndFallback;
+    battleEndFallback=function(win,err){
+      of2140Record('battle fallback',err,{win:!!win});
+      try{ return __of2140_battleEndFallback.apply(this,arguments); }
+      catch(e){ return of2140HardBattleFallback(win,e); }
+    };
+    battleEndFallback.__of2140Safe=true;
+  }
+  if(typeof endBattle==='function'&&!endBattle.__of2140Safe){
+    var __of2140_endBattle=endBattle;
+    endBattle=function(win){
+      try{ return __of2140_endBattle.apply(this,arguments); }
+      catch(err){
+        of2140Record('end battle',err,{win:!!win});
+        try{ battleEndFallback(win,err); }catch(e){ of2140HardBattleFallback(win,e); }
+        return null;
+      }
+    };
+    endBattle.__of2140Safe=true;
+  }
+
+  function of2140OwnedHero(id){ try{ return (S.heroes||[]).find(function(h){return h&&h.id===id&&h.owned;})||null; }catch(e){ return null; } }
+  function of2140TopBond(){
+    try{ return Math.max(1,...(S.heroes||[]).filter(function(h){return h&&h.owned;}).map(function(h){return bondLevel(h);})); }
+    catch(e){ return 1; }
+  }
+  function of2140BondCatchupMult(h){
+    try{
+      var gap=Math.max(0,of2140TopBond()-bondLevel(h));
+      return Math.min(5,1+(gap*0.25));
+    }catch(e){ return 1; }
+  }
+  function of2140GrantModeBond(ids,base,source){
+    try{
+      if(!ids||!ids.length||!(base>0)||typeof targetBondXp!=='function') return [];
+      var seen={}, gains=[];
+      ids.forEach(function(id){
+        if(!id||seen[id]) return; seen[id]=1;
+        var h=of2140OwnedHero(id); if(!h) return;
+        var xp=Math.max(1,Math.round(base*of2140BondCatchupMult(h)));
+        var g=targetBondXp(h,xp,source||'mode'); if(g) gains.push(g);
+      });
+      if(gains.length){
+        S.lastModeBond={at:Date.now(),source:source||'mode',gains:gains.slice(0,12)};
+        var ups=gains.filter(function(g){return g&&g.levelUp;});
+        if(ups.length) of2140Toast('Bond level up: '+ups.slice(0,2).map(function(g){return g.name;}).join(', ')+(ups.length>2?' +'+(ups.length-2):''));
+        try{ if(typeof save==='function') save(); }catch(e){}
+      }
+      return gains;
+    }catch(e){ of2140Record('mode bond xp',e,{source:source}); return []; }
+  }
+  function of2140GrantUnusedModeBond(ids,base,source,pct){
+    try{
+      if(!(base>0)||typeof targetBondXp!=='function') return [];
+      pct=(pct>0)?pct:0.25;
+      var used={}; (ids||[]).forEach(function(id){ if(id) used[id]=1; });
+      var gains=[];
+      (S.heroes||[]).forEach(function(h){
+        if(!h||!h.owned||used[h.id]) return;
+        var xp=Math.max(1,Math.round(base*pct*of2140BondCatchupMult(h)));
+        var g=targetBondXp(h,xp,(source||'mode')+' bench'); if(g) gains.push(g);
+      });
+      if(gains.length){
+        S.lastModeBenchBond={at:Date.now(),source:source||'mode',pct:pct,gains:gains.slice(0,12),count:gains.length};
+        var ups=gains.filter(function(g){return g&&g.levelUp;});
+        if(ups.length) of2140Toast('Bench bond level up: '+ups.slice(0,2).map(function(g){return g.name;}).join(', ')+(ups.length>2?' +'+(ups.length-2):''));
+        try{ if(typeof save==='function') save(); }catch(e){}
+      }
+      return gains;
+    }catch(e){ of2140Record('bench mode bond xp',e,{source:source}); return []; }
+  }
+  function of2140GrantWarTableBond(ids,base,source,opts){
+    opts=opts||{};
+    var used=of2140GrantModeBond(ids,base,source);
+    var bench=of2140GrantUnusedModeBond(ids,base,source,opts.benchPct==null?0.25:opts.benchPct);
+    return {used:used,bench:bench};
+  }
+  window.of2140GrantWarTableBond=of2140GrantWarTableBond;
+  function of2140BattleHeroIds(){
+    try{ return ((battleState&&battleState.players)||[]).map(function(u){return u&&u.id;}).filter(Boolean); }
+    catch(e){ return []; }
+  }
+
+  if(typeof ARENA_TUNE==='object'&&ARENA_TUNE) ARENA_TUNE.teamSize=8;
+  if(typeof ensureArena==='function'&&!ensureArena.__of2140TeamSize){
+    var __of2140_ensureArena=ensureArena;
+    ensureArena=function(){
+      var A=__of2140_ensureArena.apply(this,arguments);
+      try{
+        var n=(ARENA_TUNE&&ARENA_TUNE.teamSize)||8;
+        if(A&&A.teamSize!==n){
+          var owned=(S.heroes||[]).filter(function(h){return h&&h.owned;}).sort(function(a,b){return powerOf(b)-powerOf(a);}).slice(0,n);
+          var bp=owned.reduce(function(s,h){return s+powerOf(h);},0);
+          A.anchor=Math.max(A.anchor||0,Math.max(200,Math.round(bp*((ARENA_TUNE&&ARENA_TUNE.anchorFactor)||0.45))));
+          A.teamSize=n;
+        }
+      }catch(e){}
+      return A;
+    };
+    ensureArena.__of2140TeamSize=true;
+  }
+  if(typeof arenaPlayerTeam==='function'&&!arenaPlayerTeam.__of2140Size){
+    arenaPlayerTeam=function(cond){
+      var n=Math.max(1,(ARENA_TUNE&&ARENA_TUNE.teamSize)||8);
+      var pool=(S.heroes||[]).filter(function(h){return h&&h.owned;});
+      pool.sort(cond?function(a,b){return (powerOf(b)*cond.mult(b))-(powerOf(a)*cond.mult(a));}:function(a,b){return powerOf(b)-powerOf(a);});
+      return pool.slice(0,n);
+    };
+    arenaPlayerTeam.__of2140Size=true;
+  }
+
+  if(typeof GAUNTLET_TUNE==='object'&&GAUNTLET_TUNE){
+    GAUNTLET_TUNE.esc=Math.max(GAUNTLET_TUNE.esc||1.165,1.19);
+    GAUNTLET_TUNE.baseFactor=Math.max(GAUNTLET_TUNE.baseFactor||0.115,0.13);
+    GAUNTLET_TUNE.freshBonus=Math.min(GAUNTLET_TUNE.freshBonus||1.25,1.15);
+    GAUNTLET_TUNE.usedTwice=Math.min(GAUNTLET_TUNE.usedTwice||0.65,0.55);
+    GAUNTLET_TUNE.lockAt=3;
+    GAUNTLET_TUNE.squadUseLimit=3;
+  }
+  function of2140ClampGauntlet(){
+    try{
+      var R=S.gauntlet&&S.gauntlet.run; if(!R) return;
+      R.atkMult=Math.max(0.55,Math.min(1.65,R.atkMult||1));
+      R.hpMult=Math.max(0.55,Math.min(1.55,R.hpMult||1));
+    }catch(e){}
+  }
+  function of2140NextGauntletSquad(R){
+    try{
+      var G=ensureGauntlet(), lock=(GAUNTLET_TUNE.lockAt||3);
+      if(!R.retired) R.retired={};
+      (R.squad||[]).forEach(function(id){ R.retired[id]=1; G.weekUses[id]=Math.max(G.weekUses[id]||0,lock); });
+      var next=gauntletOwned().filter(function(h){ return h&&h.owned&&!R.retired[h.id]&&!gauntletLocked(h.id); })
+        .sort(function(a,b){ return (powerOf(b)*gauntletUseMult(b.id))-(powerOf(a)*gauntletUseMult(a.id)); })
+        .slice(0,GAUNTLET_TUNE.squadSize||6);
+      if(next.length<2) return false;
+      R.squad=next.map(function(h){return h.id;});
+      R.hp={}; R.dead={}; R.mult={}; R.squadClears=0; R.rotations=(R.rotations||0)+1;
+      next.forEach(function(h){ R.mult[h.id]=gauntletUseMult(h.id); G.weekUses[h.id]=(G.weekUses[h.id]||0)+1; R.hp[h.id]=gauntletHeroMax(h,R); });
+      R.rotationNotice='Squad relieved. Fresh reserves are stepping in.';
+      return true;
+    }catch(e){ of2140Record('gauntlet squad rotation',e); return false; }
+  }
+  if(typeof startGauntletBattle==='function'&&!startGauntletBattle.__of2140Clamp){
+    var __of2140_startGauntletBattle=startGauntletBattle;
+    startGauntletBattle=function(){ of2140ClampGauntlet(); return __of2140_startGauntletBattle.apply(this,arguments); };
+    startGauntletBattle.__of2140Clamp=true;
+  }
+  if(typeof gauntletShowResult==='function'&&!gauntletShowResult.__of2140Notice){
+    var __of2140_gauntletShowResult=gauntletShowResult;
+    gauntletShowResult=function(win,summary){
+      var R=S.gauntlet&&S.gauntlet.run, note=R&&R.rotationNotice;
+      var ret=__of2140_gauntletShowResult.apply(this,arguments);
+      try{
+        if(win&&note){
+          var head=document.querySelector('#arenaResult .gBoonHead');
+          if(head&&!document.getElementById('of2140RotationNote')){
+            head.insertAdjacentHTML('beforebegin','<div id="of2140RotationNote" class="optSummary"><b>Depth check:</b> '+esc(note)+'</div>');
+          }
+        }
+      }catch(e){}
+      if(R) R.rotationNotice=null;
+      return ret;
+    };
+    gauntletShowResult.__of2140Notice=true;
+  }
+  if(typeof gauntletEndBattle==='function'&&!gauntletEndBattle.__of2140Rotation){
+    gauntletEndBattle=function(win){
+      battleGauntlet=null; try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+      var G=ensureGauntlet(), R=G.run; if(!R) return;
+      var ids=of2140BattleHeroIds(), foughtFloor=R.floor||1;
+      (battleState&&battleState.players||[]).forEach(function(u){ R.hp[u.id]=Math.max(0,u.hp); if(u.hp<=0||u.dead) R.dead[u.id]=true; });
+      var livingLeft=R.squad.filter(function(id){return !R.dead[id];}).length;
+      of2140GrantWarTableBond(ids,Math.max(5,Math.round(5+foughtFloor*0.8)),'Gauntlet Floor '+foughtFloor,{benchPct:0.25});
+      if(win&&livingLeft>0){
+        R.squadClears=(R.squadClears||0)+1;
+        if(R.squadClears>=(GAUNTLET_TUNE.squadUseLimit||3)){
+          if(!of2140NextGauntletSquad(R)){
+            var endSum=gauntletEndRun();
+            try{ gauntletShowResult(false,endSum); }catch(e){ of2140Record('gauntlet end result',e); }
+            try{ renderHUD(); }catch(e){} try{ save(); }catch(e){}
+            return;
+          }
+        }
+        R.floor++;
+        of2140ClampGauntlet();
+        R.pendingBoons=gauntletBoonOffer();
+        try{ gauntletShowResult(true); }catch(e){ of2140Record('gauntlet win result',e); }
+      }else{
+        var sum=gauntletEndRun();
+        try{ gauntletShowResult(false,sum); }catch(e){ of2140Record('gauntlet loss result',e); }
+      }
+      try{ renderHUD(); }catch(e){} try{ save(); }catch(e){}
+    };
+    gauntletEndBattle.__of2140Rotation=true;
+  }
+
+  if(typeof siegeEndBattle==='function'&&!siegeEndBattle.__of2140Bond){
+    var __of2140_siegeEndBattle=siegeEndBattle;
+    siegeEndBattle=function(win){
+      var ctx=battleSiege?{ids:(battleSiege.heroIds||[]).slice(),wave:battleSiege.waveIdx||1}:null;
+      var ret=__of2140_siegeEndBattle.apply(this,arguments);
+      if(ctx) of2140GrantWarTableBond(ctx.ids,Math.max(5,5+Math.min(12,ctx.wave)),'Siege Wave '+ctx.wave,{benchPct:0.25});
+      return ret;
+    };
+    siegeEndBattle.__of2140Bond=true;
+  }
+  if(typeof expeditionCollect==='function'&&!expeditionCollect.__of2140Bond){
+    var __of2140_expeditionCollect=expeditionCollect;
+    expeditionCollect=function(expId){
+      var E=ensureExpeditions(), exp=(E.active||[]).find(function(a){return a&&a.id===expId;});
+      var ids=exp&&exp.heroIds?exp.heroIds.slice():[], tier=exp&&exp.tier;
+      var ret=__of2140_expeditionCollect.apply(this,arguments);
+      if(ret&&ret.ok) of2140GrantWarTableBond(ids,tier==='Long'?18:(tier==='Medium'?12:7),'Expedition '+(tier||''),{benchPct:0.25});
+      return ret;
+    };
+    expeditionCollect.__of2140Bond=true;
+  }
+  if(typeof arenaEndBattle==='function'&&!arenaEndBattle.__of2140Bond){
+    var __of2140_arenaEndBattle=arenaEndBattle;
+    arenaEndBattle=function(win){
+      var ids=of2140BattleHeroIds(), rank=(battleArena&&battleArena.rank)||0;
+      var ret=__of2140_arenaEndBattle.apply(this,arguments);
+      of2140GrantWarTableBond(ids,Math.max(6,6+Math.min(14,rank)),'Arena Rank '+rank,{benchPct:0.25});
+      return ret;
+    };
+    arenaEndBattle.__of2140Bond=true;
+  }
+  if(typeof conquestEndBattle==='function'&&!conquestEndBattle.__of2140Bond){
+    var __of2140_conquestEndBattle=conquestEndBattle;
+    conquestEndBattle=function(win){
+      var ids=of2140BattleHeroIds(), tier=(battleConquest&&battleConquest.tier)||0;
+      var ret=__of2140_conquestEndBattle.apply(this,arguments);
+      of2140GrantWarTableBond(ids,Math.max(7,7+Math.min(16,tier)),'Conquest Tier '+tier,{benchPct:0.25});
+      return ret;
+    };
+    conquestEndBattle.__of2140Bond=true;
+  }
+  if(typeof riftEndBattle==='function'&&!riftEndBattle.__of2140Bond){
+    var __of2140_riftEndBattle=riftEndBattle;
+    riftEndBattle=function(win){
+      var ids=of2140BattleHeroIds(), stage=0;
+      try{ stage=(ensureRift().run&&ensureRift().run.stage)||0; }catch(e){}
+      var ret=__of2140_riftEndBattle.apply(this,arguments);
+      of2140GrantWarTableBond(ids,Math.max(5,5+Math.min(18,stage)),'Rift Stage '+stage,{benchPct:0.25});
+      return ret;
+    };
+    riftEndBattle.__of2140Bond=true;
+  }
+
+  if(typeof bugReportText==='function'&&!bugReportText.__of2140Log){
+    var __of2140_bugReportText=bugReportText;
+    bugReportText=function(area){
+      var txt=__of2140_bugReportText.apply(this,arguments);
+      try{
+        var rows=((S.stabilityLog&&S.stabilityLog.crashes)||[]).slice(0,8).map(function(x){
+          return '- '+new Date(x.at).toLocaleString()+' ['+x.area+'] '+String(x.message||'').split('\n')[0];
+        });
+        if(rows.length) txt+='\n\nRecent Stability Log:\n'+rows.join('\n');
+      }catch(e){}
+      return txt;
+    };
+    bugReportText.__of2140Log=true;
+  }
+})();
+
+/* ===== Prestige Identity Frames (v2.141.0) ===== */
+(function(){
+  if(window.__of2141PrestigeInstalled) return;
+  window.__of2141PrestigeInstalled=true;
+
+  function of2141Roman(n){
+    n=Math.max(1,Math.floor(n||1));
+    var map=[['X',10],['IX',9],['V',5],['IV',4],['I',1]], out='';
+    map.forEach(function(p){ while(n>=p[1]){ out+=p[0]; n-=p[1]; } });
+    return out||'I';
+  }
+  function of2141PrestigeLevel(h){ return Math.max(0,Math.floor((h&&h.prestige)||0)); }
+  function of2141FrameLevel(p){ p=Math.max(0,Math.floor(p||0)); return p>0?Math.floor((p-1)/5)+1:0; }
+  function of2141FrameMilestone(p){
+    p=Math.max(0,Math.floor(p||0));
+    if(p<1) return 1;
+    return (Math.floor(p/5)+1)*5;
+  }
+  function of2141Band(p){
+    p=Math.max(0,Math.floor(p||0));
+    if(p>=50) return {key:'eternal',name:'Eternal',start:50,next:null,color:'#e9f3ff'};
+    if(p>=35) return {key:'ascendant',name:'Ascendant',start:35,next:50,color:'#d7a8ff'};
+    if(p>=20) return {key:'mythic',name:'Mythic',start:20,next:35,color:'#ff5d6c'};
+    if(p>=10) return {key:'exalted',name:'Exalted',start:10,next:20,color:'#8bd0ff'};
+    if(p>=5) return {key:'tempered',name:'Tempered',start:5,next:10,color:'#ffb01f'};
+    if(p>=1) return {key:'forged',name:'Forged',start:1,next:5,color:'#37d67a'};
+    return {key:'none',name:'Unprestiged',start:0,next:1,color:'#9aa7b8'};
+  }
+  function of2141Tier(p){
+    p=Math.max(0,Math.floor(p||0));
+    var b=of2141Band(p), ord=p>0?(p-b.start+1):0;
+    return {level:p,key:b.key,name:b.name,ordinal:ord,roman:ord?of2141Roman(ord):'',label:p>0?(b.name+' '+of2141Roman(ord)):'Unprestiged',next:b.next,color:b.color};
+  }
+  function of2141NextTierMilestone(p){
+    p=Math.max(0,Math.floor(p||0));
+    var b=of2141Band(p);
+    return b.next;
+  }
+  function of2141NextLegacyMilestone(p){
+    p=Math.max(0,Math.floor(p||0));
+    return p<10?10:(Math.floor(p/10)+1)*10;
+  }
+  function of2141LegacyTitle(p){
+    p=Math.max(0,Math.floor(p||0));
+    if(p>=50) return 'Eternal Oathkeeper';
+    if(p>=35) return 'Ascendant Oathkeeper';
+    if(p>=20) return 'Shield of the House';
+    if(p>=10) return 'Lightbearer';
+    if(p>=1) return 'Oathforged';
+    return '';
+  }
+  function of2141Info(h){
+    var p=of2141PrestigeLevel(h), t=of2141Tier(p), f=of2141FrameLevel(p), nf=of2141FrameMilestone(p), nt=of2141NextTierMilestone(p), nl=of2141NextLegacyMilestone(p);
+    return {p:p,tier:t,frame:f,nextFrame:nf,nextTier:nt,nextLegacy:nl,bonus:p*10,title:of2141LegacyTitle(p)};
+  }
+  function of2141Sync(h){
+    if(!h) return of2141Info(h);
+    var x=of2141Info(h);
+    h.prestigeLevel=x.p;
+    h.prestigeBonus=x.bonus;
+    h.prestigeTier=x.tier.label;
+    h.prestigeFrameLevel=x.frame;
+    if(!Array.isArray(h.legacyNodes)) h.legacyNodes=[];
+    h.legacyTitle=x.title||'';
+    return x;
+  }
+  function of2141FrameClass(frame){ return 'ofPFrame'+Math.max(1,Math.min(11,frame||1)); }
+  function of2141NearFrameScore(h){
+    var x=of2141Info(h);
+    if(!x.p) return 999;
+    return Math.max(0,x.nextFrame-x.p);
+  }
+
+  window.getPrestigeTier=function(prestigeLevel){ return of2141Tier(prestigeLevel); };
+  window.getPrestigeFrameLevel=function(prestigeLevel){ return of2141FrameLevel(prestigeLevel); };
+  window.getPrestigeBonus=function(prestigeLevel){ return Math.max(0,Math.floor(prestigeLevel||0))*10; };
+  window.getNextFrameMilestone=function(prestigeLevel){ return of2141FrameMilestone(prestigeLevel); };
+  window.getNextTierMilestone=function(prestigeLevel){ return of2141NextTierMilestone(prestigeLevel); };
+
+  if(typeof prestigeFrameTier==='function'&&!prestigeFrameTier.__of2141Identity){
+    prestigeFrameTier=function(h){
+      var x=of2141Info(h);
+      if(!x.p) return 'No Frame';
+      return x.tier.label+' · Frame '+x.frame;
+    };
+    prestigeFrameTier.__of2141Identity=true;
+  }
+
+  function of2141Styles(){
+    if(document.getElementById('of2141PrestigeStyles')) return;
+    var st=document.createElement('style'); st.id='of2141PrestigeStyles';
+    st.textContent=
+      '.hero.lqHeroCard.ofPrestigeIdentity{border-color:var(--pf1,#ffb01f)!important;box-shadow:0 0 0 1px color-mix(in srgb,var(--pf1,#ffb01f) 70%,transparent),0 14px 34px color-mix(in srgb,var(--pf1,#ffb01f) 18%,transparent),inset 0 0 24px color-mix(in srgb,var(--pf2,#ff5d9e) 12%,transparent)!important}'+
+      '.hero.lqHeroCard.ofPrestigeIdentity:after{content:"";position:absolute;inset:3px;border-radius:12px;pointer-events:none;border:1px solid color-mix(in srgb,var(--pf2,#fff) 48%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--pf1,#ffb01f) 14%,transparent),transparent 38%,color-mix(in srgb,var(--pf2,#ff5d9e) 12%,transparent));z-index:1}'+
+      '.hero.lqHeroCard.ofPrestigeIdentity .ava{box-shadow:0 0 0 2px var(--pf1,#ffb01f),0 0 20px color-mix(in srgb,var(--pf2,#ff5d9e) 38%,transparent)!important}'+
+      '.hero.lqHeroCard.ofPrestigeIdentity .prestigeRibbon{background:linear-gradient(135deg,var(--pf1,#ffb01f),var(--pf2,#ff5d9e));color:#07101d;border-color:rgba(255,255,255,.72);box-shadow:0 0 18px color-mix(in srgb,var(--pf1,#ffb01f) 45%,transparent);max-width:calc(100% - 18px);overflow:hidden;text-overflow:ellipsis}'+
+      '.hero.lqHeroCard.ofPrestigeIdentity .pstar{background:linear-gradient(135deg,var(--pf1,#ffb01f),var(--pf2,#ff5d9e));color:#07101d}'+
+      '.hero.lqHeroCard.ofPrestigeIdentity.ofFrameMajor:before{opacity:.95;background:radial-gradient(circle at 50% 15%,color-mix(in srgb,var(--pf2,#fff) 24%,transparent),transparent 38%),linear-gradient(135deg,color-mix(in srgb,var(--pf1,#ffb01f) 14%,transparent),transparent 48%,color-mix(in srgb,var(--pf2,#ff5d9e) 12%,transparent))}'+
+      '.ofPFrame1{--pf1:#9fd38a;--pf2:#f4c16a}.ofPFrame2{--pf1:#ffb01f;--pf2:#ff6e40}.ofPFrame3{--pf1:#8bd0ff;--pf2:#ffd95a}.ofPFrame4{--pf1:#5fe0c8;--pf2:#8bd0ff}.ofPFrame5{--pf1:#ff5d6c;--pf2:#ffb01f}.ofPFrame6{--pf1:#ff4d9d;--pf2:#ffd95a}.ofPFrame7{--pf1:#b88af0;--pf2:#8bd0ff}.ofPFrame8{--pf1:#d7a8ff;--pf2:#ffb01f}.ofPFrame9{--pf1:#ffffff;--pf2:#8bd0ff}.ofPFrame10{--pf1:#ffd95a;--pf2:#ffffff}.ofPFrame11{--pf1:#e9f3ff;--pf2:#ffd95a}'+
+      '.ofPrestigePanel{position:relative;overflow:hidden;margin:0 0 12px;padding:12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--pf1,#ffb01f) 58%,var(--line));background:radial-gradient(420px 170px at 92% 0%,color-mix(in srgb,var(--pf2,#ff5d9e) 18%,transparent),transparent 68%),linear-gradient(135deg,color-mix(in srgb,var(--pf1,#ffb01f) 12%,var(--panel)),var(--panel2));box-shadow:0 14px 34px rgba(0,0,0,.24)}'+
+      '.ofPrestigePanel .oph{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}.ofPrestigePanel .oph b{display:block;font-family:Orbitron;color:var(--pf2,#ffd95a);font-size:13px}.ofPrestigePanel .oph span{display:block;color:var(--muted);font-size:11px;font-weight:850;margin-top:2px}.ofPrestigePanel .opBadge{font-family:Orbitron;font-weight:1000;color:#07101d;background:linear-gradient(135deg,var(--pf1,#ffb01f),var(--pf2,#ff5d9e));border-radius:999px;padding:5px 9px;white-space:nowrap;box-shadow:0 0 16px color-mix(in srgb,var(--pf1,#ffb01f) 38%,transparent)}'+
+      '.ofPrestigeGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.ofPrestigeGrid div{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:8px;text-align:center;min-width:0}.ofPrestigeGrid b{display:block;font-family:Orbitron;color:var(--pf2,#ffd95a);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ofPrestigeGrid span{display:block;color:var(--muted);font-size:8.5px;font-weight:1000;text-transform:uppercase;letter-spacing:.35px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
+      '.ofPrestigeBar{height:8px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:#0008;overflow:hidden;margin:10px 0 7px}.ofPrestigeBar i{display:block;height:100%;background:linear-gradient(90deg,var(--pf1,#ffb01f),var(--pf2,#ff5d9e));transition:width .25s}.ofPrestigeNote{font-size:11px;color:var(--muted);font-weight:800;line-height:1.35}.ofPrestigeNote b{color:var(--ink)}'+
+      '.prestigeHeroRow.ofPrestigeHallRow{border-color:color-mix(in srgb,var(--pf1,#ffb01f) 54%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--pf1,#ffb01f) 11%,var(--bg)),var(--bg));box-shadow:inset 0 0 18px color-mix(in srgb,var(--pf2,#ff5d9e) 9%,transparent)}.prestigeHeroRow.ofPrestigeHallRow .face{box-shadow:0 0 0 2px var(--pf1,#ffb01f),0 0 16px color-mix(in srgb,var(--pf2,#ff5d9e) 35%,transparent)}.prestigeHeroRow.ofPrestigeHallRow .ps{color:var(--pf2,#ffd95a)}'+
+      '@media(max-width:420px){.ofPrestigeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}';
+    document.head.appendChild(st);
+  }
+
+  function of2141DecorateCard(card,h){
+    if(!card||!h) return card;
+    var x=of2141Sync(h);
+    if(!x.p) return card;
+    of2141Styles();
+    card.classList.add('ofPrestigeIdentity',of2141FrameClass(x.frame),'ofTier-'+x.tier.key);
+    if(x.frame>=3) card.classList.add('ofFrameMajor');
+    card.dataset.prestigeLevel=x.p;
+    card.dataset.prestigeFrame=x.frame;
+    card.title='Prestige '+x.p+' · '+x.tier.label+' · +'+x.bonus+'% power · Frame '+x.frame;
+    var rb=card.querySelector('.prestigeRibbon');
+    if(rb) rb.textContent='P'+x.p+' · '+x.tier.label;
+    var ps=card.querySelector('.pstar');
+    if(ps) ps.textContent='P'+x.p;
+    return card;
+  }
+
+  if(typeof rosterCard==='function'&&!rosterCard.__of2141Prestige){
+    var __of2141_rosterCard=rosterCard;
+    rosterCard=function(h,i){
+      var card=__of2141_rosterCard.apply(this,arguments);
+      try{ of2141DecorateCard(card,h); }catch(e){}
+      return card;
+    };
+    rosterCard.__of2141Prestige=true;
+  }
+
+  function of2141PrestigePanelHTML(h){
+    var x=of2141Sync(h);
+    if(!x.p) return '';
+    of2141Styles();
+    var inFrame=x.nextFrame?Math.max(0,x.nextFrame-x.p):0;
+    var pct=x.p<1?0:Math.min(100,Math.max(0,((x.p-(x.frame===1?1:((x.frame-1)*5)))/(Math.max(1,x.nextFrame-(x.frame===1?1:((x.frame-1)*5)))))*100));
+    var tierLine=x.nextTier?('Next major tier at P'+x.nextTier):'Eternal tier reached';
+    var legacyLine='Legacy Nodes planned every 10 prestige levels · next P'+x.nextLegacy;
+    return '<div class="ofPrestigePanel '+of2141FrameClass(x.frame)+'">'+
+      '<div class="oph"><div><b>Prestige '+x.p+'</b><span>'+esc(x.tier.label)+' · '+esc(x.title||'Oathforged')+'</span></div><div class="opBadge">P'+x.p+'</div></div>'+
+      '<div class="ofPrestigeGrid"><div><b>+'+x.bonus+'%</b><span>Power Bonus</span></div><div><b>'+x.frame+'</b><span>Frame Level</span></div><div><b>'+(inFrame?('P'+x.nextFrame):'Now')+'</b><span>Next Frame</span></div><div><b>P'+x.nextLegacy+'</b><span>Legacy Node</span></div></div>'+
+      '<div class="ofPrestigeBar"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="ofPrestigeNote"><b>'+esc(tierLine)+'.</b> '+esc(legacyLine)+'. Stars stay capped at 7; prestige number and frame show long-term investment.</div>'+
+    '</div>';
+  }
+
+  if(typeof heroDevotionBanner==='function'&&!heroDevotionBanner.__of2141Prestige){
+    var __of2141_heroDevotionBanner=heroDevotionBanner;
+    heroDevotionBanner=function(h){
+      var base='';
+      try{ base=__of2141_heroDevotionBanner.apply(this,arguments)||''; }catch(e){}
+      return of2141PrestigePanelHTML(h)+base;
+    };
+    heroDevotionBanner.__of2141Prestige=true;
+  }
+
+  if(typeof prestigeCelebration==='function'&&!prestigeCelebration.__of2141Prestige){
+    prestigeCelebration=function(h,np){
+      var x=of2141Info({prestige:np});
+      var items=[
+        {txt:'P'+np+' · '+x.tier.label,cls:'main'},
+        {txt:'Frame '+x.frame+' unlocked',cls:'bonus'},
+        {txt:'3x catch-up EXP until Lv '+prestigeCatchTarget(h),cls:'bonus'},
+        {txt:'Permanent +'+(np*10)+'% total prestige power',cls:'bonus'}
+      ];
+      if(np%10===0) items.push({txt:'Legacy Node slot planned for P'+np,cls:'title'});
+      rewardSummary('★ New Cycle Started',items);
+    };
+    prestigeCelebration.__of2141Prestige=true;
+  }
+
+  if(typeof prestigeRoadmapHTML==='function'&&!prestigeRoadmapHTML.__of2141Prestige){
+    var __of2141_prestigeRoadmapHTML=prestigeRoadmapHTML;
+    prestigeRoadmapHTML=function(h){
+      var html=__of2141_prestigeRoadmapHTML.apply(this,arguments), np=((h&&h.prestige)||0)+1, x=of2141Info({prestige:np});
+      try{
+        html=html.replace('<span>+'+(np*10)+'% power</span>','<span>+'+(np*10)+'% power</span><span>P'+np+' '+esc(x.tier.label)+'</span><span>Frame '+x.frame+'</span>');
+      }catch(e){}
+      return html;
+    };
+    prestigeRoadmapHTML.__of2141Prestige=true;
+  }
+
+  if(typeof rosterFiltered==='function'&&!rosterFiltered.__of2141Prestige){
+    var __of2141_rosterFiltered=rosterFiltered;
+    rosterFiltered=function(){
+      var list=__of2141_rosterFiltered.apply(this,arguments)||[];
+      try{
+        if(rosState.quick==='p10') list=list.filter(function(h){return h&&h.owned&&of2141PrestigeLevel(h)>=10;});
+        if(rosState.quick==='p20') list=list.filter(function(h){return h&&h.owned&&of2141PrestigeLevel(h)>=20;});
+        if(rosState.quick==='p50') list=list.filter(function(h){return h&&h.owned&&of2141PrestigeLevel(h)>=50;});
+        if(rosState.quick==='pready') list=list.filter(function(h){return h&&h.owned&&typeof canPrestige==='function'&&canPrestige(h);});
+        if(rosState.sort==='prestige') list=list.slice().sort(function(a,b){return of2141PrestigeLevel(b)-of2141PrestigeLevel(a)||powerOf(b)-powerOf(a);});
+        if(rosState.sort==='frame') list=list.slice().sort(function(a,b){return of2141FrameLevel(of2141PrestigeLevel(b))-of2141FrameLevel(of2141PrestigeLevel(a))||of2141PrestigeLevel(b)-of2141PrestigeLevel(a)||powerOf(b)-powerOf(a);});
+        if(rosState.sort==='nextFrame') list=list.slice().sort(function(a,b){return of2141NearFrameScore(a)-of2141NearFrameScore(b)||of2141PrestigeLevel(b)-of2141PrestigeLevel(a)||powerOf(b)-powerOf(a);});
+      }catch(e){}
+      return list;
+    };
+    rosterFiltered.__of2141Prestige=true;
+  }
+  if(typeof rosterMatchesQuery==='function'&&!rosterMatchesQuery.__of2141Prestige){
+    var __of2141_rosterMatchesQuery=rosterMatchesQuery;
+    rosterMatchesQuery=function(h,q){
+      if(__of2141_rosterMatchesQuery.apply(this,arguments)) return true;
+      try{
+        var x=of2141Info(h), hay=('prestige p'+x.p+' frame '+x.frame+' '+x.tier.label+' '+x.tier.name+' '+x.title).toLowerCase();
+        return !!q && hay.indexOf(String(q).toLowerCase())>=0;
+      }catch(e){ return false; }
+    };
+    rosterMatchesQuery.__of2141Prestige=true;
+  }
+  function of2141PatchRosterControls(){
+    try{
+      var q=document.getElementById('rosQuick');
+      if(q&&!q.querySelector('[data-qk="p10"]')){
+        [['p10','P10+'],['p20','P20+'],['p50','P50+'],['pready','Prestige Ready']].forEach(function(x){
+          q.insertAdjacentHTML('beforeend','<button data-qk="'+x[0]+'" class="'+(rosState.quick===x[0]?'on':'')+'">'+x[1]+'</button>');
+        });
+      }
+      var s=document.getElementById('rosSort');
+      if(s&&!s.querySelector('option[value="prestige"]')){
+        [['prestige','Prestige'],['frame','Prestige Frame'],['nextFrame','Near Next Frame']].forEach(function(x){
+          s.insertAdjacentHTML('beforeend','<option value="'+x[0]+'">'+x[1]+'</option>');
+        });
+      }
+      if(s&&['prestige','frame','nextFrame'].indexOf(rosState.sort)>=0) s.value=rosState.sort;
+    }catch(e){}
+  }
+  if(typeof renderRoster==='function'&&!renderRoster.__of2141Prestige){
+    var __of2141_renderRoster=renderRoster;
+    renderRoster=function(v){
+      var ret=__of2141_renderRoster.apply(this,arguments);
+      of2141PatchRosterControls();
+      return ret;
+    };
+    renderRoster.__of2141Prestige=true;
+  }
+
+  function of2141PrestigeHeroRow(h,full){
+    var x=of2141Sync(h), face=h.img?'<img src="'+h.img+'">':initials(h.name), pct=prestigeCatchActive(h)?Math.min(100,h.level/prestigeCatchTarget(h)*100):100;
+    return '<div class="prestigeHeroRow ofPrestigeHallRow '+of2141FrameClass(x.frame)+'" data-prestigehero="'+h.id+'">'+
+      '<div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div>'+
+      '<div><div class="pn">'+esc(h.name)+' · P'+x.p+' · '+esc(x.tier.label)+'</div>'+
+      '<div class="pm">'+esc(heroArchetype(h)?.label||h.role)+' · Frame '+x.frame+' · +'+x.bonus+'% power · Lv '+h.level+'/'+rankCap(h)+(full?' · PWR '+powerOf(h):'')+'</div>'+
+      '<div class="xpbar" style="height:7px;margin-top:5px"><i style="width:'+pct+'%;background:linear-gradient(90deg,var(--pf1,#ffb01f),var(--pf2,#ff5d9e))"></i></div></div>'+
+      '<div class="ps">'+(prestigeCatchActive(h)?'3x':'P'+x.p)+'</div></div>';
+  }
+  if(typeof prestigeHallHTML==='function'&&!prestigeHallHTML.__of2141Prestige){
+    prestigeHallHTML=function(){
+      ensurePrestigeState(); of2141Styles();
+      var total=totalPrestigeStars(), top=topPrestigeHeroes(3), m=nextPrestigeMilestone();
+      var rows=top.length?top.map(function(h){return of2141PrestigeHeroRow(h,false);}).join(''):'<div class="empty" style="padding:10px;margin-top:8px">No prestige heroes yet. Your first New Cycle will open the Hall.</div>';
+      return '<div class="prestigeHall"><div class="phh"><b>Prestige Hall</b><span>'+total+' total prestige</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">A long-term showcase for favorite heroes who have begun new cycles.</p><div class="prestigeMini"><div class="mini"><b>'+total+'</b><span>Total P</span></div><div class="mini"><b>'+Math.max(0,m.need)+'</b><span>To '+m.next+'</span></div><div class="mini"><b>'+top.length+'</b><span>Prestiged</span></div></div><div class="catchupBox"><b>Catch-up:</b> prestiged heroes gain 3x EXP until they return to their previous cap. '+prestigeMilestoneBonusText()+'.</div>'+prestigePolishSummaryHTML()+rows+'<div class="lifeactions"><button class="primary" id="openPrestigeHall">Open Prestige Hall</button></div></div>';
+    };
+    prestigeHallHTML.__of2141Prestige=true;
+  }
+  if(typeof showPrestigeHall==='function'&&!showPrestigeHall.__of2141Prestige){
+    showPrestigeHall=function(){
+      var box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
+      ensurePrestigeState(); of2141Styles();
+      var total=totalPrestigeStars(), m=nextPrestigeMilestone(), heroes=topPrestigeHeroes(20);
+      var rows=heroes.length?heroes.map(function(h){return of2141PrestigeHeroRow(h,true);}).join(''):'<div class="empty" style="padding:12px">No prestiged heroes yet.</div>';
+      var hist=(S.prestigeHistory||[]).slice(0,6).map(function(x){return '<div class="winItem"><div class="wt">P'+x.prestige+' · '+esc(x.name)+'</div><div class="wm">New Cycle started · previous cap Lv '+(x.catchTarget||100)+'</div><div class="wd">'+new Date(x.at).toLocaleDateString()+'</div></div>';}).join('');
+      box.innerHTML='<div class="prestigeCelebrate">P</div><h2>Prestige Hall</h2><p>Stars stay capped at 7. Prestige number, tier, and frame show long-term investment.</p>'+
+        '<div class="prestigeHall"><div class="phh"><b>Account Prestige</b><span>'+total+' total prestige</span></div><div class="prestigeMini"><div class="mini"><b>'+total+'</b><span>Total P</span></div><div class="mini"><b>'+m.next+'</b><span>Next goal</span></div><div class="mini"><b>'+Math.max(0,m.need)+'</b><span>Needed</span></div></div><div class="catchupBox"><b>Account bonus:</b> '+prestigeMilestoneBonusText()+'.<br><b>Catch-up:</b> 3x EXP until a prestiged hero reaches its pre-prestige cap.</div>'+prestigePolishSummaryHTML()+'</div>'+
+        prestigeMilestonesHTML()+
+        '<div style="text-align:left;margin-top:10px"><b>Prestiged Heroes</b>'+rows+'</div>'+
+        '<div style="text-align:left;margin-top:10px"><b>Recent New Cycles</b>'+(hist||'<div class="empty" style="padding:10px;margin-top:8px">No history yet.</div>')+'</div>'+
+        '<button id="prestigeHallClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px 18px;font-family:Orbitron;font-weight:900;width:100%">Done</button>';
+      modal.classList.add('show');
+      document.getElementById('prestigeHallClose').onclick=function(){modal.classList.remove('show');};
+      box.querySelectorAll('[data-pms]').forEach(function(btn){btn.onclick=function(){ claimPrestigeMilestone(btn.dataset.pms); showPrestigeHall(); };});
+      box.querySelectorAll('[data-prestigehero]').forEach(function(el){el.onclick=function(){ modal.classList.remove('show'); openHeroSheet(el.dataset.prestigehero); };});
+    };
+    showPrestigeHall.__of2141Prestige=true;
+  }
+
+  try{ of2141Styles(); }catch(e){}
+})();
+
+/* ===== v2.142.0 Roster Depth: weakest viable squads first ===== */
+(function(){
+  if(window.__of2142RosterDepth) return;
+  window.__of2142RosterDepth=true;
+
+  function of2142Pow(h,multFn){
+    try{ return Math.max(0,powerOf(h)*(multFn?multFn(h):1)); }
+    catch(e){ return 0; }
+  }
+  function of2142Asc(pool,multFn){
+    return (pool||[]).slice().sort(function(a,b){
+      return of2142Pow(a,multFn)-of2142Pow(b,multFn) || String(a.name||'').localeCompare(String(b.name||''));
+    });
+  }
+  function of2142Desc(pool,multFn){
+    return (pool||[]).slice().sort(function(a,b){
+      return of2142Pow(b,multFn)-of2142Pow(a,multFn) || String(a.name||'').localeCompare(String(b.name||''));
+    });
+  }
+  function of2142TeamPower(heroes,multFn){
+    return (heroes||[]).reduce(function(s,h){ return s+of2142Pow(h,multFn); },0);
+  }
+  function of2142RosterDepthAnchor(pool,size,multFn){
+    try{
+      size=Math.max(1,Math.floor(size||6));
+      var sorted=of2142Desc(pool,multFn), chunks=[];
+      for(var i=0;i+size<=sorted.length;i+=size) chunks.push(of2142TeamPower(sorted.slice(i,i+size),multFn));
+      if(!chunks.length) chunks.push(of2142TeamPower(sorted.slice(0,size),multFn));
+      chunks=chunks.filter(function(x){return x>0;}).sort(function(a,b){return a-b;});
+      if(!chunks.length) return 1000;
+      var idx=Math.max(0,Math.min(chunks.length-1,Math.floor(chunks.length*0.40)));
+      return Math.max(1,Math.round(chunks[idx]));
+    }catch(e){ return 1000; }
+  }
+  function of2142WeakestViable(pool,size,multFn,minPower){
+    try{
+      size=Math.max(1,Math.floor(size||6));
+      var sorted=of2142Asc(pool,multFn);
+      if(sorted.length<=size) return sorted.slice(0,size);
+      var best=null, bestPow=Infinity, fallback=null, fallbackPow=-1;
+      for(var i=0;i+size<=sorted.length;i++){
+        var team=sorted.slice(i,i+size), p=of2142TeamPower(team,multFn);
+        if(p>fallbackPow){ fallback=team; fallbackPow=p; }
+        if(p>=minPower && p<bestPow){ best=team; bestPow=p; }
+      }
+      return (best||fallback||sorted.slice(0,size)).slice(0,size);
+    }catch(e){ return (pool||[]).slice(0,size||6); }
+  }
+  function of2142BattleHeroIds(){
+    try{ return ((battleState&&battleState.players)||[]).map(function(u){return u&&u.id;}).filter(Boolean); }
+    catch(e){ return []; }
+  }
+  function of2142GrantWarBond(ids,base,source){
+    try{ if(window.of2140GrantWarTableBond) window.of2140GrantWarTableBond(ids,base,source,{benchPct:0.25}); }catch(e){}
+  }
+
+  if(typeof siegeBestTeamFor==='function'){
+    siegeBestTeamFor=function(k){
+      var sg=ensureSiege(), F=sg.fronts[k]||(sg.fronts[k]={wavesCleared:0,bestRatio:0});
+      var pool=siegeOwned().filter(function(h){return h&&!sg.tapped[h.id];});
+      var TS=SIEGE_TUNE.teamSize;
+      if(pool.length<TS) return null;
+      var mods=siegeDomainMods(), waveIdx=(F.wavesCleared||0)+1;
+      var wp=siegeWavePower(sg.base||siegeFrontBase(),waveIdx,mods[k]);
+      function score(h){ return siegeAffMult(h,k); }
+      var viable=null, fallback=null;
+      function consider(heroes){
+        if(!heroes||heroes.length<TS) return;
+        var hh=heroes.slice(0,TS), e=siegeTeamEff(hh,k), obj={heroes:hh,power:e.power,eff:e.eff,syn:e.syn,synLabel:teamSynLabel(hh),depthOrder:'weakestViable'};
+        if(!fallback||obj.eff>fallback.eff) fallback=obj;
+        if(obj.eff>=wp && (!viable||obj.eff<viable.eff)) viable=obj;
+      }
+      var asc=of2142Asc(pool,score);
+      for(var i=0;i+TS<=asc.length;i++) consider(asc.slice(i,i+TS));
+      var byIp={};
+      pool.forEach(function(h){ if(h&&h.ip) (byIp[h.ip]=byIp[h.ip]||[]).push(h); });
+      Object.keys(byIp).forEach(function(ip){
+        var a=of2142Asc(byIp[ip],score);
+        for(var j=0;j+TS<=a.length;j++) consider(a.slice(j,j+TS));
+      });
+      consider(of2142Desc(pool,score).slice(0,TS));
+      return viable||fallback;
+    };
+    siegeBestTeamFor.__of2142Depth=true;
+  }
+  if(typeof siegePanelHTML==='function'&&!siegePanelHTML.__of2142DepthCopy){
+    var __of2142_siegePanelHTML=siegePanelHTML;
+    siegePanelHTML=function(){
+      var html=__of2142_siegePanelHTML.apply(this,arguments);
+      return String(html).replace('sends your best teams to the toughest winnable fronts','sends the weakest viable teams first, saving your strongest squads for deeper waves');
+    };
+    siegePanelHTML.__of2142DepthCopy=true;
+  }
+  if(typeof siegeDeployNext==='function'&&!siegeDeployNext.__of2142Bond){
+    var __of2142_siegeDeployNext=siegeDeployNext;
+    siegeDeployNext=function(k){
+      var ret=__of2142_siegeDeployNext.apply(this,arguments);
+      try{
+        if(ret&&ret.ok&&ret.heroIds&&ret.heroIds.length){
+          var wave=ret.waveIdx||1;
+          of2142GrantWarBond(ret.heroIds,Math.max(5,5+Math.min(12,wave)),'Siege Wave '+wave);
+        }
+      }catch(e){}
+      return ret;
+    };
+    siegeDeployNext.__of2142Bond=true;
+  }
+
+  if(typeof expeditionAutoFill==='function'){
+    expeditionAutoFill=function(offer){
+      try{
+        var locked=expeditionLockedSet(), avail=expOwned().filter(function(h){return h&&!locked.has(h.id);});
+        if(!offer||avail.length<offer.size) return null;
+        var byWeak=of2142Asc(avail), pick=new Set();
+        function addWeak(list,n){
+          list.filter(function(h){return !pick.has(h.id);}).slice(0,n).forEach(function(h){pick.add(h.id);});
+        }
+        (offer.reqs||[]).forEach(function(req){
+          if(req.kind==='role') addWeak(byWeak.filter(function(h){return h.role===req.role;}),req.n);
+          else if(req.kind==='element') addWeak(byWeak.filter(function(h){return expHeroElement(h)===req.element;}),req.n);
+          else if(req.kind==='affinity') addWeak(byWeak.filter(function(h){return Array.isArray(h.aff)&&h.aff.indexOf(req.domain)>=0;}),req.n);
+          else if(req.kind==='fandom'){
+            var groups={};
+            byWeak.forEach(function(h){ if(h.ip&&!pick.has(h.id)) (groups[h.ip]=groups[h.ip]||[]).push(h); });
+            var best=null, bestPow=Infinity;
+            Object.keys(groups).forEach(function(ip){
+              if(groups[ip].length>=req.n){
+                var grp=groups[ip].slice(0,req.n), p=of2142TeamPower(grp);
+                if(p<bestPow){ best=grp; bestPow=p; }
+              }
+            });
+            if(best) best.forEach(function(h){pick.add(h.id);});
+          }
+        });
+        byWeak.forEach(function(h){ if(pick.size<offer.size&&!pick.has(h.id)) pick.add(h.id); });
+        var team=byWeak.filter(function(h){return pick.has(h.id);}).slice(0,offer.size);
+        if(team.length!==offer.size || !(offer.reqs||[]).every(function(req){return expReqCheck(req,team);})) return null;
+        var minPow=Math.max(1,(offer.recPower||1)*0.90), strong=of2142Desc(avail);
+        var guard=0;
+        while(of2142TeamPower(team)<minPow && guard++<offer.size*2){
+          var ids={}; team.forEach(function(h){ids[h.id]=1;});
+          var candidate=strong.find(function(h){return !ids[h.id];});
+          if(!candidate) break;
+          var replaced=false;
+          team=team.slice().sort(function(a,b){return powerOf(a)-powerOf(b);});
+          for(var i=0;i<team.length;i++){
+            if(powerOf(team[i])>=powerOf(candidate)) continue;
+            var test=team.slice(); test[i]=candidate;
+            if((offer.reqs||[]).every(function(req){return expReqCheck(req,test);})){ team=test; replaced=true; break; }
+          }
+          if(!replaced) break;
+        }
+        return team;
+      }catch(e){ return null; }
+    };
+    expeditionAutoFill.__of2142Depth=true;
+  }
+
+  if(typeof gauntletDefaultSquad==='function'){
+    gauntletDefaultSquad=function(){
+      var size=(GAUNTLET_TUNE&&GAUNTLET_TUNE.squadSize)||6, pool=gauntletEligible();
+      var anchor=of2142RosterDepthAnchor(gauntletOwned(),size,function(h){return gauntletUseMult(h.id);});
+      var min=anchor*(GAUNTLET_TUNE.baseFactor||0.13)*1.05;
+      return of2142WeakestViable(pool,size,function(h){return gauntletUseMult(h.id);},min).map(function(h){return h.id;});
+    };
+    gauntletDefaultSquad.__of2142Depth=true;
+  }
+  if(typeof gauntletStartRun==='function'&&!gauntletStartRun.__of2142Depth){
+    gauntletStartRun=function(squadIds){
+      var G=ensureGauntlet();
+      if(!squadIds||!squadIds.length) squadIds=gauntletDefaultSquad();
+      var heroes=squadIds.map(function(id){return S.heroes.find(function(h){return h&&h.id===id;});}).filter(Boolean);
+      if(heroes.length<2) return {ok:false,reason:'noteam'};
+      var baseLine=heroes.reduce(function(s,h){return s+powerOf(h);},0);
+      var depthBase=of2142RosterDepthAnchor(gauntletOwned(),(GAUNTLET_TUNE&&GAUNTLET_TUNE.squadSize)||6,function(h){return gauntletUseMult(h.id);});
+      var dailiesDone=0; try{ dailiesDone=(S.dailies||[]).filter(function(d){return d&&d.done;}).length; }catch(e){}
+      var enterMult={}; heroes.forEach(function(h){ enterMult[h.id]=gauntletUseMult(h.id); });
+      G.run={ floor:1, squad:heroes.map(function(h){return h.id;}), fatigued:(G.prevSquad||[]).slice(), mult:enterMult, hp:{}, dead:{}, atkMult:1+Math.min(0.30,dailiesDone*0.04), hpMult:1, baseLine:baseLine, depthBaseLine:depthBase, depthOrder:'weakest-viable-first', alive:true, startedAt:Date.now(), pendingBoons:null, habitStart:dailiesDone, rotationNotice:'Reserve squad entered early while pressure was lower.' };
+      G.prevSquad=heroes.map(function(h){return h.id;});
+      heroes.forEach(function(h){ G.weekUses[h.id]=(G.weekUses[h.id]||0)+1; });
+      G.runs=(G.runs||0)+1;
+      startGauntletBattle();
+      return {ok:true};
+    };
+    gauntletStartRun.__of2142Depth=true;
+  }
+  if(typeof gauntletFloorBase==='function'){
+    gauntletFloorBase=function(){
+      var R=S.gauntlet&&S.gauntlet.run;
+      var base=R?(R.depthBaseLine||R.baseLine):1000;
+      return Math.max(50,Math.round(base*(GAUNTLET_TUNE.baseFactor||0.13)));
+    };
+    gauntletFloorBase.__of2142Depth=true;
+  }
+  function of2142ClampGauntlet(){
+    try{
+      var R=S.gauntlet&&S.gauntlet.run; if(!R) return;
+      R.atkMult=Math.max(0.55,Math.min(1.65,R.atkMult||1));
+      R.hpMult=Math.max(0.55,Math.min(1.55,R.hpMult||1));
+    }catch(e){}
+  }
+  function of2142NextGauntletSquad(R){
+    try{
+      var G=ensureGauntlet(), lock=(GAUNTLET_TUNE.lockAt||3), size=(GAUNTLET_TUNE.squadSize||6);
+      if(!R.retired) R.retired={};
+      (R.squad||[]).forEach(function(id){ R.retired[id]=1; G.weekUses[id]=Math.max(G.weekUses[id]||0,lock); });
+      var pool=gauntletOwned().filter(function(h){return h&&h.owned&&!R.retired[h.id]&&!gauntletLocked(h.id);});
+      var anchor=R.depthBaseLine||of2142RosterDepthAnchor(gauntletOwned(),size,function(h){return gauntletUseMult(h.id);});
+      var nextFloor=(R.floor||1)+1, min=anchor*(GAUNTLET_TUNE.baseFactor||0.13)*Math.pow(GAUNTLET_TUNE.esc||1.19,Math.max(0,nextFloor-1))*0.90;
+      var next=of2142WeakestViable(pool,size,function(h){return gauntletUseMult(h.id);},min);
+      if(next.length<2) return false;
+      R.squad=next.map(function(h){return h.id;});
+      R.hp={}; R.dead={}; R.mult={}; R.squadClears=0; R.rotations=(R.rotations||0)+1;
+      next.forEach(function(h){ R.mult[h.id]=gauntletUseMult(h.id); G.weekUses[h.id]=(G.weekUses[h.id]||0)+1; R.hp[h.id]=gauntletHeroMax(h,R); });
+      R.rotationNotice='Depth check: weakest viable reserves are stepping in before the pressure spikes further.';
+      return true;
+    }catch(e){ try{ console.warn('Depth rotation failed',e); }catch(_e){} return false; }
+  }
+  if(typeof gauntletEndBattle==='function'){
+    gauntletEndBattle=function(win){
+      battleGauntlet=null; try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+      var G=ensureGauntlet(), R=G.run; if(!R) return;
+      var ids=of2142BattleHeroIds(), foughtFloor=R.floor||1;
+      (battleState&&battleState.players||[]).forEach(function(u){ R.hp[u.id]=Math.max(0,u.hp); if(u.hp<=0||u.dead) R.dead[u.id]=true; });
+      var livingLeft=R.squad.filter(function(id){return !R.dead[id];}).length;
+      of2142GrantWarBond(ids,Math.max(5,Math.round(5+foughtFloor*0.8)),'Gauntlet Floor '+foughtFloor);
+      if(win&&livingLeft>0){
+        R.squadClears=(R.squadClears||0)+1;
+        if(R.squadClears>=(GAUNTLET_TUNE.squadUseLimit||3)){
+          if(!of2142NextGauntletSquad(R)){
+            var endSum=gauntletEndRun();
+            try{ gauntletShowResult(false,endSum); }catch(e){ console.error(e); }
+            try{ renderHUD(); }catch(e){} try{ save(); }catch(e){}
+            return;
+          }
+        }
+        R.floor++;
+        of2142ClampGauntlet();
+        R.pendingBoons=gauntletBoonOffer();
+        try{ gauntletShowResult(true); }catch(e){ console.error(e); }
+      }else{
+        var sum=gauntletEndRun();
+        try{ gauntletShowResult(false,sum); }catch(e){ console.error(e); }
+      }
+      try{ renderHUD(); }catch(e){} try{ save(); }catch(e){}
+    };
+    gauntletEndBattle.__of2142Depth=true;
+  }
+  if(typeof renderGauntlet==='function'&&!renderGauntlet.__of2142DepthCopy){
+    var __of2142_renderGauntlet=renderGauntlet;
+    renderGauntlet=function(v){
+      var ret=__of2142_renderGauntlet.apply(this,arguments);
+      try{
+        var box=v&&v.querySelector&&v.querySelector('.optSummary');
+        if(box) box.innerHTML=box.innerHTML.replace('Auto-optimized:','Reserve-first:').replace('fresh (+25%)','fresh (+15%)').replace(/tired \([^)]*35%\)/g,'tired (-45%)').replace('Fresh squad - fielding your strongest','Reserve-first lead squad');
+        if(v&&v.querySelectorAll){
+          v.querySelectorAll('.portTag.good').forEach(function(el){ if(String(el.textContent||'').indexOf('+25')>=0) el.textContent='+15%'; });
+          v.querySelectorAll('.portTag.warn').forEach(function(el){ if(String(el.textContent||'').indexOf('35')>=0) el.textContent='-45%'; });
+        }
+      }catch(e){}
+      return ret;
+    };
+    renderGauntlet.__of2142DepthCopy=true;
+  }
+
+  if(typeof riftBuildSquad==='function'){
+    riftBuildSquad=function(){
+      var size=(RIFT_TUNE&&RIFT_TUNE.squadSize)||8, run=null;
+      try{ run=ensureRift().run; }catch(e){}
+      var pool=riftEligible();
+      var anchor=(run&&run.depthBaseLine)||of2142RosterDepthAnchor(riftEligibleAll(),size);
+      var stage=(run&&run.stage)||1;
+      var min=anchor*(RIFT_TUNE.baseFactor||0.12)*Math.pow(RIFT_TUNE.esc||1.18,Math.max(0,stage-1))*0.90;
+      return of2142WeakestViable(pool,size,null,min).map(function(h){return h.id;});
+    };
+    riftBuildSquad.__of2142Depth=true;
+  }
+  if(typeof riftStartRun==='function'&&!riftStartRun.__of2142Depth){
+    riftStartRun=function(){
+      var R=ensureRift(), t=riftTodayElement(), eligibleBefore=riftEligibleAll(), squad=riftBuildSquad();
+      var heroes=squad.map(function(id){return S.heroes.find(function(h){return h&&h.id===id;});}).filter(Boolean);
+      if(heroes.length<2) return {ok:false,reason:'noteam'};
+      var baseLine=heroes.reduce(function(s,h){return s+powerOf(h);},0);
+      var depthBase=of2142RosterDepthAnchor(eligibleBefore,(RIFT_TUNE&&RIFT_TUNE.squadSize)||8);
+      var ranked=eligibleBefore.slice().sort(function(a,b){return powerOf(b)-powerOf(a);}).slice(0,20).map(function(h){return h.id;});
+      var top20={}; ranked.forEach(function(id){top20[id]=1;});
+      R.run={ element:t.key, label:t.label, stage:1, squad:heroes.map(function(h){return h.id;}), hp:{}, dead:{}, exhausted:{}, alive:true,
+        atkMult:riftHabitAtk(), hpMult:1, scoreMult:riftHabitScore(), nonPrestigeAtk:1, nextSquadHp:0,
+        score:0, bosses:0, uniqueUsed:{}, p0Used:{}, squadsFielded:1, baseLine:baseLine, depthBaseLine:depthBase, depthOrder:'weakest-viable-first', top20:top20, blessings:[], pendingBless:null, startedAt:Date.now(), habitStart:riftDailiesDone() };
+      riftCreditEntry(R.run,heroes); R.totalRuns=(R.totalRuns||0)+1;
+      startRiftBattle();
+      return {ok:true};
+    };
+    riftStartRun.__of2142Depth=true;
+  }
+  if(typeof riftBase==='function'){
+    riftBase=function(){
+      var R=ensureRift().run, base=R?(R.depthBaseLine||R.baseLine):1000;
+      return Math.max(50,Math.round(base*(RIFT_TUNE.baseFactor||0.12)));
+    };
+    riftBase.__of2142Depth=true;
+  }
+  if(typeof renderRift==='function'&&!renderRift.__of2142DepthCopy){
+    var __of2142_renderRift=renderRift;
+    renderRift=function(v){
+      var ret=__of2142_renderRift.apply(this,arguments);
+      try{
+        var p=v&&v.querySelector&&v.querySelector('.stagecard p');
+        if(p) p.innerHTML=p.innerHTML.replace('your next-best '+RIFT_TUNE.squadSize+' step up','your weakest viable reserves step up first');
+      }catch(e){}
+      return ret;
+    };
+    renderRift.__of2142DepthCopy=true;
+  }
+})();
+
+/* ===== v2.143.0 Combat Space + Hero Strike Focus ===== */
+(function(){
+  if(window.__of2143VisualSpace) return;
+  window.__of2143VisualSpace=true;
+
+  function of2143InstallStyles(){
+    try{
+      var st=document.getElementById('of2143VisualSpaceStyles');
+      if(st){ document.head.appendChild(st); return; }
+      st=document.createElement('style');
+      st.id='of2143VisualSpaceStyles';
+      st.textContent=[
+        '@media (max-width:700px){',
+        '.arena.show,.arena.lq53Arena.show{display:grid!important;grid-template-rows:auto auto auto minmax(236px,34vh) auto minmax(318px,1fr) auto!important;align-content:stretch!important;gap:8px!important;padding:calc(10px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom))!important;overflow-x:hidden!important;overflow-y:auto!important;}',
+        '.arena.show .battle-controls,.arena.lq53Arena.show .battle-controls{position:relative!important;top:auto!important;right:auto!important;grid-row:1!important;display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:7px!important;z-index:8!important;margin:0!important;padding:0!important;}',
+        '.arena.show .battle-controls button,.arena.lq53Arena.show .battle-controls button{min-width:54px!important;min-height:40px!important;padding:8px 10px!important;border-radius:14px!important;font-size:12px!important;line-height:1!important;}',
+        '.arena.show .vs-head,.arena.lq53Arena.show .vs-head{grid-row:2!important;margin:0!important;padding:0 4px!important;line-height:1.05!important;letter-spacing:1.6px!important;align-self:end!important;}',
+        '.arena.show .arena-sub,.arena.lq53Arena.show .arena-sub{grid-row:3!important;margin:0!important;padding:0 8px!important;line-height:1.1!important;max-width:100%!important;white-space:normal!important;align-self:start!important;}',
+        '.arena.show .side.enemy,.arena.lq53Arena.show .side.enemy{grid-row:4!important;align-content:center!important;align-items:center!important;justify-content:center!important;gap:14px 18px!important;padding:8px 6px!important;overflow:visible!important;}',
+        '.arena.show .vs-mid,.arena.lq53Arena.show .vs-mid{grid-row:5!important;align-self:center!important;justify-self:center!important;margin:0!important;font-size:20px!important;line-height:1!important;min-height:24px!important;}',
+        '.arena.show .side.player,.arena.lq53Arena.show .side.player{grid-row:6!important;align-content:center!important;align-items:center!important;justify-content:center!important;gap:16px 18px!important;padding:8px 6px 4px!important;overflow:visible!important;}',
+        '.arena.show .battle-logline,.arena.lq53Arena.show .battle-logline{grid-row:7!important;margin:4px 4px 0!important;align-self:end!important;min-height:32px!important;}',
+        '.arena.show .side .unit,.arena.show .side.enemy .unit,.arena.show .side.player .unit,.arena.lq53Arena.show .side .unit,.arena.lq53Arena.show .side.enemy .unit,.arena.lq53Arena.show .side.player .unit{width:clamp(76px,20.8vw,96px)!important;max-width:96px!important;gap:6px!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;padding:2px!important;}',
+        '.arena.show .unit .face,.arena.lq53Arena.show .unit .face{width:clamp(68px,18vw,86px)!important;height:clamp(68px,18vw,86px)!important;border-radius:16px!important;}',
+        '.arena.show .unit.boss .face,.arena.lq53Arena.show .unit.boss .face{width:clamp(76px,20vw,94px)!important;height:clamp(76px,20vw,94px)!important;}',
+        '.arena.show .unit .nm,.arena.lq53Arena.show .unit .nm{font-size:clamp(10px,2.75vw,12px)!important;line-height:1.08!important;max-height:2.25em!important;overflow:hidden!important;text-wrap:balance!important;}',
+        '.arena.show .unit .hpbar,.arena.lq53Arena.show .unit .hpbar{height:8px!important;margin-top:4px!important;}',
+        '.arena.show .side:before,.arena.lq53Arena.show .side:before{display:none!important;}',
+        '}',
+        '@media (min-width:701px){',
+        '.arena.show,.arena.lq53Arena.show{display:grid!important;grid-template-rows:auto auto auto minmax(176px,1fr) auto minmax(220px,1.2fr) auto!important;gap:10px!important;overflow:hidden!important;}',
+        '.arena.show .battle-controls,.arena.lq53Arena.show .battle-controls{position:relative!important;top:auto!important;right:auto!important;grid-row:1!important;display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:8px!important;z-index:8!important;margin:0!important;padding:0 4px!important;}',
+        '.arena.show .battle-controls button,.arena.lq53Arena.show .battle-controls button{min-height:38px!important;border-radius:14px!important;}',
+        '.arena.show .vs-head,.arena.lq53Arena.show .vs-head{grid-row:2!important;}',
+        '.arena.show .arena-sub,.arena.lq53Arena.show .arena-sub{grid-row:3!important;}',
+        '.arena.show .side.enemy,.arena.lq53Arena.show .side.enemy{grid-row:4!important;}',
+        '.arena.show .vs-mid,.arena.lq53Arena.show .vs-mid{grid-row:5!important;}',
+        '.arena.show .side.player,.arena.lq53Arena.show .side.player{grid-row:6!important;}',
+        '.arena.show .battle-logline,.arena.lq53Arena.show .battle-logline{grid-row:7!important;}',
+        '.arena.show .side,.arena.lq53Arena.show .side{gap:14px 18px!important;justify-content:center!important;align-content:center!important;}',
+        '}',
+        '.dmg{white-space:nowrap!important;font-size:clamp(12px,3.2vw,18px)!important;line-height:1!important;z-index:2147483500!important;max-width:46vw!important;overflow:hidden!important;text-overflow:ellipsis!important;pointer-events:none!important;}',
+        '.dmg.blocknum,.dmg.shieldnum,.dmg.supportnum{font-size:clamp(11px,3vw,16px)!important;opacity:.92!important;}',
+        '.ofStrikeRewards{display:none!important;}',
+        '.ofStrikePortrait{width:clamp(150px,48vw,230px)!important;height:clamp(150px,48vw,230px)!important;border-radius:30px!important;margin:0 auto 18px!important;}',
+        '.ofStrikePortrait img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center top!important;}',
+        '.ofStrikeCard{width:min(560px,calc(100vw - 38px))!important;padding:clamp(24px,5vw,34px) clamp(18px,4vw,28px) 24px!important;}',
+        '.ofStrikeQuote{margin-top:4px!important;}',
+        '.ofStrikeHint{margin-top:18px!important;}',
+        '@media (max-width:430px){',
+        '.ofStrikePortrait{width:clamp(168px,54vw,224px)!important;height:clamp(168px,54vw,224px)!important;}',
+        '.ofStrikeName{font-size:clamp(30px,8vw,46px)!important;line-height:1.08!important;}',
+        '.ofStrikeCard{max-height:calc(100dvh - 82px)!important;overflow:auto!important;}',
+        '}'
+      ].join('');
+      document.head.appendChild(st);
+    }catch(e){}
+  }
+
+  of2143InstallStyles();
+
+  try{
+    if(typeof lq53InjectBattleStyles==='function'&&!lq53InjectBattleStyles.__of2143VisualSpace){
+      var __of2143_lq53InjectBattleStyles=lq53InjectBattleStyles;
+      lq53InjectBattleStyles=function(){
+        var ret=__of2143_lq53InjectBattleStyles.apply(this,arguments);
+        of2143InstallStyles();
+        return ret;
+      };
+      lq53InjectBattleStyles.__of2143VisualSpace=true;
+    }
+  }catch(e){}
+
+  try{
+    if(typeof floatText==='function'&&!floatText.__of2143VisualSpace){
+      var __of2143_floatText=floatText;
+      var __of2143FloatTick=0;
+      floatText=function(el,text,cls,dx,dy){
+        try{
+          if(!el||!el.getBoundingClientRect) return __of2143_floatText.apply(this,arguments);
+          var r=el.getBoundingClientRect();
+          var d=document.createElement('div');
+          var tick=__of2143FloatTick++;
+          var jitter=((tick%5)-2)*10;
+          var inPlayer=!!(el.closest&&el.closest('#playerSide'));
+          var inEnemy=!!(el.closest&&el.closest('#enemySide'));
+          var left=r.left+r.width/2-34+(dx||0)+jitter;
+          var top=r.top+8+(dy||0);
+          if(inEnemy) top=r.top-24-((tick%2)*12)+(dy||0);
+          if(inPlayer) top=r.bottom+8+((tick%2)*14);
+          left=Math.max(8,Math.min((window.innerWidth||document.documentElement.clientWidth||390)-120,left));
+          top=Math.max(64,Math.min((window.innerHeight||document.documentElement.clientHeight||720)-70,top));
+          d.className='dmg '+(cls||'');
+          d.textContent=text;
+          d.style.left=left+'px';
+          d.style.top=top+'px';
+          document.body.appendChild(d);
+          setTimeout(function(){ try{ d.remove(); }catch(e){} },980);
+          return d;
+        }catch(e){
+          return __of2143_floatText.apply(this,arguments);
+        }
+      };
+      floatText.__of2143VisualSpace=true;
+    }
+  }catch(e){}
 })();
 /* ===== end Roster Management ===== */
 
