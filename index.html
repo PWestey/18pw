@@ -2677,7 +2677,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.160.0-desktop-client-layout';
+const APP_BUILD='v2.161.0-command-kits-prototype';
 const EXPECTED_ROSTER_COUNT=379;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -16657,6 +16657,592 @@ function rerender(){
   }
 })();
 /* ===== end v2.160.0 Desktop Client Layout ===== */
+
+/* ===== v2.161.0 Command Kits Prototype ===== */
+(function(){
+  const STYLE_ID='of2161CommandKitStyles';
+  const LS_KEY='of2161CommandMode';
+  let commandMode=(localStorage.getItem(LS_KEY)||'on')!=='off';
+
+  function injectStyles(){
+    if(document.getElementById(STYLE_ID)) return;
+    const st=document.createElement('style');
+    st.id=STYLE_ID;
+    st.textContent=`
+      .battle-controls #battleCommandBtn{border-color:#37d67a88;background:linear-gradient(135deg,rgba(55,214,122,.18),rgba(54,224,230,.12))}
+      .battle-controls #battleCommandBtn.off{border-color:#ffffff18;background:#0009;color:var(--muted)}
+      .of2161CommandPanel{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:12;width:min(720px,calc(100% - 28px));border:1px solid rgba(139,208,255,.28);background:linear-gradient(180deg,rgba(13,21,38,.96),rgba(5,8,17,.96));box-shadow:0 18px 60px rgba(0,0,0,.55),0 0 26px rgba(54,224,230,.13);border-radius:18px;padding:12px;display:none;backdrop-filter:blur(10px)}
+      .of2161CommandPanel.show{display:block;animation:of2161PanelIn .18s ease-out both}
+      @keyframes of2161PanelIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+      .of2161CommandHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+      .of2161CommandHero{display:grid;grid-template-columns:44px minmax(0,1fr);gap:9px;align-items:center;min-width:0}
+      .of2161CommandFace{width:44px;height:44px;border-radius:13px;overflow:hidden;display:grid;place-items:center;font-family:Orbitron;font-weight:1000;background:linear-gradient(150deg,var(--cmd-color,#36e0e6),#050811);border:1px solid rgba(255,255,255,.18)}
+      .of2161CommandFace img{width:100%;height:100%;object-fit:cover}
+      .of2161CommandName{font-family:Orbitron;font-size:13px;font-weight:1000;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .of2161CommandSub{font-size:11px;font-weight:850;color:var(--muted);line-height:1.2;margin-top:2px}
+      .of2161Energy{min-width:92px;text-align:right;font-family:Orbitron;font-size:12px;font-weight:1000;color:#ffd95a}
+      .of2161Energy span{display:block;font-family:Rajdhani;font-size:10px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-top:2px}
+      .of2161Skills{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+      .of2161Skill{position:relative;overflow:hidden;min-height:86px;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:9px;text-align:left;background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(0,0,0,.18));color:var(--ink);font-family:Rajdhani;cursor:pointer}
+      .of2161Skill:before{content:"";position:absolute;inset:-35% -15% auto auto;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle,var(--sk-c,#36e0e6),transparent 70%);opacity:.23}
+      .of2161Skill:disabled{opacity:.45;filter:grayscale(.6);cursor:not-allowed}
+      .of2161Skill.selected{border-color:#ffd95a;box-shadow:0 0 0 2px rgba(255,217,90,.18),0 0 22px rgba(255,217,90,.20)}
+      .of2161Skill .row{position:relative;z-index:1;display:flex;align-items:center;gap:7px}
+      .of2161Skill .ico{width:30px;height:30px;flex:0 0 auto;border-radius:10px;display:grid;place-items:center;font-family:Orbitron;font-size:14px;font-weight:1000;color:#04111f;background:linear-gradient(135deg,var(--sk-c,#36e0e6),#ffffff);box-shadow:0 0 18px color-mix(in srgb,var(--sk-c,#36e0e6) 42%,transparent)}
+      .of2161Skill .tag{font-size:9px;font-weight:1000;letter-spacing:.8px;color:var(--muted);text-transform:uppercase}
+      .of2161Skill .name{position:relative;z-index:1;margin-top:5px;font-family:Orbitron;font-size:10px;line-height:1.16;font-weight:1000;color:var(--ink)}
+      .of2161Skill .desc{position:relative;z-index:1;margin-top:4px;font-size:10px;line-height:1.18;font-weight:850;color:var(--muted)}
+      .of2161CommandFoot{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:9px;color:var(--muted);font-size:11px;font-weight:850}
+      .of2161CommandFoot button{border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--ink);font-weight:900;padding:8px 10px}
+      .unit.of2161Targetable .face{cursor:pointer;box-shadow:0 0 0 3px #ffd95a,0 0 28px #ffd95a88!important;transform:translateY(-3px)}
+      .unit.of2161Targetable:after{content:"TARGET";position:absolute;left:50%;top:-9px;transform:translateX(-50%);font-family:Orbitron;font-size:8px;font-weight:1000;letter-spacing:.8px;color:#1a1205;background:#ffd95a;border-radius:999px;padding:2px 6px;z-index:9}
+      .unit.of2161Caster .face{box-shadow:0 0 0 3px #37d67a,0 0 28px #37d67a88!important}
+      .of2161KitGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+      .of2161KitCard{position:relative;overflow:hidden;display:grid;grid-template-columns:38px minmax(0,1fr);gap:9px;align-items:start;border:1px solid rgba(255,255,255,.12);background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(0,0,0,.18));border-radius:13px;padding:9px}
+      .of2161KitCard:before{content:"";position:absolute;right:-28px;top:-28px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,var(--sk-c,#36e0e6),transparent 70%);opacity:.21}
+      .of2161KitIcon{position:relative;z-index:1;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-family:Orbitron;font-weight:1000;color:#06111d;background:linear-gradient(135deg,var(--sk-c,#36e0e6),#fff);box-shadow:0 0 18px color-mix(in srgb,var(--sk-c,#36e0e6) 32%,transparent)}
+      .of2161KitBody{position:relative;z-index:1;min-width:0}
+      .of2161KitSlot{font-size:9px;font-family:Orbitron;font-weight:1000;letter-spacing:.7px;color:var(--muted);text-transform:uppercase}
+      .of2161KitName{font-size:12px;font-weight:1000;color:var(--ink);line-height:1.12;margin-top:3px}
+      .of2161KitDesc{font-size:11px;font-weight:780;color:var(--muted);line-height:1.24;margin-top:4px}
+      .turn-rail.of2161On{display:flex!important}
+      @media(max-width:620px){
+        .of2161CommandPanel{bottom:calc(72px + env(safe-area-inset-bottom));padding:10px;border-radius:16px}
+        .of2161Skills{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .of2161Skill{min-height:74px;padding:8px}
+        .of2161Skill .desc{display:none}
+        .of2161KitGrid{grid-template-columns:1fr}
+        .of2161CommandName{font-size:12px}
+      }
+      @media(min-width:1100px){
+        .of2161CommandPanel{bottom:22px;width:min(860px,calc(100% - 220px))}
+        .of2161Skill{min-height:96px}
+      }
+    `;
+    document.head.appendChild(st);
+  }
+
+  function h2161(s){ return (typeof v21Hash==='function'?v21Hash(s):String(s||'').split('').reduce((n,c)=>((n*31+c.charCodeAt(0))>>>0),0)); }
+  function cleanName(h){ return String((h&&h.name)||'Hero').replace(/\s*\/\s*/g,' / ').trim(); }
+  function shortName(h){
+    const raw=cleanName(h).replace(/["“”]/g,'');
+    const parts=raw.split('/').map(x=>x.trim()).filter(Boolean);
+    let n=parts[0]||'Hero';
+    if(parts.length>1){
+      const aliasWords=parts[1].split(/\s+/).filter(Boolean);
+      const tag=(aliasWords.length>1?aliasWords[0]:aliasWords[aliasWords.length-1]||parts[1]).replace(/[^\w'-]/g,'');
+      if(tag && !n.toLowerCase().includes(tag.toLowerCase())) n=(n+' '+tag).trim();
+    }
+    if(n.length>22){
+      const parts=n.split(/\s+/).filter(Boolean);
+      n=parts.length>1?parts.slice(-2).join(' '):n.slice(0,22);
+    }
+    return n||'Hero';
+  }
+  function pick(arr,seed){ return arr[Math.abs(h2161(seed))%arr.length]; }
+  function roleArch(u){
+    const a=(u&&u.archetype&&u.archetype.key)?u.archetype:(typeof heroArchetype==='function'?heroArchetype(u):null);
+    return (a&&a.key)||((u&&u.role)==='Tank'?'Guardian':(u&&u.role)==='Support'?'Healer':'Striker');
+  }
+  function effectMeta(key){
+    const m={
+      strike:{icon:'S',color:'#ff9f43'},guard:{icon:'G',color:'#8bd0ff'},heal:{icon:'H',color:'#37d67a'},rally:{icon:'R',color:'#ffd95a'},
+      burst:{icon:'B',color:'#ff5d6c'},storm:{icon:'Z',color:'#8bd0ff'},arcane:{icon:'A',color:'#b69bff'},shadow:{icon:'X',color:'#d16bff'},
+      fire:{icon:'F',color:'#ff7a3d'},frost:{icon:'I',color:'#8bdfff'},poison:{icon:'P',color:'#7dff8a'},tech:{icon:'T',color:'#5bd1ff'},
+      force:{icon:'J',color:'#7bb7ff'},magic:{icon:'M',color:'#cdbcff'},nature:{icon:'N',color:'#7dffb0'},holy:{icon:'L',color:'#ffd95a'},
+      command:{icon:'C',color:'#ffcf5a'},execute:{icon:'E',color:'#ff5d9e'},shield:{icon:'D',color:'#80c4ff'},ultimate:{icon:'U',color:'#ffd95a'}
+    };
+    return m[key]||m.strike;
+  }
+  function ipEffect(h){
+    const ip=String((h&&h.ip)||'');
+    if(ip.includes('Star Wars')) return 'force';
+    if(ip.includes('Harry Potter')) return 'magic';
+    if(ip.includes('Pokemon')) return pick(['fire','storm','nature','frost'],(h&&h.id)||'');
+    if(ip.includes('Witcher')) return 'magic';
+    if(ip.includes('Warcraft')) return pick(['frost','fire','holy','nature','shadow','storm'],(h&&h.id)||'');
+    if(ip.includes('Stormlight')) return 'storm';
+    if(ip.includes('Marvel')) return pick(['tech','burst','storm','shadow'],(h&&h.id)||'');
+    if(ip.includes('Court of Thorns')) return 'magic';
+    if(ip.includes('Rings')) return 'holy';
+    return pick(['strike','arcane','burst','command'],(h&&h.id)||'');
+  }
+  function motif(h){
+    const id=String((h&&h.id)||''), n=cleanName(h).toLowerCase(), ip=String((h&&h.ip)||'');
+    const rules=[
+      [/iron_man|war_machine|vision|ultron|cyborg|r2_d2|c_3po|bb_8|tali|legion|samus|megaman|robocop|terminator/,'Core Tech'],
+      [/captain_america|shield|steve_rogers|sam_wilson/,'Shieldline'],
+      [/kaladin|dalinar|shallan|szeth|jasnah|adolin|navani|renarin|stormlight/,'Radiant Oath'],
+      [/jaina|khadgar|mage|medivh/,'Arcane Frost'],
+      [/thor|storm(?!light)|elsa|kallias|iceman|sub_zero/,'Stormcall'],
+      [/hulk|thing|colossus|drax|juggernaut|maui|ralph|kratos/,'Titan Force'],
+      [/spider|web|miles|peter_parker|gwen/,'Webline'],
+      [/widow|yelena|gamora|elektra|psylocke|rogue|catwoman|astarion|azriel/,'Shadowblade'],
+      [/strange|scarlet|wanda|agatha|doom|magneto|jean|emma|mewtwo|gale|raistlin/,'Arcane Vector'],
+      [/black_panther|tchalla|shuri|wakanda/,'Panther Oath'],
+      [/luke_skywalker|obi_wan|yoda|ahsoka|mace_windu|qui_gon|rey|kanan|ezra|jedi|westman/,'Jedi Focus'],
+      [/vader|sidious|maul|dooku|kylo|sith|ventress/,'Sith Pressure'],
+      [/mandalorian|din_djarin|boba|jango|sabine|bo_katan/,'Beskar Line'],
+      [/han_solo|lando|cassian|poe|finn|hera|leia|padme/,'Rebel Gambit'],
+      [/harry_potter|dumbledore|hermione|ron|snape|voldemort|bellatrix|malfoy|mcgonagall|luna|neville|sirius|hagrid|dobby/,'Wandcraft'],
+      [/pikachu|raichu|zapdos|electivire/,'Thunder Type'],
+      [/charizard|arcanine|moltres|flareon|infernape|blaziken|typhlosion/,'Flame Type'],
+      [/blastoise|squirtle|gyarados|vaporeon|greninja|lapras|suicune/,'Tide Type'],
+      [/venusaur|bulbasaur|leafeon|celebi|grovyle|torterra/,'Grove Type'],
+      [/mew|mewtwo|alakazam|gardevoir|lucario|espeon/,'Psychic Aura'],
+      [/geralt|ciri|yennefer|triss|vesemir|witcher/,'Signcraft'],
+      [/arthas|lich|death_knight|frostmourne/,'Runeblade'],
+      [/thrall|shaman|voljin|baine|rexxar/,'Earthbind'],
+      [/illidan|demon_hunter|guldan|warlock/,'Felbrand'],
+      [/sylvanas|alleria|hunter|ranger/,'Black Arrow'],
+      [/darrow|sevro|mustang|cassius|red_rising/,'Iron Rain'],
+      [/aragorn|gandalf|legolas|gimli|frodo|samwise|sauron|galadriel|lotr|rings/,'Middle-earth'],
+      [/feyre|rhysand|nesta|cassian|mor|amren|lucien|tamlin|hybern|archeron/,'Court Magic'],
+      [/violet|xaden|tairn|andarna|fourth_wing/,'Dragon Signet']
+    ];
+    for(const r of rules){ if(r[0].test(id)||r[0].test(n)) return r[1]; }
+    if(ip.includes('Marvel')) return 'Hero Tech';
+    if(ip.includes('Star Wars')) return 'Force Line';
+    if(ip.includes('Harry Potter')) return 'Spellcraft';
+    if(ip.includes('Pokemon')) return 'Type Power';
+    if(ip.includes('Warcraft')) return 'Azeroth Power';
+    if(ip.includes('Disney')) return 'Story Magic';
+    if(ip.includes('Critical Role')) return 'Vox Tactics';
+    if(ip.includes('DC')) return 'Justice Line';
+    if(ip.includes('Mass Effect')) return 'N7 Tactics';
+    if(ip.includes("Baldur's Gate")) return 'Sword Coast';
+    if(ip.includes('Game of Thrones')) return 'Westeros Oath';
+    if(ip.includes('Diablo')) return 'Sanctuary Power';
+    if(ip.includes('League')) return 'Rift Pressure';
+    return 'Battle Focus';
+  }
+  function motifKitWords(m){
+    const shared={shield:'Bulwark',heal:'Restoration',rally:'Rally',control:'Lockdown',aoe:'Surge',bruiser:'Breaker',execute:'Finisher',precision:'Mark',burst:'Overdrive',trick:'Gambit'};
+    const words={
+      'Core Tech':{basic:['Repulsor Pulse','Targeting Burst','Arc Shot'],special:{shield:'Deflector Grid',heal:'Emergency Repair',rally:'Command Net',control:'Hard Lock',aoe:'Missile Swarm',bruiser:'Armor Breaker',execute:'Killbox',precision:'Targeting Suite',burst:'Overdrive',trick:'Countermeasure'}},
+      'Shieldline':{basic:['Guard Strike','Shield Jab','Honor Throw'],special:{shield:'Shieldwall',heal:'Field Rescue',rally:'Assemble',control:'Hold the Line',aoe:'Ricochet Sweep',bruiser:'Shield Breaker',execute:'Final Throw',precision:'Perfect Angle',burst:'Shield Rush',trick:'Tactical Feint'}},
+      'Stormcall':{basic:['Thunder Strike','Lightning Arc','Tempest Jab'],special:{aoe:'Highstorm',burst:'Thunderclap',precision:'Storm Mark',shield:'Storm Guard',heal:'Raincall',rally:'Sky Rally',control:'Static Lock',bruiser:'Hammerfall',execute:'Stormbreaker',trick:'Cloudstep'}},
+      'Titan Force':{basic:['Heavy Swing','Ground Hit','Titan Jab'],special:{shield:'Mountain Guard',bruiser:'Worldbreaker',burst:'Seismic Slam',execute:'Crushing Finish',rally:'War Cry',control:'Staggering Blow',aoe:'Shockwave',heal:'Second Wind',precision:'Power Line',trick:'Body Check'}},
+      'Webline':{basic:['Web Shot','Swing Kick','Snap Web'],special:{control:'Web Snare',precision:'Web Mark',burst:'Impact Swing',trick:'Spider Sense',execute:'Close Web',shield:'Web Cocoon',aoe:'Web Blossom',rally:'Friendly Neighborhood',heal:'Quick Rescue',bruiser:'Momentum Kick'}},
+      'Shadowblade':{basic:['Silent Strike','Night Jab','Hidden Blade'],special:{execute:'Shadow Finish',precision:'Killing Angle',trick:'Smoke Feint',control:'Pressure Point',burst:'Ambush',shield:'Evasion Guard',aoe:'Blade Fan',rally:'Covert Signal',heal:'Field Patch',bruiser:'Close Quarters'}},
+      'Arcane Vector':{basic:['Mystic Bolt','Mind Spike','Arcane Thread'],special:{aoe:'Reality Surge',control:'Mind Lock',burst:'Chaos Bloom',precision:'Vector Mark',trick:'Mirror Play',shield:'Ward Circle',heal:'Renewal Charm',rally:'Mystic Command',bruiser:'Force Crush',execute:'Hex Finish'}},
+      'Panther Oath':{basic:['Vibranium Slash','Royal Pounce','Panther Jab'],special:{precision:'Hunter Mark',burst:'Vibranium Rush',shield:'Wakandan Guard',control:'Royal Hold',execute:'Panther Finish',trick:'Silent Stalk',aoe:'Kinetic Burst',rally:'Royal Command',heal:'Ancestral Mending',bruiser:'Claw Breaker'}},
+      'Jedi Focus':{basic:['Saber Form','Force Tap','Calm Strike'],special:{shield:'Soresu Guard',heal:'Force Mend',rally:'Jedi Counsel',control:'Force Hold',aoe:'Saber Sweep',bruiser:'Resolute Blow',execute:'Finishing Form',precision:'Centering Mark',burst:'Force Surge',trick:'Mindful Feint'}},
+      'Sith Pressure':{basic:['Saber Cut','Force Crush','Dark Strike'],special:{control:'Force Choke',burst:'Dark Surge',execute:'Merciless Finish',aoe:'Hate Storm',shield:'Pain Barrier',heal:'Dark Renewal',rally:'Rule of Fear',bruiser:'Rage Breaker',precision:'Dread Mark',trick:'Deception'}},
+      'Beskar Line':{basic:['Blaster Tap','Beskar Bash','Marked Shot'],special:{precision:'Whistling Birds',burst:'Rocket Burst',shield:'Beskar Guard',control:'Cable Snare',execute:'Bounty Claim',trick:'Gadget Play',aoe:'Flame Sweep',rally:'Clan Signal',heal:'Medpack',bruiser:'Jet Charge'}},
+      'Rebel Gambit':{basic:['Quick Shot','Opening Bluff','Lucky Hit'],special:{rally:'Rebel Signal',precision:'Clean Shot',trick:'Sabacc Feint',control:'Suppressing Fire',burst:'Last Shot',shield:'Cover Line',heal:'Field Aid',aoe:'Ion Sweep',bruiser:'Dirty Trick',execute:'One More Shot'}},
+      'Wandcraft':{basic:['Stunning Spark','Wand Flick','Charm Bolt'],special:{control:'Binding Hex',aoe:'Spellstorm',heal:'Mending Charm',shield:'Protego Wall',burst:'Dueling Burst',execute:'Final Hex',precision:'Aimed Jinx',rally:'House Rally',trick:'Misdirection',bruiser:'Duelist Rush'}},
+      'Thunder Type':{basic:['Thunder Jolt','Static Hit','Volt Tap'],special:{burst:'Thunderbolt',aoe:'Discharge',precision:'Volt Mark',control:'Paralyze',shield:'Static Guard',heal:'Charge Up',rally:'Electric Rally',execute:'Volt Finish',trick:'Quick Attack',bruiser:'Wild Charge'}},
+      'Flame Type':{basic:['Ember Strike','Fire Fang','Flare Tap'],special:{burst:'Flamethrower',aoe:'Fire Spin',precision:'Burn Mark',control:'Smoke Lock',shield:'Heat Guard',heal:'Warm Light',rally:'Blaze Rally',execute:'Blast Burn',trick:'Agility Feint',bruiser:'Flare Blitz'}},
+      'Tide Type':{basic:['Water Shot','Aqua Jab','Tide Tap'],special:{shield:'Aqua Ring',heal:'Healing Rain',aoe:'Surf',burst:'Hydro Pump',control:'Whirlpool',precision:'Tide Mark',execute:'Tsunami Finish',rally:'Current Rally',trick:'Mist Veil',bruiser:'Aqua Tail'}},
+      'Grove Type':{basic:['Vine Lash','Leaf Tap','Seed Shot'],special:{heal:'Synthesis',shield:'Leech Guard',control:'Vine Bind',aoe:'Petal Storm',burst:'Solar Beam',precision:'Spore Mark',execute:'Root Finish',rally:'Growth Rally',trick:'Sleep Powder',bruiser:'Wood Hammer'}},
+      'Psychic Aura':{basic:['Psy Bolt','Aura Jab','Mind Tap'],special:{control:'Psychic Lock',aoe:'Psywave',shield:'Barrier',heal:'Recover',burst:'Psystrike',precision:'Future Sight',execute:'Mind Finish',rally:'Calm Mind',trick:'Teleport Feint',bruiser:'Aura Sphere'}},
+      'Signcraft':{basic:['Silver Strike','Sign Tap','Witcher Blow'],special:{shield:'Quen Ward',burst:'Igni Burst',control:'Axii Hold',aoe:'Aard Sweep',heal:'Swallow Tonic',precision:'Monster Mark',execute:'Silver Finish',rally:'Wolf School',trick:'Yrden Trap',bruiser:'Whirl'}},
+      'Runeblade':{basic:['Frost Edge','Rune Strike','Death Grip'],special:{control:'Frozen Hold',burst:'Frostmourne Hunger',shield:'Icebound Fortitude',aoe:'Howling Blast',heal:'Death Pact',rally:'Dark Command',execute:'Runeblade Finish',precision:'Chill Mark',trick:'Grave Feint',bruiser:'Obliterate'}},
+      'Earthbind':{basic:['Stone Shock','Totem Hit','Earth Jab'],special:{rally:'Bloodlust',heal:'Chain Heal',shield:'Earth Shield',aoe:'Chain Lightning',control:'Totem Lock',burst:'Stormstrike',precision:'Spirit Mark',execute:'Ancestral Finish',trick:'Wind Shear',bruiser:'Earthbreaker'}},
+      'Arcane Frost':{basic:['Frostbolt','Arcane Spark','Ice Lance'],special:{aoe:'Blizzard',control:'Polymorph Lock',burst:'Arcane Blast',shield:'Ice Barrier',heal:'Temporal Mend',precision:'Frost Mark',rally:'Arcane Intellect',execute:'Deep Freeze',trick:'Blink Step',bruiser:'Cone of Cold'}},
+      'Felbrand':{basic:['Fel Slash','Chaos Bolt','Demon Bite'],special:{burst:'Metamorphosis',aoe:'Fel Storm',control:'Fear Lock',shield:'Fel Ward',heal:'Soul Leech',execute:'Annihilation',precision:'Demon Mark',rally:'Dark Pact',trick:'Shadowstep',bruiser:'Chaos Strike'}},
+      'Black Arrow':{basic:['Black Arrow','Ranger Shot','Shadow Shot'],special:{precision:'Aimed Shot',execute:'Banshee Finish',control:'Binding Arrow',aoe:'Volley',shield:'Cloak Guard',heal:'Hunter Mend',burst:'Dark Quiver',rally:'War Cry',trick:'Vanish Shot',bruiser:'Close Shot'}},
+      'Radiant Oath':{basic:['Stormlight Strike','Spear Form','Radiant Tap'],special:{shield:'Shardplate Guard',heal:'Stormlight Mend',rally:'Ideal Spoken',control:'Lash Lock',aoe:'Highstorm Surge',burst:'Surgebinding',precision:'Honorspren Mark',execute:'Shardblade Finish',trick:'Lightweave',bruiser:'Bridge Charge'}},
+      'Iron Rain':{basic:['Razor Feint','Iron Jab','Pulse Shot'],special:{rally:'Howler Signal',precision:'Razor Mark',execute:'Reaper Finish',control:'Gold Lock',shield:'Aegis Guard',heal:'Field Stims',aoe:'Iron Rain',burst:'Peerless Charge',trick:'Ghost Cloak',bruiser:'Breaker Drill'}},
+      'Middle-earth':{basic:['Valor Strike','Elven Shot','Ranger Blow'],special:{rally:'Last Alliance',shield:'Oath Guard',heal:'Kingsfoil',aoe:'Light of the West',control:'Ring Hold',precision:'True Shot',burst:'Anduril Flame',execute:'Final Stand',trick:'Secret Path',bruiser:'Axe Charge'}},
+      'Court Magic':{basic:['Glamour Strike','Night Spark','Fae Jab'],special:{control:'Court Bind',burst:'Starlight Surge',heal:'Cauldron Mend',shield:'Winnow Guard',aoe:'Nightfall',execute:'Made Finish',precision:'Illyrian Mark',rally:'Court Command',trick:'Shadowstep',bruiser:'Wing Strike'}},
+      'Dragon Signet':{basic:['Signet Strike','Dragon Spark','Rider Jab'],special:{burst:'Lightning Signet',aoe:'Dragonfire',shield:'Scale Guard',heal:'Bonded Mend',control:'Wing Lock',precision:'Rider Mark',execute:'Tairn Finish',rally:'Squad Command',trick:'Saddle Feint',bruiser:'Claw Dive'}}
+    };
+    return words[m]||{basic:['Measured Strike','Focused Hit','Opening Move'],special:shared};
+  }
+  function specialBlueprint(h){
+    const a=roleArch(h), eff=ipEffect(h);
+    const b={
+      Guardian:{kind:'shield',target:'self',effect:'guard',cd:2,mult:.82,desc:'Taunt pressure and shield the squad.'},
+      Protector:{kind:'shield',target:'self',effect:'shield',cd:2,mult:.80,desc:'Protect the weakest allies with a large barrier.'},
+      Healer:{kind:'heal',target:'ally',effect:'heal',cd:2,mult:.35,desc:'Heal the weakest ally and steady the team.'},
+      Leader:{kind:'rally',target:'self',effect:'rally',cd:3,mult:.45,desc:'Rally allies with healing, shields, and tempo.'},
+      Controller:{kind:'control',target:'enemy',effect:'arcane',cd:2,mult:1.10,desc:'Disrupt a priority target and blunt incoming damage.'},
+      Caster:{kind:'aoe',target:'allEnemies',effect:eff==='strike'?'arcane':eff,cd:3,mult:.72,desc:'Hit every enemy with a battlefield-wide burst.'},
+      Bruiser:{kind:'bruiser',target:'enemy',effect:'burst',cd:2,mult:1.45,desc:'Heavy hit that restores the user.'},
+      Assassin:{kind:'execute',target:'enemy',effect:'execute',cd:2,mult:1.65,desc:'High damage, with bonus force into wounded targets.'},
+      Marksman:{kind:'precision',target:'enemy',effect:'strike',cd:2,mult:1.55,desc:'Precision hit that favors bosses and tough targets.'},
+      Hunter:{kind:'precision',target:'enemy',effect:'strike',cd:2,mult:1.48,desc:'Marked shot that pressures the strongest foe.'},
+      Striker:{kind:'burst',target:'enemy',effect:eff==='strike'?'burst':eff,cd:2,mult:1.42,desc:'Reliable burst damage into a chosen target.'},
+      Specialist:{kind:'trick',target:'enemy',effect:eff,cd:2,mult:1.28,desc:'Flexible strike with a small team shield.'}
+    };
+    return b[a]||b.Specialist;
+  }
+  function heroKit(h){
+    const name=shortName(h), m=motif(h), eff=ipEffect(h), bp=specialBlueprint(h), ult=(typeof ultimateName==='function'?ultimateName(h):'Signature Ultimate');
+    const words=motifKitWords(m), basicVerb=pick(words.basic,(h&&h.id)+'basic');
+    const spVerb=(words.special&&words.special[bp.kind])||{shield:'Ward',heal:'Restoration',rally:'Command',control:'Lockdown',aoe:'Surge',bruiser:'Breaker',execute:'Finisher',precision:'Mark',burst:'Overdrive',trick:'Gambit'}[bp.kind]||'Technique';
+    const basicEff=(eff==='heal'||eff==='guard')?'strike':eff;
+    return {
+      id:(h&&h.id)||name,
+      basic:{id:'basic',slot:'Basic',name:name+' · '+m+' '+basicVerb,kind:'basic',target:'enemy',effect:basicEff,cooldown:0,energyCost:0,mult:1,desc:'Single-target attack. Builds ultimate energy.'},
+      special:{id:'special',slot:'Special',name:name+' · '+m+' '+spVerb,kind:bp.kind,target:bp.target,effect:bp.effect,cooldown:bp.cd,energyCost:0,mult:bp.mult,desc:bp.desc},
+      ultimate:{id:'ultimate',slot:'Ultimate',name:name+' · '+ult,kind:'ultimate',target:'all',effect:'ultimate',cooldown:0,energyCost:100,mult:3,desc:'Consumes full energy for this hero’s signature payoff.'},
+      passive:(typeof passiveOf==='function'?passiveOf(h):null)
+    };
+  }
+  window.of2161HeroKit=heroKit;
+  window.of2161AuditKits=function(){
+    const seen={}, dup=[];
+    (S&&S.heroes||[]).forEach(h=>{
+      const k=heroKit(h);
+      [k.basic,k.special,k.ultimate].forEach(s=>{ if(seen[s.name]) dup.push(s.name); seen[s.name]=1; });
+    });
+    return {heroes:(S&&S.heroes||[]).length,abilities:Object.keys(seen).length,duplicates:dup};
+  };
+
+  function skillCardHTML(skill,disabled,selected,extra){
+    const meta=effectMeta(skill.effect);
+    return '<button class="of2161Skill '+(selected?'selected':'')+'" data-skill="'+skill.id+'" style="--sk-c:'+meta.color+'" '+(disabled?'disabled':'')+'>'+
+      '<div class="row"><div class="ico">'+meta.icon+'</div><div><div class="tag">'+skill.slot+(extra?(' · '+extra):'')+'</div></div></div>'+
+      '<div class="name">'+esc(skill.name)+'</div><div class="desc">'+esc(skill.desc)+'</div></button>';
+  }
+  function kitGridHTML(h){
+    const k=heroKit(h), list=[k.basic,k.special,k.ultimate].concat(k.passive?[{id:'passive',slot:'Passive',name:k.passive.name,desc:k.passive.desc,effect:'command'}]:[]);
+    return '<div class="of2161KitGrid">'+list.map(s=>{ const m=effectMeta(s.effect||'command'); return '<div class="of2161KitCard" style="--sk-c:'+m.color+'"><div class="of2161KitIcon">'+m.icon+'</div><div class="of2161KitBody"><div class="of2161KitSlot">'+esc(s.slot||'Ability')+'</div><div class="of2161KitName">'+esc(s.name||'Ability')+'</div><div class="of2161KitDesc">'+esc(s.desc||'')+'</div></div></div>'; }).join('')+'</div>';
+  }
+
+  function unitHero(u){ return (S&&S.heroes||[]).find(h=>h.id===u.id)||u; }
+  function energyReady(u){ return (u.energy||0)>=100 && !u.ultCast; }
+  function tickEnergy(u){
+    if(u.energy==null) u.energy=(h2161(u.id)%28)+(typeof fxEnergyStart==='function'?fxEnergyStart():0);
+    u.energy=Math.min(100,u.energy+(typeof ULT_ENERGY_PER_TURN==='number'?ULT_ENERGY_PER_TURN:36)*(typeof fxEnergyMult==='function'?fxEnergyMult():1)*(typeof forgeUltMult==='function'?forgeUltMult():1));
+  }
+  function canCommandBattle(){ return !!battleState && (battleMode==='campaign'||battleMode==='tower') && !battleState.replay; }
+  function shouldManual(){ return commandMode && canCommandBattle(); }
+  function commandPanel(){
+    let p=document.getElementById('of2161CommandPanel');
+    if(!p){
+      p=document.createElement('div');
+      p.id='of2161CommandPanel';
+      p.className='of2161CommandPanel';
+      const arena=document.getElementById('arena');
+      if(arena) arena.appendChild(p);
+    }
+    return p;
+  }
+  function refreshCommandButton(){
+    const b=document.getElementById('battleCommandBtn');
+    if(b){ b.textContent=commandMode?'Command':'Auto Cmd'; b.classList.toggle('off',!commandMode); }
+  }
+  function clearTargeting(){
+    document.querySelectorAll('.of2161Targetable').forEach(el=>{
+      el.classList.remove('of2161Targetable');
+      el.onclick=null;
+    });
+    document.querySelectorAll('.of2161Caster').forEach(el=>el.classList.remove('of2161Caster'));
+  }
+  function targetableEnemies(skill){
+    clearTargeting();
+    if(!battleState||!battleState.awaitingCommand||!skill||skill.target!=='enemy') return;
+    (battleState.enemies||[]).forEach(e=>{
+      if(!e||e.dead) return;
+      const el=document.querySelector('#enemySide [data-idx="'+e._i+'"]');
+      if(el){
+        el.classList.add('of2161Targetable');
+        el.onclick=function(){ executeCommandSkill(skill,e); };
+      }
+    });
+  }
+  function renderCommandPanel(selected){
+    const p=commandPanel();
+    if(!battleState||!battleState.awaitingCommand||!battleState.activeUnit){
+      p.classList.remove('show');
+      p.innerHTML='';
+      clearTargeting();
+      return;
+    }
+    const u=battleState.activeUnit, h=unitHero(u), kit=heroKit(h);
+    const specCd=(u.cd&&u.cd.cmdSpecial)||0, ultOk=energyReady(u);
+    const face=u.img?'<img src="'+u.img+'">':(typeof initials==='function'?initials(u.name):'?');
+    p.style.setProperty('--cmd-color',u.color||'#36e0e6');
+    p.innerHTML='<div class="of2161CommandHead"><div class="of2161CommandHero"><div class="of2161CommandFace">'+face+'</div><div><div class="of2161CommandName">'+esc(u.name)+'</div><div class="of2161CommandSub">'+esc((u.archetype&&u.archetype.label)||u.role||'Hero')+' · choose an action</div></div></div><div class="of2161Energy">'+Math.floor(u.energy||0)+'%<span>Ultimate</span></div></div>'+
+      '<div class="of2161Skills">'+
+      skillCardHTML(kit.basic,false,selected==='basic','Ready')+
+      skillCardHTML(kit.special,specCd>0,selected==='special',specCd>0?'CD '+specCd:'Ready')+
+      skillCardHTML(kit.ultimate,!ultOk,selected==='ultimate',ultOk?'Ready':'Energy')+
+      '<button class="of2161Skill" data-skill="auto" style="--sk-c:#8b97b5"><div class="row"><div class="ico">A</div><div><div class="tag">Auto</div></div></div><div class="name">Let the squad decide</div><div class="desc">Uses a sensible skill and continues the battle.</div></button>'+
+      '</div><div class="of2161CommandFoot"><span>'+(selected?'Select a highlighted enemy target.':'Specials use cooldowns. Ultimates are once per battle.')+'</span><button id="of2161AutoRest">Auto Command Rest</button></div>';
+    p.classList.add('show');
+    p.querySelectorAll('[data-skill]').forEach(btn=>{
+      btn.onclick=function(){
+        const id=this.dataset.skill;
+        if(id==='auto'){ autoHeroTurn(u,battleState.players,battleState.enemies); return; }
+        const skill=kit[id];
+        if(!skill) return;
+        if(skill.target==='enemy'){ battleState.selectedSkill=skill; renderCommandPanel(id); targetableEnemies(skill); setBattleLog('Choose a target for '+skill.name+'.'); }
+        else executeCommandSkill(skill,null);
+      };
+    });
+    const autoRest=document.getElementById('of2161AutoRest');
+    if(autoRest) autoRest.onclick=function(){ commandMode=false; localStorage.setItem(LS_KEY,'off'); refreshCommandButton(); autoHeroTurn(u,battleState.players,battleState.enemies); toast('Auto Command enabled for the rest of this battle.'); };
+    if(selected) targetableEnemies(battleState.selectedSkill);
+    try{ const caster=document.querySelector('#playerSide [data-idx="'+u._i+'"]'); if(caster) caster.classList.add('of2161Caster'); }catch(e){}
+  }
+
+  function vFloat(side,u,n,kind){
+    try{ const el=document.querySelector('#'+(side==='enemy'?'enemySide':'playerSide')+' [data-idx="'+u._i+'"]'); if(el){ if(kind==='heal') floatShield(el,n); else floatDmg(el,n,false,kind); } }catch(e){}
+  }
+  function damageUnit(att,tgt,mult,tag){
+    if(!att||!tgt||tgt.dead) return 0;
+    let dmg=Math.max(1,Math.round((att.atk||10)*(mult||1)));
+    dmg=typeof applyIncomingMitigation==='function'?applyIncomingMitigation(tgt,dmg):dmg;
+    if(tgt.shield){ const b=Math.min(tgt.shield,dmg); tgt.shield-=b; dmg-=b; }
+    const actual=Math.min(tgt.hp,Math.max(0,dmg));
+    tgt.hp-=actual; if(tgt.hp<=0){ tgt.hp=0; tgt.dead=true; }
+    att.dealt=(att.dealt||0)+actual; tgt.taken=(tgt.taken||0)+actual;
+    vFloat(tgt.side==='p'?'player':'enemy',tgt,actual,tag||'splash');
+    return actual;
+  }
+  function healUnit(caster,tgt,amt){
+    if(!caster||!tgt||tgt.dead) return 0;
+    const before=tgt.hp, val=Math.max(1,Math.round(amt*(typeof forgeHealMult==='function'?forgeHealMult():1)*(caster.supportMult||1)));
+    tgt.hp=Math.min(tgt.max||tgt.hp,tgt.hp+val);
+    const got=Math.max(0,tgt.hp-before);
+    caster.support=(caster.support||0)+got;
+    vFloat('player',tgt,got,'heal');
+    return got;
+  }
+  function shieldUnit(caster,tgt,amt){
+    if(!caster||!tgt||tgt.dead) return 0;
+    const val=Math.max(1,Math.round(amt*(typeof forgeHealMult==='function'?forgeHealMult():1)*(caster.supportMult||1)));
+    tgt.shield=(tgt.shield||0)+val;
+    caster.support=(caster.support||0)+val;
+    vFloat('player',tgt,val,'heal');
+    return val;
+  }
+  function executeCommandSkill(skill,target){
+    if(!battleState||!battleState.awaitingCommand||!battleState.activeUnit) return;
+    const u=battleState.activeUnit, allies=battleState.players||[], enemies=battleState.enemies||[], aliveA=allies.filter(a=>!a.dead), aliveE=enemies.filter(e=>!e.dead);
+    if(!aliveA.length||!aliveE.length) return;
+    const kit=heroKit(unitHero(u)), s=skill||kit.basic;
+    clearTargeting();
+    try{
+      if(s.kind==='basic'){
+        if(!target) target=pickTarget(enemies,u);
+        if(target) strike(u,target,'enemy',1);
+      }else if(s.kind==='ultimate'){
+        if(energyReady(u)){ u.ultCast=true; u.energy=0; castUltimate(u,allies,enemies); }
+      }else{
+        kitSetCd(u,'cmdSpecial',s.cooldown||2);
+        if(s.kind==='heal'){
+          const inj=aliveA.slice().sort((a,b)=>(a.hp/a.max)-(b.hp/b.max))[0];
+          healUnit(u,inj,(u.atk||10)*1.15);
+          aliveA.forEach(a=>shieldUnit(u,a,(u.atk||10)*0.20));
+          if(target) strike(u,target,'enemy',s.mult||.35);
+        }else if(s.kind==='shield'){
+          kitAddSt(u,'taunting',2,1);
+          aliveA.forEach(a=>shieldUnit(u,a,(u.max||u.hp)*(roleArch(u)==='Protector'?.12:.09)));
+          if(target) strike(u,target,'enemy',s.mult||.8);
+        }else if(s.kind==='rally'){
+          aliveA.forEach(a=>{ healUnit(u,a,(a.max||a.hp)*0.06); shieldUnit(u,a,(u.max||u.hp)*0.06); a._cmdRally=2; });
+          if(target) strike(u,target,'enemy',s.mult||.45);
+        }else if(s.kind==='aoe'){
+          aliveE.forEach(e=>damageUnit(u,e,s.mult||.72,'splash'));
+          shakeArena();
+        }else if(s.kind==='control'){
+          if(!target) target=pickTarget(enemies,u);
+          if(target){ strike(u,target,'enemy',s.mult||1.1); target._cmdWeaken=2; target.atk=Math.max(1,Math.round((target.atk||1)*0.92)); }
+          aliveA.forEach(a=>shieldUnit(u,a,(u.max||u.hp)*0.035));
+        }else if(s.kind==='bruiser'){
+          if(!target) target=pickTarget(enemies,u);
+          if(target) strike(u,target,'enemy',s.mult||1.45);
+          healUnit(u,u,(u.max||u.hp)*0.14);
+        }else if(s.kind==='execute'){
+          if(!target) target=aliveE.slice().sort((a,b)=>a.hp-b.hp)[0];
+          if(target) strike(u,target,'enemy',(target.hp/(target.max||target.hp)<.42)?2.05:(s.mult||1.65));
+        }else if(s.kind==='precision'||s.kind==='burst'||s.kind==='trick'){
+          if(!target) target=pickTarget(enemies,u);
+          if(target) strike(u,target,'enemy',s.mult||1.35);
+          if(s.kind==='trick') aliveA.forEach(a=>shieldUnit(u,a,(u.max||u.hp)*0.025));
+        }
+      }
+      battleEvent((u.name||'Hero')+' used '+(s.name||'a skill'),'skill');
+      setBattleLog((u.name||'Hero')+' used '+(s.name||'a skill')+'.');
+      passiveBanner((s.slot||'Skill')+' · '+(s.name||''),effectMeta(s.effect).color);
+    }catch(e){ console.error(e); }
+    finishCommandTurn();
+  }
+  function autoHeroTurn(u,players,enemies,fromLoop){
+    if(!u||u.dead) return;
+    tickEnergy(u);
+    const kit=heroKit(unitHero(u));
+    if(energyReady(u)){ executeAutoSkill(u,kit.ultimate,players,enemies,fromLoop); return; }
+    const cd=(u.cd&&u.cd.cmdSpecial)||0;
+    if(cd<=0 && Math.random()<.68){ executeAutoSkill(u,kit.special,players,enemies,fromLoop); return; }
+    executeAutoSkill(u,kit.basic,players,enemies,fromLoop);
+  }
+  function executeAutoSkill(u,skill,players,enemies,fromLoop){
+    if(!battleState) return;
+    battleState.awaitingCommand=true; battleState.activeUnit=u;
+    battleState.autoCommandResolve=!!fromLoop;
+    if(skill.target==='enemy') executeCommandSkill(skill,pickTarget(enemies,u));
+    else executeCommandSkill(skill,null);
+    if(battleState) battleState.autoCommandResolve=false;
+  }
+  function finishCommandTurn(){
+    if(!battleState) return;
+    const fromLoop=!!battleState.autoCommandResolve;
+    clearTargeting();
+    battleState.awaitingCommand=false;
+    battleState.autoCommandResolve=false;
+    battleState.activeUnit=null;
+    battleState.selectedSkill=null;
+    renderCommandPanel();
+    refreshBars('enemySide',battleState.enemies||[]);
+    refreshBars('playerSide',battleState.players||[]);
+    updateTurnRail();
+    const pAlive=(battleState.players||[]).some(u=>!u.dead), eAlive=(battleState.enemies||[]).some(u=>!u.dead);
+    if(!eAlive||!pAlive){ endBattleSeq(eAlive,pAlive); return; }
+    if(!fromLoop) setTimeout(()=>{ try{ battleStep(); }catch(e){ console.error(e); } },60);
+  }
+
+  const previousWire=wireBattleControls;
+  wireBattleControls=function(){
+    previousWire.apply(this,arguments);
+    const controls=document.getElementById('battleControls');
+    const au=document.getElementById('battleAutoBtn');
+    if(au){
+      au.textContent=autoAdvance?'Advance On':'Advance Off';
+      au.onclick=()=>{ autoAdvance=!autoAdvance; au.textContent=autoAdvance?'Advance On':'Advance Off'; toast('Auto-advance: '+(autoAdvance?'on':'off')); };
+    }
+    if(controls && !document.getElementById('battleCommandBtn')){
+      const btn=document.createElement('button');
+      btn.id='battleCommandBtn';
+      btn.onclick=function(){
+        commandMode=!commandMode;
+        localStorage.setItem(LS_KEY,commandMode?'on':'off');
+        refreshCommandButton();
+        if(battleState&&battleState.awaitingCommand&&battleState.activeUnit&&!commandMode){
+          autoHeroTurn(battleState.activeUnit,battleState.players,battleState.enemies);
+        }
+        toast(commandMode?'Command Mode on':'Auto Command on');
+      };
+      if(au && au.nextSibling) controls.insertBefore(btn,au.nextSibling); else controls.appendChild(btn);
+    }
+    refreshCommandButton();
+  };
+
+  const previousStart=startBattle;
+  startBattle=function(mode,opts){
+    const result=previousStart.apply(this,arguments);
+    injectStyles();
+    commandPanel();
+    if(battleState){
+      battleState.awaitingCommand=false;
+      battleState.activeUnit=null;
+      battleState.selectedSkill=null;
+      battleState.commandEnabled=canCommandBattle();
+      (battleState.players||[]).forEach(u=>{ u.kit=heroKit(unitHero(u)); });
+    }
+    wireBattleControls();
+    renderTurnRail();
+    renderCommandPanel();
+    return result;
+  };
+
+  renderTurnRail=function(){
+    try{
+      const r=ensureTurnRail();
+      if(!r||!battleState||!battleState.q){ return; }
+      r.classList.add('of2161On');
+      r.innerHTML=battleState.q.map(function(u,i){
+        const side=u.side==='p'?'p':'e', img=u.img?'<img src="'+u.img+'">':'<span>'+esc(String(u.name||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase())+'</span>';
+        return '<div class="turn-card '+side+'" data-i="'+i+'" title="'+esc(u.name||'')+'" style="--uc:'+(u.color||'#556')+'">'+img+'</div>';
+      }).join('');
+      updateTurnRail();
+    }catch(e){}
+  };
+  updateTurnRail=function(){
+    try{
+      const r=document.getElementById('turnRail');
+      if(!r||!battleState||!battleState.q) return;
+      const active=battleState.awaitingCommand?battleState.qi-1:battleState.qi-1;
+      r.querySelectorAll('.turn-card').forEach(card=>{
+        const idx=+card.dataset.i, u=battleState.q[idx];
+        card.classList.toggle('done',idx<active||(u&&u.dead));
+        card.classList.toggle('active',idx===active&&!(u&&u.dead));
+      });
+    }catch(e){}
+  };
+
+  battleStep=function(){
+    if(!battleState || battleState.over || battleState.ending || battleState.awaitingCommand) return;
+    const {players,enemies}=battleState;
+    if(!battleState.q || battleState.qi>=battleState.q.length){
+      if(battleState.q){
+        try{ kitRoundEnd(players,enemies); }catch(e){}
+        const pA=players.some(u=>!u.dead), eA=enemies.some(u=>!u.dead);
+        if(!eA||!pA||battleState.turn>=40){ endBattleSeq(eA,pA); return; }
+      }
+      battleState.turn++;
+      try{ v21OnTurnStart(players,enemies); }catch(e){ console.error(e); }
+      try{ kitRoundStart(players,enemies); }catch(e){ console.error(e); }
+      if(!shouldManual()) try{ v21Ultimates(players,enemies); }catch(e){ console.error(e); }
+      try{ maybeKaladinShield(); }catch(e){}
+      battleState.q=buildActQueue(players,enemies);
+      battleState.qi=0;
+      renderTurnRail();
+    }
+    const u=battleState.q[battleState.qi++];
+    if(u && !u.dead){
+      spotlightUnit(u);
+      if(u.side==='p'){
+        tickEnergy(u);
+        if(shouldManual()){
+          battleState.awaitingCommand=true;
+          battleState.activeUnit=u;
+          battleState.selectedSkill=null;
+          renderCommandPanel();
+          setBattleLog('Command Mode: choose '+u.name+'’s skill.');
+          updateTurnRail();
+          return;
+        }
+        autoHeroTurn(u,players,enemies,true);
+      }else{
+        enemyTurn(u,players,enemies);
+      }
+    }
+    refreshBars('enemySide',enemies);
+    refreshBars('playerSide',players);
+    updateTurnRail();
+    const pAlive=players.some(u=>!u.dead), eAlive=enemies.some(u=>!u.dead);
+    if(!eAlive||!pAlive){ endBattleSeq(eAlive,pAlive); return; }
+  };
+
+  const previousOpenHeroSheet=openHeroSheet;
+  openHeroSheet=function(id){
+    const ret=previousOpenHeroSheet.apply(this,arguments);
+    setTimeout(()=>enhanceHeroSheet(id),0);
+    return ret;
+  };
+  function enhanceHeroSheet(id){
+    try{
+      const h=(S&&S.heroes||[]).find(x=>x.id===id);
+      if(!h) return;
+      const panels=[].slice.call(document.querySelectorAll('#sheet .heroChamberPanelV159'));
+      let target=panels.find(p=>{ const h4=p.querySelector('h4'); return h4 && /Ability/i.test(h4.textContent||''); });
+      const html=kitGridHTML(h);
+      if(target){
+        if(!target.querySelector('.of2161KitGrid')) target.insertAdjacentHTML('beforeend',html);
+        const head=target.querySelector('h4 span');
+        if(head) head.textContent='Command kit';
+      }else{
+        const root=document.querySelector('#sheet .heroChamberV159');
+        if(root && !root.querySelector('.of2161KitGrid')) root.insertAdjacentHTML('beforeend','<div class="heroChamberPanelV159"><h4>Command Kit <span>Basic / Special / Ultimate / Passive</span></h4>'+html+'</div>');
+      }
+    }catch(e){}
+  }
+
+  const previousCloseArena=closeArena;
+  closeArena=function(){ clearTargeting(); renderCommandPanel(); return previousCloseArena.apply(this,arguments); };
+  const previousCloseArenaToHome=closeArenaToHome;
+  closeArenaToHome=function(){ clearTargeting(); renderCommandPanel(); return previousCloseArenaToHome.apply(this,arguments); };
+
+  injectStyles();
+})();
+/* ===== end v2.161.0 Command Kits Prototype ===== */
 
 </script>
 
