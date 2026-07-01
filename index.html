@@ -2407,10 +2407,14 @@ function promoCost(g){ return PROMO[g.rarity]||null; }
 function canPromote(g){ const p=PROMO[g.rarity]; return !!p && g.level>=gearMaxLvl(g) && (S.dust||0)>=p.dust && (S.stones||0)>=p.stones && (S.gold||0)>=p.gold; }
 const COLORS=['#e62429','#1f6feb','#37c46e','#f7c531','#7c4dff','#ff7a3c','#36e0e6','#ff5d9e'];
 const THEMES={
-  web:{name:'Web-Slinger',a:'#e62429',b:'#1f6feb'}, arc:{name:'Arc Reactor',a:'#ffb01f',b:'#36e0e6'},
-  jedi:{name:'Jedi Order',a:'#39c46e',b:'#3fb6ff'}, trainer:{name:'Trainer',a:'#ef3e34',b:'#f7c531'},
-  house:{name:'House Pride',a:'#caa53d',b:'#7c4dff'}, dark:{name:'Console',a:'#5b8cff',b:'#37d6c4'}
+  web:{name:'Marvel',cue:'Avengers red, gold tech, comic energy',icon:'A',a:'#e62429',b:'#1f6feb',c:'#ffd95a'},
+  jedi:{name:'Star Wars',cue:'Lightsaber blue, hyperspace black, rebellion gold',icon:'✦',a:'#3fb6ff',b:'#ffe66d',c:'#111827'},
+  trainer:{name:'Pokemon',cue:'Poke Ball red, badge yellow, route green',icon:'⚡',a:'#ef3e34',b:'#ffcb05',c:'#2a75bb'},
+  house:{name:'Harry Potter',cue:'Hogwarts purple, candle gold, spelllight',icon:'⚯',a:'#7c4dff',b:'#caa53d',c:'#2f174d'},
+  arc:{name:'World of Warcraft',cue:'Azeroth blue, faction gold, fel magic',icon:'⚔',a:'#1f6feb',b:'#ffb01f',c:'#37d67a'},
+  dark:{name:'Oathforge Console',cue:'Neutral debug blue and teal',icon:'⌘',a:'#5b8cff',b:'#37d6c4',c:'#8bd0ff'}
 };
+const THEME_ORDER=['web','jedi','trainer','house','arc'];
 
 const uid=()=>Math.random().toString(36).slice(2,9);
 const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();};
@@ -2673,7 +2677,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.154.0-spark-economy-pass';
+const APP_BUILD='v2.156.0-ip-theme-upgrade';
 const EXPECTED_ROSTER_COUNT=379;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -6533,9 +6537,14 @@ document.getElementById('openSettings').onclick=()=>{
   const ts=document.getElementById('titleSelect');
   if(ts){ const titles=Object.keys(S.titlesUnlocked||{Adventurer:true}).sort(); ts.innerHTML=titles.map(t=>'<option value="'+esc(t)+'"'+(currentTitle()===t?' selected':'')+'>'+esc(t)+'</option>').join(''); ts.onchange=()=>{ S.activeTitle=ts.value; save(); render(); toast('Title set: '+ts.value); }; }
   const g=document.getElementById('themeGrid'); g.innerHTML='';
-  Object.entries(THEMES).forEach(([k,t])=>{ const b=document.createElement('button'); if(k===S.theme)b.style.borderColor=t.a;
-    b.innerHTML='<div class="swatch" style="background:linear-gradient(90deg,'+t.a+','+t.b+')"></div>'+t.name;
-    b.onclick=()=>{S.theme=k;applyTheme();g.querySelectorAll('button').forEach(x=>x.style.borderColor='var(--line)');b.style.borderColor=t.a;save();render();};
+  const themeKeys=(typeof THEME_ORDER!=='undefined'?THEME_ORDER.slice():Object.keys(THEMES));
+  if(S.theme&&THEMES[S.theme]&&!themeKeys.includes(S.theme)) themeKeys.push(S.theme);
+  themeKeys.forEach(k=>{ const t=THEMES[k]; if(!t) return; const b=document.createElement('button');
+    b.type='button'; b.className='themeChoice'; b.dataset.themeOption=k; b.setAttribute('aria-label',t.name+' theme');
+    b.style.setProperty('--ta',t.a); b.style.setProperty('--tb',t.b); b.style.setProperty('--tc',t.c||t.b);
+    b.classList.toggle('on',k===S.theme);
+    b.innerHTML='<div class="themeSigil">'+esc(t.icon||'✦')+'</div><div class="themeName">'+esc(t.name)+'</div><div class="themeCue">'+esc(t.cue||'')+'</div><div class="themeStrip"></div>';
+    b.onclick=()=>{S.theme=k;applyTheme();g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));save();render();};
     g.appendChild(b); });
   const dm=document.getElementById('doneModeSeg');
   dm.querySelectorAll('button').forEach(b=>{ b.classList.toggle('on',b.dataset.m===(S.doneMode||'bottom'));
@@ -7143,11 +7152,11 @@ function startTicker(){
 
 /* ===== v1.39.1 Bug Sweep + UI Polish ===== */
 const THEME_SURFACES_V139={
-  web:{bg:'#080f1d',panel:'#10192c',panel2:'#17243b',modal:'#18243c',nav:'#0f182b',line:'#2f4468'},
-  arc:{bg:'#0b1218',panel:'#121f2b',panel2:'#1a2a38',modal:'#1e3142',nav:'#111d28',line:'#35516b'},
-  jedi:{bg:'#091312',panel:'#11201f',panel2:'#18302e',modal:'#1e3936',nav:'#0f1b1a',line:'#345c56'},
-  trainer:{bg:'#121018',panel:'#201926',panel2:'#2b2233',modal:'#34283d',nav:'#191320',line:'#5a4250'},
-  house:{bg:'#120f1a',panel:'#1b1730',panel2:'#261f42',modal:'#302855',nav:'#151126',line:'#544777'},
+  web:{bg:'#0b0712',panel:'#181120',panel2:'#24182d',modal:'#281a2b',nav:'#100914',line:'#693241'},
+  arc:{bg:'#07101b',panel:'#101b2a',panel2:'#182a3a',modal:'#1b2e42',nav:'#08111f',line:'#4b6386'},
+  jedi:{bg:'#030711',panel:'#071224',panel2:'#0d2037',modal:'#0b1830',nav:'#030712',line:'#214d77'},
+  trainer:{bg:'#14110b',panel:'#241b12',panel2:'#332716',modal:'#39291b',nav:'#12100f',line:'#75552a'},
+  house:{bg:'#0c0712',panel:'#171026',panel2:'#25183c',modal:'#2d1b48',nav:'#0b0814',line:'#6b548f'},
   dark:{bg:'#0b1220',panel:'#101a2c',panel2:'#16243b',modal:'#1a2944',nav:'#0f1830',line:'#31496f'}
 };
 const ARCHETYPE_ROW_RULES_V139={
@@ -7173,6 +7182,58 @@ function injectV139Styles(){
       radial-gradient(760px 420px at -10% 10%, color-mix(in srgb,var(--accent2) 15%, transparent), transparent 58%),
       linear-gradient(180deg, color-mix(in srgb,var(--bg) 96%, #000), #050811 88%) !important;}
     .nav{background:linear-gradient(180deg,color-mix(in srgb,var(--navbg) 92%, transparent),var(--navbg))!important;border-top-color:color-mix(in srgb,var(--accent) 18%, var(--line))!important}
+    html[data-theme="web"] body{background:
+      radial-gradient(820px 420px at 82% -8%, rgba(230,36,41,.36), transparent 62%),
+      radial-gradient(600px 360px at -8% 8%, rgba(31,111,235,.26), transparent 58%),
+      radial-gradient(420px 300px at 72% 18%, rgba(255,217,90,.16), transparent 64%),
+      repeating-linear-gradient(135deg, rgba(255,217,90,.055) 0 2px, transparent 2px 28px),
+      linear-gradient(180deg,#120712,#050811 88%)!important}
+    html[data-theme="jedi"] body{background:
+      radial-gradient(circle at 18% 14%, rgba(255,255,255,.52) 0 1px, transparent 2px),
+      radial-gradient(circle at 72% 9%, rgba(255,255,255,.34) 0 1px, transparent 2px),
+      radial-gradient(620px 320px at 78% -4%, rgba(63,182,255,.31), transparent 62%),
+      radial-gradient(520px 360px at 12% 38%, rgba(255,230,109,.13), transparent 60%),
+      linear-gradient(180deg,#030711,#050811 88%)!important}
+    html[data-theme="trainer"] body{background:
+      radial-gradient(700px 380px at 0% 0%, rgba(239,62,52,.35), transparent 58%),
+      radial-gradient(600px 360px at 90% 2%, rgba(255,203,5,.24), transparent 58%),
+      radial-gradient(520px 340px at 42% 20%, rgba(42,117,187,.22), transparent 60%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 2px, transparent 2px 24px),
+      linear-gradient(180deg,#15100b,#050811 88%)!important}
+    html[data-theme="house"] body{background:
+      radial-gradient(760px 420px at 72% -8%, rgba(124,77,255,.34), transparent 62%),
+      radial-gradient(520px 300px at 8% 14%, rgba(202,165,61,.23), transparent 58%),
+      repeating-linear-gradient(135deg, rgba(202,165,61,.06) 0 1px, transparent 1px 24px),
+      linear-gradient(180deg,#0d0613,#050811 88%)!important}
+    html[data-theme="arc"] body{background:
+      radial-gradient(760px 420px at 0% -6%, rgba(31,111,235,.34), transparent 60%),
+      radial-gradient(620px 360px at 86% -4%, rgba(255,176,31,.24), transparent 60%),
+      radial-gradient(520px 340px at 50% 28%, rgba(55,214,122,.14), transparent 64%),
+      repeating-linear-gradient(45deg, rgba(255,176,31,.05) 0 2px, transparent 2px 30px),
+      linear-gradient(180deg,#07101b,#050811 88%)!important}
+    html[data-theme] .nav{box-shadow:0 -14px 34px color-mix(in srgb,var(--accent) 17%, transparent)!important}
+    html[data-theme] .nav button.on,.tabs button.on{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 42%, transparent))}
+    html[data-theme] .go,html[data-theme] .fight,html[data-theme] .bigbtn{box-shadow:0 10px 28px color-mix(in srgb,var(--accent) 24%, transparent), inset 0 0 0 1px rgba(255,255,255,.12)!important}
+    html[data-theme="web"] .stage-badge,html[data-theme="web"] .go{background:linear-gradient(135deg,#e62429,#8f111d)!important;color:#fff!important}
+    html[data-theme="jedi"] .stage-badge,html[data-theme="jedi"] .go{background:linear-gradient(135deg,#3fb6ff,#142b68)!important;color:#fff!important}
+    html[data-theme="trainer"] .stage-badge,html[data-theme="trainer"] .go{background:linear-gradient(135deg,#ef3e34,#ffcb05)!important;color:#12100b!important}
+    html[data-theme="house"] .stage-badge,html[data-theme="house"] .go{background:linear-gradient(135deg,#7c4dff,#2f174d)!important;color:#fff!important}
+    html[data-theme="arc"] .stage-badge,html[data-theme="arc"] .go{background:linear-gradient(135deg,#1f6feb,#ffb01f)!important;color:#07101b!important}
+    .themegrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+    .themegrid .themeChoice{position:relative;overflow:hidden;min-height:104px;padding:13px!important;border-radius:16px!important;border:2px solid color-mix(in srgb,var(--ta) 26%,var(--line))!important;background:linear-gradient(145deg,color-mix(in srgb,var(--ta) 34%,#050811),color-mix(in srgb,var(--tb) 24%,#050811))!important;color:#fff!important;align-items:flex-start!important;text-align:left!important;gap:5px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 12px 30px rgba(0,0,0,.26)}
+    .themegrid .themeChoice:before{content:'';position:absolute;inset:-40%;background:radial-gradient(circle at 18% 22%,color-mix(in srgb,var(--tc) 38%,transparent),transparent 26%),repeating-linear-gradient(135deg,rgba(255,255,255,.08) 0 1px,transparent 1px 18px);opacity:.72;transform:rotate(-6deg);pointer-events:none}
+    .themegrid .themeChoice:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.13),transparent 42%,rgba(0,0,0,.18));pointer-events:none}
+    .themegrid .themeChoice.on{border-color:var(--tc)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--tc) 35%,transparent),0 16px 34px color-mix(in srgb,var(--ta) 28%,transparent)!important}
+    .themeSigil,.themeName,.themeCue,.themeStrip{position:relative;z-index:1}
+    .themeSigil{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:rgba(0,0,0,.36);border:1px solid rgba(255,255,255,.2);font-family:Orbitron;font-size:23px;font-weight:900;color:var(--tc);text-shadow:0 0 12px color-mix(in srgb,var(--tc) 65%,transparent)}
+    .themeName{font-family:Orbitron;font-size:16px;font-weight:900;letter-spacing:.6px;line-height:1.05;text-transform:uppercase}
+    .themeCue{font-size:11px;font-weight:800;line-height:1.18;color:rgba(255,255,255,.78);max-width:94%}
+    .themeStrip{position:absolute;left:12px;right:12px;bottom:10px;height:4px;border-radius:99px;background:linear-gradient(90deg,var(--ta),var(--tc),var(--tb));box-shadow:0 0 14px color-mix(in srgb,var(--tc) 45%,transparent)}
+    html[data-theme="web"] .themeframe,html[data-theme="web"] .sheet,html[data-theme="web"] .card{border-color:color-mix(in srgb,#e62429 24%,var(--line))!important}
+    html[data-theme="jedi"] .themeframe,html[data-theme="jedi"] .sheet,html[data-theme="jedi"] .card{border-color:color-mix(in srgb,#3fb6ff 24%,var(--line))!important}
+    html[data-theme="trainer"] .themeframe,html[data-theme="trainer"] .sheet,html[data-theme="trainer"] .card{border-color:color-mix(in srgb,#ffcb05 22%,var(--line))!important}
+    html[data-theme="house"] .themeframe,html[data-theme="house"] .sheet,html[data-theme="house"] .card{border-color:color-mix(in srgb,#caa53d 22%,var(--line))!important}
+    html[data-theme="arc"] .themeframe,html[data-theme="arc"] .sheet,html[data-theme="arc"] .card{border-color:color-mix(in srgb,#ffb01f 22%,var(--line))!important}
     .sheet,.arena .result,#awayBox,#revealBox,.setupcard,.synergyPanel,.lifecard,.stagecard,.team-strip,.formrow,.pickSlot,.wallet,.lastActionCard,.tasktoast{box-shadow:0 14px 34px rgba(0,0,0,.24)}
     .sheet,.arena .result,#awayBox,#revealBox,.setupcard,.synergyPanel,.lifecard,.stagecard,.team-strip,.formrow,.pickSlot{background:linear-gradient(180deg,var(--modalbg), color-mix(in srgb,var(--modalbg) 88%, #050811))!important;border-color:color-mix(in srgb,var(--accent) 14%, var(--line))!important;backdrop-filter:blur(12px)}
     .wallet{background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 96%, transparent),color-mix(in srgb,var(--panel) 82%,#050811))!important;border-color:color-mix(in srgb,var(--accent2) 12%, var(--line))!important;position:relative!important;top:auto!important;z-index:1!important;backdrop-filter:none!important}
@@ -7194,9 +7255,12 @@ function injectV139Styles(){
 }
 function applyTheme(){
   injectV139Styles();
-  const t=THEMES[S.theme]||THEMES.web, surf=THEME_SURFACES_V139[S.theme]||THEME_SURFACES_V139.web;
+  const key=THEMES[S.theme]?S.theme:'web';
+  const t=THEMES[key]||THEMES.web, surf=THEME_SURFACES_V139[key]||THEME_SURFACES_V139.web;
+  document.documentElement.setAttribute('data-theme',key);
   const r=document.documentElement.style;
   r.setProperty('--accent',t.a); r.setProperty('--accent2',t.b);
+  r.setProperty('--themeAccent3',t.c||t.b); r.setProperty('--themeGlow',t.c||t.b);
   r.setProperty('--bg',surf.bg); r.setProperty('--panel',surf.panel); r.setProperty('--panel2',surf.panel2); r.setProperty('--line',surf.line); r.setProperty('--modalbg',surf.modal); r.setProperty('--navbg',surf.nav);
   const meta=document.querySelector('meta[name="theme-color"]'); if(meta) meta.setAttribute('content',surf.bg);
   applyAppSettings();
@@ -15987,7 +16051,7 @@ function rerender(){
   function invitePanelHTML(){
     if(!completeRoster()) return '';
     var c=cfg(), W=weekState(), left=Math.max(0,c.inviteSparkWeeklyCap-(W.inviteSparks||0)), possible=Math.min(left,Math.floor((S.summonTickets||0)/c.inviteSparkCost));
-    return '<div class="of2154InvitePanel"><div class="of2154Head"><b>Roster Complete</b><span>'+fmt(S.summonTickets||0)+' Holo-Invites · '+fmt(S.sparks||0)+' Force Sparks</span></div><p>Summons are now an evergreen prestige resource. Use Holo-Invites to fuel the wide cohorts required by higher prestige tiers.</p><div class="of2154InviteStats"><span>'+c.inviteSparkCost+' Invites = 1 Spark</span><span>'+W.inviteSparks+'/'+c.inviteSparkWeeklyCap+' weekly exchange</span><span>'+((W.rosterClaimed||!c.rosterCompleteWeeklySparks)?'Dividend claimed':'Dividend ready')+'</span></div><div class="of2154InviteActions"><button type="button" id="of2154ConvertOne" '+(!possible?'disabled':'')+'>Convert 1</button><button type="button" id="of2154ConvertMax" '+(!possible?'disabled':'')+'>Convert '+Math.max(0,possible)+'</button><button type="button" id="of2154ClaimRoster" '+((W.rosterClaimed||!c.rosterCompleteWeeklySparks)?'disabled':'')+'>Claim +'+c.rosterCompleteWeeklySparks+'</button></div></div>';
+    return '<div class="of2154InvitePanel"><div class="of2154Head"><b>Roster Complete</b><span>'+fmt(S.summonTickets||0)+' Holo-Invites · '+fmt(S.sparks||0)+' Force Sparks</span></div><p>Holo-Invites now fuel the wide prestige cohorts required by higher tiers.</p><div class="of2154InviteStats"><span>'+c.inviteSparkCost+' Invites = 1 Spark</span><span>'+W.inviteSparks+'/'+c.inviteSparkWeeklyCap+' weekly exchange</span><span>'+((W.rosterClaimed||!c.rosterCompleteWeeklySparks)?'Dividend claimed':'Dividend ready')+'</span></div><div class="of2154InviteActions"><button type="button" id="of2154ConvertOne" '+(!possible?'disabled':'')+'>Convert 1</button><button type="button" id="of2154ConvertMax" '+(!possible?'disabled':'')+'>Convert '+Math.max(0,possible)+'</button><button type="button" id="of2154ClaimRoster" '+((W.rosterClaimed||!c.rosterCompleteWeeklySparks)?'disabled':'')+'>Claim +'+c.rosterCompleteWeeklySparks+'</button></div></div>';
   }
 
   function injectStyles(){
@@ -16003,13 +16067,17 @@ function rerender(){
       '.of2154Tiers{display:grid;gap:6px}.of2154Tier{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.035);padding:7px 8px;font-size:11px;font-weight:850}',
       '.of2154Tier b{color:#ffd95a}.of2154Tier em{font-style:normal;color:var(--muted);font-family:Orbitron;font-size:9px}.of2154Tier.ready{border-color:#ffd95a99;background:rgba(255,217,90,.10)}.of2154Tier.done{opacity:.62}',
       '.of2154MissionSpark button,.of2154InviteActions button,.of2154DevPanel button{border:none;border-radius:11px;background:linear-gradient(90deg,#ffd95a,#ffb01f);color:#181109;font-family:Orbitron;font-weight:1000;padding:10px 11px;margin-top:9px}',
+      '.of2154RosterCompleteGrid{grid-template-columns:1fr!important}.of2154RosterCompleteGrid #summonBtn{display:none!important}',
+      '.of2154InvitePanel{padding:10px!important;margin:8px 0 10px!important}',
+      '.of2154InvitePanel p{font-size:10.5px!important;margin-bottom:7px!important}',
       '.of2154InviteStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0}.of2154InviteStats span{border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.04);padding:8px;color:var(--muted);font-size:10.5px;font-weight:900;text-align:center;line-height:1.2}',
       '.of2154InviteActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.of2154InviteActions button:disabled,.of2154DevPanel button:disabled{opacity:.45;filter:grayscale(.4)}',
+      '.of2154InvitePanel .of2154InviteActions button{font-size:10px!important;padding:8px 4px!important;margin-top:0!important;min-width:0!important;white-space:nowrap}',
       '.of2154DevPanel{border-color:rgba(139,208,255,.26);background:linear-gradient(180deg,rgba(139,208,255,.08),rgba(10,14,25,.62))}',
       '.of2154DevGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.of2154DevField label{display:block;margin:0 0 4px;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.5px}.of2154DevField input{width:100%;box-sizing:border-box;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:900}',
       '.of2154DevStats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:9px 0}.of2154DevStats span{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px;color:var(--muted);font-size:10.5px;font-weight:850;line-height:1.25}.of2154DevStats b{display:block;color:var(--ink);font-family:Orbitron;font-size:13px}',
       '.of2154DevActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.of2154DevActions .secondary{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}',
-      '@media(max-width:430px){.of2154DevGrid,.of2154DevStats,.of2154InviteActions,.of2154InviteStats{grid-template-columns:1fr}.of2154Tier{grid-template-columns:1fr auto}}'
+      '@media(max-width:430px){.of2154DevGrid,.of2154DevStats{grid-template-columns:1fr}.of2154InvitePanel .of2154InviteActions,.of2154InvitePanel .of2154InviteStats{grid-template-columns:repeat(3,minmax(0,1fr))!important}.of2154InvitePanel .of2154Head{display:block}.of2154InvitePanel .of2154Head span{display:block;text-align:left;margin-top:3px}.of2154Tier{grid-template-columns:1fr auto}}'
     ].join('\n');
     document.head.appendChild(st);
   }
@@ -16029,15 +16097,17 @@ function rerender(){
       root=root||by('view')||document;
       if(!completeRoster()) return;
       var btn=root.querySelector('#summonBtn');
+      var row=(btn&&btn.parentElement&&btn.parentElement.querySelector&&btn.parentElement.querySelector('#albumsBtn'))?btn.parentElement:null;
+      if(row) row.classList.add('of2154RosterCompleteGrid');
       if(btn){
-        btn.textContent='Roster complete - Holo-Invites fuel Force Sparks';
-        btn.style.background='linear-gradient(135deg,#ffd95a,#37d67a)';
-        btn.style.color='#111408';
+        btn.classList.add('of2154RosterCompleteBtn');
+        btn.textContent='Roster complete';
         btn.onclick=function(ev){ ev.preventDefault(); try{ toast('Use the Holo-Invite exchange below.'); }catch(e){} };
       }
       if(!root.querySelector('.of2154InvitePanel')){
         var html=invitePanelHTML();
-        if(html && btn) btn.insertAdjacentHTML('afterend',html);
+        if(html && row) row.insertAdjacentHTML('beforebegin',html);
+        else if(html && btn) btn.insertAdjacentHTML('afterend',html);
       }
       wireSparkPanels(root);
     }catch(e){}
@@ -16236,6 +16306,70 @@ function rerender(){
   setTimeout(function(){ try{ if(typeof view!=='undefined'&&view==='heroes') enhanceRoster(by('view')); injectSettingsPanel(); }catch(e){} },0);
 })();
 /* ===== end v2.154.0 Spark Economy Pass ===== */
+
+/* ===== v2.155.0 Roster + Clash Polish ===== */
+(function(){
+  if(window.__of2155RosterClashPolish) return;
+  window.__of2155RosterClashPolish = true;
+
+  function injectPolishStyles(){
+    if(document.getElementById('of2155RosterClashStyles')) return;
+    var st=document.createElement('style');
+    st.id='of2155RosterClashStyles';
+    st.textContent=[
+      'html.of2155ClashStable #clashBattleOverlay.clashBattleOverlay.c7{background:#070a12!important;transform:translateZ(0);backface-visibility:hidden;contain:layout paint style;isolation:isolate}',
+      'html.of2155ClashStable #clashBattleOverlay .clashBattlePanel.c7,html.of2155ClashStable #clashBattleOverlay .clashBattlePanel.c7.hasArt{background:linear-gradient(180deg,#101725,#070a12)!important;transform:translateZ(0);backface-visibility:hidden;contain:layout paint style;isolation:isolate;will-change:auto}',
+      'html.of2155ClashStable #clashBattleOverlay .clashBattlePanel.c7:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(620px 260px at 50% -10%,rgba(205,188,255,.20),transparent 62%);opacity:.9}',
+      'html.of2155ClashStable #clashBattleOverlay .clashBattlePanel.c7>*{position:relative;z-index:1}',
+      'html.of2155ClashStable #clashBattleOverlay .clashAdvChart{max-height:30px!important;overflow:hidden!important}',
+      'html.of2155ClashStable #clashBattleOverlay .clashBattlePattern{max-height:36px!important;overflow:hidden!important}',
+      'html.of2155ClashStable .clashShot,html.of2155ClashStable .clashImpact{display:none!important}',
+      'html.of2155ClashStable #clashBattleOverlay .clashHeroCell.acting{animation:none!important}',
+      'html.of2155ClashStable #clashBattleOverlay .clashEnemyToken{transition:top .18s linear!important;will-change:top;transform:translate3d(-50%,0,0)!important}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
+  function markClashStable(on){
+    try{ document.documentElement.classList.toggle('of2155ClashStable',!!on); }catch(e){}
+  }
+
+  function patchClashEntrypoints(){
+    injectPolishStyles();
+    try{
+      if(typeof window.startClashBattle==='function' && !window.startClashBattle.__of2155Stable){
+        var oldStart=window.startClashBattle;
+        window.startClashBattle=function(){
+          markClashStable(true);
+          injectPolishStyles();
+          var r=oldStart.apply(this,arguments);
+          setTimeout(function(){ markClashStable(!!document.getElementById('clashBattleOverlay')); },0);
+          return r;
+        };
+        window.startClashBattle.__of2155Stable=true;
+      }
+    }catch(e){}
+    try{
+      if(typeof window.closeClashBattle==='function' && !window.closeClashBattle.__of2155Stable){
+        var oldClose=window.closeClashBattle;
+        window.closeClashBattle=function(){
+          var r=oldClose.apply(this,arguments);
+          markClashStable(false);
+          return r;
+        };
+        window.closeClashBattle.__of2155Stable=true;
+      }
+    }catch(e){}
+  }
+
+  injectPolishStyles();
+  patchClashEntrypoints();
+  setTimeout(patchClashEntrypoints,0);
+  setInterval(function(){
+    try{ if(!document.getElementById('clashBattleOverlay')) markClashStable(false); }catch(e){}
+  },1200);
+})();
+/* ===== end v2.155.0 Roster + Clash Polish ===== */
 
 </script>
 
