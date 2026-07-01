@@ -122,32 +122,78 @@ function getSaveRef() {
   return doc(db, "users", user.uid, "saves", "main");
 }
 
-function getLocalRawSave() {
-  const key = resolveSaveKey();
-  return key ? localStorage.getItem(key) : null;
-}
+// ===== IndexedDB save access + portrait handling (added for cloud save fix) =====
+const OF_IDB_NAME  = 'lifequest';
+const OF_IDB_STORE = 'sheets';
 
-function getLocalSaveObject() {
-  const raw = getLocalRawSave();
-  if (!raw) {
-    throw new Error(
-      "No local Oathforge save found. Open the game so it loads/creates a save, then try again. " +
-      "(Looked for key \"" + PREFERRED_SAVE_KEY + "\" and any large JSON save in this browser.)"
-    );
+function ofIdbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(OF_IDB_NAME);
+    req.onerror   = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
+  });
+}
+async function idbGetRawSave(key) {
+  const db = await ofIdbOpen();
+  try {
+    if (!db.objectStoreNames.contains(OF_IDB_STORE)) return null;
+    return await new Promise((resolve, reject) => {
+      const r = db.transaction(OF_IDB_STORE, 'readonly').objectStore(OF_IDB_STORE).get(key);
+      r.onsuccess = () => resolve(r.result != null ? r.result : null);
+      r.onerror   = () => reject(r.error);
+    });
+  } finally { db.close(); }
+}
+async function idbPutRawSave(key, rawString) {
+  const db = await ofIdbOpen();
+  try {
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(OF_IDB_STORE, 'readwrite');
+      tx.objectStore(OF_IDB_STORE).put(rawString, key);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror    = () => reject(tx.error);
+    });
+  } finally { db.close(); }
+}
+function stripPortraitsForCloud(saveObj) {
+  const clone = JSON.parse(JSON.stringify(saveObj));
+  delete clone.heroPortraits;
+  if (Array.isArray(clone.heroes)) {
+    for (const h of clone.heroes) {
+      if (typeof h.img === 'string' && h.img.indexOf('data:image') === 0) h.img = null;
+    }
   }
-  return JSON.parse(raw);
+  return clone;
+}
+function mergeLocalPortraits(cloudObj, localObj) {
+  if (!localObj) return cloudObj;
+  if (localObj.heroPortraits) cloudObj.heroPortraits = localObj.heroPortraits;
+  if (Array.isArray(cloudObj.heroes) && Array.isArray(localObj.heroes)) {
+    const byId = {};
+    for (const h of localObj.heroes) {
+      if (typeof h.img === 'string' && h.img.indexOf('data:image') === 0) byId[h.id] = h.img;
+    }
+    for (const h of cloudObj.heroes) {
+      if ((h.img == null) && byId[h.id]) h.img = byId[h.id];
+    }
+  }
+  return cloudObj;
 }
 
-function writeLocalSaveObject(saveObj) {
-  const key = resolveSaveKey() || PREFERRED_SAVE_KEY;
-  const raw = JSON.stringify(saveObj);
-  const backupKey = "OF_PRE_CLOUD_RESTORE_" + Date.now();
-  const existing = localStorage.getItem(key);
-  if (existing) localStorage.setItem(backupKey, existing);
-  localStorage.setItem(key, raw);
-  markLocalSaveUpdated();
-  alert("Cloud save restored. Oathforge will reload now.\n\nSafety backup created in localStorage as:\n" + backupKey);
-  location.reload();
+async function getLocalRawSave() {
+  return await idbGetRawSave(resolveSaveKey());
+}
+
+async function getLocalSaveObject() {
+  const raw = await getLocalRawSave();
+  if (raw == null) return null;
+  try { return JSON.parse(raw); } catch (e) { return null; }
+}
+
+async function writeLocalSaveObject(obj) {
+  const raw = (typeof obj === 'string') ? obj : JSON.stringify(obj);
+  await idbPutRawSave(resolveSaveKey(), raw);
+  try { markLocalSaveUpdated(); } catch (e) {}
 }
 
 function markLocalSaveUpdated() {
@@ -163,7 +209,7 @@ function getAppVersion() {
   return window.OATHFORGE_VERSION || window.APP_VERSION || window.SAVE_VERSION || "unknown";
 }
 
-function summarizeSave(save) {
+async function summarizeSave(save) {
   try {
     return {
       playerName: (save && (save.playerName || (save.profile && save.profile.name))) || null,
@@ -220,8 +266,8 @@ async function getCloudSave() {
 
 async function cloudBackup(opts) {
   const force = !!(opts && opts.force);
-  const localSave = getLocalSaveObject();
-  const raw = JSON.stringify(localSave);
+  const localSave = await getLocalSaveObject();
+  const raw = JSON.stringify(stripPortraitsForCloud(localSave));
   if (raw.length > 900000) {
     throw new Error("Save is too large for this simple Firestore setup: " + raw.length + " characters.");
   }
@@ -246,12 +292,13 @@ async function cloudBackup(opts) {
   await setDoc(ref, {
     schema: 1,
     saveJson: raw,
+    portraitsStripped: true,
     updatedAt: serverTimestamp(),
     updatedAtClientMs: Date.now(),
     deviceId: getDeviceId(),
     appVersion: String(getAppVersion()),
     saveVersion: saveVersion ? String(saveVersion) : null,
-    summary: summarizeSave(localSave)
+    summary: await summarizeSave(localSave)
   });
   localStorage.setItem(LAST_SYNC_KEY, String(Date.now()));
   updateCloudStatus("Cloud backup complete");
@@ -274,11 +321,12 @@ async function restoreCloudSave() {
   );
   if (!ok) return;
   const saveObj = JSON.parse(data.saveJson);
-  writeLocalSaveObject(saveObj);
+  if (data.portraitsStripped) { saveObj = mergeLocalPortraits(saveObj, await getLocalSaveObject()); }
+    await writeLocalSaveObject(saveObj);
 }
 
 async function syncNow() {
-  const localRaw = getLocalRawSave();
+  const localRaw = await getLocalRawSave();
   const cloud = await getCloudSave();
   if (!localRaw && !cloud.exists) {
     alert("No local save or cloud save found.");
