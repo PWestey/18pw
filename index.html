@@ -1000,7 +1000,7 @@ const TUNE={
   stageRateBonus:0.30,                   // +30% exp rate per cleared stage
   levelCost:lvl=>20*lvl,                 // exp to raise a hero one level
   liveTickMs:1500,                       // how often idle income ticks while open
-  roleBase:{Tank:{hp:320,atk:18},DPS:{hp:150,atk:44},Support:{hp:200,atk:28}},
+  roleBase:{Tank:{hp:330,atk:20},DPS:{hp:150,atk:44},Support:{hp:215,atk:30}},
   heroScale:lvl=>1+0.18*(lvl-1),
   // v2.3 re-correction: ENEMIES are the single tuning lever. Hero-side buffs pulled back.
   enemyHpBase:120,enemyHpMult:1.30, enemyAtkBase:16, enemyGrowth:1.016,
@@ -2355,8 +2355,8 @@ function seedRoster(){ sanitizeHeroes(); const have=new Set(S.heroes.map(h=>h.id
       if(!Array.isArray(existing.aff)||!existing.aff.length) existing.aff=(r.aff||[]).slice();
       return;
     }
-    if(!have.has(r.id)){ const nh={id:r.id,name:r.name,ip:r.ip,role:r.role,color:r.color,img:null,level:1,rank:0,prestige:0,exp:0,bondXp:0,aff:(r.aff||[]).slice(),archetype:r.archetype||null,tags:Array.isArray(r.tags)?r.tags.slice():[],gear:{weapon:null,armor:null,boots:null,relic:null},owned:!!r.owned}; nh.elementType=inferHeroElementType(nh); nh.clashRole=inferClashRole(nh); S.heroes.push(nh); }
-  }); sanitizeHeroes(); }
+    if(!have.has(r.id)){ const bal=(typeof balancedRosterRoleArch==='function')?balancedRosterRoleArch(r):{role:r.role,arch:r.archetype||null}; const nh={id:r.id,name:r.name,ip:r.ip,role:bal.role,color:r.color,img:null,level:1,rank:0,prestige:0,exp:0,bondXp:0,aff:(r.aff||[]).slice(),archetype:bal.arch||r.archetype||null,archKey:bal.arch||undefined,tags:Array.isArray(r.tags)?r.tags.slice():[],gear:{weapon:null,armor:null,boots:null,relic:null},owned:!!r.owned}; nh.elementType=inferHeroElementType(nh); nh.clashRole=inferClashRole(nh); S.heroes.push(nh); }
+  }); if(!S._roleArchBalanceV2159 && typeof applyRosterRoleArchetypeBalance==='function') applyRosterRoleArchetypeBalance(S.heroes,{force:true}); sanitizeHeroes(); }
 function lockedHeroes(){ sanitizeHeroes(); return S.heroes.filter(h=>h&&!h.owned); }
 function foldFamilyDomain(id,present){
   var trio=['marriage','home','fatherhood'];
@@ -2407,11 +2407,11 @@ function promoCost(g){ return PROMO[g.rarity]||null; }
 function canPromote(g){ const p=PROMO[g.rarity]; return !!p && g.level>=gearMaxLvl(g) && (S.dust||0)>=p.dust && (S.stones||0)>=p.stones && (S.gold||0)>=p.gold; }
 const COLORS=['#e62429','#1f6feb','#37c46e','#f7c531','#7c4dff','#ff7a3c','#36e0e6','#ff5d9e'];
 const THEMES={
-  web:{name:'Marvel',cue:'Avengers red, gold tech, comic energy',icon:'A',a:'#e62429',b:'#1f6feb',c:'#ffd95a'},
-  jedi:{name:'Star Wars',cue:'Lightsaber blue, hyperspace black, rebellion gold',icon:'✦',a:'#3fb6ff',b:'#ffe66d',c:'#111827'},
-  trainer:{name:'Pokemon',cue:'Poke Ball red, badge yellow, route green',icon:'⚡',a:'#ef3e34',b:'#ffcb05',c:'#2a75bb'},
-  house:{name:'Harry Potter',cue:'Hogwarts purple, candle gold, spelllight',icon:'⚯',a:'#7c4dff',b:'#caa53d',c:'#2f174d'},
-  arc:{name:'World of Warcraft',cue:'Azeroth blue, faction gold, fel magic',icon:'⚔',a:'#1f6feb',b:'#ffb01f',c:'#37d67a'},
+  web:{name:'Marvel',cue:'Avengers red, gold tech, comic energy',icon:'A',a:'#f02f3d',b:'#2f80ff',c:'#ffd95a'},
+  jedi:{name:'Star Wars',cue:'Lightsaber blue, deep space, rebellion gold',icon:'✦',a:'#54c7ff',b:'#ffd76a',c:'#7dffb0'},
+  trainer:{name:'Pokemon',cue:'Poke Ball red, badge yellow, route blue',icon:'⚡',a:'#ef233c',b:'#ffcb05',c:'#2a75bb'},
+  house:{name:'Harry Potter',cue:'Hogwarts purple, candle gold, spelllight',icon:'⚯',a:'#8b5cff',b:'#caa53d',c:'#b79cff'},
+  arc:{name:'World of Warcraft',cue:'Azeroth blue, faction gold, fel magic',icon:'⚔',a:'#2b7cff',b:'#f3b43f',c:'#32d16b'},
   dark:{name:'Oathforge Console',cue:'Neutral debug blue and teal',icon:'⌘',a:'#5b8cff',b:'#37d6c4',c:'#8bd0ff'}
 };
 const THEME_ORDER=['web','jedi','trainer','house','arc'];
@@ -2677,7 +2677,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.157.0-clash-label-art-fix';
+const APP_BUILD='v2.160.0-desktop-client-layout';
 const EXPECTED_ROSTER_COUNT=379;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2886,6 +2886,7 @@ function migrate(){
   ensureDomainStats(); ensureDayStats(); ensureQuestState(); ensureStrategyState(); ensureAssignments(); ensureTrials(); ensureMonthStats(); ensurePrestigeState(); ensurePrestigeMilestones(); ensureHeroQuests(); ensurePrestigeMilestones();
   ensureHeroPortraitVault();
   seedRoster();
+  if(!S._roleArchBalanceV2159 && typeof applyRosterRoleArchetypeBalance==='function'){ applyRosterRoleArchetypeBalance(S.heroes,{force:true}); S._roleArchBalanceV2159=true; }
   // Season 1: auto-own the curated 25 starters
   if(!S._season1InitDone && Array.isArray(S.heroes)){
     const STARTER_IDS_S1=['marvel__iron_man','star_wars__obi_wan_kenobi','harry_potter__harry_potter','pokemon__arcanine','the_witcher__geralt_of_rivia','world_of_warcraft__jaina_proudmoore','red_rising__darrow','stormlight_archive__kaladin','lord_of_the_rings__legolas','critical_role__grog_strongjaw','disney_pixar__wreck_it_ralph','game_of_thrones__jon_snow','marvel__spider_man','fourth_wing__violet_sorrengail','a_court_of_thorns_and_roses__feyre_archeron','the_witcher__yennefer','world_of_warcraft__tyrande_whisperwind','dc__superman','red_rising__virginia_mustang_au_augustus','harry_potter__hermione_granger','marvel__captain_america_steve_rogers','disney_pixar__baymax','pokemon__lucario','marvel__colossus','star_wars__rey'];
@@ -5559,8 +5560,55 @@ function normArchKey(key,role){ role=normalizeRole(role); var valid=ROLE_ARCH[ro
   if(key && valid.indexOf(key)>=0) return key;
   var want=(key in ARCH_REMAP)?ARCH_REMAP[key]:null; if(!want) want=archHint(key);
   if(want && valid.indexOf(want)>=0) return want; return ARCH_DEFAULT[role]||valid[0]; }
+const ROSTER_ROLE_ARCH_OVERRIDES_V2159={
+  'marvel__iron_man':{role:'DPS',arch:'Caster'},'marvel__captain_america_steve_rogers':{role:'Tank',arch:'Guardian'},'marvel__captain_america_sam_wilson':{role:'Tank',arch:'Guardian'},'marvel__thor':{role:'DPS',arch:'Bruiser'},'marvel__hulk':{role:'Tank',arch:'Guardian'},'marvel__black_widow':{role:'DPS',arch:'Assassin'},'marvel__hawkeye':{role:'DPS',arch:'Marksman'},'marvel__war_machine':{role:'Tank',arch:'Guardian'},'marvel__falcon':{role:'DPS',arch:'Marksman'},'marvel__winter_soldier':{role:'DPS',arch:'Assassin'},'marvel__scarlet_witch':{role:'DPS',arch:'Caster'},'marvel__vision':{role:'DPS',arch:'Caster'},'marvel__doctor_strange':{role:'Support',arch:'Leader'},'marvel__spider_man':{role:'DPS',arch:'Striker'},'marvel__miles_morales':{role:'DPS',arch:'Striker'},'marvel__ghost_spider':{role:'DPS',arch:'Assassin'},'marvel__black_panther_tchalla':{role:'DPS',arch:'Striker'},'marvel__ant_man':{role:'DPS',arch:'Striker'},'marvel__wasp':{role:'DPS',arch:'Striker'},'marvel__captain_marvel':{role:'DPS',arch:'Bruiser'},'marvel__nick_fury':{role:'Support',arch:'Leader'},'marvel__loki':{role:'DPS',arch:'Caster'},'marvel__shang_chi':{role:'DPS',arch:'Striker'},'marvel__yelena_belova':{role:'DPS',arch:'Assassin'},'marvel__kate_bishop':{role:'DPS',arch:'Marksman'},'marvel__moon_knight':{role:'DPS',arch:'Assassin'},'marvel__she_hulk':{role:'Tank',arch:'Guardian'},'marvel__daredevil':{role:'DPS',arch:'Assassin'},'marvel__punisher':{role:'DPS',arch:'Marksman'},'marvel__star_lord':{role:'DPS',arch:'Marksman'},'marvel__gamora':{role:'DPS',arch:'Assassin'},'marvel__drax':{role:'Tank',arch:'Guardian'},'marvel__rocket_raccoon':{role:'DPS',arch:'Marksman'},'marvel__groot':{role:'Tank',arch:'Guardian'},'marvel__nebula':{role:'DPS',arch:'Assassin'},'marvel__mantis':{role:'Support',arch:'Healer'},'marvel__yondu':{role:'DPS',arch:'Marksman'},'marvel__adam_warlock':{role:'Support',arch:'Healer'},'marvel__mister_fantastic':{role:'Support',arch:'Leader'},'marvel__invisible_woman':{role:'Support',arch:'Leader'},'marvel__human_torch':{role:'DPS',arch:'Caster'},'marvel__the_thing':{role:'Tank',arch:'Guardian'},'marvel__doctor_doom':{role:'DPS',arch:'Caster'},'marvel__wolverine':{role:'DPS',arch:'Bruiser'},'marvel__professor_x':{role:'Support',arch:'Leader'},'marvel__magneto':{role:'DPS',arch:'Caster'},'marvel__cyclops':{role:'DPS',arch:'Marksman'},'marvel__jean_grey':{role:'Support',arch:'Leader'},'marvel__storm':{role:'DPS',arch:'Caster'},'marvel__rogue':{role:'DPS',arch:'Bruiser'},'marvel__gambit':{role:'DPS',arch:'Marksman'},'marvel__beast':{role:'Support',arch:'Leader'},'marvel__nightcrawler':{role:'DPS',arch:'Assassin'},'marvel__colossus':{role:'Tank',arch:'Guardian'},'marvel__mystique':{role:'DPS',arch:'Assassin'},'marvel__quicksilver':{role:'DPS',arch:'Striker'},'marvel__iceman':{role:'DPS',arch:'Caster'},'marvel__kitty_pryde_shadowcat':{role:'DPS',arch:'Assassin'},'marvel__jubilee':{role:'DPS',arch:'Caster'},'marvel__psylocke':{role:'DPS',arch:'Assassin'},'marvel__cable':{role:'DPS',arch:'Marksman'},'marvel__domino':{role:'DPS',arch:'Marksman'},'marvel__deadpool':{role:'DPS',arch:'Striker'},'marvel__emma_frost':{role:'Support',arch:'Leader'},'marvel__magik':{role:'DPS',arch:'Caster'},'marvel__elektra':{role:'DPS',arch:'Assassin'},'marvel__jessica_jones':{role:'Tank',arch:'Guardian'},'marvel__luke_cage':{role:'Tank',arch:'Guardian'},'marvel__iron_fist':{role:'DPS',arch:'Striker'},'marvel__agatha_harkness':{role:'DPS',arch:'Caster'},'marvel__namor':{role:'Tank',arch:'Guardian'},'marvel__the_hunter':{role:'DPS',arch:'Striker'},
+  'star_wars__obi_wan_kenobi':{role:'Tank',arch:'Guardian'},'star_wars__luke_skywalker':{role:'DPS',arch:'Caster'},'star_wars__anakin_skywalker':{role:'DPS',arch:'Bruiser'},'star_wars__yoda':{role:'Support',arch:'Leader'},'star_wars__ahsoka_tano':{role:'DPS',arch:'Striker'},'star_wars__mace_windu':{role:'Tank',arch:'Guardian'},'star_wars__qui_gon_jinn':{role:'Support',arch:'Leader'},'star_wars__kanan_jarrus':{role:'Tank',arch:'Guardian'},'star_wars__ezra_bridger':{role:'DPS',arch:'Caster'},'star_wars__leia_organa':{role:'Support',arch:'Leader'},'star_wars__han_solo':{role:'DPS',arch:'Marksman'},'star_wars__chewbacca':{role:'Tank',arch:'Guardian'},'star_wars__din_djarin':{role:'Tank',arch:'Guardian'},'star_wars__grogu':{role:'Support',arch:'Healer'},'star_wars__rey':{role:'DPS',arch:'Striker'},'star_wars__r2_d2':{role:'Support',arch:'Healer'},'star_wars__c_3po':{role:'Support',arch:'Leader'},'star_wars__padme_amidala':{role:'Support',arch:'Leader'},'star_wars__lando_calrissian':{role:'DPS',arch:'Marksman'},'star_wars__cassian_andor':{role:'DPS',arch:'Marksman'},'star_wars__sabine_wren':{role:'DPS',arch:'Marksman'},'star_wars__hera_syndulla':{role:'Support',arch:'Leader'},'star_wars__master_westman':{role:'Support',arch:'Leader'},
+  'harry_potter__harry_potter':{role:'DPS',arch:'Caster'},'harry_potter__hermione_granger':{role:'Support',arch:'Leader'},'harry_potter__ron_weasley':{role:'DPS',arch:'Striker'},'harry_potter__albus_dumbledore':{role:'Support',arch:'Leader'},'harry_potter__severus_snape':{role:'DPS',arch:'Caster'},'harry_potter__sirius_black':{role:'DPS',arch:'Bruiser'},'harry_potter__remus_lupin':{role:'Tank',arch:'Guardian'},'harry_potter__neville_longbottom':{role:'Tank',arch:'Guardian'},'harry_potter__luna_lovegood':{role:'Support',arch:'Healer'},'harry_potter__minerva_mcgonagall':{role:'Support',arch:'Leader'},'harry_potter__rubeus_hagrid':{role:'Tank',arch:'Guardian'},'harry_potter__dobby':{role:'Support',arch:'Healer'},'harry_potter__draco_malfoy':{role:'DPS',arch:'Caster'},'harry_potter__bellatrix_lestrange':{role:'DPS',arch:'Caster'},'harry_potter__voldemort':{role:'DPS',arch:'Caster'},'harry_potter__peter_hufflepuff':{role:'Tank',arch:'Guardian'},
+  'pokemon__pikachu':{role:'DPS',arch:'Caster'},'pokemon__charizard':{role:'DPS',arch:'Bruiser'},'pokemon__blastoise':{role:'Tank',arch:'Guardian'},'pokemon__venusaur':{role:'Support',arch:'Healer'},'pokemon__mew':{role:'Support',arch:'Leader'},'pokemon__lucario':{role:'DPS',arch:'Striker'},'pokemon__greninja':{role:'DPS',arch:'Assassin'},'pokemon__gengar':{role:'DPS',arch:'Caster'},'pokemon__dragonite':{role:'DPS',arch:'Bruiser'},'pokemon__gyarados':{role:'DPS',arch:'Bruiser'},'pokemon__arcanine':{role:'DPS',arch:'Striker'},'pokemon__snorlax':{role:'Tank',arch:'Guardian'},'pokemon__eevee':{role:'Support',arch:'Leader'},'pokemon__umbreon':{role:'Tank',arch:'Guardian'},'pokemon__rayquaza':{role:'DPS',arch:'Bruiser'},'pokemon__entei':{role:'DPS',arch:'Bruiser'},'pokemon__peter_trainer':{role:'Support',arch:'Leader'},
+  'world_of_warcraft__arthas_menethil':{role:'DPS',arch:'Bruiser'},'world_of_warcraft__the_lich_king':{role:'Tank',arch:'Guardian'},'world_of_warcraft__illidan_stormrage':{role:'DPS',arch:'Assassin'},'world_of_warcraft__thrall':{role:'DPS',arch:'Caster'},'world_of_warcraft__jaina_proudmoore':{role:'DPS',arch:'Caster'},'world_of_warcraft__varian_wrynn':{role:'Tank',arch:'Guardian'},'world_of_warcraft__anduin_wrynn':{role:'Support',arch:'Healer'},'world_of_warcraft__sylvanas_windrunner':{role:'DPS',arch:'Marksman'},'world_of_warcraft__uther_lightbringer':{role:'Tank',arch:'Guardian'},'world_of_warcraft__tirion_fordring':{role:'Tank',arch:'Guardian'},'world_of_warcraft__malfurion_stormrage':{role:'Support',arch:'Healer'},'world_of_warcraft__tyrande_whisperwind':{role:'Support',arch:'Healer'},'world_of_warcraft__khadgar':{role:'DPS',arch:'Caster'},'world_of_warcraft__guldan':{role:'DPS',arch:'Caster'},'world_of_warcraft__velen':{role:'Support',arch:'Leader'},'world_of_warcraft__alleria_windrunner':{role:'DPS',arch:'Marksman'},'world_of_warcraft__genn_greymane':{role:'DPS',arch:'Bruiser'},'world_of_warcraft__deathwing':{role:'Tank',arch:'Guardian'},'world_of_warcraft__alexstrasza':{role:'Support',arch:'Healer'},'world_of_warcraft__peter_paladin':{role:'Tank',arch:'Guardian'},'world_of_warcraft__peter_shaman':{role:'Support',arch:'Healer'},'world_of_warcraft__peter_druid':{role:'Tank',arch:'Guardian'},'world_of_warcraft__peter_hunter':{role:'DPS',arch:'Marksman'},'world_of_warcraft__peter_warrior':{role:'Tank',arch:'Guardian'},'world_of_warcraft__peter_monk':{role:'Support',arch:'Leader'},'world_of_warcraft__peter_rogue':{role:'DPS',arch:'Assassin'},'world_of_warcraft__peter_evoker':{role:'DPS',arch:'Caster'},'world_of_warcraft__peter_death_knight':{role:'Tank',arch:'Guardian'},'world_of_warcraft__peter_demon_hunter':{role:'DPS',arch:'Assassin'},'world_of_warcraft__peter_priest':{role:'Support',arch:'Healer'},'world_of_warcraft__peter_mage':{role:'DPS',arch:'Caster'},'world_of_warcraft__peter_warlock':{role:'DPS',arch:'Caster'},'world_of_warcraft__megan_priest':{role:'Support',arch:'Healer'},
+  'stormlight_archive__kaladin':{role:'Tank',arch:'Guardian'},'stormlight_archive__syl':{role:'Support',arch:'Leader'},'stormlight_archive__dalinar_kholin':{role:'Tank',arch:'Guardian'},'stormlight_archive__adolin_kholin':{role:'DPS',arch:'Striker'},'stormlight_archive__shallan_davar':{role:'DPS',arch:'Caster'},'stormlight_archive__pattern':{role:'Support',arch:'Leader'},'stormlight_archive__jasnah_kholin':{role:'DPS',arch:'Caster'},'stormlight_archive__navani_kholin':{role:'Support',arch:'Leader'},'stormlight_archive__szeth':{role:'DPS',arch:'Assassin'},'stormlight_archive__lift':{role:'Support',arch:'Healer'},'stormlight_archive__renarin_kholin':{role:'Support',arch:'Healer'},'stormlight_archive__teft':{role:'Tank',arch:'Guardian'},'stormlight_archive__rock':{role:'Tank',arch:'Guardian'},'stormlight_archive__lopen':{role:'DPS',arch:'Striker'},'stormlight_archive__wit':{role:'Support',arch:'Leader'},
+  'mass_effect__commander_shepard':{role:'Tank',arch:'Guardian'},'mass_effect__garrus_vakarian':{role:'DPS',arch:'Marksman'},'mass_effect__liara_t_soni':{role:'Support',arch:'Leader'},'mass_effect__tali_zorah':{role:'Support',arch:'Leader'},'mass_effect__urdnot_wrex':{role:'Tank',arch:'Guardian'},'mass_effect__mordin_solus':{role:'Support',arch:'Healer'},'mass_effect__miranda_lawson':{role:'DPS',arch:'Caster'},'mass_effect__jack':{role:'DPS',arch:'Caster'},'mass_effect__legion':{role:'DPS',arch:'Marksman'},'mass_effect__thane_krios':{role:'DPS',arch:'Assassin'},
+  'diablo__diablo':{role:'DPS',arch:'Bruiser'},'diablo__tyrael':{role:'Tank',arch:'Guardian'},'diablo__deckard_cain':{role:'Support',arch:'Leader'},'diablo__lilith':{role:'DPS',arch:'Caster'},'diablo__inarius':{role:'Tank',arch:'Guardian'},'diablo__mephisto':{role:'DPS',arch:'Caster'},'diablo__baal':{role:'DPS',arch:'Caster'},'diablo__malthael':{role:'DPS',arch:'Assassin'},'diablo__leah':{role:'Support',arch:'Healer'},'diablo__imperius':{role:'Tank',arch:'Guardian'},
+  'league_of_legends__ahri':{role:'DPS',arch:'Caster'},'league_of_legends__jinx':{role:'DPS',arch:'Marksman'},'league_of_legends__lux':{role:'Support',arch:'Healer'},'league_of_legends__miss_fortune':{role:'DPS',arch:'Marksman'},'league_of_legends__caitlyn':{role:'DPS',arch:'Marksman'},'league_of_legends__vi':{role:'Tank',arch:'Guardian'},'league_of_legends__kai_sa':{role:'DPS',arch:'Marksman'},'league_of_legends__akali':{role:'DPS',arch:'Assassin'},'league_of_legends__yasuo':{role:'DPS',arch:'Striker'},'league_of_legends__ezreal':{role:'DPS',arch:'Marksman'},
+  'dc__superman':{role:'Tank',arch:'Guardian'},'dc__batman':{role:'DPS',arch:'Assassin'},'dc__wonder_woman':{role:'Tank',arch:'Guardian'},'dc__the_flash_barry_allen':{role:'DPS',arch:'Striker'},'dc__green_lantern_hal_jordan':{role:'DPS',arch:'Caster'},'dc__aquaman':{role:'Tank',arch:'Guardian'},'dc__martian_manhunter':{role:'Support',arch:'Leader'},'dc__cyborg':{role:'Support',arch:'Leader'},'dc__green_arrow':{role:'DPS',arch:'Marksman'},'dc__black_canary':{role:'DPS',arch:'Caster'},'dc__shazam':{role:'DPS',arch:'Bruiser'},'dc__supergirl':{role:'DPS',arch:'Bruiser'},'dc__batgirl_barbara_gordon':{role:'Support',arch:'Leader'},'dc__nightwing':{role:'DPS',arch:'Striker'},'dc__robin_damian_wayne':{role:'DPS',arch:'Assassin'},
+  'baldur_s_gate_3__shadowheart':{role:'Support',arch:'Healer'},'baldur_s_gate_3__astarion':{role:'DPS',arch:'Assassin'},'baldur_s_gate_3__gale':{role:'DPS',arch:'Caster'},'baldur_s_gate_3__lae_zel':{role:'DPS',arch:'Striker'},'baldur_s_gate_3__wyll':{role:'DPS',arch:'Caster'},'baldur_s_gate_3__karlach':{role:'Tank',arch:'Guardian'},'baldur_s_gate_3__halsin':{role:'Support',arch:'Healer'},'baldur_s_gate_3__minthara':{role:'DPS',arch:'Striker'},'baldur_s_gate_3__jaheira':{role:'Support',arch:'Leader'},'baldur_s_gate_3__minsc':{role:'Tank',arch:'Guardian'},'baldur_s_gate_3__the_dark_urge':{role:'DPS',arch:'Assassin'},'baldur_s_gate_3__the_emperor':{role:'Support',arch:'Leader'},'baldur_s_gate_3__ketheric_thorm':{role:'Tank',arch:'Guardian'},'baldur_s_gate_3__enver_gortash':{role:'Support',arch:'Leader'},'baldur_s_gate_3__orin_the_red':{role:'DPS',arch:'Assassin'},'baldur_s_gate_3__raphael':{role:'DPS',arch:'Caster'},'baldur_s_gate_3__withers':{role:'Support',arch:'Healer'},'baldur_s_gate_3__dame_aylin':{role:'Tank',arch:'Guardian'},'baldur_s_gate_3__isobel':{role:'Support',arch:'Healer'},'baldur_s_gate_3__mizora':{role:'DPS',arch:'Caster'}
+};
+function rosterRoleArchOverride(h){ return h?ROSTER_ROLE_ARCH_OVERRIDES_V2159[h.id]||null:null; }
+function balancedArchFromText(h,role,preferred){
+  const text=((h&&h.id)||'')+' '+((h&&h.name)||'')+' '+((h&&h.ip)||'')+' '+((h&&h.archetype)||'')+' '+(Array.isArray(h&&h.tags)?h.tags.join(' '):'');
+  const s=text.toLowerCase();
+  if(role==='Tank') return 'Guardian';
+  if(role==='Support'){
+    if(/heal|healer|priest|cleric|medic|doctor|mender|restor|baymax|mantis|shadowheart|isobel|pike|triss|grogu|dobby|samwise|mirabel|alexstrasza|anduin|tyrande|malfurion|leah|mordin/.test(s)) return 'Healer';
+    return 'Leader';
+  }
+  if(/archer|bow|sniper|marksman|gun|rifle|blaster|shooter|hawkeye|bishop|rocket|punisher|caitlyn|jinx|miss_fortune|garrus|legolas|vex|percy|sabine|lando|han|cassian|sylvanas|alleria|merida|buzz|jessie|cable|domino|yondu|cyclops/.test(s)) return 'Marksman';
+  if(/assassin|rogue|shadow|stealth|spy|thief|widow|elektra|azriel|astarion|thane|akali|vax|arya|moon|greninja|nightcrawler|mystique|psylocke|gamora|nebula|yelen|orin/.test(s)) return 'Assassin';
+  if(/mage|wizard|witch|sorcer|caster|psychic|warlock|arcane|spell|storm|lightning|frost|fire|chaos|force|jedi|sith|dragon|rayquaza|gengar|elsa|jaina|gale|jasnah|scarlet|strange|doom|voldemort|dumbledore|yoda|thrall|khadgar|guldan|mephisto|baal|lilith|agatha|magik|iceman|jubilee|jack|miranda|wyll|raphael|mizora/.test(s)) return 'Caster';
+  if(/hulk|thor|captain marvel|wolverine|grog|karlach|gimli|drax|bruiser|brawler|warrior|barbarian|rage|dragonite|gyarados|supergirl|shazam|genn|arthas|tamlin|maui|diablo|deathwing|charizard|entei|rogue/.test(s)) return 'Bruiser';
+  return normArchKey(preferred||((h&&h.archKey)||'')||((h&&h.archetype)||''),role);
+}
+function balancedRosterRoleArch(h){
+  if(!h) return {role:'DPS',arch:'Striker'};
+  const exact=rosterRoleArchOverride(h);
+  const role=normalizeRole((exact&&exact.role)||h.role);
+  const preferred=(exact&&exact.arch)||(CUSTOM_HERO_ARCHETYPES[h.id]&&CUSTOM_HERO_ARCHETYPES[h.id].key)||h.archKey||h.archetype;
+  return {role,arch:normArchKey(balancedArchFromText(h,role,preferred),role)};
+}
+function applyRosterRoleArchetypeBalance(list,opts){
+  const arr=Array.isArray(list)?list:((typeof S!=='undefined'&&Array.isArray(S.heroes))?S.heroes:[]);
+  arr.forEach(h=>{
+    if(!h) return;
+    const bal=balancedRosterRoleArch(h);
+    h.role=bal.role;
+    h.archKey=bal.arch;
+    h.archetype=bal.arch;
+    if(typeof inferClashRole==='function') h.clashRole=inferClashRole(h);
+    if(typeof inferHeroElementType==='function') h.elementType=inferHeroElementType(h);
+  });
+}
 function generatedArchetype(h){ if(!h)return null; const opts=ROLE_ARCH[normalizeRole(h.role)]||ROLE_ARCH.DPS; const key=opts[v21Hash(h.id)%opts.length]; return {key,...(ARCHETYPE_DEFS[key]||{})}; }
-function heroArchetype(h){ if(!h)return null; var ak=h.archKey?normArchKey(h.archKey,h.role):null; if(ak&&ARCHETYPE_DEFS[ak]) return {key:ak,...ARCHETYPE_DEFS[ak]}; var c=CUSTOM_HERO_ARCHETYPES[h.id]; if(c){ var ck=normArchKey(c.key,h.role); if(ARCHETYPE_DEFS[ck]) return {key:ck,...ARCHETYPE_DEFS[ck]}; } return generatedArchetype(h); }
+function heroArchetype(h){ if(!h)return null; var ak=h.archKey?normArchKey(h.archKey,h.role):(h.archetype?normArchKey(h.archetype,h.role):null); if(ak&&ARCHETYPE_DEFS[ak]) return {key:ak,...ARCHETYPE_DEFS[ak]}; var c=CUSTOM_HERO_ARCHETYPES[h.id]; if(c){ var ck=normArchKey(c.key,h.role); if(ARCHETYPE_DEFS[ck]) return {key:ck,...ARCHETYPE_DEFS[ck]}; } return generatedArchetype(h); }
 function archetypeColor(h){ const a=heroArchetype(h); return a&&a.color?a.color:'#8bd0ff'; }
 function archAbilityText(key){
   var T=(typeof ARCH_TUNE!=='undefined')?ARCH_TUNE:{}; var P=function(x){ return Math.round((x||0)*100)+'%'; };
@@ -5608,14 +5656,16 @@ function computeSynergy(hs){
     if(mods.hp) bonus.hp*=mods.hp; if(mods.atk) bonus.atk*=mods.atk; if(mods.support) bonus.support*=mods.support; if(mods.risk) bonus.risk*=mods.risk;
   }
   if(hs.length>=3 && roles.Tank>=1 && roles.DPS>=1 && roles.Support>=1) add('Balanced Line','Tank + DPS + Support: +5% HP / ATK / support.',{hp:1.05,atk:1.05,support:1.05},'gold');
-  if((roles.Tank||0)>=2) add('Shield Wall','2+ Tanks: +8% HP.',{hp:1.08});
+  if((roles.Tank||0)>=2) add('Shield Wall','2+ Tanks: +8% HP and safer targeting.',{hp:1.08,risk:.97});
   if((roles.DPS||0)>=3) add('Strike Team','3+ DPS: +8% ATK.',{atk:1.08});
-  if((roles.Support||0)>=2) add('Backline Core','2+ Supports: +10% support output and safer targeting.',{support:1.10,risk:.95});
-  if((archetypes.Guardian||0)>=2) add('Guardian Wall','2+ Guardians: +6% HP.',{hp:1.06});
+  if((roles.Support||0)>=2) add('Backline Core','2+ Supports: +12% support output and safer targeting.',{support:1.12,risk:.94});
+  if((archetypes.Guardian||0)>=2) add('Guardian Wall','2+ Guardians: +6% HP / safer targeting.',{hp:1.06,risk:.97});
   if((archetypes.Bruiser||0)>=2) add('Brawler Front','2+ Bruisers: +4% HP / ATK.',{hp:1.04,atk:1.04});
-  if((archetypes.Assassin||0)>=2) add('Shadow Pair','2+ Assassins: +6% ATK.',{atk:1.06});
+  if((archetypes.Striker||0)>=2) add('Focused Assault','2+ Strikers: +5% ATK.',{atk:1.05});
+  if((archetypes.Assassin||0)>=2) add('Shadow Pair','2+ Assassins: +6% ATK / safer targeting.',{atk:1.06,risk:.97});
   if((archetypes.Caster||0)>=2) add('Arcane Core','2+ Casters: +5% ATK / support.',{atk:1.05,support:1.05});
-  if((archetypes.Healer||0)>=1 && (archetypes.Protector||0)>=1) add('Sustain Core','Healer + Protector: +8% support output.',{support:1.08});
+  if((archetypes.Marksman||0)>=2) add('Fireline','2+ Marksmen: +5% ATK / safer targeting.',{atk:1.05,risk:.97});
+  if((archetypes.Healer||0)>=1 && (archetypes.Leader||0)>=1) add('Sustain Core','Healer + Leader: +8% support output.',{support:1.08});
   if((archetypes.Leader||0)>=1 && hs.length>=4) add('Command Presence','Leader in 4+ hero team: +3% HP / ATK.',{hp:1.03,atk:1.03});
   if(ipN>=3){ const _ib=ipSynergyTier(ipN); add(ipSynergyName(topIp),topIp+' x'+ipN+': +'+Math.round(_ib*100)+'% HP / ATK.',{hp:1+_ib,atk:1+_ib},'gold'); }
   if(affN>=3) add('Shared Purpose',(DKEY[topAff]?DKEY[topAff].label:topAff)+' x'+affN+': +4% HP / ATK.',{hp:1.04,atk:1.04});
@@ -5712,8 +5762,8 @@ function canDoubleStrike(att){
   return false;
 }
 /* ===== Combat v1: round-based kit engine (durations + cooldowns + role kits) ===== */
-const KIT_TAUNT_DUR=2, KIT_TAUNT_CD=3, KIT_HEAL_CD=2, KIT_HEAL_FACTOR=0.9, KIT_TAUNT_REDIRECT=0.72, KIT_TANK_MIT=0.42, KIT_EXEC_THRESH=0.35, KIT_EXEC_MULT=1.55;
-const KIT_TEAM_DR=0.09;
+const KIT_TAUNT_DUR=2, KIT_TAUNT_CD=3, KIT_HEAL_CD=2, KIT_HEAL_FACTOR=1.05, KIT_TAUNT_REDIRECT=0.72, KIT_TANK_MIT=0.42, KIT_EXEC_THRESH=0.35, KIT_EXEC_MULT=1.55;
+const KIT_TEAM_DR=0.10;
 function kitTankAlive(){ try{ return !!(battleState && battleState.players && battleState.players.some(function(u){ return u.role==='Tank' && !u.dead; })); }catch(e){ return false; } }
 function kitSt(u){ if(!u.st) u.st=[]; return u.st; }
 function kitAddSt(u,type,dur,val){ const s=kitSt(u),ex=s.find(x=>x.type===type); if(ex){ ex.dur=Math.max(ex.dur,dur); if(val!=null)ex.val=val; } else s.push({type:type,dur:dur,val:(val==null?1:val)}); }
@@ -5724,10 +5774,10 @@ function kitReady(u,k){ return !(u.cd&&u.cd[k]>0); }
 function kitSetCd(u,k,t){ kitCd(u)[k]=t; }
 function kitTickCd(u){ if(!u||!u.cd)return; for(const k in u.cd){ if(u.cd[k]>0)u.cd[k]--; } }
 /* ===== Archetype combat identities (Phase 2) ===== */
-const ARCH_TUNE={ leaderAtk:0.08, bruiserLS:0.18, bruiserDmg:0.06, strikerDmg:0.12, marksmanBase:0.08, marksmanBoss:0.28, marksmanPriority:0.12, casterSplash:0.25, leaderShield:0.6, leaderShieldCap:0.35 };
+const ARCH_TUNE={ leaderAtk:0.07, bruiserLS:0.16, bruiserDmg:0.08, strikerDmg:0.12, marksmanBase:0.09, marksmanBoss:0.24, marksmanPriority:0.12, casterSplash:0.22, leaderShield:0.72, leaderShieldCap:0.38 };
 function unitArch(u){ return (u && u.archetype && u.archetype.key) || null; }
 function archLeaderAura(){ try{ return (((battleState&&battleState.players)||[]).some(function(u){return !u.dead && unitArch(u)==='Leader';}))?(1+ARCH_TUNE.leaderAtk):1; }catch(e){ return 1; } }
-function archRoundStart(pa){ try{ pa.filter(function(u){return unitArch(u)==='Leader';}).forEach(function(u){ var inj=pa.filter(function(x){return !x.dead;}).sort(function(a,b){return (a.hp/a.max)-(b.hp/b.max);})[0]; if(inj){ var cap=Math.round((inj.max||inj.hp)*ARCH_TUNE.leaderShieldCap); var grant=Math.max(1,Math.round(u.atk*ARCH_TUNE.leaderShield*forgeHealMult())); inj.shield=Math.min(cap,(inj.shield||0)+grant); } }); }catch(e){} }
+function archRoundStart(pa){ try{ pa.filter(function(u){return unitArch(u)==='Leader';}).forEach(function(u){ var inj=pa.filter(function(x){return !x.dead;}).sort(function(a,b){return (a.hp/a.max)-(b.hp/b.max);})[0]; if(inj){ var cap=Math.round((inj.max||inj.hp)*ARCH_TUNE.leaderShieldCap), before=inj.shield||0; var grant=Math.max(1,Math.round(u.atk*ARCH_TUNE.leaderShield*(u.supportMult||1)*forgeHealMult())); inj.shield=Math.min(cap,before+grant); u.support=(u.support||0)+Math.max(0,(inj.shield||0)-before); } }); }catch(e){} }
 function archAtkMod(att,tgt){ if(!att||att.side!=='p') return 1; var a=unitArch(att), m=archLeaderAura(); if(a==='Striker') m*=(1+ARCH_TUNE.strikerDmg); if(a==='Bruiser') m*=(1+ARCH_TUNE.bruiserDmg); if(a==='Marksman'){ m*=(1+ARCH_TUNE.marksmanBase); if(tgt&&tgt.boss){ m*=(1+ARCH_TUNE.marksmanBoss); } else if(tgt&&battleState){ var _tough=((battleState.enemies)||[]).filter(function(e){return !e.dead;}).sort(function(x,y){return (y.max||0)-(x.max||0);})[0]; if(_tough&&tgt===_tough) m*=(1+ARCH_TUNE.marksmanPriority); } } return m; }
 function archOnDealt(att,actual){ if(!att||att.side!=='p'||!actual) return; if(unitArch(att)==='Bruiser'){ att.hp=Math.min(att.max,att.hp+Math.round(actual*ARCH_TUNE.bruiserLS)); } }
 function archCasterSplash(att,tgt,actual){ try{ if(!att||att.side!=='p'||unitArch(att)!=='Caster'||!battleState) return; var sp=Math.max(1,Math.round(actual*ARCH_TUNE.casterSplash)); battleState.enemies.forEach(function(e){ if(e&&!e.dead&&e!==tgt){ e.hp-=sp; if(e.hp<=0){e.hp=0;e.dead=true;} } }); }catch(e){} }
@@ -5751,7 +5801,7 @@ function legRenewalVictory(){ try{ var any=legPlayersWithSig('renewal').length; 
 function legRoundStart(pa){ try{ pa.forEach(function(u){ if(unitHasSig(u,'tempered')) u._temper=Math.min(LEGSIG_TUNE.temperedCap,(u._temper||0)+LEGSIG_TUNE.temperedPerRound); }); pa.filter(function(u){return unitHasSig(u,'hearthlight');}).forEach(function(u){ var inj=pa.filter(function(x){return !x.dead&&x.hp<x.max;}).sort(function(a,b){return (a.hp/a.max)-(b.hp/b.max);})[0]; if(inj){ var amt=Math.max(1,Math.round(u.atk*LEGSIG_TUNE.hearthHealFactor*forgeHealMult())); inj.hp=Math.min(inj.max,inj.hp+amt); } }); }catch(e){} }
 function kitRoundStart(players,enemies){ if(!battleState)return; const pa=players.filter(u=>!u.dead); legRoundStart(pa); archRoundStart(pa); if(!battleState._forgeHome){ battleState._forgeHome=true; var _fss=forgeStartShield(); if(_fss>0) pa.forEach(function(u){ u.shield=(u.shield||0)+Math.round((u.max||u.hp)*_fss); }); legRenewalShield(pa); }
   pa.filter(u=>u.role==='Tank').forEach(u=>{ if(kitReady(u,'taunt')){ kitAddSt(u,'taunting',KIT_TAUNT_DUR,1); kitSetCd(u,'taunt',KIT_TAUNT_CD); try{passiveBanner('\uD83D\uDEE1 '+(u.name||'Tank')+' \u00B7 Taunt',(ROLECOLOR&&ROLECOLOR.Tank)||'#5bd1ff');}catch(e){} } });
-  pa.filter(u=>unitArch(u)==='Healer').forEach(u=>{ if(kitReady(u,'heal')){ const inj=pa.filter(x=>x.hp<x.max).sort((a,b)=>(a.hp/a.max)-(b.hp/b.max))[0]; if(inj){ const amt=Math.max(1,Math.round(u.atk*KIT_HEAL_FACTOR*forgeHealMult())); inj.hp=Math.min(inj.max,inj.hp+amt); kitSetCd(u,'heal',KIT_HEAL_CD); try{ if(inj.hp/inj.max<0.85) passiveBanner('\u271A '+(u.name||'Support')+' \u00B7 Heal',(ROLECOLOR&&ROLECOLOR.Support)||'#37d67a'); }catch(e){} } } });
+  pa.filter(u=>unitArch(u)==='Healer').forEach(u=>{ if(kitReady(u,'heal')){ const inj=pa.filter(x=>x.hp<x.max).sort((a,b)=>(a.hp/a.max)-(b.hp/b.max))[0]; if(inj){ const before=inj.hp; const amt=Math.max(1,Math.round(u.atk*KIT_HEAL_FACTOR*(u.supportMult||1)*forgeHealMult())); inj.hp=Math.min(inj.max,inj.hp+amt); u.support=(u.support||0)+Math.max(0,inj.hp-before); kitSetCd(u,'heal',KIT_HEAL_CD); try{ if(inj.hp/inj.max<0.85) passiveBanner('\u271A '+(u.name||'Support')+' \u00B7 Heal',(ROLECOLOR&&ROLECOLOR.Support)||'#37d67a'); }catch(e){} } } });
 }
 function kitRoundEnd(players,enemies){ players.concat(enemies).forEach(u=>{ kitTickSt(u); kitTickCd(u); }); }
 function applyIncomingMitigation(tgt,dmg){
@@ -6009,19 +6059,20 @@ function castUltimate(u,allies,enemies){
   try{ ultimateMoment(u,name,col); }catch(e){ try{ passiveBanner('\u2726 '+u.name+' \u2014 '+name+'!', col); }catch(_){} }
   const aliveE=()=>enemies.filter(e=>!e.dead), aliveA=()=>allies.filter(a=>!a.dead);
   const hit=(t,m,tag)=>{ if(!t||t.dead)return; let d=Math.max(1,Math.round((u.atk||10)*m)); if(t.shield){const b=Math.min(t.shield,d);t.shield-=b;d-=b;} const act=Math.min(t.hp,d); t.hp-=act; if(t.hp<=0){t.hp=0;t.dead=true;} u.dealt=(u.dealt||0)+act; t.taken=(t.taken||0)+act; v21Float('enemySide',t._i,act,tag||'ult'); };
-  const shield=(a,amt)=>{ amt=Math.round(amt*forgeHealMult()); a.shield=(a.shield||0)+amt; v21Float('playerSide',a._i,amt,'heal'); };
-  const heal=(a,amt)=>{ const before=a.hp; a.hp=Math.min(a.max||a.hp,a.hp+Math.round(amt*forgeHealMult())); const got=Math.round(a.hp-before); if(got>0){ u.support=(u.support||0)+got; v21Float('playerSide',a._i,got,'heal'); } };
+  const shield=(a,amt)=>{ const before=a.shield||0; amt=Math.round(amt*forgeHealMult()*(u.supportMult||1)); a.shield=(a.shield||0)+amt; const got=Math.max(0,(a.shield||0)-before); if(got>0) u.support=(u.support||0)+got; v21Float('playerSide',a._i,amt,'heal'); };
+  const heal=(a,amt)=>{ const before=a.hp; a.hp=Math.min(a.max||a.hp,a.hp+Math.round(amt*forgeHealMult()*(u.supportMult||1))); const got=Math.round(a.hp-before); if(got>0){ u.support=(u.support||0)+got; v21Float('playerSide',a._i,got,'heal'); } };
   switch(cls){
     case 'Healer': aliveA().forEach(a=>heal(a,(a.max||a.hp)*0.30)); break;
-    case 'Guardian': aliveA().forEach(a=>shield(a,(u.max||u.hp)*0.20)); break;
+    case 'Guardian': aliveA().forEach(a=>shield(a,(u.max||u.hp)*0.22)); break;
     case 'Protector': aliveA().slice().sort((x,y)=>x.hp-y.hp).slice(0,2).forEach(a=>shield(a,(u.max||u.hp)*0.45)); break;
     case 'Caster': aliveE().forEach(t=>hit(t,1.55,'splash')); break;
     case 'Assassin': { const t=aliveE().slice().sort((x,y)=>x.hp-y.hp)[0]; hit(t,(t&&t.hp<(t.max||t.hp)*0.4)?4.2:3.3); break; }
     case 'Marksman':
     case 'Hunter': { const t=aliveE().slice().sort((x,y)=>((y.boss?1e9:0)+y.hp)-((x.boss?1e9:0)+x.hp))[0]; hit(t,3.7); break; }
     case 'Bruiser': { const t=aliveE().slice().sort((x,y)=>y.hp-x.hp)[0]; hit(t,2.5); heal(u,(u.max||u.hp)*0.20); break; }
+    case 'Striker': { const t=(typeof pickTarget==='function'&&pickTarget(enemies,u))||aliveE()[0]; hit(t,3.25); break; }
     case 'Controller': { const t=aliveE().slice().sort((x,y)=>(y.boss?1:0)-(x.boss?1:0))[0]; hit(t,1.3); aliveA().forEach(a=>shield(a,(u.max||u.hp)*0.10)); break; }
-    case 'Leader': { aliveA().forEach(a=>{ heal(a,(a.max||a.hp)*0.10); shield(a,(u.max||u.hp)*0.08); }); break; }
+    case 'Leader': { aliveA().forEach(a=>{ heal(a,(a.max||a.hp)*0.12); shield(a,(u.max||u.hp)*0.12); }); break; }
     default: { const t=(typeof pickTarget==='function'&&pickTarget(enemies,u))||aliveE()[0]; hit(t,3.0); }
   }
 }
@@ -7152,25 +7203,22 @@ function startTicker(){
 
 /* ===== v1.39.1 Bug Sweep + UI Polish ===== */
 const THEME_SURFACES_V139={
-  web:{bg:'#0b0712',panel:'#181120',panel2:'#24182d',modal:'#281a2b',nav:'#100914',line:'#693241'},
-  arc:{bg:'#07101b',panel:'#101b2a',panel2:'#182a3a',modal:'#1b2e42',nav:'#08111f',line:'#4b6386'},
-  jedi:{bg:'#030711',panel:'#071224',panel2:'#0d2037',modal:'#0b1830',nav:'#030712',line:'#214d77'},
-  trainer:{bg:'#14110b',panel:'#241b12',panel2:'#332716',modal:'#39291b',nav:'#12100f',line:'#75552a'},
-  house:{bg:'#0c0712',panel:'#171026',panel2:'#25183c',modal:'#2d1b48',nav:'#0b0814',line:'#6b548f'},
+  web:{bg:'#0e0813',panel:'#1b111f',panel2:'#27172f',modal:'#2b1b30',nav:'#100814',line:'#7b2d43'},
+  arc:{bg:'#06111f',panel:'#101d2e',panel2:'#19314b',modal:'#1d3a57',nav:'#071220',line:'#4d6f99'},
+  jedi:{bg:'#030915',panel:'#08172c',panel2:'#102a48',modal:'#0d203d',nav:'#020710',line:'#235b86'},
+  trainer:{bg:'#141009',panel:'#261a10',panel2:'#372515',modal:'#3f2b17',nav:'#120f0b',line:'#7e5425'},
+  house:{bg:'#0d0716',panel:'#181028',panel2:'#271945',modal:'#312153',nav:'#0b0815',line:'#765aa4'},
   dark:{bg:'#0b1220',panel:'#101a2c',panel2:'#16243b',modal:'#1a2944',nav:'#0f1830',line:'#31496f'}
 };
 const ARCHETYPE_ROW_RULES_V139={
-  Guardian:{pref:'front',active:'Guardian front: +8% HP',inactive:'Guardian wants Front Row'},
-  Bruiser:{pref:'front',active:'Bruiser front: +5% HP / +5% ATK',inactive:'Bruiser wants Front Row'},
-  Healer:{pref:'back',active:'Healer back: +12% healing',inactive:'Healer wants Back Row'},
-  Protector:{pref:'back',active:'Protector back: +10% shielding',inactive:'Protector wants Back Row'},
-  Caster:{pref:'back',active:'Caster back: +8% power',inactive:'Caster wants Back Row'},
-  Controller:{pref:'back',active:'Controller back: +4% ATK / +6% control',inactive:'Controller wants Back Row'},
-  Hunter:{pref:'back',active:'Hunter back: +8% boss damage',inactive:'Hunter wants Back Row'},
-  Assassin:{pref:'back',active:'Assassin back: +10% pressure',inactive:'Assassin wants Back Row'},
-  Striker:{pref:'either',front:'Striker front: +6% ATK',back:'Striker back: +3% ATK / safer'},
-  Leader:{pref:'either',front:'Leader front: +3% HP aura',back:'Leader back: +3% support aura'},
-  Specialist:{pref:'either',front:'Specialist front: +4% HP / ATK',back:'Specialist back: +4% support'}
+  Guardian:{pref:'front',active:'Guardian front: +10% HP / team steadiness',inactive:'Guardian wants Front Row'},
+  Bruiser:{pref:'front',active:'Bruiser front: +4% HP / +8% ATK',inactive:'Bruiser wants Front Row'},
+  Healer:{pref:'back',active:'Healer back: +12% healing / safer',inactive:'Healer wants Back Row'},
+  Leader:{pref:'either',front:'Leader front: +3% HP / +3% ATK aura',back:'Leader back: +8% support aura'},
+  Striker:{pref:'either',front:'Striker front: +10% ATK',back:'Striker back: +10% ATK / safer'},
+  Assassin:{pref:'back',active:'Assassin back: +9% ATK / safer targeting',inactive:'Assassin wants Back Row'},
+  Caster:{pref:'back',active:'Caster back: +8% power / control support',inactive:'Caster wants Back Row'},
+  Marksman:{pref:'back',active:'Marksman back: +10% precision / safer targeting',inactive:'Marksman wants Back Row'}
 };
 function injectV139Styles(){
   if(document.getElementById('v1391Styles')) return;
@@ -7183,34 +7231,30 @@ function injectV139Styles(){
       linear-gradient(180deg, color-mix(in srgb,var(--bg) 96%, #000), #050811 88%) !important;}
     .nav{background:linear-gradient(180deg,color-mix(in srgb,var(--navbg) 92%, transparent),var(--navbg))!important;border-top-color:color-mix(in srgb,var(--accent) 18%, var(--line))!important}
     html[data-theme="web"] body{background:
-      radial-gradient(820px 420px at 82% -8%, rgba(230,36,41,.36), transparent 62%),
-      radial-gradient(600px 360px at -8% 8%, rgba(31,111,235,.26), transparent 58%),
-      radial-gradient(420px 300px at 72% 18%, rgba(255,217,90,.16), transparent 64%),
-      repeating-linear-gradient(135deg, rgba(255,217,90,.055) 0 2px, transparent 2px 28px),
-      linear-gradient(180deg,#120712,#050811 88%)!important}
+      radial-gradient(900px 520px at 82% -10%, rgba(240,47,61,.40), transparent 63%),
+      radial-gradient(700px 420px at -10% 8%, rgba(47,128,255,.28), transparent 58%),
+      radial-gradient(520px 340px at 74% 19%, rgba(255,217,90,.20), transparent 65%),
+      linear-gradient(180deg,#120813 0%,#080914 68%,#050811 100%)!important}
     html[data-theme="jedi"] body{background:
-      radial-gradient(circle at 18% 14%, rgba(255,255,255,.52) 0 1px, transparent 2px),
-      radial-gradient(circle at 72% 9%, rgba(255,255,255,.34) 0 1px, transparent 2px),
-      radial-gradient(620px 320px at 78% -4%, rgba(63,182,255,.31), transparent 62%),
-      radial-gradient(520px 360px at 12% 38%, rgba(255,230,109,.13), transparent 60%),
-      linear-gradient(180deg,#030711,#050811 88%)!important}
+      radial-gradient(760px 410px at 78% -8%, rgba(84,199,255,.34), transparent 62%),
+      radial-gradient(620px 380px at 14% 18%, rgba(125,255,176,.13), transparent 61%),
+      radial-gradient(520px 330px at 58% 8%, rgba(255,215,106,.16), transparent 64%),
+      linear-gradient(180deg,#030915 0%,#061027 66%,#050811 100%)!important}
     html[data-theme="trainer"] body{background:
-      radial-gradient(700px 380px at 0% 0%, rgba(239,62,52,.35), transparent 58%),
-      radial-gradient(600px 360px at 90% 2%, rgba(255,203,5,.24), transparent 58%),
-      radial-gradient(520px 340px at 42% 20%, rgba(42,117,187,.22), transparent 60%),
-      repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 2px, transparent 2px 24px),
-      linear-gradient(180deg,#15100b,#050811 88%)!important}
+      radial-gradient(720px 400px at -5% -4%, rgba(239,35,60,.38), transparent 59%),
+      radial-gradient(640px 380px at 94% 0%, rgba(255,203,5,.29), transparent 60%),
+      radial-gradient(560px 360px at 43% 19%, rgba(42,117,187,.25), transparent 62%),
+      linear-gradient(180deg,#17100a 0%,#0b111c 68%,#050811 100%)!important}
     html[data-theme="house"] body{background:
-      radial-gradient(760px 420px at 72% -8%, rgba(124,77,255,.34), transparent 62%),
-      radial-gradient(520px 300px at 8% 14%, rgba(202,165,61,.23), transparent 58%),
-      repeating-linear-gradient(135deg, rgba(202,165,61,.06) 0 1px, transparent 1px 24px),
-      linear-gradient(180deg,#0d0613,#050811 88%)!important}
+      radial-gradient(820px 440px at 74% -8%, rgba(139,92,255,.37), transparent 62%),
+      radial-gradient(560px 320px at 7% 14%, rgba(202,165,61,.25), transparent 59%),
+      radial-gradient(520px 360px at 60% 34%, rgba(183,156,255,.13), transparent 66%),
+      linear-gradient(180deg,#0e0717 0%,#100b1c 65%,#050811 100%)!important}
     html[data-theme="arc"] body{background:
-      radial-gradient(760px 420px at 0% -6%, rgba(31,111,235,.34), transparent 60%),
-      radial-gradient(620px 360px at 86% -4%, rgba(255,176,31,.24), transparent 60%),
-      radial-gradient(520px 340px at 50% 28%, rgba(55,214,122,.14), transparent 64%),
-      repeating-linear-gradient(45deg, rgba(255,176,31,.05) 0 2px, transparent 2px 30px),
-      linear-gradient(180deg,#07101b,#050811 88%)!important}
+      radial-gradient(800px 450px at -4% -8%, rgba(43,124,255,.38), transparent 61%),
+      radial-gradient(660px 380px at 88% -5%, rgba(243,180,63,.28), transparent 61%),
+      radial-gradient(560px 360px at 50% 29%, rgba(50,209,107,.18), transparent 65%),
+      linear-gradient(180deg,#06111f 0%,#0a1726 66%,#050811 100%)!important}
     html[data-theme] .nav{box-shadow:0 -14px 34px color-mix(in srgb,var(--accent) 17%, transparent)!important}
     html[data-theme] .nav button.on,.tabs button.on{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 42%, transparent))}
     html[data-theme] .go,html[data-theme] .fight,html[data-theme] .bigbtn{box-shadow:0 10px 28px color-mix(in srgb,var(--accent) 24%, transparent), inset 0 0 0 1px rgba(255,255,255,.12)!important}
@@ -7221,7 +7265,7 @@ function injectV139Styles(){
     html[data-theme="arc"] .stage-badge,html[data-theme="arc"] .go{background:linear-gradient(135deg,#1f6feb,#ffb01f)!important;color:#07101b!important}
     .themegrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
     .themegrid .themeChoice{position:relative;overflow:hidden;min-height:104px;padding:13px!important;border-radius:16px!important;border:2px solid color-mix(in srgb,var(--ta) 26%,var(--line))!important;background:linear-gradient(145deg,color-mix(in srgb,var(--ta) 34%,#050811),color-mix(in srgb,var(--tb) 24%,#050811))!important;color:#fff!important;align-items:flex-start!important;text-align:left!important;gap:5px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 12px 30px rgba(0,0,0,.26)}
-    .themegrid .themeChoice:before{content:'';position:absolute;inset:-40%;background:radial-gradient(circle at 18% 22%,color-mix(in srgb,var(--tc) 38%,transparent),transparent 26%),repeating-linear-gradient(135deg,rgba(255,255,255,.08) 0 1px,transparent 1px 18px);opacity:.72;transform:rotate(-6deg);pointer-events:none}
+    .themegrid .themeChoice:before{content:'';position:absolute;inset:-35%;background:radial-gradient(circle at 18% 22%,color-mix(in srgb,var(--tc) 45%,transparent),transparent 25%),radial-gradient(circle at 88% 8%,color-mix(in srgb,var(--tb) 36%,transparent),transparent 28%),linear-gradient(135deg,color-mix(in srgb,var(--ta) 18%,transparent),color-mix(in srgb,var(--tc) 10%,transparent));opacity:.84;pointer-events:none}
     .themegrid .themeChoice:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.13),transparent 42%,rgba(0,0,0,.18));pointer-events:none}
     .themegrid .themeChoice.on{border-color:var(--tc)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--tc) 35%,transparent),0 16px 34px color-mix(in srgb,var(--ta) 28%,transparent)!important}
     .themeSigil,.themeName,.themeCue,.themeStrip{position:relative;z-index:1}
@@ -7270,9 +7314,9 @@ function preferredRowTextV139(h){ const rule=archetypeRowRuleV139(h); const role
 function formationEvaluationV139(h,row){
   if(!h) return {state:'neutral',badge:'Open',summary:'Open slot'};
   let score=0; const parts=[];
-  if(h.role==='Tank'){ if(row==='front'){score+=1; parts.push('Tank +10% HP');} else {score-=1; parts.push('Tank wants Front');} }
-  if(h.role==='Support'){ if(row==='back'){score+=1; parts.push('Support +10% support / safer');} else {score-=1; parts.push('Support wants Back');} }
-  if(h.role==='DPS'){ if(row==='front'){score+=0.4; parts.push('DPS +8% ATK / more risk');} else {score+=0.25; parts.push('DPS safer');} }
+  if(h.role==='Tank'){ if(row==='front'){score+=1; parts.push('Tank +12% HP');} else {score-=1; parts.push('Tank wants Front');} }
+  if(h.role==='Support'){ if(row==='back'){score+=1; parts.push('Support +12% output / safer');} else {score-=1; parts.push('Support wants Back');} }
+  if(h.role==='DPS'){ if(row==='front'){score+=0.4; parts.push('DPS +8% ATK / more risk');} else {score+=0.35; parts.push('DPS +5% ATK / safer');} }
   const rule=archetypeRowRuleV139(h);
   if(rule){ if(rule.pref==='front'){ if(row==='front'){score+=1; parts.push(rule.active);} else {score-=1; parts.push(rule.inactive);} } else if(rule.pref==='back'){ if(row==='back'){score+=1; parts.push(rule.active);} else {score-=1; parts.push(rule.inactive);} } else { const txt=(row==='front'&&rule.front)?rule.front:(row==='back'&&rule.back)?rule.back:'Flexible'; parts.push(txt); score+=0.2; } }
   const state=score>=1?'good':score<=-1?'bad':'neutral';
@@ -7281,8 +7325,8 @@ function formationEvaluationV139(h,row){
 function formationStatusChipV139(h,row){ const ev=formationEvaluationV139(h,row); return '<span class="slotstatus '+ev.state+'">'+esc(ev.badge)+'</span>'; }
 function formationBadgeHTMLV139(h,row){ const ev=formationEvaluationV139(h,row); return '<span class="slotpref '+ev.state+'" title="'+esc(ev.summary)+'">'+(ev.state==='good'?'✓':ev.state==='bad'?'!':'↔')+'</span>'; }
 function formationBonus(h,row){ return formationEvaluationV139(h,row).summary; }
-function formationLegendHTMLV139(){ return '<div class="formationLegend"><div class="lg"><b>Front Row</b><span>Tanks, Guardians, Bruisers. Strikers can also pressure from the front.</span></div><div class="lg"><b>Back Row</b><span>Supports, Healers, Protectors, Casters, Controllers, Hunters, Assassins.</span></div><div class="lg"><b>Flexible</b><span>DPS can go either way. Leaders and Specialists are fine in either row.</span></div></div>'; }
-function formationGuideHTMLV139(){ return '<div class="formationGuide"><div class="guide"><b>Front = pressure</b><span>More incoming hits. Great for durable heroes and frontline archetypes.</span></div><div class="guide"><b>Back = safety</b><span>Safer targeting. Best for Supports, Casters, Healers, Hunters, and utility heroes.</span></div></div>'; }
+function formationLegendHTMLV139(){ return '<div class="formationLegend"><div class="lg"><b>Front Row</b><span>Tanks, Guardians, Bruisers. Strikers can also pressure from the front.</span></div><div class="lg"><b>Back Row</b><span>Supports, Healers, Casters, Marksmen, and Assassins stay safer here.</span></div><div class="lg"><b>Flexible</b><span>Leaders and Strikers can work from either row depending on the squad.</span></div></div>'; }
+function formationGuideHTMLV139(){ return '<div class="formationGuide"><div class="guide"><b>Front = pressure</b><span>More incoming hits. Great for durable heroes and frontline archetypes.</span></div><div class="guide"><b>Back = safety</b><span>Safer targeting. Best for Supports, Casters, Healers, Marksmen, and utility heroes.</span></div></div>'; }
 function formationSlotHTML(mode,i){
   const id=squad(mode)[i], h=id?S.heroes.find(x=>x.id===id):null, row=formationRow(i);
   if(h){ const ava=h.img?'<img src="'+h.img+'">':initials(h.name), ev=formationEvaluationV139(h,row); return '<div class="slot full '+row+' themeframe" data-lineup-edit="'+mode+'" style="cursor:pointer" title="'+esc(ev.summary)+'"><span class="pos">'+(i+1)+'</span>'+formationBadgeHTMLV139(h,row)+'<div class="ava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+ava+'</div></div>'; }
@@ -7299,10 +7343,19 @@ function formationSuggestions(mode){
 }
 function formationMultiplier(h,row){
   let hp=1, atk=1, risk=1, support=1; const p=passiveOf(h), e=p&&p.effect;
-  if(h.role==='Tank'&&row==='front') hp*=1.10; if(h.role==='Support'&&row==='back'){ hp*=1.10; support*=1.10; risk*=0.65; } if(h.role==='DPS'&&row==='front'){ atk*=1.08; risk*=1.18; } if(h.role==='DPS'&&row==='back') risk*=0.78;
+  if(h.role==='Tank'){ if(row==='front'){ hp*=1.12; risk*=1.14; } else { hp*=1.04; risk*=0.92; } }
+  if(h.role==='Support'){ if(row==='back'){ hp*=1.08; support*=1.12; risk*=0.70; } else { hp*=1.04; support*=1.06; risk*=1.03; } }
+  if(h.role==='DPS'){ if(row==='front'){ atk*=1.08; risk*=1.12; } else { atk*=1.05; risk*=0.88; } }
   const a=heroArchetype(h), k=a&&a.key;
-  if(k==='Guardian'&&row==='front') hp*=1.08; if(k==='Bruiser'&&row==='front'){ hp*=1.05; atk*=1.05; } if(k==='Healer'&&row==='back'){ support*=1.12; risk*=0.88; } if(k==='Protector'&&row==='back'){ support*=1.10; hp*=1.04; risk*=0.90; } if(k==='Caster'&&row==='back'){ atk*=1.08; risk*=0.92; } if(k==='Controller'&&row==='back'){ atk*=1.04; support*=1.06; risk*=0.92; } if(k==='Hunter'&&row==='back') atk*=1.08; if(k==='Marksman'&&row==='back') atk*=1.10; if(k==='Assassin'&&row==='back'){ atk*=1.10; risk*=0.90; } if(k==='Striker'&&row==='front'){ atk*=1.06; risk*=1.08; } if(k==='Striker'&&row==='back'){ atk*=1.03; risk*=0.92; } if(k==='Leader'&&row==='front') hp*=1.03; if(k==='Leader'&&row==='back') support*=1.03; if(k==='Specialist'&&row==='front'){ hp*=1.04; atk*=1.04; } if(k==='Specialist'&&row==='back') support*=1.04;
-  if(e==='frontline'&&row==='front'){ hp*=1.06; risk*=1.15; } if(e==='supportAura'&&row==='back'){ support*=1.12; hp*=1.04; } if(e==='protector'&&row==='front') hp*=1.05; if(e==='reckless') risk*=1.08; if(e==='taunt') risk*=1.60; return {hp,atk,risk,support};
+  if(k==='Guardian'){ hp*=row==='front'?1.10:1.04; support*=1.03; }
+  if(k==='Bruiser'){ hp*=1.04; atk*=1.08; if(row==='front') risk*=1.05; }
+  if(k==='Healer'){ support*=1.12; hp*=1.04; risk*=row==='back'?0.86:1.02; }
+  if(k==='Leader'){ support*=1.08; atk*=1.03; hp*=1.03; risk*=row==='back'?0.94:1.00; }
+  if(k==='Caster'){ atk*=1.08; support*=1.03; risk*=row==='back'?0.94:1.04; }
+  if(k==='Marksman'){ atk*=1.10; risk*=row==='back'?0.90:1.06; }
+  if(k==='Assassin'){ atk*=1.09; risk*=row==='back'?0.88:1.04; }
+  if(k==='Striker') atk*=1.10;
+  if(e==='frontline'&&row==='front'){ hp*=1.06; risk*=1.10; } if(e==='supportAura'&&row==='back'){ support*=1.10; hp*=1.04; } if(e==='protector'&&row==='front') hp*=1.05; if(e==='reckless') risk*=1.06; if(e==='taunt') risk*=1.45; return {hp,atk,risk,support};
 }
 function squadCandidateButtonHTML(h,mode){
   const arr=squad(mode), on=arr.includes(h.id), full=!on&&arr.length>=TUNE.teamSize, disabled=full?' disabled':''; const face=h.img?'<img src="'+h.img+'">':initials(h.name), p=passiveOf(h), a=heroArchetype(h); const idx=arr.indexOf(h.id), row=idx>=0?formationRow(idx):null, ev=row?formationEvaluationV139(h,row):null; const note=row?formationStatusChipV139(h,row)+' <span style="color:var(--muted)">'+esc(ev.summary)+'</span>':'<span class="slotstatus neutral">Preferred</span> <span style="color:var(--muted)">'+esc(preferredRowTextV139(h))+'</span>';
@@ -7861,7 +7914,7 @@ function openHeroSheet(id){
   const hadj=document.getElementById('hAdjust'); if(hadj) hadj.onclick=()=>{ if(img) pickImage(dataUrl=>{ img=dataUrl; syncPortrait(); persistPortrait(); toast('Portrait saved'); },img); };
   const hrem=document.getElementById('hRemoveImg'); if(hrem) hrem.onclick=()=>{ img=null; syncPortrait(); persistPortrait(); toast('Portrait removed'); };
   document.querySelectorAll('[data-gearslot]').forEach(b=>b.onclick=()=>openGearSheet(h.id));
-  document.getElementById('h_save').onclick=()=>{ h.name=(document.getElementById('h_name').value.trim()||h.name); h.role=role; h.color=color; h.img=img; h.archKey=archKey||undefined; setHeroPortraitOverride(h.id,img); hideScrim(); renderHUD(); render(); save(); toast(h.name+' saved'); };
+  document.getElementById('h_save').onclick=()=>{ h.name=(document.getElementById('h_name').value.trim()||h.name); h.role=role; h.color=color; h.img=img; h.archKey=archKey||undefined; h.archetype=archKey||undefined; setHeroPortraitOverride(h.id,img); hideScrim(); renderHUD(); render(); save(); toast(h.name+' saved'); };
   const lu=document.getElementById('h_levelone'); if(lu) lu.onclick=()=>{ const c=TUNE.levelCost(h.level); if(h.level>=rankCap(h)){ toast('Rank up to raise the cap'); return; } if((h.exp||0)<c){ toast('Not enough banked EXP yet'); return; } h.exp-=c; h.level++; toast(h.name+' leveled up'); rerender(); renderHUD(); save(); };
   document.getElementById('h_levelmax').onclick=()=>{ const before=h.level, used=levelHeroToMaxAvailable(h), gained=h.level-before; if(gained<=0){ toast(h.level>=rankCap(h)?'Already at current rank cap':'Not enough banked EXP yet'); return; } toast(h.name+' gained '+gained+' level'+(gained===1?'':'s')+' · spent '+Math.floor(used)+' EXP'); rerender(); renderHUD(); save(); };
   const ru=document.getElementById('h_rankup'); if(ru) ru.onclick=()=>{ const i=rankIdx(h); if(i>=RANKUP.length){toast('Already max rank');return;} if(!canRankUp(h)){toast('Need '+missingReqText(RANKUP[i]));return;} const r=RANKUP[i]; S.heroCores-=(r.cores||0); S.gold-=(r.gold||0); S.bossCores-=(r.boss||0); S.sparks-=(r.sparks||0); h.rank=i+1; applyLevels(h); toast(h.name+' is now '+RANKS[h.rank].name); rerender(); renderHUD(); save(); };
@@ -16372,7 +16425,240 @@ function rerender(){
 })();
 /* ===== end v2.155.0 Roster + Clash Polish ===== */
 
+/* ===== v2.160.0 Desktop Client Layout ===== */
+(function(){
+  const STYLE_ID = 'of2160DesktopClientStyles';
+  if(!document.getElementById(STYLE_ID)){
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = `
+:root{
+  --of-desktop-nav:108px;
+  --of-desktop-gap:18px;
+  --of-desktop-panel:rgba(13,18,31,.82);
+}
+@media (min-width:760px){
+  .wrap{max-width:min(980px,calc(100vw - 32px));padding:18px 18px 110px}
+  .rgrid{grid-template-columns:repeat(auto-fill,minmax(142px,1fr));gap:12px}
+  .rgrid.compact{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
+  .hero .hn{font-size:15px}
+  .hero .ava{border-radius:13px}
+  .sheet{max-width:min(760px,calc(100vw - 48px));border-radius:22px;border-bottom:1px solid var(--line)}
+  .scrim{align-items:center;padding:28px}
+  .actiongrid,.lifesys-grid,.battleModeGrid,.growthModeGrid,.of2149WarGrid,.roomGrid,.dungeonGrid,.cardGrid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .of2150HomeDeck{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:1100px){
+  html,body{font-size:18px}
+  body{min-height:100vh}
+  .wrap{width:calc(100vw - var(--of-desktop-nav));max-width:none;margin-left:var(--of-desktop-nav);margin-right:0;padding:22px clamp(22px,2.2vw,42px) 42px}
+  .hud{margin:-22px calc(-1 * clamp(22px,2.2vw,42px)) 20px;padding:18px clamp(22px,2.2vw,42px) 16px;background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 94%,transparent),color-mix(in srgb,var(--bg) 78%,transparent));backdrop-filter:blur(14px);border-bottom:1px solid color-mix(in srgb,var(--accent) 16%,var(--line))}
+  .hud-top{display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;margin-bottom:10px}
+  .hudLogo{height:54px;max-width:300px}
+  .stage-badge{padding:10px 15px;border-radius:16px}
+  .stage-badge b{font-size:28px}
+  .stage-badge small{font-size:10px}
+  .gear{width:52px;height:52px;border-radius:16px;font-size:22px}
+  .res{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:8px}
+  .res .r{padding:8px 12px;border-radius:15px}
+  .res .r .lab{font-size:10px}
+  .res .r .val{font-size:20px}
+  .rate{font-size:14px;text-align:left}
+  .nav{top:0;bottom:0;left:0;right:auto;width:var(--of-desktop-nav);height:100vh;flex-direction:column;justify-content:flex-start;gap:8px;padding:18px 10px;border-top:0;border-right:1px solid color-mix(in srgb,var(--accent) 18%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--navbg,var(--panel)) 96%,#050811),color-mix(in srgb,var(--bg) 88%,#000));box-shadow:16px 0 42px rgba(0,0,0,.22)}
+  .nav button{flex:0 0 auto;min-height:82px;border-radius:18px;justify-content:center;gap:8px;font-size:11px;letter-spacing:.35px}
+  .nav button.on{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 22%,transparent),color-mix(in srgb,var(--accent2) 12%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 42%,transparent),0 12px 28px color-mix(in srgb,var(--accent) 16%,transparent)}
+  .navIcon{width:38px;height:38px}
+  .of2149NavLabel{font-size:10px!important;max-width:86px!important}
+  .head h2{font-size:16px}
+  .tabs{max-width:860px}
+  .card,.stagecard,.team-strip,.questBoard,.lifecard,.homeModesCard,.of2150HomeCard,.of2150LegendMount{border-radius:18px}
+  .actiongrid,.lifesys-grid,.battleModeGrid,.growthModeGrid,.of2149WarGrid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+  .roomGrid,.dungeonGrid,.cardGrid{grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+  .homeMgmtGrid162{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .ofHomeMoreGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .of2150HomeDeck{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .of2150HomeCard{min-height:164px;padding:16px}
+  .of2150HomeCard b{font-size:18px}
+  .of2150LegendMount{grid-template-columns:auto minmax(0,1fr) auto;padding:14px}
+  .rgrid{grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:16px}
+  .rgrid.compact{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
+  .hero{padding:14px;border-radius:18px}
+  .hero .ava{border-radius:15px;margin-bottom:9px}
+  .hero .hn{font-size:17px;line-height:1.08}
+  .hero .hr{font-size:12px}
+  .hero .badge{font-size:9px}
+  .hero.compact .hn{font-size:12px}
+  .v161CollectionHero{padding:18px;margin-bottom:16px}
+  .v161CollectionTop h2{font-size:26px}
+  .v161FilterDock{top:108px;padding:8px 0 12px}
+  .v161Toolbar{grid-template-columns:minmax(280px,1fr) auto;gap:10px}
+  .v161Toolbar input{font-size:16px;padding:13px 15px}
+  .v161Selects{grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+  .v161Grid{grid-template-columns:repeat(auto-fill,minmax(178px,1fr))!important;gap:16px!important}
+  .v161Grid.cards{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))!important}
+  .v161Grid.list{grid-template-columns:repeat(auto-fill,minmax(460px,1fr))!important}
+  .v161RosterHero{min-height:246px;border-radius:20px}
+  .v161Portrait{margin:12px 12px 9px;border-radius:18px}
+  .v161Name{font-size:16px}
+  .v161Stats b{font-size:12px}
+  .v161Stats span{font-size:9px}
+  .v161AddHero{min-height:246px;border-radius:20px}
+  .v161Grid.list .v161RosterHero{min-height:132px;grid-template-columns:116px 1fr}
+  .v161Grid.list .v161Portrait{width:92px;height:92px;border-radius:16px}
+  .v158FormationStage{border-radius:24px;margin-bottom:18px}
+  .v158PowerBand{padding:16px 18px 0}
+  .v158PowerBox{padding:12px 14px}
+  .v158PowerBox .v{font-size:24px}
+  .v158VS{font-size:32px}
+  .v158Battlefield{grid-template-columns:minmax(0,1fr) 86px minmax(0,1fr);gap:14px;min-height:420px;padding:18px}
+  .v158Side{grid-template-rows:repeat(2,132px);gap:12px}
+  .v158Unit{min-height:132px;border-radius:18px}
+  .v158Name{font-size:13px;bottom:16px}
+  .v158Sub{font-size:10px;bottom:5px}
+  .v158Tray{padding:14px 18px 16px}
+  .v158Mini{width:64px;min-width:64px}
+  .v158Mini .pic{width:62px;height:62px;border-radius:16px}
+  .v158ActionRow{grid-template-columns:repeat(3,minmax(0,1fr));padding:0 18px 18px}
+  .scrim{align-items:center;padding:34px 34px}
+  .sheet{width:min(1080px,calc(100vw - var(--of-desktop-nav) - 74px));max-width:1080px;max-height:min(88vh,920px);border:1px solid color-mix(in srgb,var(--accent) 18%,var(--line));border-radius:24px;padding:24px;box-shadow:0 34px 90px rgba(0,0,0,.62);animation:pop .22s cubic-bezier(.2,.9,.25,1)}
+  #sheet:has(.heroDetailV141),#sheet:has(.heroChamberStageV159){max-width:min(1220px,calc(100vw - var(--of-desktop-nav) - 74px))}
+  .themegrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  html[data-of-view="home"] #view{display:grid;grid-template-columns:minmax(360px,.92fr) minmax(420px,1.1fr);gap:18px;align-items:start}
+  html[data-of-view="home"] #view>.head,
+  html[data-of-view="home"] #view>.titlebar{grid-column:1/-1}
+  html[data-of-view="home"] #view>.heroTopV141,
+  html[data-of-view="home"] #view>.heroChamberStageV159,
+  html[data-of-view="home"] #view>.of2149WarHero,
+  html[data-of-view="home"] #view>.homeCampScene{grid-column:1;position:sticky;top:112px}
+  html[data-of-view="home"] #view>.homeCampScene{min-height:430px;display:flex;flex-direction:column;justify-content:space-between;padding:18px}
+  html[data-of-view="home"] #view>.of2150HomeDeck,
+  html[data-of-view="home"] #view>.homeMgmt162,
+  html[data-of-view="home"] #view>.homeModesCard,
+  html[data-of-view="home"] #view>.setupcard,
+  html[data-of-view="home"] #view>.homeAction162,
+  html[data-of-view="home"] #view>.homeOneLine162,
+  html[data-of-view="home"] #view>.homeMini162,
+  html[data-of-view="home"] #view>.lastActionCard,
+  html[data-of-view="home"] #view>.homeDailyReviewWrap162,
+  html[data-of-view="home"] #view>.actiongrid,
+  html[data-of-view="home"] #view>.lifesys-grid{grid-column:2}
+  html[data-of-view="home"] #view>.homeOneLine162{margin:0 2px 4px}
+  html[data-of-view="home"] .heroTopV141{min-height:0}
+  html[data-of-view="home"] .heroStageV141{min-height:360px!important}
+  #sheet .heroDetailV141{grid-template-columns:minmax(430px,500px) minmax(0,1fr);gap:18px;align-items:start}
+  #sheet .heroDetailV141>.heroTopV141{grid-column:1;grid-row:1 / span 8;position:sticky;top:0;overflow:visible!important}
+  #sheet .heroDetailV141>.hsTabs,
+  #sheet .heroDetailV141>.wallet,
+  #sheet .heroDetailV141>.heroActionsV141,
+  #sheet .heroDetailV141>.hsec,
+  #sheet .heroDetailV141>.prestigeRoad,
+  #sheet .heroDetailV141>.bondRoad,
+  #sheet .heroDetailV141>.heroQuestBox{grid-column:2}
+  #sheet .heroStageV141{width:100%!important;max-width:480px!important;grid-template-columns:100px minmax(0,1fr) 100px!important;grid-template-rows:96px 250px 96px!important;gap:14px!important;min-height:462px!important;margin:8px auto 14px!important;padding:8px!important}
+  #sheet .heroPortraitV141{width:270px!important;height:270px!important;border-radius:38px!important}
+  #sheet .gearNodeV141{width:98px!important;height:98px!important;border-radius:22px!important}
+  #sheet .gearNodeV141 .gi{font-size:30px!important}
+  #sheet .heroStatsV141{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  #sheet .heroStatsV141 .s{padding:11px}
+  #sheet .heroStatsV141 .v{font-size:18px}
+  #sheet .heroChamberStageV159{min-height:560px}
+  #sheet .heroPortraitRingV159{width:330px!important;height:330px!important;top:126px!important}
+  #sheet .heroChamberGearV159 .gearNodeV141{width:102px!important;height:102px!important}
+  #sheet .heroStatsBandV159{grid-template-columns:repeat(4,minmax(0,1fr))}
+  #sheet .heroChamberTwoV159{grid-template-columns:1fr 1fr}
+  .arena{padding:22px 34px!important}
+  .arena .vs-head{font-size:16px;margin-bottom:8px}
+  .arena-sub{font-size:13px;margin-bottom:10px}
+  .arena.show,.arena.lq53Arena.show{display:grid!important;grid-template-columns:minmax(360px,1fr) 120px minmax(360px,1fr)!important;grid-template-rows:auto auto minmax(0,1fr) auto!important;column-gap:24px!important;row-gap:12px!important;align-items:stretch!important;overflow:hidden!important}
+  .arena.show .battle-controls,.arena.lq53Arena.show .battle-controls{position:absolute!important;right:28px!important;top:20px!important;grid-row:auto!important;padding:0!important}
+  .arena.show .vs-head,.arena.lq53Arena.show .vs-head{grid-column:1/-1!important;grid-row:1!important}
+  .arena.show .arena-sub,.arena.lq53Arena.show .arena-sub{grid-column:1/-1!important;grid-row:2!important}
+  .arena.show .side.enemy,.arena.lq53Arena.show .side.enemy{grid-column:1!important;grid-row:3!important;justify-content:center!important}
+  .arena.show .vs-mid,.arena.lq53Arena.show .vs-mid{grid-column:2!important;grid-row:3!important;display:grid!important;place-items:center!important;margin:0!important;font-size:44px!important}
+  .arena.show .side.player,.arena.lq53Arena.show .side.player{grid-column:3!important;grid-row:3!important;justify-content:center!important}
+  .arena.show .side,.arena.lq53Arena.show .side{gap:12px!important}
+  .arena.show .unit .face,.arena.lq53Arena.show .unit .face{width:88px!important;height:88px!important;border-radius:20px!important}
+  .arena.show .unit.boss .face,.arena.lq53Arena.show .unit.boss .face{width:118px!important;height:118px!important}
+  .arena.show .unit .nm,.arena.lq53Arena.show .unit .nm{font-size:16px!important}
+  .arena.show .unit .hpbar,.arena.lq53Arena.show .unit .hpbar{height:12px!important}
+  .arena.show .battle-logline,.arena.lq53Arena.show .battle-logline{grid-column:1/-1!important;grid-row:4!important;font-size:14px!important}
+  .arena .result{width:min(680px,calc(100vw - var(--of-desktop-nav) - 140px));max-width:680px}
+  .clashBattlePanel.c7{width:min(1180px,calc(100vw - var(--of-desktop-nav) - 70px))!important;height:min(860px,calc(100vh - 46px))!important;max-height:calc(100vh - 46px)!important;border-radius:24px!important;padding:16px!important}
+  .clashArenaGrid.c7{gap:10px!important}
+  .clashHeroCell{grid-template-columns:52px 1fr!important;min-height:68px!important;padding:7px!important}
+  .heroTile{width:52px!important;height:52px!important;border-radius:14px!important}
+  .enemyTrack{bottom:224px!important}
+  .clashEnemyToken{width:56px!important}
+  .clashEnemyToken .enemyFace{height:44px!important}
+  .clashEnemyToken.boss{width:74px!important}
+  .clashEnemyToken.boss .enemyFace{height:64px!important}
+}
+@media (min-width:1440px){
+  .wrap{padding-left:46px;padding-right:46px}
+  .rgrid{grid-template-columns:repeat(auto-fill,minmax(205px,1fr))}
+  .rgrid.compact{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .hero .hn{font-size:18px}
+  .v161Grid{grid-template-columns:repeat(auto-fill,minmax(205px,1fr))!important}
+  .v161Grid.cards{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))!important}
+  .v161RosterHero{min-height:278px}
+  .v161Grid.list{grid-template-columns:repeat(auto-fill,minmax(520px,1fr))!important}
+  .v158Battlefield{min-height:500px}
+  .v158Side{grid-template-rows:repeat(2,158px)}
+  .v158Unit{min-height:158px}
+  .unit .face{width:100px;height:100px}
+  .of2149WarGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  html[data-of-view="home"] #view{grid-template-columns:minmax(430px,.85fr) minmax(500px,1fr) minmax(320px,.72fr)}
+  html[data-of-view="home"] #view>.homeCampScene{grid-column:1}
+  html[data-of-view="home"] #view>.setupcard,
+  html[data-of-view="home"] #view>.homeAction162,
+  html[data-of-view="home"] #view>.homeOneLine162,
+  html[data-of-view="home"] #view>.homeMini162,
+  html[data-of-view="home"] #view>.lastActionCard,
+  html[data-of-view="home"] #view>.homeDailyReviewWrap162{grid-column:2}
+  html[data-of-view="home"] #view>.of2150HomeDeck{grid-column:2/-1}
+  html[data-of-view="home"] #view>.homeMgmt162,
+  html[data-of-view="home"] #view>.homeModesCard{grid-column:3}
+  html[data-of-view="home"] #view>.actiongrid,
+  html[data-of-view="home"] #view>.lifesys-grid{grid-column:2}
+  #sheet .heroDetailV141{grid-template-columns:minmax(500px,580px) minmax(0,1fr)}
+  #sheet .heroStageV141{max-width:560px!important;grid-template-columns:112px minmax(0,1fr) 112px!important;grid-template-rows:108px 300px 108px!important;min-height:544px!important}
+  #sheet .heroPortraitV141{width:330px!important;height:330px!important}
+  #sheet .gearNodeV141{width:110px!important;height:110px!important}
+}
+`;
+    document.head.appendChild(style);
+  }
+
+  function markFormFactor(){
+    const w = window.innerWidth || document.documentElement.clientWidth || 0;
+    document.documentElement.dataset.formFactor = w >= 1440 ? 'large' : w >= 1100 ? 'desktop' : w >= 760 ? 'tablet' : 'phone';
+  }
+
+  function markView(){
+    try{
+      document.documentElement.dataset.ofView = (typeof view !== 'undefined' && view) ? String(view) : 'home';
+    }catch(e){
+      document.documentElement.dataset.ofView = 'home';
+    }
+  }
+
+  window.addEventListener('resize', markFormFactor, { passive:true });
+  markFormFactor();
+  markView();
+
+  if(typeof render === 'function' && !render.__of2160DesktopClient){
+    const previousRender = render;
+    render = function(){
+      const result = previousRender.apply(this, arguments);
+      setTimeout(markView, 0);
+      return result;
+    };
+    render.__of2160DesktopClient = true;
+  }
+})();
+/* ===== end v2.160.0 Desktop Client Layout ===== */
+
 </script>
-<script type="module" src="./oathforge-cloud.js"></script>
+
 </body>
 </html>
