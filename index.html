@@ -2673,7 +2673,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.153.0-mobile-fix-pass';
+const APP_BUILD='v2.154.0-spark-economy-pass';
 const EXPECTED_ROSTER_COUNT=379;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -15824,6 +15824,418 @@ function rerender(){
   setTimeout(function(){ try{ var v=by('view'); if(v&&typeof view!=='undefined'&&view==='home') enhanceHome(v); postProcess(document); }catch(e){} },0);
 })();
 /* ===== end v2.153.0 Mobile Fix Pass ===== */
+
+/* ===== v2.154.0 Spark Economy Pass ===== */
+(function(){
+  'use strict';
+  if(window.__of2154SparkEconomyPass) return;
+  window.__of2154SparkEconomyPass = true;
+
+  var DEFAULTS={
+    heroMissionThresholds:'3,6,10,15,20,30',
+    heroMissionSparks:'1,2,3,4,6,8',
+    musterSparkMult:2,
+    inviteSparkCost:5,
+    inviteSparkWeeklyCap:8,
+    rosterCompleteWeeklySparks:10,
+    prestigeSparkCostMult:1
+  };
+
+  function by(id){ return document.getElementById(id); }
+  function safeEsc(v){
+    try{ return (typeof esc==='function') ? esc(v) : String(v == null ? '' : v).replace(/[&<>"]/g,function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[m]; }); }
+    catch(e){ return String(v == null ? '' : v); }
+  }
+  function fmt(n){
+    try{ return (typeof v168Num==='function') ? v168Num(n||0) : Math.round(n||0).toLocaleString(); }
+    catch(e){ return String(Math.round(n||0)); }
+  }
+  function wk(){
+    try{ return (typeof periodKey==='function') ? periodKey('weekly') : 'w'+Math.floor(Date.now()/604800000); }
+    catch(e){ return 'w'+Math.floor(Date.now()/604800000); }
+  }
+  function clampNum(v,def,min,max){
+    var n=Number(v);
+    if(!isFinite(n)) n=def;
+    if(typeof min==='number') n=Math.max(min,n);
+    if(typeof max==='number') n=Math.min(max,n);
+    return n;
+  }
+  function parseList(s,fallback){
+    var src=String(s||fallback||'').split(',').map(function(x){ return Math.max(0,Math.round(Number(x.trim())||0)); }).filter(function(n){ return n>0; });
+    return src.length?src:parseList(fallback,'1');
+  }
+  function cfg(){
+    try{
+      if(!S.dev||typeof S.dev!=='object') S.dev={};
+      if(!S.dev.sparkEconomy||typeof S.dev.sparkEconomy!=='object') S.dev.sparkEconomy={};
+      var c=S.dev.sparkEconomy;
+      Object.keys(DEFAULTS).forEach(function(k){ if(typeof c[k]==='undefined') c[k]=DEFAULTS[k]; });
+      c.heroMissionThresholds=String(c.heroMissionThresholds||DEFAULTS.heroMissionThresholds);
+      c.heroMissionSparks=String(c.heroMissionSparks||DEFAULTS.heroMissionSparks);
+      c.musterSparkMult=clampNum(c.musterSparkMult,DEFAULTS.musterSparkMult,0,20);
+      c.inviteSparkCost=Math.max(1,Math.round(clampNum(c.inviteSparkCost,DEFAULTS.inviteSparkCost,1,999)));
+      c.inviteSparkWeeklyCap=Math.max(0,Math.round(clampNum(c.inviteSparkWeeklyCap,DEFAULTS.inviteSparkWeeklyCap,0,999)));
+      c.rosterCompleteWeeklySparks=Math.max(0,Math.round(clampNum(c.rosterCompleteWeeklySparks,DEFAULTS.rosterCompleteWeeklySparks,0,999)));
+      c.prestigeSparkCostMult=clampNum(c.prestigeSparkCostMult,DEFAULTS.prestigeSparkCostMult,0.1,5);
+      return c;
+    }catch(e){ return Object.assign({},DEFAULTS); }
+  }
+  function thresholds(){ return parseList(cfg().heroMissionThresholds,DEFAULTS.heroMissionThresholds); }
+  function awards(){ return parseList(cfg().heroMissionSparks,DEFAULTS.heroMissionSparks); }
+  function pairTiers(){
+    var t=thresholds(), a=awards();
+    return t.map(function(n,i){ return {n:n,sp:a[Math.min(i,a.length-1)]||1}; });
+  }
+  function weekState(){
+    if(!S.sparkEconomyWeek||typeof S.sparkEconomyWeek!=='object'||S.sparkEconomyWeek.wk!==wk()){
+      S.sparkEconomyWeek={wk:wk(),inviteSparks:0,rosterClaimed:false};
+    }
+    if(typeof S.sparkEconomyWeek.inviteSparks!=='number') S.sparkEconomyWeek.inviteSparks=0;
+    return S.sparkEconomyWeek;
+  }
+  function completeRoster(){
+    try{ return !!(S.heroes&&S.heroes.length&&typeof ownedCount==='function'&&ownedCount()>=S.heroes.length); }
+    catch(e){ return false; }
+  }
+  function heroMissionState(){
+    try{
+      var H=(typeof ensureHeroQuests==='function') ? ensureHeroQuests() : (S.heroQuestState||(S.heroQuestState={wk:wk(),claimed:{}}));
+      if(!H.sparkClaimed||typeof H.sparkClaimed!=='object') H.sparkClaimed={};
+      return H;
+    }catch(e){
+      S.heroQuestState=S.heroQuestState||{wk:wk(),claimed:{},sparkClaimed:{}};
+      return S.heroQuestState;
+    }
+  }
+  function heroMissionClaimedCount(){
+    try{
+      var H=heroMissionState(), n=0;
+      Object.keys(H.claimed||{}).forEach(function(k){ if(H.claimed[k]) n++; });
+      return n;
+    }catch(e){ return 0; }
+  }
+  function heroMissionReadyTiers(){
+    var H=heroMissionState(), n=heroMissionClaimedCount();
+    return pairTiers().filter(function(t){ return n>=t.n && !H.sparkClaimed[t.n]; });
+  }
+  function grantHeroMissionCaches(showWhenEmpty){
+    var ready=heroMissionReadyTiers();
+    if(!ready.length){ if(showWhenEmpty) try{ toast('No Hero Mission Spark cache ready yet.'); }catch(e){} return 0; }
+    var H=heroMissionState(), total=0, items=[];
+    ready.forEach(function(t){
+      H.sparkClaimed[t.n]=true;
+      total+=t.sp;
+      items.push({txt:'+'+t.sp+' Force Spark'+(t.sp===1?'':'s')+' at '+t.n+' Hero Missions',cls:'bonus'});
+    });
+    S.sparks=(S.sparks||0)+total;
+    try{ addWin('Hero Mission Spark Cache','Completed '+heroMissionClaimedCount()+' Hero Missions this week.','discipline'); }catch(e){}
+    try{ rewardSummary('Hero Mission Spark Cache',[{txt:'+'+total+' Force Spark'+(total===1?'':'s'),cls:'main'}].concat(items)); }catch(e){}
+    try{ renderHUD(); render(); save(); }catch(e){}
+    return total;
+  }
+  window.of2154ClaimHeroMissionCaches=function(){ grantHeroMissionCaches(true); };
+
+  function heroMissionSparkPanelHTML(){
+    var H=heroMissionState(), n=heroMissionClaimedCount();
+    var rows=pairTiers().map(function(t){
+      var done=!!H.sparkClaimed[t.n], ready=n>=t.n&&!done;
+      return '<div class="of2154Tier '+(done?'done':ready?'ready':'')+'"><span>'+n+'/'+t.n+' Hero Missions</span><b>+'+t.sp+' Force Spark'+(t.sp===1?'':'s')+'</b><em>'+(done?'Claimed':ready?'Ready':'Locked')+'</em></div>';
+    }).join('');
+    var ready=heroMissionReadyTiers().length;
+    return '<div class="of2154MissionSpark"><div class="of2154Head"><b>Force Spark Caches</b><span>'+n+' Hero Missions claimed this week</span></div><p>Wide Hero Mission work now pays the Spark cost created by prestige breadth gates.</p><div class="of2154Tiers">'+rows+'</div>'+(ready?'<button type="button" id="of2154ClaimHeroCaches">Claim Ready Caches</button>':'')+'</div>';
+  }
+
+  function scaledMusterReward(r){
+    var out=Object.assign({},r||{}), mult=cfg().musterSparkMult;
+    if(out.sparks) out.sparks=Math.max(0,Math.round(out.sparks*mult));
+    return out;
+  }
+
+  function convertInvites(requested){
+    var c=cfg(), W=weekState(), left=Math.max(0,c.inviteSparkWeeklyCap-(W.inviteSparks||0));
+    var maxByTickets=Math.floor((S.summonTickets||0)/c.inviteSparkCost);
+    var n=Math.max(1,Math.round(Number(requested)||1));
+    n=Math.min(n,left,maxByTickets);
+    if(!completeRoster()){ try{ toast('Holo-Invite exchange unlocks when the roster is complete.'); }catch(e){} return 0; }
+    if(n<=0){
+      try{ toast(left<=0?'Weekly Holo-Invite Spark cap reached.':'Need '+c.inviteSparkCost+' Holo-Invites for 1 Force Spark.'); }catch(e){}
+      return 0;
+    }
+    S.summonTickets=(S.summonTickets||0)-n*c.inviteSparkCost;
+    S.sparks=(S.sparks||0)+n;
+    W.inviteSparks=(W.inviteSparks||0)+n;
+    try{ rewardSummary('Holo-Invite Exchange',[{txt:'+'+n+' Force Spark'+(n===1?'':'s'),cls:'main'},{txt:'-'+(n*c.inviteSparkCost)+' Holo-Invites',cls:'bonus'},{txt:(c.inviteSparkWeeklyCap-W.inviteSparks)+' weekly exchange left',cls:'bonus'}]); }catch(e){}
+    try{ renderHUD(); render(); save(); }catch(e){}
+    return n;
+  }
+  window.of2154ConvertInvites=function(n){ return convertInvites(n); };
+
+  function claimRosterDividend(){
+    var c=cfg(), W=weekState();
+    if(!completeRoster()){ try{ toast('Complete the roster to claim this weekly Spark dividend.'); }catch(e){} return false; }
+    if(W.rosterClaimed){ try{ toast('Roster completion dividend already claimed this week.'); }catch(e){} return false; }
+    if(c.rosterCompleteWeeklySparks<=0){ try{ toast('Roster completion dividend is disabled in Developer Tools.'); }catch(e){} return false; }
+    W.rosterClaimed=true;
+    S.sparks=(S.sparks||0)+c.rosterCompleteWeeklySparks;
+    try{ rewardSummary('Roster Complete Dividend',[{txt:'+'+c.rosterCompleteWeeklySparks+' Force Sparks',cls:'main'},{txt:'Full collection keeps powering prestige breadth.',cls:'bonus'}]); }catch(e){}
+    try{ renderHUD(); render(); save(); }catch(e){}
+    return true;
+  }
+  window.of2154ClaimRosterDividend=claimRosterDividend;
+
+  function invitePanelHTML(){
+    if(!completeRoster()) return '';
+    var c=cfg(), W=weekState(), left=Math.max(0,c.inviteSparkWeeklyCap-(W.inviteSparks||0)), possible=Math.min(left,Math.floor((S.summonTickets||0)/c.inviteSparkCost));
+    return '<div class="of2154InvitePanel"><div class="of2154Head"><b>Roster Complete</b><span>'+fmt(S.summonTickets||0)+' Holo-Invites · '+fmt(S.sparks||0)+' Force Sparks</span></div><p>Summons are now an evergreen prestige resource. Use Holo-Invites to fuel the wide cohorts required by higher prestige tiers.</p><div class="of2154InviteStats"><span>'+c.inviteSparkCost+' Invites = 1 Spark</span><span>'+W.inviteSparks+'/'+c.inviteSparkWeeklyCap+' weekly exchange</span><span>'+((W.rosterClaimed||!c.rosterCompleteWeeklySparks)?'Dividend claimed':'Dividend ready')+'</span></div><div class="of2154InviteActions"><button type="button" id="of2154ConvertOne" '+(!possible?'disabled':'')+'>Convert 1</button><button type="button" id="of2154ConvertMax" '+(!possible?'disabled':'')+'>Convert '+Math.max(0,possible)+'</button><button type="button" id="of2154ClaimRoster" '+((W.rosterClaimed||!c.rosterCompleteWeeklySparks)?'disabled':'')+'>Claim +'+c.rosterCompleteWeeklySparks+'</button></div></div>';
+  }
+
+  function injectStyles(){
+    if(by('of2154SparkStyles')) return;
+    var st=document.createElement('style');
+    st.id='of2154SparkStyles';
+    st.textContent=[
+      '.of2154MissionSpark,.of2154InvitePanel,.of2154DevPanel{margin:12px 0;padding:12px;border-radius:15px;border:1px solid rgba(255,217,90,.28);background:linear-gradient(180deg,rgba(255,217,90,.09),rgba(10,14,25,.62));text-align:left}',
+      '.of2154Head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}',
+      '.of2154Head b{font-family:Orbitron;font-size:12px;color:#ffd95a;text-transform:uppercase;letter-spacing:.6px}',
+      '.of2154Head span{color:var(--muted);font-size:11px;font-weight:900;text-align:right;line-height:1.25}',
+      '.of2154MissionSpark p,.of2154InvitePanel p,.of2154DevPanel p{margin:0 0 10px;color:var(--muted);font-size:11.5px;font-weight:760;line-height:1.35}',
+      '.of2154Tiers{display:grid;gap:6px}.of2154Tier{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.035);padding:7px 8px;font-size:11px;font-weight:850}',
+      '.of2154Tier b{color:#ffd95a}.of2154Tier em{font-style:normal;color:var(--muted);font-family:Orbitron;font-size:9px}.of2154Tier.ready{border-color:#ffd95a99;background:rgba(255,217,90,.10)}.of2154Tier.done{opacity:.62}',
+      '.of2154MissionSpark button,.of2154InviteActions button,.of2154DevPanel button{border:none;border-radius:11px;background:linear-gradient(90deg,#ffd95a,#ffb01f);color:#181109;font-family:Orbitron;font-weight:1000;padding:10px 11px;margin-top:9px}',
+      '.of2154InviteStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0}.of2154InviteStats span{border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.04);padding:8px;color:var(--muted);font-size:10.5px;font-weight:900;text-align:center;line-height:1.2}',
+      '.of2154InviteActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.of2154InviteActions button:disabled,.of2154DevPanel button:disabled{opacity:.45;filter:grayscale(.4)}',
+      '.of2154DevPanel{border-color:rgba(139,208,255,.26);background:linear-gradient(180deg,rgba(139,208,255,.08),rgba(10,14,25,.62))}',
+      '.of2154DevGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.of2154DevField label{display:block;margin:0 0 4px;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.5px}.of2154DevField input{width:100%;box-sizing:border-box;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:900}',
+      '.of2154DevStats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:9px 0}.of2154DevStats span{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px;color:var(--muted);font-size:10.5px;font-weight:850;line-height:1.25}.of2154DevStats b{display:block;color:var(--ink);font-family:Orbitron;font-size:13px}',
+      '.of2154DevActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.of2154DevActions .secondary{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}',
+      '@media(max-width:430px){.of2154DevGrid,.of2154DevStats,.of2154InviteActions,.of2154InviteStats{grid-template-columns:1fr}.of2154Tier{grid-template-columns:1fr auto}}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
+  function wireSparkPanels(root){
+    try{
+      var claim=by('of2154ClaimHeroCaches'); if(claim) claim.onclick=function(){ grantHeroMissionCaches(true); };
+      var one=by('of2154ConvertOne'); if(one) one.onclick=function(){ convertInvites(1); };
+      var max=by('of2154ConvertMax'); if(max) max.onclick=function(){ var c=cfg(), W=weekState(); convertInvites(Math.min(c.inviteSparkWeeklyCap-(W.inviteSparks||0),Math.floor((S.summonTickets||0)/c.inviteSparkCost))); };
+      var div=by('of2154ClaimRoster'); if(div) div.onclick=function(){ claimRosterDividend(); };
+    }catch(e){}
+  }
+
+  function enhanceRoster(root){
+    try{
+      injectStyles();
+      root=root||by('view')||document;
+      if(!completeRoster()) return;
+      var btn=root.querySelector('#summonBtn');
+      if(btn){
+        btn.textContent='Roster complete - Holo-Invites fuel Force Sparks';
+        btn.style.background='linear-gradient(135deg,#ffd95a,#37d67a)';
+        btn.style.color='#111408';
+        btn.onclick=function(ev){ ev.preventDefault(); try{ toast('Use the Holo-Invite exchange below.'); }catch(e){} };
+      }
+      if(!root.querySelector('.of2154InvitePanel')){
+        var html=invitePanelHTML();
+        if(html && btn) btn.insertAdjacentHTML('afterend',html);
+      }
+      wireSparkPanels(root);
+    }catch(e){}
+  }
+
+  function insertHeroMissionPanel(){
+    try{
+      injectStyles();
+      var box=by('revealBox'); if(!box||box.querySelector('.of2154MissionSpark')) return;
+      var target=box.querySelector('.heroQuestBox');
+      if(target) target.insertAdjacentHTML('afterend',heroMissionSparkPanelHTML());
+      else box.insertAdjacentHTML('beforeend',heroMissionSparkPanelHTML());
+      wireSparkPanels(box);
+    }catch(e){}
+  }
+
+  function settingsPanelHTML(){
+    var c=cfg(), W=weekState(), hq=heroMissionClaimedCount(), ready=heroMissionReadyTiers().reduce(function(s,t){return s+t.sp;},0);
+    return '<div class="of2154DevPanel" id="of2154DevPanel"><div class="of2154Head"><b>Force Spark Economy</b><span>Dev tuning</span></div><p>These levers control the extra Spark income added for prestige breadth. Defaults favor wide roster play without changing normal combat difficulty.</p><div class="of2154DevStats"><span><b>'+hq+'</b>Hero Missions claimed this week</span><span><b>'+ready+'</b>Ready cache Sparks</span><span><b>'+((S.summonTickets||0))+'</b>Holo-Invites owned</span><span><b>'+((W.inviteSparks||0)+'/'+c.inviteSparkWeeklyCap)+'</b>Invite Sparks this week</span></div><div class="of2154DevGrid">'+
+      field('Hero Mission thresholds','of2154HeroMissionThresholds',c.heroMissionThresholds,'text')+
+      field('Spark awards by tier','of2154HeroMissionSparks',c.heroMissionSparks,'text')+
+      field('Muster Spark multiplier','of2154MusterSparkMult',c.musterSparkMult,'number','0.25')+
+      field('Invites per Spark','of2154InviteSparkCost',c.inviteSparkCost,'number','1')+
+      field('Invite weekly Spark cap','of2154InviteSparkWeeklyCap',c.inviteSparkWeeklyCap,'number','1')+
+      field('Complete roster weekly Sparks','of2154RosterCompleteWeeklySparks',c.rosterCompleteWeeklySparks,'number','1')+
+      field('Prestige Spark cost x','of2154PrestigeSparkCostMult',c.prestigeSparkCostMult,'number','0.05')+
+      '</div><div class="of2154DevActions"><button type="button" id="of2154ApplyDev">Apply Spark Tuning</button><button type="button" class="secondary" id="of2154ResetDev">Reset Defaults</button><button type="button" class="secondary" id="of2154ClaimDevCaches">Claim Mission Caches</button><button type="button" class="secondary" id="of2154ClaimDevRoster">Claim Roster Dividend</button></div></div>';
+  }
+  function field(label,id,val,type,step){
+    return '<div class="of2154DevField"><label>'+safeEsc(label)+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+safeEsc(val)+'" '+(step?'step="'+step+'"':'')+'></div>';
+  }
+  function injectSettingsPanel(){
+    try{
+      injectStyles();
+      var wrap=by('devToolsWrap'), sheet=document.querySelector('#setScrim .sheet');
+      if(!wrap||!sheet) return;
+      var old=by('of2154DevPanel'); if(old) old.remove();
+      var anchor=by('devTuneReset');
+      if(anchor) anchor.insertAdjacentHTML('afterend',settingsPanelHTML());
+      else wrap.insertAdjacentHTML('beforeend',settingsPanelHTML());
+      wireSettingsPanel();
+    }catch(e){}
+  }
+  function wireSettingsPanel(){
+    var apply=by('of2154ApplyDev');
+    if(apply) apply.onclick=function(){
+      var c=cfg();
+      c.heroMissionThresholds=(by('of2154HeroMissionThresholds')||{}).value||DEFAULTS.heroMissionThresholds;
+      c.heroMissionSparks=(by('of2154HeroMissionSparks')||{}).value||DEFAULTS.heroMissionSparks;
+      c.musterSparkMult=clampNum((by('of2154MusterSparkMult')||{}).value,DEFAULTS.musterSparkMult,0,20);
+      c.inviteSparkCost=Math.max(1,Math.round(clampNum((by('of2154InviteSparkCost')||{}).value,DEFAULTS.inviteSparkCost,1,999)));
+      c.inviteSparkWeeklyCap=Math.max(0,Math.round(clampNum((by('of2154InviteSparkWeeklyCap')||{}).value,DEFAULTS.inviteSparkWeeklyCap,0,999)));
+      c.rosterCompleteWeeklySparks=Math.max(0,Math.round(clampNum((by('of2154RosterCompleteWeeklySparks')||{}).value,DEFAULTS.rosterCompleteWeeklySparks,0,999)));
+      c.prestigeSparkCostMult=clampNum((by('of2154PrestigeSparkCostMult')||{}).value,DEFAULTS.prestigeSparkCostMult,0.1,5);
+      try{ save(); renderHUD(); render(); toast('Spark economy tuning applied'); }catch(e){}
+      setTimeout(injectSettingsPanel,80);
+    };
+    var reset=by('of2154ResetDev');
+    if(reset) reset.onclick=function(){
+      try{ S.dev=S.dev||{}; S.dev.sparkEconomy=Object.assign({},DEFAULTS); save(); renderHUD(); render(); toast('Spark economy defaults restored'); }catch(e){}
+      setTimeout(injectSettingsPanel,80);
+    };
+    var caches=by('of2154ClaimDevCaches'); if(caches) caches.onclick=function(){ grantHeroMissionCaches(true); setTimeout(injectSettingsPanel,80); };
+    var roster=by('of2154ClaimDevRoster'); if(roster) roster.onclick=function(){ claimRosterDividend(); setTimeout(injectSettingsPanel,80); };
+  }
+
+  try{
+    if(typeof prestigeCost==='function' && !prestigeCost.__of2154){
+      var oldPrestigeCost=prestigeCost;
+      prestigeCost=function(h){
+        var c=oldPrestigeCost.apply(this,arguments);
+        try{
+          var mult=cfg().prestigeSparkCostMult;
+          if(c&&c.sparks&&Math.abs(mult-1)>0.0001) c=Object.assign({},c,{sparks:Math.max(1,Math.ceil(c.sparks*mult))});
+        }catch(e){}
+        return c;
+      };
+      prestigeCost.__of2154=true;
+    }
+  }catch(e){}
+
+  try{
+    if(typeof heroQuestSummaryHTML==='function' && !heroQuestSummaryHTML.__of2154){
+      var oldHeroQuestSummaryHTML=heroQuestSummaryHTML;
+      heroQuestSummaryHTML=function(){
+        var html=oldHeroQuestSummaryHTML.apply(this,arguments);
+        try{ injectStyles(); html+=heroMissionSparkPanelHTML(); }catch(e){}
+        return html;
+      };
+      heroQuestSummaryHTML.__of2154=true;
+    }
+  }catch(e){}
+
+  try{
+    if(typeof claimHeroQuest==='function' && !claimHeroQuest.__of2154){
+      var oldClaimHeroQuest=claimHeroQuest;
+      claimHeroQuest=function(){
+        var before=heroMissionClaimedCount();
+        var r=oldClaimHeroQuest.apply(this,arguments);
+        var after=heroMissionClaimedCount();
+        if(after>before) setTimeout(function(){ grantHeroMissionCaches(false); },260);
+        return r;
+      };
+      claimHeroQuest.__of2154=true;
+    }
+  }catch(e){}
+
+  try{
+    if(typeof showHeroQuests==='function' && !showHeroQuests.__of2154){
+      var oldShowHeroQuests=showHeroQuests;
+      showHeroQuests=function(){ var r=oldShowHeroQuests.apply(this,arguments); setTimeout(insertHeroMissionPanel,0); return r; };
+      showHeroQuests.__of2154=true;
+    }
+  }catch(e){}
+
+  try{
+    if(typeof showQuestBoard==='function' && !showQuestBoard.__of2154){
+      var oldShowQuestBoard=showQuestBoard;
+      showQuestBoard=function(){ var r=oldShowQuestBoard.apply(this,arguments); setTimeout(function(){ wireSparkPanels(by('revealBox')||document); },0); return r; };
+      showQuestBoard.__of2154=true;
+    }
+  }catch(e){}
+
+  try{
+    if(typeof applyMusterReward==='function' && !applyMusterReward.__of2154){
+      var oldApplyMusterReward=applyMusterReward;
+      applyMusterReward=function(r){ return oldApplyMusterReward.call(this,scaledMusterReward(r)); };
+      applyMusterReward.__of2154=true;
+    }
+    if(typeof musterRewardText==='function' && !musterRewardText.__of2154){
+      var oldMusterRewardText=musterRewardText;
+      musterRewardText=function(r){ return oldMusterRewardText.call(this,scaledMusterReward(r)); };
+      musterRewardText.__of2154=true;
+    }
+    if(typeof musterClaim==='function' && !musterClaim.__of2154){
+      var oldMusterClaim=musterClaim;
+      musterClaim=function(idx){ var res=oldMusterClaim.apply(this,arguments); if(res&&res.ok) res.reward=scaledMusterReward(res.reward); return res; };
+      musterClaim.__of2154=true;
+    }
+  }catch(e){}
+
+  try{
+    if(typeof randomUnlock==='function' && !randomUnlock.__of2154){
+      var oldRandomUnlock=randomUnlock;
+      randomUnlock=function(){
+        if(completeRoster()){
+          try{ toast('Roster complete. Holo-Invites now convert into Force Sparks.'); }catch(e){}
+          return null;
+        }
+        return oldRandomUnlock.apply(this,arguments);
+      };
+      randomUnlock.__of2154=true;
+    }
+    if(typeof summonReadyInfo==='function' && !summonReadyInfo.__of2154){
+      var oldSummonReadyInfo=summonReadyInfo;
+      summonReadyInfo=function(){
+        if(completeRoster()){
+          var c=cfg(), W=weekState(), left=Math.max(0,c.inviteSparkWeeklyCap-(W.inviteSparks||0)), possible=Math.min(left,Math.floor((S.summonTickets||0)/c.inviteSparkCost));
+          return {ready:possible>0||(!W.rosterClaimed&&c.rosterCompleteWeeklySparks>0),label:'Holo-Invite exchange ready',sub:possible+' Force Spark'+(possible===1?'':'s')+' convertible · roster dividend '+(W.rosterClaimed?'claimed':'ready'),target:null};
+        }
+        return oldSummonReadyInfo.apply(this,arguments);
+      };
+      summonReadyInfo.__of2154=true;
+    }
+  }catch(e){}
+
+  try{
+    if(typeof renderRoster==='function' && !renderRoster.__of2154){
+      var oldRenderRoster=renderRoster;
+      renderRoster=function(v){ var r=oldRenderRoster.apply(this,arguments); setTimeout(function(){ enhanceRoster(v); },0); return r; };
+      renderRoster.__of2154=true;
+    }
+  }catch(e){}
+
+  try{
+    var settingsBtn=by('openSettings');
+    if(settingsBtn && !settingsBtn.__of2154){
+      var oldSettingsClick=settingsBtn.onclick;
+      settingsBtn.onclick=function(e){ if(oldSettingsClick) oldSettingsClick.call(this,e); setTimeout(injectSettingsPanel,90); };
+      settingsBtn.__of2154=true;
+    }
+    document.addEventListener('click',function(e){
+      try{ if(e.target&&e.target.closest&&e.target.closest('#openSettings,#devToolsToggle')) setTimeout(injectSettingsPanel,120); }catch(_e){}
+    },true);
+  }catch(e){}
+
+  try{
+    if(typeof render==='function' && !render.__of2154){
+      var oldRender2154=render;
+      render=function(){ var r=oldRender2154.apply(this,arguments); setTimeout(function(){ try{ if(typeof view!=='undefined'&&view==='heroes') enhanceRoster(by('view')); wireSparkPanels(document); }catch(e){} },0); return r; };
+      render.__of2154=true;
+    }
+  }catch(e){}
+
+  injectStyles();
+  setTimeout(function(){ try{ if(typeof view!=='undefined'&&view==='heroes') enhanceRoster(by('view')); injectSettingsPanel(); }catch(e){} },0);
+})();
+/* ===== end v2.154.0 Spark Economy Pass ===== */
 
 </script>
 
