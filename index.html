@@ -2673,7 +2673,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=28;
-const APP_BUILD='v2.152.0-ip-labels-art-worklist';
+const APP_BUILD='v2.153.0-mobile-fix-pass';
 const EXPECTED_ROSTER_COUNT=379;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -11754,6 +11754,8 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   injectClashEditorStyles();
 })();
 
+
+
 </script>
 
 
@@ -15509,6 +15511,319 @@ function rerender(){
   setTimeout(function(){ apply(document); },120);
 })();
 /* ===== end v2.152.0 Official IP Labels + Art Worklist ===== */
+
+
+
+
+/* ===== v2.153.0 Mobile Fix Pass ===== */
+(function(){
+  'use strict';
+  if(window.__of2153MobileFixPass) return;
+  window.__of2153MobileFixPass = true;
+
+  function by(id){ return document.getElementById(id); }
+  function safeEsc(v){
+    try{ return (typeof esc==='function') ? esc(v) : String(v == null ? '' : v).replace(/[&<>"]/g,function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[m]; }); }
+    catch(e){ return String(v == null ? '' : v); }
+  }
+  function fmt(n){
+    try{ return (typeof v168Num==='function') ? v168Num(n||0) : Math.round(n||0).toLocaleString(); }
+    catch(e){ return String(Math.round(n||0)); }
+  }
+  function icon(k){
+    try{ return (typeof cicon==='function') ? cicon(k,18) : ''; }
+    catch(e){ return ''; }
+  }
+  function injectStyles(){
+    if(by('of2153MobileFixStyles')) return;
+    var st=document.createElement('style');
+    st.id='of2153MobileFixStyles';
+    st.textContent=[
+      '.of2153HomeActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}',
+      '.of2153HomeActions button{min-width:0;text-align:left;border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));background:linear-gradient(180deg,rgba(22,32,54,.94),rgba(10,14,25,.96));color:var(--ink);border-radius:16px;padding:13px 12px;box-shadow:0 14px 34px rgba(0,0,0,.22)}',
+      '.of2153HomeActions button b{display:block;font-family:Orbitron;font-size:13px;line-height:1.1;letter-spacing:.2px}',
+      '.of2153HomeActions button span{display:block;margin-top:5px;color:var(--muted);font-size:11px;font-weight:800;line-height:1.25}',
+      '.of2153HomeActions button:active{transform:translateY(1px)}',
+      '.of2153LegendPicker{margin:10px 0 0;border:1px solid color-mix(in srgb,#ffd95a 35%,var(--line));border-radius:16px;background:linear-gradient(180deg,rgba(31,35,62,.96),rgba(10,13,24,.98));padding:12px;box-shadow:0 14px 36px rgba(0,0,0,.28)}',
+      '.of2153LegendPickerHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px}',
+      '.of2153LegendPickerHead b{font-family:Orbitron;color:#ffd95a;font-size:12px;text-transform:uppercase;letter-spacing:.8px}',
+      '.of2153LegendPickerHead span{display:block;color:var(--muted);font-size:11px;font-weight:800;line-height:1.3;margin-top:2px}',
+      '.of2153LegendPickerHead button{background:transparent;border:1px solid var(--line);border-radius:10px;color:var(--muted);padding:6px 9px;font-weight:900}',
+      '.of2153LegendList{display:grid;gap:8px}',
+      '.of2153LegendCard{display:grid;grid-template-columns:46px 1fr auto;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.09);border-radius:13px;background:rgba(255,255,255,.045);padding:9px}',
+      '.of2153LegendSigil{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:rgba(255,217,90,.12);border:1px solid rgba(255,217,90,.28);font-size:22px}',
+      '.of2153LegendCard b{display:block;color:#fff;font-size:13px;line-height:1.15}',
+      '.of2153LegendCard span{display:block;color:var(--muted);font-size:10.5px;font-weight:800;line-height:1.25;margin-top:2px}',
+      '.of2153LegendCard button{border:none;border-radius:11px;background:linear-gradient(90deg,#ffd95a,#ffb01f);color:#16100a;font-family:Orbitron;font-weight:1000;padding:9px 10px;min-width:74px}',
+      '.of2153LegendEmpty{color:var(--muted);font-weight:800;font-size:12px;line-height:1.35;padding:6px 2px}',
+      '#awayBox .of2153AwayList{display:grid;gap:8px;margin:14px 0 4px}',
+      '#awayBox .of2153AwayRow{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:9px 11px}',
+      '#awayBox .of2153AwayRow span{color:var(--muted);font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.5px}',
+      '#awayBox .of2153AwayRow b{font-family:Orbitron;font-size:18px}',
+      '#awayBox .of2153Collect{width:100%;margin-top:13px;border:none;border-radius:14px;background:linear-gradient(90deg,#ff3d3d,#ff212f);color:#fff;font-family:Orbitron;font-weight:1000;padding:14px;font-size:14px}',
+      '.growthSanctuaryV148 .focusOrb{display:none!important}',
+      '.growthSanctuaryV148 .gsvTop{grid-template-columns:1fr!important}',
+      '.nav{padding-top:4px!important;padding-bottom:calc(9px + env(safe-area-inset-bottom))!important;min-height:72px!important;overflow:visible!important}',
+      '.nav button{min-width:0!important;padding:4px 1px 6px!important;gap:2px!important;line-height:1!important;overflow:visible!important}',
+      '.nav button img{max-height:25px!important;object-fit:contain!important}',
+      '.of2149NavLabel{font-size:8.4px!important;line-height:1!important;letter-spacing:0!important;max-width:70px!important;max-height:2.08em!important;overflow:visible!important}',
+      '@media(max-width:390px){.of2149NavLabel{font-size:7.8px!important;max-width:64px!important}.nav button img{max-height:23px!important}}',
+      '#sheet .heroTopV141{overflow:hidden!important}',
+      '#sheet .heroStageV141{box-sizing:border-box;width:100%;max-width:100%;grid-template-columns:minmax(58px,68px) minmax(0,1fr) minmax(58px,68px)!important;grid-template-rows:66px minmax(134px,150px) 66px!important;gap:6px!important;padding:0 2px!important;margin:2px auto 10px!important}',
+      '#sheet .gearNodeV141{width:64px!important;height:64px!important;max-width:100%!important;min-width:0!important;border-radius:15px!important}',
+      '#sheet .gearNodeV141 .gi{font-size:20px!important;line-height:1!important}',
+      '#sheet .gearNodeV141 .gn,#sheet .gearNodeV141 .gp{font-size:7.4px!important;line-height:1.05!important;letter-spacing:.4px!important}',
+      '#sheet .heroPortraitV141{width:min(43vw,170px)!important;height:min(43vw,170px)!important;border-radius:28px!important}',
+      '@media(max-width:390px){#sheet .heroStageV141{grid-template-columns:56px minmax(0,1fr) 56px!important;grid-template-rows:58px 126px 58px!important;gap:5px!important}#sheet .gearNodeV141{width:56px!important;height:56px!important;border-radius:13px!important}#sheet .gearNodeV141 .gi{font-size:18px!important}#sheet .heroPortraitV141{width:min(42vw,152px)!important;height:min(42vw,152px)!important}}',
+      '.arena .side.enemy .unit .face,.arena .unit.enemy .face,.arena .unit.boss .face{overflow:hidden!important;background:rgba(7,10,18,.34)!important}',
+      '.arena .side.enemy .unit .face img,.arena .unit.enemy .face img,.arena .unit.boss .face img{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:center 32%!important;transform:scale(1.12)!important;display:block!important;background:transparent!important}',
+      '@media(max-width:430px){.of2153HomeActions{grid-template-columns:1fr}.of2153LegendCard{grid-template-columns:42px 1fr}.of2153LegendCard button{grid-column:1/-1;width:100%}}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
+  function labelText(s){
+    if(!s) return s;
+    var out=String(s);
+    out=out.replace(/Boss Cores/g,'__BOSSCORES__').replace(/Hero Cores/g,'__HEROCORES__').replace(/Kyber Shards/g,'__KYBERSHARDS__').replace(/Force Sparks/g,'__FORCESPARKS__').replace(/Holo-Invites/g,'__HOLOINVITES__').replace(/Stardust/g,'__STARDUST__').replace(/Credits/g,'__CREDITS__');
+    out=out.replace(/\bBoss:\s*/g,'__BOSSCORES__: ');
+    out=out.replace(/\bGold\b/g,'__CREDITS__');
+    out=out.replace(/\bDust\b/g,'__STARDUST__');
+    out=out.replace(/\bCrystals\b/g,'__KYBERSHARDS__');
+    out=out.replace(/\bTickets\b/g,'__HOLOINVITES__');
+    out=out.replace(/\bSparks\b/g,'__FORCESPARKS__');
+    out=out.replace(/\bCores\b/g,'__HEROCORES__');
+    out=out.replace(/__BOSSCORES__/g,'Boss Cores').replace(/__HEROCORES__/g,'Hero Cores').replace(/__KYBERSHARDS__/g,'Kyber Shards').replace(/__FORCESPARKS__/g,'Force Sparks').replace(/__HOLOINVITES__/g,'Holo-Invites').replace(/__STARDUST__/g,'Stardust').replace(/__CREDITS__/g,'Credits');
+    return out;
+  }
+
+  function applyVisibleLabels(root){
+    if(!root) return;
+    try{
+      var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
+        acceptNode:function(n){
+          var p=n.parentElement;
+          if(!p || /^(SCRIPT|STYLE|TEXTAREA|INPUT)$/i.test(p.tagName)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var batch=[], node;
+      while((node=walker.nextNode())) batch.push(node);
+      batch.forEach(function(n){ var t=labelText(n.nodeValue); if(t!==n.nodeValue) n.nodeValue=t; });
+    }catch(e){}
+  }
+
+  function openMissionBoard(){
+    try{
+      if(typeof showQuestBoard==='function') showQuestBoard();
+      else if(typeof navTo==='function') navTo('quests');
+      else { view='quests'; render(); }
+    }catch(e){ try{ view='quests'; render(); }catch(_e){} }
+  }
+
+  function enhanceHome(v){
+    if(!v) return;
+    injectStyles();
+    applyVisibleLabels(v);
+    function bindHomeActions(){
+      var mb=by('of2153MissionBoard'); if(mb) mb.onclick=function(ev){ ev.preventDefault(); openMissionBoard(); };
+      var rm=by('of2153RosterMgmt'); if(rm) rm.onclick=function(ev){ ev.preventDefault(); if(typeof openRosterMgmt==='function') openRosterMgmt(); };
+    }
+    if(v.querySelector('.of2153HomeActions')){ bindHomeActions(); return; }
+    var html='<section class="of2153HomeActions">'+
+      '<button type="button" id="of2153MissionBoard"><b>Mission Board</b><span>Open the current missions from Headquarters.</span></button>'+
+      '<button type="button" id="of2153RosterMgmt"><b>Squadron Management</b><span>Rank, equip, and tune the full hero roster.</span></button>'+
+      '</section>';
+    var anchor=v.querySelector('.v170Path,.todaysPath,.v171LivingStage,.v170Manage');
+    if(anchor && anchor.classList && anchor.classList.contains('v170Manage')) anchor.insertAdjacentHTML('beforebegin',html);
+    else if(anchor) anchor.insertAdjacentHTML('afterend',html);
+    else v.insertAdjacentHTML('beforeend',html);
+    bindHomeActions();
+  }
+
+  function cleanGrowth(root){
+    try{ (root||document).querySelectorAll('.focusOrb').forEach(function(n){ n.remove(); }); }catch(e){}
+  }
+
+  function legendTitle(li){
+    try{ var bp=(typeof legendBp==='function') ? legendBp(li.key) : null; return (bp&&bp.name)||li.name||'Forged Legendary'; }
+    catch(e){ return li&&li.name || 'Forged Legendary'; }
+  }
+  function legendIcon(li){
+    try{ var bp=(typeof legendBp==='function') ? legendBp(li.key) : null; return (bp&&bp.icon)||'&#10022;'; }
+    catch(e){ return '&#10022;'; }
+  }
+  function legendLine(li){
+    try{
+      var st=(typeof legendStats==='function') ? legendStats(li) : null;
+      if(st) return 'Lv '+(li.level||1)+' - +'+st.atkPct+'% ATK, +'+st.hpPct+'% HP';
+    }catch(e){}
+    return 'Lv '+((li&&li.level)||1)+' - signature power';
+  }
+
+  function openLegendPicker(heroId){
+    try{
+      if(typeof ensureLegendaryState==='function') ensureLegendaryState();
+      var h=(S.heroes||[]).find(function(x){ return x&&x.id===heroId; });
+      if(!h) return;
+      var sheet=by('sheet'); if(!sheet) return;
+      sheet.querySelectorAll('.of2153LegendPicker').forEach(function(n){ n.remove(); });
+      var mount=sheet.querySelector('.of2150LegendMount[data-of2150-legend-slot="'+CSS.escape(heroId)+'"]')||sheet.querySelector('.of2150LegendMount');
+      var list=(S.legendaries||[]).filter(function(li){ return li && (!li.eq || li.eq===heroId); });
+      var body='';
+      if(list.length){
+        body='<div class="of2153LegendList">'+list.map(function(li){
+          var eq=li.eq===heroId?'Currently equipped':'Available';
+          return '<div class="of2153LegendCard" data-iid="'+safeEsc(li.iid)+'"><div class="of2153LegendSigil">'+legendIcon(li)+'</div><div><b>'+safeEsc(legendTitle(li))+'</b><span>'+safeEsc(legendLine(li))+'</span><span>'+safeEsc(eq)+'</span></div><button type="button" data-of2153-equip="'+safeEsc(li.iid)+'">'+(li.eq===heroId?'Keep':'Equip')+'</button></div>';
+        }).join('')+'</div>';
+      }else{
+        body='<div class="of2153LegendEmpty">No forged legendaries are free right now. The Crucible can forge more when you are ready.</div>';
+      }
+      var html='<div class="of2153LegendPicker"><div class="of2153LegendPickerHead"><div><b>Choose Legendary</b><span>'+safeEsc(h.name)+' can equip any forged legendary not assigned elsewhere.</span></div><button type="button" data-of2153-close>Close</button></div>'+body+'</div>';
+      if(mount) mount.insertAdjacentHTML('afterend',html); else sheet.insertAdjacentHTML('beforeend',html);
+      var picker=sheet.querySelector('.of2153LegendPicker');
+      if(!picker) return;
+      var close=picker.querySelector('[data-of2153-close]'); if(close) close.onclick=function(){ picker.remove(); };
+      picker.querySelectorAll('[data-of2153-equip]').forEach(function(btn){
+        btn.onclick=function(ev){
+          ev.stopPropagation();
+          var iid=btn.getAttribute('data-of2153-equip');
+          try{ if(typeof legendEquip==='function') legendEquip(iid,heroId); }catch(e){}
+          try{ if(typeof toast==='function') toast('Legendary equipped'); }catch(e){}
+          try{ if(typeof save==='function') save(); }catch(e){}
+          setTimeout(function(){ try{ openHeroSheet(heroId); }catch(e){} },40);
+        };
+      });
+      try{ picker.scrollIntoView({block:'nearest',behavior:S&&S.reduceMotion?'auto':'smooth'}); }catch(e){}
+    }catch(e){ try{ console.warn('legend picker failed',e); }catch(_e){} }
+  }
+
+  function wireLegendButtons(root){
+    try{
+      (root||document).querySelectorAll('.of2150LegendMount').forEach(function(mount){
+        var heroId=mount.getAttribute('data-of2150-legend-slot');
+        mount.querySelectorAll('[data-of2150-legend-open]').forEach(function(btn){
+          var isEquip=/equip/i.test(btn.textContent||'');
+          if(isEquip){
+            btn.onclick=function(ev){ ev.stopPropagation(); ev.preventDefault(); openLegendPicker(heroId); };
+          }else{
+            btn.onclick=function(ev){ ev.stopPropagation(); ev.preventDefault(); try{ if(typeof legendOpenForge==='function') legendOpenForge(); else { hideScrim(); navTo('forge'); } }catch(e){} };
+          }
+        });
+      });
+    }catch(e){}
+  }
+
+  function replaceShowAway(){
+    try{
+      showAway=function(){
+        if(!awayReport) return;
+        var R=awayReport; awayReport=null;
+        var L=R.loot||{};
+        var h=R.hours||0, hl=h>=1 ? h.toFixed(1)+'h' : Math.round(h*60)+'m';
+        var rows=[];
+        if(L.gold>0) rows.push(['Credits',fmt(L.gold),'#ffcf5a',icon('gold')]);
+        if(L.dust>0) rows.push(['Stardust',fmt(L.dust),'#7ee787',icon('dust')]);
+        if(L.cores>0) rows.push(['Hero Cores',fmt(L.cores),'#5fe0c8',icon('cores')]);
+        if(L.gear&&L.gear.length) rows.push(['Equipment',fmt(L.gear.length),'#c08bff','']);
+        var list=rows.length?'<div class="of2153AwayList">'+rows.map(function(r){ return '<div class="of2153AwayRow"><span>'+r[3]+' '+r[0]+'</span><b style="color:'+r[2]+'">'+r[1]+'</b></div>'; }).join('')+'</div>':'';
+        var lvl='';
+        if(R.levelUps&&R.levelUps.length){
+          var top=R.levelUps[0], more=R.levelUps.length-1;
+          lvl='<div class="wbHeroes"><div class="wbHeroLine">Level up: <b>'+safeEsc(top.name)+'</b> Lv '+top.from+' to '+top.to+'</div>'+(more>0?'<div class="wbHeroMore">+'+more+' more hero'+(more===1?'':'es')+' leveled up</div>':'')+'</div>';
+        }
+        var box=by('awayBox'), modal=by('awayModal'); if(!box||!modal) return;
+        box.innerHTML='<div class="wbIco">&#127749;</div><h2 class="wbTitle">Welcome back</h2><p class="wbSub">Your oath held for '+hl+(R.mom&&R.mom>1.001?' - x'+R.mom.toFixed(2)+' Momentum':'')+'</p><div class="wbExp">+'+fmt(R.exp)+' <span>EXP each hero</span></div>'+lvl+list+'<button id="awayCollect" class="of2153Collect">Collect & Continue</button>';
+        modal.classList.add('show');
+        var btn=by('awayCollect');
+        if(btn) btn.onclick=function(){
+          if(btn.dataset.done){ modal.classList.remove('show'); return; }
+          btn.dataset.done='1';
+          try{ collectAway(L); }catch(e){}
+          btn.textContent='Collected';
+          setTimeout(function(){ modal.classList.remove('show'); },120);
+        };
+      };
+    }catch(e){}
+  }
+
+  function disableActFirst(){
+    try{ window.v165ActFirstNudge=function(){ var n=by('v165ActFirst'); if(n) n.remove(); }; v165ActFirstNudge=window.v165ActFirstNudge; }catch(e){}
+    try{ var n=by('v165ActFirst'); if(n) n.remove(); }catch(e){}
+  }
+
+  function patchRosterMgmt(){
+    try{
+      if(typeof openRosterMgmt!=='function' || openRosterMgmt.__of2153) return;
+      var old=openRosterMgmt;
+      openRosterMgmt=function(){
+        var r=old.apply(this,arguments);
+        setTimeout(function(){
+          var s=by('sheet');
+          if(!s) return;
+          applyVisibleLabels(s);
+          var h=s.querySelector('.rmSheet h3'); if(h) h.textContent='Squadron Management';
+          var head=s.querySelector('.rmHead'); if(head) head.innerHTML=head.innerHTML.replace(/heroes/g,'heroes').replace(/total power/g,'total power');
+        },0);
+        return r;
+      };
+      openRosterMgmt.__of2153=true;
+    }catch(e){}
+  }
+
+  function postProcess(root){
+    injectStyles();
+    disableActFirst();
+    cleanGrowth(root||document);
+    applyVisibleLabels(root||document);
+    wireLegendButtons(root||document);
+  }
+
+  injectStyles();
+  replaceShowAway();
+  disableActFirst();
+  patchRosterMgmt();
+
+  try{
+    if(typeof renderHome==='function'){
+      var oldHome=renderHome;
+      renderHome=function(v){ var r=oldHome.apply(this,arguments); try{ enhanceHome(v); }catch(e){} return r; };
+    }
+  }catch(e){}
+  try{
+    if(typeof renderGrowth==='function'){
+      var oldGrowth=renderGrowth;
+      renderGrowth=function(v){ var r=oldGrowth.apply(this,arguments); try{ cleanGrowth(v); applyVisibleLabels(v); }catch(e){} return r; };
+    }
+  }catch(e){}
+  try{
+    if(typeof openHeroSheet==='function'){
+      var oldHeroSheet=openHeroSheet;
+      openHeroSheet=function(id){ var r=oldHeroSheet.apply(this,arguments); setTimeout(function(){ wireLegendButtons(by('sheet')||document); applyVisibleLabels(by('sheet')||document); },0); return r; };
+    }
+  }catch(e){}
+  try{
+    if(typeof render==='function'){
+      var oldRender=render;
+      render=function(){ var r=oldRender.apply(this,arguments); setTimeout(function(){ var v=by('view'); if(v){ if(typeof view!=='undefined'&&view==='home') enhanceHome(v); postProcess(v); } },0); return r; };
+    }
+  }catch(e){}
+
+  try{
+    var mo=new MutationObserver(function(muts){
+      var touched=false;
+      muts.forEach(function(m){ if(m.addedNodes&&m.addedNodes.length) touched=true; });
+      if(touched){
+        disableActFirst();
+        var v=by('view'); if(v){ if(typeof view!=='undefined'&&view==='home') enhanceHome(v); cleanGrowth(v); }
+      }
+    });
+    if(document.body) mo.observe(document.body,{childList:true,subtree:true});
+  }catch(e){}
+
+  setTimeout(function(){ try{ var v=by('view'); if(v&&typeof view!=='undefined'&&view==='home') enhanceHome(v); postProcess(document); }catch(e){} },0);
+})();
+/* ===== end v2.153.0 Mobile Fix Pass ===== */
 
 </script>
 
