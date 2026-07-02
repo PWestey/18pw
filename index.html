@@ -2676,9 +2676,9 @@ function domainChip(it){ const k=domainOf(it); if(!k) return ''; const d=DKEY[k]
 function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:'+DKEY[k].color+'22;color:'+DKEY[k].color+';margin:0 6px 6px 0">'+DKEY[k].icon+' '+DKEY[k].label+'</span>':'').join(''); }
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
-const SAVE_VERSION=31;
-const APP_BUILD='v2.167.0-webp-enemyart';
-const EXPECTED_ROSTER_COUNT=433;
+const SAVE_VERSION=32;
+const APP_BUILD='v2.168.1-pokemon-batch-dailies';
+const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
@@ -12900,6 +12900,132 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
       "vord",
       "queen"
     ]
+  },
+  {
+    "id": "pokemon__nurse_joy",
+    "name": "Nurse Joy",
+    "ip": "Pokemon",
+    "role": "Support",
+    "color": "#ffcb05",
+    "owned": false,
+    "aff": [
+      "home",
+      "fatherhood",
+      "faith"
+    ],
+    "archetype": "Healer",
+    "identity": "Nurse Joy keeps the team steady with calm care, triage, and Pokemon Center resolve.",
+    "desc": "Nurse Joy keeps the team steady with calm care, triage, and Pokemon Center resolve.",
+    "tags": [
+      "pokemon",
+      "pokemon-center",
+      "healer"
+    ]
+  },
+  {
+    "id": "pokemon__officer_jenny",
+    "name": "Officer Jenny",
+    "ip": "Pokemon",
+    "role": "Tank",
+    "color": "#ffcb05",
+    "owned": false,
+    "aff": [
+      "discipline",
+      "work",
+      "home"
+    ],
+    "archetype": "Guardian",
+    "identity": "Officer Jenny turns patrol discipline and public courage into a wall between allies and danger.",
+    "desc": "Officer Jenny turns patrol discipline and public courage into a wall between allies and danger.",
+    "tags": [
+      "pokemon",
+      "law",
+      "protector"
+    ]
+  },
+  {
+    "id": "pokemon__serena",
+    "name": "Serena",
+    "ip": "Pokemon",
+    "role": "Support",
+    "color": "#ffcb05",
+    "owned": false,
+    "aff": [
+      "hobbies",
+      "discipline",
+      "work"
+    ],
+    "archetype": "Leader",
+    "identity": "Serena turns confidence, timing, and Kalos performer polish into team momentum.",
+    "desc": "Serena turns confidence, timing, and Kalos performer polish into team momentum.",
+    "tags": [
+      "pokemon",
+      "performer",
+      "kalos"
+    ]
+  },
+  {
+    "id": "pokemon__dawn",
+    "name": "Dawn",
+    "ip": "Pokemon",
+    "role": "DPS",
+    "color": "#ffcb05",
+    "owned": false,
+    "aff": [
+      "hobbies",
+      "discipline",
+      "faith"
+    ],
+    "archetype": "Caster",
+    "identity": "Dawn blends Sinnoh contest flair, quick combinations, and no-need-to-worry pressure.",
+    "desc": "Dawn blends Sinnoh contest flair, quick combinations, and no-need-to-worry pressure.",
+    "tags": [
+      "pokemon",
+      "coordinator",
+      "sinnoh"
+    ]
+  },
+  {
+    "id": "pokemon__orla",
+    "name": "Orla",
+    "ip": "Pokemon",
+    "role": "Support",
+    "color": "#ffcb05",
+    "owned": false,
+    "aff": [
+      "work",
+      "home",
+      "discipline"
+    ],
+    "archetype": "Specialist",
+    "identity": "Orla keeps the Brave Olivine running and turns smart repairs into tactical openings.",
+    "desc": "Orla keeps the Brave Olivine running and turns smart repairs into tactical openings.",
+    "tags": [
+      "pokemon",
+      "rising-volt-tacklers",
+      "engineer"
+    ]
+  },
+  {
+    "id": "pokemon__mollie",
+    "name": "Mollie",
+    "ip": "Pokemon",
+    "role": "Support",
+    "color": "#ffcb05",
+    "owned": false,
+    "aff": [
+      "faith",
+      "home",
+      "fatherhood"
+    ],
+    "archetype": "Healer",
+    "identity": "Mollie brings field-medic calm, hard-earned kindness, and rescue-first focus to the squad.",
+    "desc": "Mollie brings field-medic calm, hard-earned kindness, and rescue-first focus to the squad.",
+    "tags": [
+      "pokemon",
+      "rising-volt-tacklers",
+      "medic"
+    ]
   }
 ];
   const MANUAL_ROSTER_UPDATES=[
@@ -13380,6 +13506,36 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
     "name": "Listener’s Honor",
     "effect": "teamDR",
     "desc": "While Eshonai is alive, the squad takes slightly less incoming damage."
+  },
+  "pokemon__nurse_joy": {
+    "name": "Pokemon Center Triage",
+    "effect": "guardShield",
+    "desc": "Nurse Joy occasionally shields or stabilizes the weakest ally before pressure snowballs."
+  },
+  "pokemon__officer_jenny": {
+    "name": "Badge Patrol",
+    "effect": "teamDR",
+    "desc": "While Officer Jenny is active, the squad takes slightly less incoming damage."
+  },
+  "pokemon__serena": {
+    "name": "Showcase Momentum",
+    "effect": "lowAllyRally",
+    "desc": "When an ally is under pressure, Serena rallies the squad into a stronger tempo."
+  },
+  "pokemon__dawn": {
+    "name": "No Need To Worry",
+    "effect": "splash",
+    "desc": "Dawn splashes part of her contest combinations into another enemy."
+  },
+  "pokemon__orla": {
+    "name": "Brave Olivine Tune-Up",
+    "effect": "supportAura",
+    "desc": "Orla improves support output and survivability from the back row."
+  },
+  "pokemon__mollie": {
+    "name": "Field Medic Calm",
+    "effect": "guardShield",
+    "desc": "Mollie occasionally shields or stabilizes a weakened ally."
   }
 };
   const RELEASE_ULTIMATES={
@@ -13441,7 +13597,13 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   "pokemon__gengar": "Blooming Field",
   "pokemon__gyarados": "Electric Chase",
   "pokemon__rayquaza": "Splintered Stone Edge",
-  "stormlight_archive__lift": "Rhythm of Resolve"
+  "stormlight_archive__lift": "Rhythm of Resolve",
+  "pokemon__nurse_joy": "Full Restore Ward",
+  "pokemon__officer_jenny": "Citywide Lockdown",
+  "pokemon__serena": "Kalos Showcase Finale",
+  "pokemon__dawn": "Sinnoh Contest Burst",
+  "pokemon__orla": "Engine-Room Overdrive",
+  "pokemon__mollie": "Aerial Clinic Revival"
 };
   const RELEASE_ULT_QUOTES={
   "marvel__black_cat": "Luck is not fair. That is why I like it.",
@@ -13502,7 +13664,13 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   "pokemon__gengar": "A quiet bloom can change the whole field.",
   "pokemon__gyarados": "Fast feet, clear target.",
   "pokemon__rayquaza": "The hunt ends when discipline catches instinct.",
-  "stormlight_archive__lift": "I will remember the rhythm before the storm took it."
+  "stormlight_archive__lift": "I will remember the rhythm before the storm took it.",
+  "pokemon__nurse_joy": "Everyone gets back on their feet.",
+  "pokemon__officer_jenny": "This route is under protection.",
+  "pokemon__serena": "Confidence becomes the performance.",
+  "pokemon__dawn": "No need to worry.",
+  "pokemon__orla": "If it flies, I can fix it.",
+  "pokemon__mollie": "Hold still. I am helping."
 };
   const RELEASE_LIFE_LINES={
   "marvel__black_cat": [
@@ -13799,6 +13967,30 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
     "Listen before the change takes shape.",
     "Honor can survive the wrong storm.",
     "Keep the rhythm of who you meant to be."
+  ],
+  "pokemon__nurse_joy": [
+    "Care becomes strength when you keep showing up.",
+    "The quiet work of recovery still counts as power."
+  ],
+  "pokemon__officer_jenny": [
+    "Order is built one protected moment at a time.",
+    "Standing guard is also an oath."
+  ],
+  "pokemon__serena": [
+    "Practice makes confidence visible.",
+    "A brave step can become the whole routine."
+  ],
+  "pokemon__dawn": [
+    "No need to worry. Begin, then adjust.",
+    "Style is focus made visible."
+  ],
+  "pokemon__orla": [
+    "Fix the engine, then trust the flight.",
+    "Small adjustments keep big dreams airborne."
+  ],
+  "pokemon__mollie": [
+    "Help first. Sort the rest after.",
+    "Calm hands can change the outcome."
   ]
 };
   const RELEASE_KIT_OVERRIDES={
@@ -14745,6 +14937,102 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
       "mult": 0.82,
       "cooldown": 2
     }
+  },
+  "pokemon__nurse_joy": {
+    "basic": {
+      "name": "Nurse Joy · Gentle Checkup",
+      "effect": "heal",
+      "desc": "A careful opening move that builds ultimate energy."
+    },
+    "special": {
+      "name": "Nurse Joy · Center Triage",
+      "kind": "heal",
+      "desc": "Heal the weakest ally and cover the team with a small recovery ward.",
+      "target": "ally",
+      "effect": "heal",
+      "mult": 0.35,
+      "cooldown": 2
+    }
+  },
+  "pokemon__officer_jenny": {
+    "basic": {
+      "name": "Officer Jenny · Patrol Baton",
+      "effect": "guard",
+      "desc": "A disciplined opening move that builds ultimate energy."
+    },
+    "special": {
+      "name": "Officer Jenny · Protective Roadblock",
+      "kind": "shield",
+      "desc": "Draw pressure and shield the squad behind a firm defensive line.",
+      "target": "self",
+      "effect": "guard",
+      "mult": 0.82,
+      "cooldown": 2
+    }
+  },
+  "pokemon__serena": {
+    "basic": {
+      "name": "Serena · Ribbon Step",
+      "effect": "rally",
+      "desc": "A performer’s opening move that builds ultimate energy."
+    },
+    "special": {
+      "name": "Serena · Showcase Rally",
+      "kind": "rally",
+      "desc": "Rally allies with poise, healing, and a clean tempo lift.",
+      "target": "self",
+      "effect": "rally",
+      "mult": 0.45,
+      "cooldown": 3
+    }
+  },
+  "pokemon__dawn": {
+    "basic": {
+      "name": "Dawn · Piplup Opening",
+      "effect": "frost",
+      "desc": "A contest-ready opening move that builds ultimate energy."
+    },
+    "special": {
+      "name": "Dawn · Contest Combination",
+      "kind": "aoe",
+      "desc": "Hit every enemy with a polished Sinnoh contest burst.",
+      "target": "allEnemies",
+      "effect": "frost",
+      "mult": 0.72,
+      "cooldown": 3
+    }
+  },
+  "pokemon__orla": {
+    "basic": {
+      "name": "Orla · Wrench Tap",
+      "effect": "tech",
+      "desc": "A clever opening move that builds ultimate energy."
+    },
+    "special": {
+      "name": "Orla · Volt Tackler Tune-Up",
+      "kind": "trick",
+      "desc": "Strike a priority target and reinforce the squad with emergency fixes.",
+      "target": "enemy",
+      "effect": "tech",
+      "mult": 1.28,
+      "cooldown": 2
+    }
+  },
+  "pokemon__mollie": {
+    "basic": {
+      "name": "Mollie · Medic’s Glance",
+      "effect": "heal",
+      "desc": "A focused opening move that builds ultimate energy."
+    },
+    "special": {
+      "name": "Mollie · Field Patch Kit",
+      "kind": "heal",
+      "desc": "Patch the weakest ally and steady the team through incoming damage.",
+      "target": "ally",
+      "effect": "heal",
+      "mult": 0.35,
+      "cooldown": 2
+    }
   }
 };
   const RELEASE_ROLE_ARCH={
@@ -15051,6 +15339,30 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   "baldur_s_gate_3__gale": {
     "role": "DPS",
     "arch": "Caster"
+  },
+  "pokemon__nurse_joy": {
+    "role": "Support",
+    "arch": "Healer"
+  },
+  "pokemon__officer_jenny": {
+    "role": "Tank",
+    "arch": "Guardian"
+  },
+  "pokemon__serena": {
+    "role": "Support",
+    "arch": "Leader"
+  },
+  "pokemon__dawn": {
+    "role": "DPS",
+    "arch": "Caster"
+  },
+  "pokemon__orla": {
+    "role": "Support",
+    "arch": "Specialist"
+  },
+  "pokemon__mollie": {
+    "role": "Support",
+    "arch": "Healer"
   }
 };
   const RELEASE_CLASH_ELEMENTS={
@@ -15112,7 +15424,13 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   "pokemon__gengar": "Grove",
   "pokemon__gyarados": "Flame",
   "pokemon__rayquaza": "Storm",
-  "stormlight_archive__lift": "Storm"
+  "stormlight_archive__lift": "Storm",
+  "pokemon__nurse_joy": "Grove",
+  "pokemon__officer_jenny": "Stone",
+  "pokemon__serena": "Tide",
+  "pokemon__dawn": "Tide",
+  "pokemon__orla": "Storm",
+  "pokemon__mollie": "Grove"
 };
   const RELEASE_CLASH_ROLES={
   "marvel__black_cat": "Melee DPS",
@@ -15173,7 +15491,13 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   "pokemon__gengar": "Healer",
   "pokemon__gyarados": "Melee DPS",
   "pokemon__rayquaza": "Melee DPS",
-  "stormlight_archive__lift": "Tank"
+  "stormlight_archive__lift": "Tank",
+  "pokemon__nurse_joy": "Support",
+  "pokemon__officer_jenny": "Tank",
+  "pokemon__serena": "Support",
+  "pokemon__dawn": "Ranged DPS",
+  "pokemon__orla": "Support",
+  "pokemon__mollie": "Healer"
 };
   const RELEASE_ALBUMS=[
   {
@@ -15204,7 +15528,7 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   {
     "id": "release_one_heroes",
     "name": "Release One Heroes",
-    "blurb": "The first official monthly hero drop.",
+    "blurb": "The first official hero drop, expanded with Pokemon field support.",
     "color": "#8bd0ff",
     "cp": 140,
     "crystals": 120,
@@ -15220,7 +15544,13 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
       "disney_pixar__kida",
       "disney_pixar__esmeralda",
       "disney_pixar__peter_pan",
-      "disney_pixar__tinkerbell"
+      "disney_pixar__tinkerbell",
+      "pokemon__nurse_joy",
+      "pokemon__officer_jenny",
+      "pokemon__serena",
+      "pokemon__dawn",
+      "pokemon__orla",
+      "pokemon__mollie"
     ]
   },
   {
@@ -15263,6 +15593,27 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
       "star_wars__darth_maul",
       "game_of_thrones__melisandre",
       "diablo__adria"
+    ]
+  },
+  {
+    "id": "pokemon_field_team",
+    "name": "Pokemon Field Team",
+    "blurb": "Trainers, medics, engineers, and protectors from across the Pokemon world.",
+    "color": "#ffcb05",
+    "cp": 70,
+    "crystals": 60,
+    "members": [
+      "pokemon__ash_ketchum",
+      "pokemon__misty",
+      "pokemon__brock",
+      "pokemon__jessie",
+      "pokemon__james",
+      "pokemon__nurse_joy",
+      "pokemon__officer_jenny",
+      "pokemon__serena",
+      "pokemon__dawn",
+      "pokemon__orla",
+      "pokemon__mollie"
     ]
   }
 ];
@@ -21940,6 +22291,147 @@ function rerender(){
   of2164WrapRiftAuto();
 })();
 /* ===== end v2.164.0 Gear Priority + Rift Polish ===== */
+
+
+
+/* ===== v2.168.1 Daily Batch Complete ===== */
+(function(){
+  if(window.__of21681DailyBatchComplete) return;
+  window.__of21681DailyBatchComplete=true;
+  var selected=new Set();
+  function by(id){ return document.getElementById(id); }
+  function esc2(x){ try{ return (typeof esc==='function')?esc(x):String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }catch(e){ return String(x||''); } }
+  function batchOpenDailies(){
+    try{
+      return (S.dailies||[]).filter(function(d){
+        if(!d||d.freq!=='daily'||d.done) return false;
+        if(typeof taskActiveToday==='function'&&!taskActiveToday(d)) return false;
+        if(typeof of2146IsMissed==='function'&&of2146IsMissed(d.id)) return false;
+        return true;
+      });
+    }catch(e){ return []; }
+  }
+  function batchOpenIds(){ return batchOpenDailies().map(function(d){return d.id;}); }
+  function pruneSelection(){ var open=new Set(batchOpenIds()); Array.from(selected).forEach(function(id){ if(!open.has(id)) selected.delete(id); }); }
+  function injectStyles(){
+    if(by('of21681BatchStyles')) return;
+    var st=document.createElement('style'); st.id='of21681BatchStyles';
+    st.textContent='\
+      .of21681BatchBar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:linear-gradient(135deg,rgba(54,224,230,.10),rgba(255,217,90,.08));border:1px solid color-mix(in srgb,var(--accent2) 25%,var(--line));border-radius:14px;padding:10px 11px;margin:0 0 10px}\
+      .of21681BatchBar b{display:block;font-family:Orbitron;font-size:12px;color:var(--ink);letter-spacing:.5px}.of21681BatchBar span{display:block;margin-top:2px;color:var(--muted);font-size:11px;font-weight:850;line-height:1.25}\
+      .of21681BatchActions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.of21681BatchActions button{border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:8px 9px;font-family:Rajdhani;font-size:12px;font-weight:1000}.of21681BatchActions button.go{background:linear-gradient(135deg,#37d67a,#8bd0ff);border:0;color:#06111f}.of21681BatchActions button:disabled{opacity:.45;filter:grayscale(.35)}\
+      .of21681Pick{width:30px;height:30px;border-radius:9px;border:2px solid color-mix(in srgb,var(--accent2) 35%,var(--line));background:rgba(255,255,255,.035);color:var(--accent2);font-family:Orbitron;font-size:15px;font-weight:1000;display:grid;place-items:center;flex:0 0 auto}.of21681Pick.on{background:linear-gradient(135deg,#37d67a,#8bd0ff);border:0;color:#06111f;box-shadow:0 0 16px rgba(55,214,122,.18)}.card.of21681Selected{border-color:color-mix(in srgb,#37d67a 55%,var(--line));background:linear-gradient(180deg,rgba(55,214,122,.10),var(--panel2))}\
+      @media(max-width:430px){.of21681BatchBar{grid-template-columns:1fr}.of21681BatchActions{display:grid;grid-template-columns:1fr 1fr}.of21681BatchActions button.go{grid-column:1 / -1}}';
+    document.head.appendChild(st);
+  }
+  function decorate(v){
+    try{
+      injectStyles();
+      if(typeof subtab==='undefined'||subtab!=='dailies'){ selected.clear(); return; }
+      var list=(v&&v.querySelector&&v.querySelector('#list'))||by('list'); if(!list) return;
+      pruneSelection();
+      var open=batchOpenIds(), sel=Array.from(selected).filter(function(id){return open.indexOf(id)>=0;});
+      var bar=document.createElement('div'); bar.className='of21681BatchBar';
+      bar.innerHTML='<div><b>Batch Complete Dailies</b><span id="of21681BatchStatus">'+sel.length+' selected · '+open.length+' open today</span></div><div class="of21681BatchActions"><button type="button" id="of21681SelectAll">'+(sel.length&&sel.length===open.length?'Unselect all':'Select all open')+'</button><button type="button" id="of21681Clear" '+(!sel.length?'disabled':'')+'>Clear</button><button type="button" class="go" id="of21681Complete" '+(!sel.length?'disabled':'')+'>Complete selected</button></div>';
+      list.parentNode.insertBefore(bar,list);
+      list.querySelectorAll('.card').forEach(function(card){
+        var chk=card.querySelector('.chk[data-act="daily"][data-id]'); if(!chk) return;
+        var id=chk.dataset.id, d=(S.dailies||[]).find(function(x){return x&&x.id===id;});
+        if(!d||d.done||(typeof taskActiveToday==='function'&&!taskActiveToday(d))) return;
+        var pick=document.createElement('button'); pick.type='button'; pick.className='of21681Pick'+(selected.has(id)?' on':''); pick.dataset.pickdaily=id; pick.textContent=selected.has(id)?'✓':'+'; pick.setAttribute('aria-label','Select '+(d.title||'daily')+' for batch completion');
+        var body=card.querySelector('.body'); card.insertBefore(pick,body||chk); card.classList.toggle('of21681Selected',selected.has(id));
+      });
+      list.querySelectorAll('[data-pickdaily]').forEach(function(btn){ btn.onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); var id=btn.dataset.pickdaily; if(selected.has(id)) selected.delete(id); else selected.add(id); try{ render(); }catch(e){} }; });
+      var all=by('of21681SelectAll'); if(all) all.onclick=function(){ var ids=batchOpenIds(); pruneSelection(); if(ids.length&&Array.from(selected).filter(function(id){return ids.indexOf(id)>=0;}).length===ids.length) selected.clear(); else ids.forEach(function(id){selected.add(id);}); render(); };
+      var clear=by('of21681Clear'); if(clear) clear.onclick=function(){ selected.clear(); render(); };
+      var complete=by('of21681Complete'); if(complete) complete.onclick=function(){ completeSelected(); };
+    }catch(e){ try{ console.warn('Daily batch decoration failed',e); }catch(_e){} }
+  }
+  function rewardTextItems(total,count){
+    var items=[{txt:count+' dailies completed',cls:'main'}];
+    if(total.crystals) items.push({txt:'+'+total.crystals+' crystals',cls:'bonus'});
+    if(total.gold) items.push({txt:'+'+total.gold+' Gold',cls:'bonus'});
+    if(total.dust) items.push({txt:'+'+total.dust+' Dust',cls:'bonus'});
+    if(total.cores) items.push({txt:'+'+total.cores+' Hero Cores',cls:'bonus'});
+    if(total.legendShards) items.push({txt:'+'+total.legendShards+' Legendary Shards',cls:'bonus'});
+    if(total.bondXp) items.push({txt:'+'+total.bondXp+' Bond XP spread across heroes',cls:'bond'});
+    if(total.gear.length) items.push({txt:total.gear.length+' gear drop'+(total.gear.length===1?'':'s'),cls:'bonus'});
+    if(total.titles.length) items.push({txt:'Title: '+total.titles[0]+(total.titles.length>1?' +'+(total.titles.length-1)+' more':''),cls:'title'});
+    if(total.chests.length) items.push({txt:total.chests[0],cls:'main'});
+    return items;
+  }
+  function completeOne(d,total){
+    if(!d||d.done) return false;
+    if(typeof taskActiveToday==='function'&&!taskActiveToday(d)) return false;
+    lastTaskLoot=null; lastDomainGain=null;
+    if(typeof gainBond==='function'){ gainBond._last=[]; gainBond._titles=[]; }
+    d.done=true; d.streak=(d.streak||0)+1;
+    d.chargeAwarded=0;
+    var pk=(typeof periodKey==='function')?periodKey(d.freq):d.pk;
+    if(d.lootedPk!==pk){
+      try{ if(typeof taskLoot==='function') taskLoot(d.diff,d.domain); }catch(e){}
+      var loot=lastTaskLoot||{};
+      total.crystals+=(loot.crystals||0); total.gold+=(loot.gold||0); total.dust+=(loot.dust||0); total.cores+=(loot.cores||0); total.sparks+=(loot.sparks||0); total.stones+=(loot.stones||0);
+      if(loot.gear) total.gear.push(loot.gear);
+      if(loot.shard) total.ticketShards++;
+      var ls=0; try{ ls=grantLegendaryShards(d.diff,d.domain)||0; }catch(e){} total.legendShards+=ls;
+      try{ if(typeof trackLifeAction==='function') trackLifeAction(d.domain,d.diff,'daily'); }catch(e){}
+      try{ if(typeof grantForgeXp==='function') grantForgeXp(d.domain,d.diff); }catch(e){}
+      try{
+        var tk=typeof todayStr==='function'?todayStr():'';
+        if(S.dailyOathChestClaimedDate!==tk){
+          var act=(S.dailies||[]).filter(function(x){return x&&x.freq==='daily'&&(typeof taskActiveToday!=='function'||taskActiveToday(x));});
+          var dn=act.filter(function(x){return x.done;}).length;
+          if(act.length>0&&dn/act.length>=0.8){ S.dailyOathChestClaimedDate=tk; grantTicket(1); S.gold=(S.gold||0)+120; S.dust=(S.dust||0)+60; S.heroCores=(S.heroCores||0)+3; total.gold+=120; total.dust+=60; total.cores+=3; total.chests.push('Daily Oath Chest claimed'); }
+        }
+      }catch(e){}
+      var bu=[], tu=[];
+      try{ bu=gainBond(d.domain,(BONDXP&&BONDXP[d.diff])||0)||[]; }catch(e){}
+      try{ tu=unlockTitles(d.domain,d.diff)||[]; }catch(e){}
+      bu.forEach(function(b){ total.bondXp+=(b.xp||0); if(b.levelUp) total.bondLevels.push((b.name||'Hero')+' Lv '+b.lv); });
+      tu.forEach(function(t){ if(total.titles.indexOf(t)<0) total.titles.push(t); });
+      d.lootedPk=pk;
+      try{ var W=ensureWeek(); W.done=(W.done||0)+1; W.pts=(W.pts||0)+((d.diff==='hard')?3:(d.diff==='med'?2:1)); var cm=checkChests(); if(cm&&cm.length) total.chests=total.chests.concat(cm); }catch(e){}
+    }
+    try{ if(typeof checkStreakMilestone==='function') checkStreakMilestone(d); }catch(e){}
+    try{ if(typeof v176GoldenRoll==='function') v176GoldenRoll(null,d); }catch(e){}
+    total.names.push(d.title||'Daily');
+    if(typeof majorRewardBlocked==='function'&&majorRewardBlocked(lastTaskLoot,total.chests)) total.blocked=true;
+    return true;
+  }
+  function completeSelected(){
+    try{
+      pruneSelection();
+      var ids=Array.from(selected);
+      if(!ids.length){ try{ toast('Select one or more dailies first.'); }catch(e){} return; }
+      var byId=new Map((S.dailies||[]).filter(Boolean).map(function(d){return [d.id,d];}));
+      var snap=(typeof taskSnapshot==='function')?taskSnapshot():null;
+      var total={names:[],crystals:0,gold:0,dust:0,cores:0,sparks:0,stones:0,legendShards:0,ticketShards:0,bondXp:0,bondLevels:[],titles:[],gear:[],chests:[],blocked:false};
+      ids.forEach(function(id){ completeOne(byId.get(id),total); });
+      selected.clear();
+      var n=total.names.length;
+      if(!n){ try{ toast('Those dailies are already handled.'); }catch(e){} render(); return; }
+      var items=rewardTextItems(total,n);
+      try{ rewardSummary(n+' dailies complete',items); }catch(e){}
+      try{ toast('Completed '+n+' dail'+(n===1?'y':'ies')+' together.'); }catch(e){}
+      try{
+        S.lastActionResult={title:n+' dailies complete',kind:'daily',domain:null,domainLabel:'Dailies',domainIcon:'✓',diff:'med',at:Date.now(),rewards:items.map(function(x){return x.txt||x;}),progress:[total.names.slice(0,3).join(' · ')+(n>3?' +'+(n-3)+' more':''),(total.chests[0]||'Batch completion kept rewards and progress together.')],next:(typeof nextGoalLine==='function'?nextGoalLine():''),hero:null,heroMoment:null};
+        setTimeout(function(){ try{ if(S&&S.lastActionResult){ S.lastActionResult=null; if(typeof rerender==='function') rerender(); else render(); } }catch(e){} },6000);
+      }catch(e){}
+      try{ if(typeof showUndoBar==='function') showUndoBar(snap,n+' dailies',!!total.blocked); }catch(e){}
+      try{ renderHUD(); }catch(e){}
+      try{ render(); }catch(e){}
+      try{ save(); }catch(e){}
+    }catch(e){ try{ console.error('Batch complete failed',e); toast('Batch complete hit a snag. No unsafe reset was made.'); }catch(_e){} }
+  }
+  var oldRenderTasks=(typeof renderTasks==='function')?renderTasks:null;
+  if(oldRenderTasks&&!oldRenderTasks.__of21681DailyBatch){
+    renderTasks=function(v){ var r=oldRenderTasks.apply(this,arguments); try{ decorate(v); }catch(e){} return r; };
+    renderTasks.__of21681DailyBatch=true;
+  }
+  injectStyles();
+})();
+/* ===== end v2.168.1 Daily Batch Complete ===== */
 
 </script>
 
