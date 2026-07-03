@@ -2677,7 +2677,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.169.4-boot-sweep-fix';
+const APP_BUILD='v2.169.5-lean-export';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -6521,7 +6521,7 @@ function openPortraitCrop(src,cb){
     wrap.querySelector('#cropCancel').onclick=()=>wrap.remove();
     wrap.querySelector('#cropReset').onclick=()=>{z.value=1;x.value=0;y.value=0;draw();};
     wrap.querySelector('#cropSave').onclick=()=>{ const out=document.createElement('canvas'); out.width=192; out.height=192; const o=out.getContext('2d');
-      const scale=out.width/cv.width; o.scale(scale,scale); o.drawImage(cv,0,0); const data=out.toDataURL('image/png'); wrap.remove(); cb(data); };
+      const scale=out.width/cv.width; o.scale(scale,scale); o.drawImage(cv,0,0); const data=out.toDataURL('image/webp',0.92); wrap.remove(); cb(data); };
   };
   im.src=src;
 }
@@ -6535,7 +6535,7 @@ function pickSheet(cb){
     fr.onload=()=>{ const im=new Image(); im.onload=()=>{ const cap=1536; const sc=Math.min(1,cap/im.width);
       const cv=document.createElement('canvas'); cv.width=Math.round(im.width*sc); cv.height=Math.round(im.height*sc);
       cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
-      cleanup(); cb(cv.toDataURL('image/png'), cv.width, cv.height); }; im.onerror=()=>{ cleanup(); toast('Could not load that image'); }; im.src=fr.result; };
+      cleanup(); cb(cv.toDataURL('image/webp',0.92), cv.width, cv.height); }; im.onerror=()=>{ cleanup(); toast('Could not load that image'); }; im.src=fr.result; };
     fr.onerror=()=>{ cleanup(); toast('Could not read that image'); };
     fr.readAsDataURL(file); };
   inp.oncancel=cleanup;
@@ -6787,13 +6787,13 @@ function makeBackupPackage(reason){
 function backupFilename(reason){ return 'life-quest-backup-'+(reason||'manual')+'-'+dateStamp()+'.json'; }
 function downloadBackupPackage(reason){
   const pkg=makeBackupPackage(reason||'manual');
-  const blob=new Blob([JSON.stringify(pkg,null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(pkg,function(k,v){return k==='img'?undefined:v;})],{type:'application/json'});
   const url=URL.createObjectURL(blob), a=document.createElement('a');
   a.href=url; a.download=backupFilename(reason||'manual'); document.body.appendChild(a); a.click();
   setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},500); toast('Backup downloaded');
 }
 async function copyBackupText(){
-  const txt=JSON.stringify(makeBackupPackage('clipboard'),null,2);
+  const txt=JSON.stringify(makeBackupPackage('clipboard'),function(k,v){return k==='img'?undefined:v;});
   try{ await navigator.clipboard.writeText(txt); toast('Backup copied to clipboard.'); }
   catch(e){ toast('Clipboard blocked — use Download backup.'); }
 }
