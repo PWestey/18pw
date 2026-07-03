@@ -2677,7 +2677,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.169.0-portrait-vault-fix';
+const APP_BUILD='v2.169.3-particles-restored';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -6029,6 +6029,7 @@ function ultPortraitBanner(u,name,color){
     if(typeof lq53Reduced==='function' && lq53Reduced()) return false;
     color=color||(u&&u.color)||'#ffd24a';
     const img=(u&&u.img)?'<img src="'+u.img+'" alt="">':'';
+    try{document.querySelectorAll('.ultPortraitBanner').forEach(function(x){x.remove();});}catch(e){}
     const b=document.createElement('div'); b.className='ultPortraitBanner';
     b.style.setProperty('--ultc',color);
     b.innerHTML='<div class="ultPbPort">'+img+'</div><div class="ultPbInfo"><div class="ultPbTag">\u2605 ULTIMATE</div><div class="ultPbName">'+esc((u&&u.name)||'Hero')+'</div><div class="ultPbUlt">'+esc(name||'')+'</div></div>';
@@ -6264,6 +6265,7 @@ function floatSupport(el,n){ if(n>0) floatText(el,'SUP +'+Math.round(n),'support
 function passiveBanner(text,color){
   if(!text) return;
   battleEvent(text,'trigger');
+  try{document.querySelectorAll('.passiveToast').forEach(function(x){x.remove();});}catch(e){}
   const b=document.createElement('div'); b.className='passiveToast'; b.textContent=text;
   if(color) b.style.background='linear-gradient(135deg,'+color+',#36e0e6)';
   document.body.appendChild(b); setTimeout(()=>b.remove(),1200);
@@ -9253,6 +9255,7 @@ function lq53Banner(text,color){
 }
 function lq53Moment(text,color){
   if(lq53Reduced()||!text) return;
+  try{document.querySelectorAll('.lq53HeroMoment').forEach(function(x){x.remove();});}catch(e){}
   const b=document.createElement('div'); b.className='lq53HeroMoment'; b.textContent=text; b.style.setProperty('--moment',color||'#36e0e6');
   document.body.appendChild(b); setTimeout(()=>b.remove(),1250);
 }
@@ -16443,7 +16446,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       if(!aliveNow&&allSpawned&&battle7.enemies.length===0){ c7Resolve(false,'wipe'); return; }
       if(aliveNow&&allSpawned&&battle7.kind==='normal'&&battle7.enemies.length<=1&&(battle7.timeLeft||0)<=2){ c7Resolve(true,'cleanup'); return; }
       if((battle7.timeLeft||0)<=0){ c7Resolve(aliveNow&&allSpawned&&battle7.enemies.length===0,'timeout'); return; }
-      c7RenderBattle();
+      c7TickRender();
     }catch(e){
       console.error('Clash tick failed',e);
       battle7.log='Clash recovered from a battle tick error.';
@@ -16486,6 +16489,21 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7RewardLine(rw){ try{ if(!rw) return 'Rewards claimed'; var p=[]; if(rw.gold) p.push('+'+rw.gold+' gold'); if(rw.dust) p.push('+'+rw.dust+' dust'); if(rw.stones) p.push('+'+rw.stones+' stones'); if(rw.bondXp) p.push('+'+rw.bondXp+' bond XP'); if(Array.isArray(rw.extra)) rw.extra.forEach(function(x){ if(x) p.push(String(x)); }); return p.length?p.join('  ·  '):'Rewards claimed'; }catch(e){ return 'Rewards claimed'; } }
   function c7RenderResult(){ try{ const r=battle7.result||{}, rw=r.reward||{}, timeUsed=c7FmtTime(Math.max(0,(battle7.totalTime||0)-(battle7.timeLeft||0))); if(r.win){ const autoLine=(S.clash&&S.clash.autoBattle&&!r.autoStop)?'<p>Auto battle: next stage starts in 3 seconds.</p>':(r.autoStop?'<p>Auto stopped: '+esc7(r.autoStop)+'.</p>':''); return '<div class="clashResult win"><h2>VICTORY</h2><p>'+(r.first?'First clear secured.':'Replay clear secured.')+'</p>'+autoLine+'<div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+timeUsed+'</b><span>Time Used</span></div></div><div class="clashRewardLine">'+esc7(c7RewardLine(rw))+'</div><button onclick="closeClashBattle()">Continue</button></div>'; } const weak=c7WeakLane(), laneCfg=battle7.lanes.find(l=>l.key===weak), laneType=c7LaneType(laneCfg,battle7.chapter,battle7.stage,battle7.pattern), why=r.reason==='timeout'?'Time expired before the swarm was fully cleared.':(r.reason==='leaks'?'Too many enemies slipped to the bottom.':'Your line broke before the swarm ended.'); return '<div class="clashResult lose"><h2>DEFEAT</h2><p>'+esc7(why)+'</p><div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+c7FmtTime(battle7.timeLeft||0)+'</b><span>Time Left</span></div></div><div class="clashCoach"><b>Weak Lane: '+esc7((laneCfg&&laneCfg.label)||cap7(weak))+'</b><span>'+(laneType?c7ElementBadge(laneType,false)+' lane · counter with '+c7CounterBadge(laneType,false):'Basic lane · add sturdier heroes or more raw power')+'</span><span>Try Optimize Squad, keep Tanks front, and use Melee DPS for close-range splash.</span></div><div class="clashResultActions"><button onclick="clashAutoOptimize(true);closeClashBattle();setTimeout(startClashBattle,250)">Optimize & Retry</button><button onclick="closeClashBattle();setTimeout(function(){openClashSquadEditor(0)},100)">Edit Squad</button><button onclick="closeClashBattle()">Leave</button></div></div>'; }catch(_err){ console.error('c7RenderResult failed',_err); var _r=(battle7&&battle7.result)||{}; return '<div class="clashResult '+(_r.win?'win':'lose')+'"><h2>'+(_r.win?'VICTORY':'BATTLE ENDED')+'</h2><p>'+(_r.win?'Clear secured.':'The swarm held this round  retry from the clash screen.')+'</p><button onclick="closeClashBattle()">Continue</button></div>'; } }
   function c7SpeedValue(){ return battle7&&battle7.speed>=3?3:(battle7&&battle7.speed===2?2:1); }
+  function c7TickRender(){
+    try{
+      const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return;
+      const grid=o.querySelector('.clashArenaGrid'); if(!grid){ c7RenderBattle(); return; }
+      const laneEls=grid.querySelectorAll('.clashLaneBattle');
+      if(laneEls.length!==battle7.lanes.length){ c7RenderBattle(); return; }
+      // moving part: rebuild only the enemy tracks (small), leave hero portraits untouched
+      battle7.lanes.forEach(function(l,i){ const et=laneEls[i]&&laneEls[i].querySelector('.enemyTrack'); if(et) et.innerHTML=c7LaneEnemyHTML(l.key); });
+      // hero cells: update HP bar + dead/acting state WITHOUT rebuilding the portrait img
+      battle7.heroes.forEach(function(h){ try{ const cell=o.querySelector('.clashHeroCell[data-heroid="'+h.id+'"]'); if(!cell) return; const bar=cell.querySelector('.heroHp i'); if(bar) bar.style.width=Math.max(0,Math.round(h.hp/(h.maxHp||1)*100))+'%'; cell.classList.toggle('dead',h.hp<=0); cell.classList.toggle('acting',!!h.acted); }catch(e){} });
+      const pat=o.querySelector('.clashBattlePattern'); if(pat) pat.innerHTML='<span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span>';
+      const logEl=o.querySelector('.clashBattleLog'); if(logEl) logEl.textContent=battle7.log||'';
+      const headSpan=o.querySelector('.clashBattleHead span'); if(headSpan) headSpan.textContent='Chapter '+battle7.chapter+' \u00b7 Stage '+battle7.stage+' \u00b7 '+c7FmtTime(battle7.timeLeft||0)+' left \u00b7 '+battle7.lanes.length+' lanes';
+    }catch(e){ try{ c7RenderBattle(); }catch(_e){} }
+  }
   function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['front','mid','back','rear']; /* v2.106 clash: front rank renders at top of stack, facing the descending swarm */ battle7.heroes.forEach(h=>h.acted=0); const advChart=['Flame','Grove','Stone','Storm','Tide','Flame'].map(e=>c7ElementBadge(e,true)).join('<span class="clashAdvArrow">▸</span>'); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; const _cz=BATTLE_ZONES[(((battle7.chapter||1)-1)%BATTLE_ZONES.length+BATTLE_ZONES.length)%BATTLE_ZONES.length], _cbg=(typeof v156BgForClass==='function'&&_cz)?v156BgForClass(_cz.c):''; o.innerHTML='<div class="clashBattlePanel c7 hasArt '+(battle7.lanes.length===5?'five':'three')+'" style="--clashArt:url('+_cbg+')"><div class="clashBattleHead"><div><b>⚡ Squadron Clash</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">'+((S.clash&&S.clash.autoBattle)?'Auto Battle On':'Auto Battle Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Resolve</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashAdvChart">'+advChart+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+' '+c7ElementBadge(t,true)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
   window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); battle7._wd={t:battle7.tickCount||0,at:Date.now()}; if(battle7.watchdog) clearInterval(battle7.watchdog); battle7.watchdog=setInterval(c7Watchdog,1500); }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
   window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; battle7.resolving=true; let guard=0; while(battle7&&!battle7.ended&&guard++<900){ battle7.resolving=false; c7Tick(); if(!battle7||battle7.ended) break; battle7.resolving=true; } if(battle7&&!battle7.ended){ battle7.resolving=false; c7Resolve(false); } };
@@ -20292,7 +20310,6 @@ function rerender(){
       'html.of2155ClashStable #clashBattleOverlay .clashBattlePanel.c7>*{position:relative;z-index:1}',
       'html.of2155ClashStable #clashBattleOverlay .clashAdvChart{max-height:30px!important;overflow:hidden!important}',
       'html.of2155ClashStable #clashBattleOverlay .clashBattlePattern{max-height:36px!important;overflow:hidden!important}',
-      'html.of2155ClashStable .clashShot,html.of2155ClashStable .clashImpact{display:none!important}',
       'html.of2155ClashStable #clashBattleOverlay .clashHeroCell.acting{animation:none!important}',
       'html.of2155ClashStable #clashBattleOverlay .clashEnemyToken{transition:top .18s linear!important;will-change:top;transform:translate3d(-50%,0,0)!important}'
     ].join('\n');
