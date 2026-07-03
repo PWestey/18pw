@@ -2677,7 +2677,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.169.3-particles-restored';
+const APP_BUILD='v2.169.4-boot-sweep-fix';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -8772,10 +8772,16 @@ function v149GearSetInfo(h){
   return {filled,upgrades,missing,score:gearScore(h),pct:Math.round(filled/4*100)};
 }
 function v149ClosestGearWin(){
+  /* v2.169.4: cheap pre-scan picks ONE candidate, then a single full evaluation.
+     The old version ran the full gear evaluation for every owned hero on every
+     home render, which froze boot on large rosters. */
   const owned=(S.heroes||[]).filter(h=>h&&h.owned);
-  let best=null;
-  owned.forEach(h=>{ const g=v149GearSetInfo(h); if(!g) return; const priority=(g.filled===3?95:g.upgrades?88:g.filled<4?70+g.filled:0); if(priority && (!best||priority>best.priority)) best={h,g,priority}; });
-  if(!best) return null;
+  let cand=null;
+  owned.forEach(h=>{ const filled=SLOTS.filter(sl=>h.gear&&h.gear[sl]).length; const priority=(filled===3?95:filled<4?70+filled:10); if(!cand||priority>cand.priority) cand={h,priority}; });
+  if(!cand) return null;
+  const g=v149GearSetInfo(cand.h); if(!g) return null;
+  const best={h:cand.h,g,priority:(g.filled===3?95:g.upgrades?88:g.filled<4?70+g.filled:0)};
+  if(!best.priority) return null;
   if(best.g.upgrades) return {kind:'gear',icon:'⚙',color:'#37d67a',title:best.h.name+' has better gear available',sub:'Auto-equip best or tap a highlighted slot.',tag:'GEAR ↑',id:best.h.id,score:best.priority};
   if(best.g.filled<4) return {kind:'gear',icon:'⚙',color:'#8bd0ff',title:best.h.name+' is '+best.g.filled+'/4 gear equipped',sub:'Missing '+SLOTNAME[best.g.missing]+' — a new drop is a fast power bump.',tag:best.g.filled+'/4',id:best.h.id,score:best.priority};
   return null;
@@ -11038,7 +11044,7 @@ function v166SmartCleanup(silent){
   return {equipped:(fill.totalChanged||0)+(eq.changed||0),gain:eq.gain||0,salvaged:sv.count||0,dust:sv.dust||0};
 }
 const __grantGear_v166=grantGear;
-grantGear=function(g){ __grantGear_v166.apply(this,arguments); setTimeout(()=>{try{v166SmartCleanup(true);}catch(e){}},0); };
+grantGear=function(g){ __grantGear_v166.apply(this,arguments); /* v2.169.4: per-drop SmartCleanup removed — full roster sweep per drop froze combat */ };
 function v166BestTeam(mode){
   const owned=(S.heroes||[]).filter(h=>h&&h.owned);
   const used=new Set(), out=[];
@@ -11131,7 +11137,7 @@ const openSettingsBtn_v166=document.getElementById('openSettings');
 if(openSettingsBtn_v166){ const old=openSettingsBtn_v166.onclick; openSettingsBtn_v166.onclick=function(e){ if(old) old.call(this,e); setTimeout(v166InjectSettingsPanel,0); }; }
 const __save_v166=save;
 save=async function(){ try{ v166EnsureAutomation(); v166AutoTomorrowFocus(); await v166MaybeDailyBackup('daily-auto'); }catch(e){} return __save_v166.apply(this,arguments); };
-(function(){ v166InjectStyles(); try{ v166EnsureAutomation(); if((S.doneMode||'keep')==='keep') S.doneMode='bottom'; setTimeout(()=>v166SmartCleanup(true),0); }catch(e){} })();
+(function(){ v166InjectStyles(); try{ v166EnsureAutomation(); if((S.doneMode||'keep')==='keep') S.doneMode='bottom'; /* v2.169.4: boot-time SmartCleanup removed — raced load() and froze boot on large rosters; use the Smart Cleanup button */ }catch(e){} })();
 
 
 /* ===== v1.67 Visual Restraint + Premium Focus Mode ===== */
