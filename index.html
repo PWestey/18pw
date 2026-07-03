@@ -1,6 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta name="app-build" content="v2.168.3-cache-buster">
+<script>
+/* Oathforge auto-update cache-buster.
+   Reads this page's build stamp, fetches the live file fresh (no-store),
+   and if the deployed build is newer, reloads once to pull it in.
+   Loop-guarded: at most 2 reload attempts per stale episode, then it
+   stops and leaves the running version alone. No effect offline. */
+(function(){
+  try{
+    if(location.protocol.indexOf("http")!==0) return;
+    var meta=document.querySelector('meta[name="app-build"]');
+    var running=meta?meta.getAttribute("content"):null;
+    if(!running) return;
+    function ss(k,v){ try{ if(v===undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k,v); }catch(e){ return null; } }
+    var probeUrl=location.pathname+"?_cc="+Date.now();
+    fetch(probeUrl,{cache:"no-store"}).then(function(r){
+      if(!r.ok||!r.body) return;
+      var reader=r.body.getReader(), dec=new TextDecoder(), buf="";
+      (function pump(){
+        return reader.read().then(function(res){
+          if(res.value) buf+=dec.decode(res.value,{stream:true});
+          var m=buf.match(/name="app-build"[^>]*content="([^"]+)"/);
+          if(m){ try{ reader.cancel(); }catch(e){} decide(m[1]); return; }
+          if(res.done || buf.length>131072){ try{ reader.cancel(); }catch(e){} return; }
+          return pump();
+        });
+      })();
+    }).catch(function(){});
+    function decide(fresh){
+      if(!fresh || fresh===running){ ss("__ofcbTries","0"); return; }
+      var tries=parseInt(ss("__ofcbTries")||"0",10)||0;
+      if(tries>=2){
+        try{ if(typeof toast==="function") toast("Update ready \u00B7 clear Safari cache if it doesn't appear"); }catch(e){}
+        return;
+      }
+      ss("__ofcbTries",String(tries+1));
+      location.replace(location.pathname+"?_v="+encodeURIComponent(fresh));
+    }
+  }catch(e){}
+})();
+</script>
 <!-- Oathforge (build stamped in APP_BUILD) — boss/leak feel, speed normalize, and custom portrait priority. -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -2677,7 +2718,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.168.2-away-modal-removed';
+const APP_BUILD='v2.168.3-cache-buster';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
