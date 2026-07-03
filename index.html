@@ -2677,7 +2677,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.168.2-away-modal-removed';
+const APP_BUILD='v2.169.5-lean-export';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -2971,6 +2971,7 @@ async function load(){
       if(!S){ try{ const ls=localStorage.getItem(KEY); if(ls) S=JSON.parse(ls); }catch(e3){} }
       if(!S){ S=seed(); recovered=false; freshFallback=true; } else { recovered=true; } } }
     else { S=seed(); }
+  try{ if(typeof loadPortraits==='function') await loadPortraits(); }catch(e){}
   migrate();
   applyTuneOverrides();
   recalcCollection();
@@ -2984,7 +2985,7 @@ async function load(){
   if(graceReport){ const g=graceReport; graceReport=null; setTimeout(()=>toast('🕊️ Grace Day used — your streak'+(g.saved>1?'s are':' is')+' safe. Welcome back.'), awayReport?1800:900); }
   if(albumMsgs&&albumMsgs.length) setTimeout(()=>toast(albumMsgs.join(' · ')), awayReport?1200:600);
 }
-async function save(){if(typeof savePortraits==="function") savePortraits(); if(S){ try{ ensureHeroPortraitVault(); }catch(e){} S.lastSavedAt=Date.now(); S.appBuild=APP_BUILD; } await Store.set(KEY,JSON.stringify(S)); }
+async function save(){if(typeof savePortraits==="function") savePortraits(); if(S){ try{ ensureHeroPortraitVault(); }catch(e){} S.lastSavedAt=Date.now(); S.appBuild=APP_BUILD; } await Store.set(KEY,JSON.stringify(S,function(k,v){return (k==='img'||k==='heroPortraits')?undefined:v;})); }
 let _saveSoonT=null,_saveSoonPending=false;
 function saveSoon(){ _saveSoonPending=true; if(_saveSoonT) clearTimeout(_saveSoonT); _saveSoonT=setTimeout(function(){ _saveSoonT=null; _saveSoonPending=false; try{ save(); }catch(e){} },650); }
 function flushSaveSoon(){ if(_saveSoonT){ clearTimeout(_saveSoonT); _saveSoonT=null; } if(_saveSoonPending){ _saveSoonPending=false; try{ save(); }catch(e){} } }
@@ -6028,6 +6029,7 @@ function ultPortraitBanner(u,name,color){
     if(typeof lq53Reduced==='function' && lq53Reduced()) return false;
     color=color||(u&&u.color)||'#ffd24a';
     const img=(u&&u.img)?'<img src="'+u.img+'" alt="">':'';
+    try{document.querySelectorAll('.ultPortraitBanner').forEach(function(x){x.remove();});}catch(e){}
     const b=document.createElement('div'); b.className='ultPortraitBanner';
     b.style.setProperty('--ultc',color);
     b.innerHTML='<div class="ultPbPort">'+img+'</div><div class="ultPbInfo"><div class="ultPbTag">\u2605 ULTIMATE</div><div class="ultPbName">'+esc((u&&u.name)||'Hero')+'</div><div class="ultPbUlt">'+esc(name||'')+'</div></div>';
@@ -6263,6 +6265,7 @@ function floatSupport(el,n){ if(n>0) floatText(el,'SUP +'+Math.round(n),'support
 function passiveBanner(text,color){
   if(!text) return;
   battleEvent(text,'trigger');
+  try{document.querySelectorAll('.passiveToast').forEach(function(x){x.remove();});}catch(e){}
   const b=document.createElement('div'); b.className='passiveToast'; b.textContent=text;
   if(color) b.style.background='linear-gradient(135deg,'+color+',#36e0e6)';
   document.body.appendChild(b); setTimeout(()=>b.remove(),1200);
@@ -6518,7 +6521,7 @@ function openPortraitCrop(src,cb){
     wrap.querySelector('#cropCancel').onclick=()=>wrap.remove();
     wrap.querySelector('#cropReset').onclick=()=>{z.value=1;x.value=0;y.value=0;draw();};
     wrap.querySelector('#cropSave').onclick=()=>{ const out=document.createElement('canvas'); out.width=192; out.height=192; const o=out.getContext('2d');
-      const scale=out.width/cv.width; o.scale(scale,scale); o.drawImage(cv,0,0); const data=out.toDataURL('image/png'); wrap.remove(); cb(data); };
+      const scale=out.width/cv.width; o.scale(scale,scale); o.drawImage(cv,0,0); const data=out.toDataURL('image/webp',0.92); wrap.remove(); cb(data); };
   };
   im.src=src;
 }
@@ -6532,7 +6535,7 @@ function pickSheet(cb){
     fr.onload=()=>{ const im=new Image(); im.onload=()=>{ const cap=1536; const sc=Math.min(1,cap/im.width);
       const cv=document.createElement('canvas'); cv.width=Math.round(im.width*sc); cv.height=Math.round(im.height*sc);
       cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
-      cleanup(); cb(cv.toDataURL('image/png'), cv.width, cv.height); }; im.onerror=()=>{ cleanup(); toast('Could not load that image'); }; im.src=fr.result; };
+      cleanup(); cb(cv.toDataURL('image/webp',0.92), cv.width, cv.height); }; im.onerror=()=>{ cleanup(); toast('Could not load that image'); }; im.src=fr.result; };
     fr.onerror=()=>{ cleanup(); toast('Could not read that image'); };
     fr.readAsDataURL(file); };
   inp.oncancel=cleanup;
@@ -6784,13 +6787,13 @@ function makeBackupPackage(reason){
 function backupFilename(reason){ return 'life-quest-backup-'+(reason||'manual')+'-'+dateStamp()+'.json'; }
 function downloadBackupPackage(reason){
   const pkg=makeBackupPackage(reason||'manual');
-  const blob=new Blob([JSON.stringify(pkg,null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(pkg,function(k,v){return k==='img'?undefined:v;})],{type:'application/json'});
   const url=URL.createObjectURL(blob), a=document.createElement('a');
   a.href=url; a.download=backupFilename(reason||'manual'); document.body.appendChild(a); a.click();
   setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},500); toast('Backup downloaded');
 }
 async function copyBackupText(){
-  const txt=JSON.stringify(makeBackupPackage('clipboard'),null,2);
+  const txt=JSON.stringify(makeBackupPackage('clipboard'),function(k,v){return k==='img'?undefined:v;});
   try{ await navigator.clipboard.writeText(txt); toast('Backup copied to clipboard.'); }
   catch(e){ toast('Clipboard blocked — use Download backup.'); }
 }
@@ -8769,10 +8772,16 @@ function v149GearSetInfo(h){
   return {filled,upgrades,missing,score:gearScore(h),pct:Math.round(filled/4*100)};
 }
 function v149ClosestGearWin(){
+  /* v2.169.4: cheap pre-scan picks ONE candidate, then a single full evaluation.
+     The old version ran the full gear evaluation for every owned hero on every
+     home render, which froze boot on large rosters. */
   const owned=(S.heroes||[]).filter(h=>h&&h.owned);
-  let best=null;
-  owned.forEach(h=>{ const g=v149GearSetInfo(h); if(!g) return; const priority=(g.filled===3?95:g.upgrades?88:g.filled<4?70+g.filled:0); if(priority && (!best||priority>best.priority)) best={h,g,priority}; });
-  if(!best) return null;
+  let cand=null;
+  owned.forEach(h=>{ const filled=SLOTS.filter(sl=>h.gear&&h.gear[sl]).length; const priority=(filled===3?95:filled<4?70+filled:10); if(!cand||priority>cand.priority) cand={h,priority}; });
+  if(!cand) return null;
+  const g=v149GearSetInfo(cand.h); if(!g) return null;
+  const best={h:cand.h,g,priority:(g.filled===3?95:g.upgrades?88:g.filled<4?70+g.filled:0)};
+  if(!best.priority) return null;
   if(best.g.upgrades) return {kind:'gear',icon:'⚙',color:'#37d67a',title:best.h.name+' has better gear available',sub:'Auto-equip best or tap a highlighted slot.',tag:'GEAR ↑',id:best.h.id,score:best.priority};
   if(best.g.filled<4) return {kind:'gear',icon:'⚙',color:'#8bd0ff',title:best.h.name+' is '+best.g.filled+'/4 gear equipped',sub:'Missing '+SLOTNAME[best.g.missing]+' — a new drop is a fast power bump.',tag:best.g.filled+'/4',id:best.h.id,score:best.priority};
   return null;
@@ -9252,6 +9261,7 @@ function lq53Banner(text,color){
 }
 function lq53Moment(text,color){
   if(lq53Reduced()||!text) return;
+  try{document.querySelectorAll('.lq53HeroMoment').forEach(function(x){x.remove();});}catch(e){}
   const b=document.createElement('div'); b.className='lq53HeroMoment'; b.textContent=text; b.style.setProperty('--moment',color||'#36e0e6');
   document.body.appendChild(b); setTimeout(()=>b.remove(),1250);
 }
@@ -11034,7 +11044,7 @@ function v166SmartCleanup(silent){
   return {equipped:(fill.totalChanged||0)+(eq.changed||0),gain:eq.gain||0,salvaged:sv.count||0,dust:sv.dust||0};
 }
 const __grantGear_v166=grantGear;
-grantGear=function(g){ __grantGear_v166.apply(this,arguments); setTimeout(()=>{try{v166SmartCleanup(true);}catch(e){}},0); };
+grantGear=function(g){ __grantGear_v166.apply(this,arguments); /* v2.169.4: per-drop SmartCleanup removed — full roster sweep per drop froze combat */ };
 function v166BestTeam(mode){
   const owned=(S.heroes||[]).filter(h=>h&&h.owned);
   const used=new Set(), out=[];
@@ -11127,7 +11137,7 @@ const openSettingsBtn_v166=document.getElementById('openSettings');
 if(openSettingsBtn_v166){ const old=openSettingsBtn_v166.onclick; openSettingsBtn_v166.onclick=function(e){ if(old) old.call(this,e); setTimeout(v166InjectSettingsPanel,0); }; }
 const __save_v166=save;
 save=async function(){ try{ v166EnsureAutomation(); v166AutoTomorrowFocus(); await v166MaybeDailyBackup('daily-auto'); }catch(e){} return __save_v166.apply(this,arguments); };
-(function(){ v166InjectStyles(); try{ v166EnsureAutomation(); if((S.doneMode||'keep')==='keep') S.doneMode='bottom'; setTimeout(()=>v166SmartCleanup(true),0); }catch(e){} })();
+(function(){ v166InjectStyles(); try{ v166EnsureAutomation(); if((S.doneMode||'keep')==='keep') S.doneMode='bottom'; /* v2.169.4: boot-time SmartCleanup removed — raced load() and froze boot on large rosters; use the Smart Cleanup button */ }catch(e){} })();
 
 
 /* ===== v1.67 Visual Restraint + Premium Focus Mode ===== */
@@ -16442,7 +16452,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       if(!aliveNow&&allSpawned&&battle7.enemies.length===0){ c7Resolve(false,'wipe'); return; }
       if(aliveNow&&allSpawned&&battle7.kind==='normal'&&battle7.enemies.length<=1&&(battle7.timeLeft||0)<=2){ c7Resolve(true,'cleanup'); return; }
       if((battle7.timeLeft||0)<=0){ c7Resolve(aliveNow&&allSpawned&&battle7.enemies.length===0,'timeout'); return; }
-      c7RenderBattle();
+      c7TickRender();
     }catch(e){
       console.error('Clash tick failed',e);
       battle7.log='Clash recovered from a battle tick error.';
@@ -16485,6 +16495,21 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7RewardLine(rw){ try{ if(!rw) return 'Rewards claimed'; var p=[]; if(rw.gold) p.push('+'+rw.gold+' gold'); if(rw.dust) p.push('+'+rw.dust+' dust'); if(rw.stones) p.push('+'+rw.stones+' stones'); if(rw.bondXp) p.push('+'+rw.bondXp+' bond XP'); if(Array.isArray(rw.extra)) rw.extra.forEach(function(x){ if(x) p.push(String(x)); }); return p.length?p.join('  ·  '):'Rewards claimed'; }catch(e){ return 'Rewards claimed'; } }
   function c7RenderResult(){ try{ const r=battle7.result||{}, rw=r.reward||{}, timeUsed=c7FmtTime(Math.max(0,(battle7.totalTime||0)-(battle7.timeLeft||0))); if(r.win){ const autoLine=(S.clash&&S.clash.autoBattle&&!r.autoStop)?'<p>Auto battle: next stage starts in 3 seconds.</p>':(r.autoStop?'<p>Auto stopped: '+esc7(r.autoStop)+'.</p>':''); return '<div class="clashResult win"><h2>VICTORY</h2><p>'+(r.first?'First clear secured.':'Replay clear secured.')+'</p>'+autoLine+'<div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+timeUsed+'</b><span>Time Used</span></div></div><div class="clashRewardLine">'+esc7(c7RewardLine(rw))+'</div><button onclick="closeClashBattle()">Continue</button></div>'; } const weak=c7WeakLane(), laneCfg=battle7.lanes.find(l=>l.key===weak), laneType=c7LaneType(laneCfg,battle7.chapter,battle7.stage,battle7.pattern), why=r.reason==='timeout'?'Time expired before the swarm was fully cleared.':(r.reason==='leaks'?'Too many enemies slipped to the bottom.':'Your line broke before the swarm ended.'); return '<div class="clashResult lose"><h2>DEFEAT</h2><p>'+esc7(why)+'</p><div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+c7FmtTime(battle7.timeLeft||0)+'</b><span>Time Left</span></div></div><div class="clashCoach"><b>Weak Lane: '+esc7((laneCfg&&laneCfg.label)||cap7(weak))+'</b><span>'+(laneType?c7ElementBadge(laneType,false)+' lane · counter with '+c7CounterBadge(laneType,false):'Basic lane · add sturdier heroes or more raw power')+'</span><span>Try Optimize Squad, keep Tanks front, and use Melee DPS for close-range splash.</span></div><div class="clashResultActions"><button onclick="clashAutoOptimize(true);closeClashBattle();setTimeout(startClashBattle,250)">Optimize & Retry</button><button onclick="closeClashBattle();setTimeout(function(){openClashSquadEditor(0)},100)">Edit Squad</button><button onclick="closeClashBattle()">Leave</button></div></div>'; }catch(_err){ console.error('c7RenderResult failed',_err); var _r=(battle7&&battle7.result)||{}; return '<div class="clashResult '+(_r.win?'win':'lose')+'"><h2>'+(_r.win?'VICTORY':'BATTLE ENDED')+'</h2><p>'+(_r.win?'Clear secured.':'The swarm held this round  retry from the clash screen.')+'</p><button onclick="closeClashBattle()">Continue</button></div>'; } }
   function c7SpeedValue(){ return battle7&&battle7.speed>=3?3:(battle7&&battle7.speed===2?2:1); }
+  function c7TickRender(){
+    try{
+      const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return;
+      const grid=o.querySelector('.clashArenaGrid'); if(!grid){ c7RenderBattle(); return; }
+      const laneEls=grid.querySelectorAll('.clashLaneBattle');
+      if(laneEls.length!==battle7.lanes.length){ c7RenderBattle(); return; }
+      // moving part: rebuild only the enemy tracks (small), leave hero portraits untouched
+      battle7.lanes.forEach(function(l,i){ const et=laneEls[i]&&laneEls[i].querySelector('.enemyTrack'); if(et) et.innerHTML=c7LaneEnemyHTML(l.key); });
+      // hero cells: update HP bar + dead/acting state WITHOUT rebuilding the portrait img
+      battle7.heroes.forEach(function(h){ try{ const cell=o.querySelector('.clashHeroCell[data-heroid="'+h.id+'"]'); if(!cell) return; const bar=cell.querySelector('.heroHp i'); if(bar) bar.style.width=Math.max(0,Math.round(h.hp/(h.maxHp||1)*100))+'%'; cell.classList.toggle('dead',h.hp<=0); cell.classList.toggle('acting',!!h.acted); }catch(e){} });
+      const pat=o.querySelector('.clashBattlePattern'); if(pat) pat.innerHTML='<span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span>';
+      const logEl=o.querySelector('.clashBattleLog'); if(logEl) logEl.textContent=battle7.log||'';
+      const headSpan=o.querySelector('.clashBattleHead span'); if(headSpan) headSpan.textContent='Chapter '+battle7.chapter+' \u00b7 Stage '+battle7.stage+' \u00b7 '+c7FmtTime(battle7.timeLeft||0)+' left \u00b7 '+battle7.lanes.length+' lanes';
+    }catch(e){ try{ c7RenderBattle(); }catch(_e){} }
+  }
   function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['front','mid','back','rear']; /* v2.106 clash: front rank renders at top of stack, facing the descending swarm */ battle7.heroes.forEach(h=>h.acted=0); const advChart=['Flame','Grove','Stone','Storm','Tide','Flame'].map(e=>c7ElementBadge(e,true)).join('<span class="clashAdvArrow">▸</span>'); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; const _cz=BATTLE_ZONES[(((battle7.chapter||1)-1)%BATTLE_ZONES.length+BATTLE_ZONES.length)%BATTLE_ZONES.length], _cbg=(typeof v156BgForClass==='function'&&_cz)?v156BgForClass(_cz.c):''; o.innerHTML='<div class="clashBattlePanel c7 hasArt '+(battle7.lanes.length===5?'five':'three')+'" style="--clashArt:url('+_cbg+')"><div class="clashBattleHead"><div><b>⚡ Squadron Clash</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">'+((S.clash&&S.clash.autoBattle)?'Auto Battle On':'Auto Battle Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Resolve</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashAdvChart">'+advChart+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+' '+c7ElementBadge(t,true)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
   window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); battle7._wd={t:battle7.tickCount||0,at:Date.now()}; if(battle7.watchdog) clearInterval(battle7.watchdog); battle7.watchdog=setInterval(c7Watchdog,1500); }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
   window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; battle7.resolving=true; let guard=0; while(battle7&&!battle7.ended&&guard++<900){ battle7.resolving=false; c7Tick(); if(!battle7||battle7.ended) break; battle7.resolving=true; } if(battle7&&!battle7.ended){ battle7.resolving=false; c7Resolve(false); } };
@@ -20291,7 +20316,6 @@ function rerender(){
       'html.of2155ClashStable #clashBattleOverlay .clashBattlePanel.c7>*{position:relative;z-index:1}',
       'html.of2155ClashStable #clashBattleOverlay .clashAdvChart{max-height:30px!important;overflow:hidden!important}',
       'html.of2155ClashStable #clashBattleOverlay .clashBattlePattern{max-height:36px!important;overflow:hidden!important}',
-      'html.of2155ClashStable .clashShot,html.of2155ClashStable .clashImpact{display:none!important}',
       'html.of2155ClashStable #clashBattleOverlay .clashHeroCell.acting{animation:none!important}',
       'html.of2155ClashStable #clashBattleOverlay .clashEnemyToken{transition:top .18s linear!important;will-change:top;transform:translate3d(-50%,0,0)!important}'
     ].join('\n');
