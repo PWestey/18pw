@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.172.5-expedition-currency-icons';
+const APP_BUILD='v2.172.6-combatnumbers-off';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -18202,7 +18202,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       var __of2143_floatText=floatText;
       var __of2143FloatTick=0;
       floatText=function(el,text,cls,dx,dy){
-        if(typeof lq52Reduced==='function'&&lq52Reduced()) return;
+        return; /* combat numbers off by default (too fast to read + forced reflow); particles kept */
         try{
           if(!el||!el.getBoundingClientRect) return __of2143_floatText.apply(this,arguments);
           var r=el.getBoundingClientRect();
