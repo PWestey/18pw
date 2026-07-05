@@ -1961,7 +1961,7 @@ function showDungeons(){
   box.querySelectorAll('[data-dungeon]').forEach(btn=>btn.onclick=()=>{ claimDungeon(btn.dataset.dungeon); showDungeons(); });
 }
 
-document.addEventListener('click',function(e){ try{ var t=e.target&&e.target.closest&&e.target.closest('#openTrials'); if(t&&typeof showDungeons==='function'){ e.preventDefault(); showDungeons(); } }catch(_e){} });
+if(!window.__dungeonsDocWired){ window.__dungeonsDocWired=1; document.addEventListener('click',function(e){ try{ var t=e.target&&e.target.closest&&e.target.closest('#openTrials'); if(t&&typeof showDungeons==='function'){ e.preventDefault(); showDungeons(); } }catch(_e){} }); }
 function showSanctuary(){
   const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
   const total=sanctuaryPower(), rooms=DOMAINS.map(d=>roomCardHTML(d[0])).join('');
@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.170.49-siege-arena-overlay-fix';
+const APP_BUILD='v2.171.4-listener-leak-fix';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3326,7 +3326,7 @@ function siegePanelHTML(){ try{injectConstraintStyles();}catch(e){}
       '<div class="siegeMeta"><div class="sm"><b>'+usedHeroes+'/'+ownedHeroes+'</b><span>heroes sent</span></div><div class="sm"><b>'+(sg.totalWaves||0)+'</b><span>waves cleared</span></div><div class="sm"><b>'+siegeFrontsTouched()+'/8</b><span>fronts engaged</span></div></div>'+
       '<div class="siegeReserves'+(teamsReady<1?' low':'')+'">Reserves: <b>'+untapped+'</b> untapped · <b>'+teamsReady+'</b> full team'+(teamsReady===1?'':'s')+' ready'+(teamsReady<1?' — deploy-once: your army is spent for the week':'')+'</div>'+
       siegeHaulChipsHTML(sg.earned)+
-      '<button class="siegeAuto" data-auto="6">⚡ Auto-deploy ×6 — sends your best teams to the toughest winnable fronts</button>'+
+      '<button class="siegeAuto" data-auto="6">⚡ Auto-run — deploys every winnable team until your roster is spent</button>'+
     '</div>'+
     '<div class="siegeGrid">'+tiles+'</div>'+
   '</div>';
@@ -3339,7 +3339,7 @@ function siegeWireButtons(v){
   }; });
   v.querySelectorAll('.siegeAuto[data-auto]').forEach(btn=>{ btn.onclick=()=>{
     const N=parseInt(btn.dataset.auto)||5; let did=0,won=0,ms=null,gold=0;
-    for(let i=0;i<N;i++){ const mods=siegeDomainMods(), sg=ensureSiege(), base=sg.base||siegeFrontBase(); let pick=null;
+    var _sgGuard=0; while(_sgGuard++<800){ const mods=siegeDomainMods(), sg=ensureSiege(), base=sg.base||siegeFrontBase(); let pick=null;
       DOMAINS.forEach(d=>{ const k=d[0], F=sg.fronts[k]; const tm=siegeBestTeamFor(k); if(!tm) return; const wp=siegeWavePower(base,F.wavesCleared+1,mods[k]); if(tm.eff>=wp){ if(!pick||wp>pick.wp) pick={k:k,wp:wp}; } });
       if(!pick) break; const res=siegeDeployNext(pick.k); did++; if(res.win){ won++; if(res.reward) gold+=res.reward.gold; if(res.milestone) ms=res.milestone; } }
     if(did===0){ try{toast('No winnable fronts with teams remaining');}catch(e){} }
@@ -3782,7 +3782,7 @@ function riftShowResult(state,extra){ injectRiftStyles(); injectGauntletStyles()
     r.querySelectorAll('[data-bless]').forEach(b=>{ b.onclick=()=>{ try{v172Float(b,b.querySelector('.gbName').textContent);}catch(e){} riftApplyBlessing(b.dataset.bless); }; });
   } else if(state==='fell' && R){ r.className='result lose'; const left=(extra&&extra.left)||0;
     r.innerHTML='<h2 style="color:#ffb84a">SQUAD FELL</h2><p style="margin:4px 0">Stage '+R.stage+' \u00b7 Score '+v168Num(riftScore())+'</p>'+mvpHtml+'<div class="riftFellSub"><b>'+left+'</b> '+R.label.replace(' Rift','')+' hero'+(left===1?'':'es')+' still ready. Send them in to hold the line.</div><div class="gRunBtns"><button class="mini-btn primary" id="riftNext">Send next squad</button><button class="mini-btn" id="riftRetire">Retire &amp; bank</button></div>';
-    const nx=document.getElementById('riftNext'); if(nx) nx.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} if(!riftDeployNext()){ const sum=riftEndRun('out'); riftShowResult('ended',sum); } };
+    const nx=document.getElementById('riftNext'); if(nx) nx.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} if(!riftDeployNext()){ const sum=riftEndRun('out'); riftShowResult('ended',sum); } }; if(nx && typeof autoAdvance!=='undefined' && autoAdvance){ try{clearAuto();}catch(e){} autoNext=setInterval(function(){ try{clearAuto();}catch(e){} try{ var _rn=document.getElementById('riftNext'); if(_rn) _rn.click(); }catch(e){} }, 850); }
     const rt=document.getElementById('riftRetire'); if(rt) rt.onclick=()=>{ const sum=riftEndRun('retire'); riftShowResult('ended',sum); };
   } else { r.className='result lose'; const sum=extra||(S.rift&&S.rift.lastRun)||{stage:0,score:0,best:0,label:'Rift'};
     const claimed=Object.keys(ensureRift().claimedMs||{}).map(Number).sort((a,b)=>a-b);
@@ -6404,7 +6404,7 @@ function drawUnits(containerId,arr,cls){
   const c=document.getElementById(containerId); c.innerHTML='';
   arr.forEach((u,i)=>{ u._i=i;
     if(cls==='enemy'){ const _ea=enemyArtFallback(u); if(_ea) u.img=_ea; }
-    const face=u.img?'<img src="'+u.img+'">':initials(u.name);
+    const face=u.img?'<img src="'+u.img+'" decoding="async">':initials(u.name);
     const el=document.createElement('div'); el.className='unit '+cls+(u.boss?' boss':'')+' '+(u.row||'front')+' role-'+String(u.role||u.enemyRole||'').toLowerCase(); el.dataset.idx=i;
     el.innerHTML='<div class="face" style="background:linear-gradient(160deg,'+u.color+',#0008);box-shadow:inset 0 0 0 2px '+(ROLECOLOR[u.role]||'#ffffff88')+'66">'+face+'</div>'+
       '<div class="info"><div class="nm">'+esc(u.name)+(u.enemyRole?'<span class="enemyRoleChip">'+enemyRoleLabel(u)+'</span>':(u.archetype?'<span class="enemyRoleChip" style="color:'+(u.archetype.color||'#cdbcff')+'">'+esc(u.archetype.label)+'</span>':''))+'</div><div style="font-size:10px;color:var(--muted);font-weight:800">'+(u.side==='e'?(u.boss?'BOSS':'ENEMY ROLE'):(u.row==='back'?'BACK':'FRONT'))+(u.passive?' · '+esc(u.passive.name):'')+'</div><div class="hpbar"><i style="width:100%"></i></div></div>';
@@ -9275,7 +9275,7 @@ function lq52InjectStyles(){
   `;
   document.head.appendChild(st);
 }
-function lq52Reduced(){ return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+function lq52Reduced(){ return !!((window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)||(typeof S!=='undefined'&&S&&S.appSettings&&S.appSettings.reduceMotion)); }
 function lq52SparkBurst(x,y,color,count,spread){
   if(lq52Reduced()) return;
   color=color||'#36e0e6'; count=count||10; spread=spread||40;
@@ -10941,7 +10941,7 @@ bugReportText = function(area){
     return txt.replace(/Current tab: .*?(\n)/,'Current tab: '+viewAlias(typeof view!=='undefined'?view:'home')+' / '+(typeof subtab!=='undefined'?subtab:'')+' / '+(typeof campSub!=='undefined'?campSub:'')+'$1')+'\n\nRegression QA:\n'+lq64ReportText(false);
   }catch(e){ return 'OATHFORGE BUG REPORT\n\nArea: '+(area||'General')+'\nBuild: '+APP_BUILD+'\nCurrent tab: '+(typeof view!=='undefined'?view:'home')+'\nBug reporter fallback: '+(e.message||String(e))+'\n\nRegression QA:\n'+lq64ReportText(false); }
 };
-document.addEventListener('click',e=>{ if(e.target&&e.target.closest&&e.target.closest('#openSettings')) setTimeout(lq64PatchDeveloperTools,40); },true);
+if(!window.__towerSettingsDocWired){ window.__towerSettingsDocWired=1; document.addEventListener('click',e=>{ if(e.target&&e.target.closest&&e.target.closest('#openSettings')) setTimeout(lq64PatchDeveloperTools,40); },true); }
 (function installV164(){ lq64InjectStyles(); lq64StabilitySweep(); setTimeout(lq64PatchDeveloperTools,250); })();
 
 
@@ -16651,7 +16651,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7SpawnImpact(el,type,heal){ if(!el) return; const r=el.getBoundingClientRect(), meta=c7FxMeta(type), fx=document.createElement('div'); fx.className='clashImpact '+meta.cls+(heal?' heal':''); fx.style.left=(r.left+r.width/2)+'px'; fx.style.top=(r.top+r.height/2)+'px'; fx.style.setProperty('--shot',meta.shot); fx.style.setProperty('--shot2',meta.shot2); document.body.appendChild(fx); setTimeout(()=>fx.remove(),430); }
   function c7SpawnShot(fromEl,toEl,type,kind){ if(!fromEl||!toEl) return; const a=fromEl.getBoundingClientRect(), t=toEl.getBoundingClientRect(), meta=c7FxMeta(type), p=document.createElement('div'); p.className='clashShot '+meta.cls+(kind==='support'?' support':'')+(kind==='heal'?' heal':''); p.style.left=(a.left+a.width/2-8)+'px'; p.style.top=(a.top+a.height/2-8)+'px'; p.style.setProperty('--shot',meta.shot); p.style.setProperty('--shot2',meta.shot2); document.body.appendChild(p); const dx=(t.left+t.width/2)-(a.left+a.width/2), dy=(t.top+t.height/2)-(a.top+a.height/2), ang=Math.atan2(dy,dx)*180/Math.PI; requestAnimationFrame(()=>{ p.style.transform='translate('+dx+'px,'+dy+'px) rotate('+ang+'deg)'; }); setTimeout(()=>{ c7SpawnImpact(toEl,type,kind==='heal'); c7FlashNode(toEl,'fxHit'); },250); setTimeout(()=>p.remove(),380); c7FlashNode(fromEl,'fxFire'); }
   function c7LaneEnemyHTML(lane){ return battle7.enemies.filter(e=>e.hp>0&&c7EnemyLanes(e).includes(lane)).map(e=>{ const meta=e.type?(ELEMENT_META[e.type]||ELEMENT_META.Flame):{color:'#9ca3af'}, top=Math.min(94,Math.max(5,e.y*.78)), face=e.img?'<img src="'+e.img+'" alt="">':(e.boss?'☠':(!e.type?'◇':'◆')); return '<div class="clashEnemyToken '+(e.boss?'boss':'')+' '+(!e.type?'basic':'')+'" data-eid="'+esc7(e.id)+'" data-lane="'+esc7(lane)+'" title="'+esc7(e.name)+'" style="top:'+top+'%;--el:'+(e.color||meta.color)+'"><div class="enemyFace">'+face+'</div><div class="enemyHp"><i style="width:'+Math.max(0,Math.round(e.hp/e.maxHp*100))+'%"></i></div><div class="enemyType">'+c7ElementBadge(e.type,true)+'</div></div>'; }).join(''); }
-  function c7HeroCellHTML(lane,row){ const h=battle7.heroes.find(x=>x.lane===lane&&x.row===row); if(!h) return '<div class="clashHeroCell empty"></div>'; const meta=ELEMENT_META[h.type]||ELEMENT_META.Flame, hpPct=Math.max(0,Math.round(h.hp/h.maxHp*100)), real=c7HeroById(h.id)||h, heroImg=c7HeroPortraitImg(real)||h.img; return '<div class="clashHeroCell '+(h.hp<=0?'dead ':'')+(h.acted?'acting ':'')+'" data-heroid="'+esc7(h.id)+'" data-lane="'+esc7(lane)+'" data-row="'+esc7(row)+'" style="--el:'+meta.color+'"><div class="heroTile" style="background:'+h.color+'">'+(heroImg?'<img src="'+heroImg+'" alt="">':esc7(h.name.slice(0,2).toUpperCase()))+'</div><div class="heroHp"><i style="width:'+hpPct+'%"></i></div><div class="heroTags">'+c7ElementBadge(h.type,true)+'<span>'+esc7((h.role||'').replace(' DPS',''))+'</span></div></div>'; }
+  function c7HeroCellHTML(lane,row){ const h=battle7.heroes.find(x=>x.lane===lane&&x.row===row); if(!h) return '<div class="clashHeroCell empty"></div>'; const meta=ELEMENT_META[h.type]||ELEMENT_META.Flame, hpPct=Math.max(0,Math.round(h.hp/h.maxHp*100)), real=c7HeroById(h.id)||h, heroImg=c7HeroPortraitImg(real)||h.img; return '<div class="clashHeroCell '+(h.hp<=0?'dead ':'')+(h.acted?'acting ':'')+'" data-heroid="'+esc7(h.id)+'" data-lane="'+esc7(lane)+'" data-row="'+esc7(row)+'" style="--el:'+meta.color+'"><div class="heroTile" style="background:'+h.color+'">'+(heroImg?'<img src="'+heroImg+'" alt="" loading="lazy" decoding="async">':esc7(h.name.slice(0,2).toUpperCase()))+'</div><div class="heroHp"><i style="width:'+hpPct+'%"></i></div><div class="heroTags">'+c7ElementBadge(h.type,true)+'<span>'+esc7((h.role||'').replace(' DPS',''))+'</span></div></div>'; }
   function c7WeakLane(){ let best=battle7.lanes[0].key, worst=999; battle7.lanes.forEach(l=>{ const alive=battle7.heroes.filter(h=>h.lane===l.key&&h.hp>0).length, hp=battle7.heroes.filter(h=>h.lane===l.key).reduce((s,h)=>s+(h.hp/h.maxHp),0), score=alive*2+hp; if(score<worst){ worst=score; best=l.key; } }); return best; }
   function c7RewardLine(rw){ try{ if(!rw) return 'Rewards claimed'; var p=[]; if(rw.gold) p.push('+'+rw.gold+' gold'); if(rw.dust) p.push('+'+rw.dust+' dust'); if(rw.stones) p.push('+'+rw.stones+' stones'); if(rw.bondXp) p.push('+'+rw.bondXp+' bond XP'); if(Array.isArray(rw.extra)) rw.extra.forEach(function(x){ if(x) p.push(String(x)); }); return p.length?p.join('  ·  '):'Rewards claimed'; }catch(e){ return 'Rewards claimed'; } }
   function c7RenderResult(){ try{ const r=battle7.result||{}, rw=r.reward||{}, timeUsed=c7FmtTime(Math.max(0,(battle7.totalTime||0)-(battle7.timeLeft||0))); if(r.win){ const autoLine=(S.clash&&S.clash.autoBattle&&!r.autoStop)?'<p>Auto battle: next stage starts in 3 seconds.</p>':(r.autoStop?'<p>Auto stopped: '+esc7(r.autoStop)+'.</p>':''); return '<div class="clashResult win"><h2>VICTORY</h2><p>'+(r.first?'First clear secured.':'Replay clear secured.')+'</p>'+autoLine+'<div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+timeUsed+'</b><span>Time Used</span></div></div><div class="clashRewardLine">'+esc7(c7RewardLine(rw))+'</div><button onclick="closeClashBattle()">Continue</button></div>'; } const weak=c7WeakLane(), laneCfg=battle7.lanes.find(l=>l.key===weak), laneType=c7LaneType(laneCfg,battle7.chapter,battle7.stage,battle7.pattern), why=r.reason==='timeout'?'Time expired before the swarm was fully cleared.':(r.reason==='leaks'?'Too many enemies slipped to the bottom.':'Your line broke before the swarm ended.'); return '<div class="clashResult lose"><h2>DEFEAT</h2><p>'+esc7(why)+'</p><div class="clashResultStats"><div><b>'+battle7.defeated+'/'+battle7.totalEnemies+'</b><span>Defeated</span></div><div><b>'+battle7.leaks+'/'+battle7.leakLimit+'</b><span>Leaks</span></div><div><b>'+c7FmtTime(battle7.timeLeft||0)+'</b><span>Time Left</span></div></div><div class="clashCoach"><b>Weak Lane: '+esc7((laneCfg&&laneCfg.label)||cap7(weak))+'</b><span>'+(laneType?c7ElementBadge(laneType,false)+' lane · counter with '+c7CounterBadge(laneType,false):'Basic lane · add sturdier heroes or more raw power')+'</span><span>Try Optimize Squad, keep Tanks front, and use Melee DPS for close-range splash.</span></div><div class="clashResultActions"><button onclick="clashAutoOptimize(true);closeClashBattle();setTimeout(startClashBattle,250)">Optimize & Retry</button><button onclick="closeClashBattle();setTimeout(function(){openClashSquadEditor(0)},100)">Edit Squad</button><button onclick="closeClashBattle()">Leave</button></div></div>'; }catch(_err){ console.error('c7RenderResult failed',_err); var _r=(battle7&&battle7.result)||{}; return '<div class="clashResult '+(_r.win?'win':'lose')+'"><h2>'+(_r.win?'VICTORY':'BATTLE ENDED')+'</h2><p>'+(_r.win?'Clear secured.':'The swarm held this round  retry from the clash screen.')+'</p><button onclick="closeClashBattle()">Continue</button></div>'; } }
@@ -18758,7 +18758,7 @@ function rerender(){
   'use strict';
   var OF2147_FX_SELECTOR='.clashShot,.clashImpact,.battleFloat,.dmg,.critdmg,.shieldnum,.blocknum,.supportnum,.v171Orb,.v171WorldReward,.v171MeaningFlash,.lq53ClashBanner,.ultPortraitBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.v176Gold,.v176GoldFlash';
   function of2147FxMax(){
-    try{ return (S&&S.reduceMotion)?12:44; }catch(e){ return 44; }
+    try{ return (typeof lq52Reduced==='function'&&lq52Reduced())?6:44; }catch(e){ return 44; }
   }
   function of2147TrimFx(max){
     try{
