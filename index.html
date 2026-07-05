@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.172.2-ability-banner-tune';
+const APP_BUILD='v2.172.3-pace-cloudloader';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -6043,7 +6043,7 @@ function applyBattleScene(mode,head,sub){
   if(a) a.textContent=(sub||sc.n+' · '+sc.d);
   if(log) log.textContent=mode==='tower'?'The climb begins...':'Your squad advances...';
 }
-function battleDelay(){ return battleSpeed===4?70:battleSpeed===2?220:1600; }
+function battleDelay(){ return battleSpeed===4?70:battleSpeed===2?220:2000; }
 function battleEvent(msg,type){ if(battleState&&msg){ battleState.events=battleState.events||[]; battleState.events.push({msg,type:type||'event',at:battleState.turn||0}); if(battleState.events.length>40) battleState.events.shift(); } }
 function setBattleLog(msg){ const el=document.getElementById('battleLogline'); if(el) el.textContent=msg; }
 function wireBattleControls(){
@@ -22639,5 +22639,6 @@ function rerender(){
 
 </script>
 
-<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){try{navigator.serviceWorker.register('./sw.js').catch(function(){});}catch(e){}});}</script></body>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){try{navigator.serviceWorker.register('./sw.js').catch(function(){});}catch(e){}});}</script><script type="module" src="oathforge-cloud.js"></script>
+</body>
 </html>
