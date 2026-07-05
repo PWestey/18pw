@@ -11,6 +11,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {
   getFirestore,
+  initializeFirestore,
   doc,
   getDoc,
   setDoc,
@@ -119,7 +120,9 @@ async function base64ToGunzip(b64) {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+// iOS Safari / restrictive networks often block Firestore's default streaming
+// (WebChannel) connection, surfacing as "client is offline". Force long-polling.
+const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 const googleProvider = new GoogleAuthProvider();
 
 await setPersistence(auth, browserLocalPersistence);
