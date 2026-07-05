@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.170.46-surface-icons';
+const APP_BUILD='v2.170.49-siege-arena-overlay-fix';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3270,7 +3270,7 @@ function siegeFrontBase(){ const teams=siegeBuildTeams(siegeOwned()); return Mat
 function ensureSiege(){ const wk=periodKey('weekly'); const prev=S.siege; if(!prev||prev.wk!==wk){ S.siege={wk,tapped:{},fronts:{},totalWaves:0,base:0,earned:{gold:0,dust:0,exp:0,cry:0,sparks:0,cores:0},rewardClaimedAt:prev?(prev.rewardClaimedAt||0):0}; } const sg=S.siege; if(!sg.tapped)sg.tapped={}; if(!sg.fronts)sg.fronts={}; if(!sg.earned)sg.earned={gold:0,dust:0,exp:0,cry:0,sparks:0,cores:0}; if(!sg.base||sg.base<1) sg.base=siegeFrontBase(); DOMAINS.forEach(d=>{ if(!sg.fronts[d[0]]) sg.fronts[d[0]]={wavesCleared:0,bestRatio:0}; }); return sg; }
 function siegeTeamEff(heroes,k){ let base=0,aff=0; heroes.forEach(h=>{ const p=powerOf(h); base+=p; aff+=p*(siegeAffMult(h,k)-1); }); const syn=computeSynergy(heroes).bonus; const synMult=(syn.hp*0.34+syn.atk*0.66); return { eff:Math.round((base+aff)*(1+siegeCollectionEdge())*synMult), power:base, syn:syn }; }
 function siegeBestTeamFor(k){ const sg=ensureSiege(); const pool=siegeOwned().filter(h=>!sg.tapped[h.id]); const TS=SIEGE_TUNE.teamSize; if(pool.length<TS) return null;
-  const wsort=(arr)=>arr.slice().sort((a,b)=>(powerOf(b)*siegeAffMult(b,k))-(powerOf(a)*siegeAffMult(a,k)));
+  const wsort=(arr)=>{ const kd=arr.map(h=>({h:h,key:powerOf(h)*siegeAffMult(h,k)})); kd.sort((a,b)=>b.key-a.key); return kd.map(x=>x.h); };
   let best=null; const consider=(heroes)=>{ if(!heroes||heroes.length<TS) return; const hh=heroes.slice(0,TS); const e=siegeTeamEff(hh,k); if(!best||e.eff>best.eff){ best={heroes:hh,power:e.power,eff:e.eff,syn:e.syn,synLabel:teamSynLabel(hh)}; } };
   consider(wsort(pool).slice(0,TS));
   const byIp={}; pool.forEach(h=>{ const ip=h&&h.ip; if(ip){ (byIp[ip]=byIp[ip]||[]).push(h); } });
@@ -5232,7 +5232,7 @@ function renderCampaign(v){
       '<div class="dungeonBox"><div class="dh"><b>Weekly Trials</b><span>'+c.ready+' ready · '+c.claimed+'/8 cleared</span></div><div class="dungeonGrid">'+DOMAINS.map(d=>dungeonCardHTML(d[0])).join('')+'</div></div>';
     v.querySelectorAll('[data-dungeon]').forEach(btn=>btn.onclick=()=>{ claimDungeon(btn.dataset.dungeon); renderHUD(); render(); save(); });
   } else if(campSub==='siege'){
-    injectSiegeStyles(); v.innerHTML=tabs+siegePanelHTML(); try{ siegeWireButtons(v); }catch(e){} try{ v.querySelectorAll('.v158FormationStage,.v155EnemyPreview,.v156SceneCard').forEach(el=>el.remove()); }catch(e){}
+    injectSiegeStyles(); try{var _arS=document.getElementById('arena'); if(_arS) _arS.classList.remove('show','arenaEnded');}catch(e){} v.innerHTML=tabs+siegePanelHTML(); try{ siegeWireButtons(v); }catch(e){} try{ v.querySelectorAll('.v158FormationStage,.v155EnemyPreview,.v156SceneCard').forEach(el=>el.remove()); }catch(e){}
   } else if(campSub==='raid'){
     const R=ensureRaid(), pct=Math.min(100,R.dmg/R.max*100), mult=1+raidSquadPower()/1000, boss=currentBoss();
     const weakChips=boss.weak.map(k=>DKEY[k]?'<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:'+DKEY[k].color+'22;color:'+DKEY[k].color+';margin:0 6px 4px 0">'+DKEY[k].icon+' '+DKEY[k].label+' ×'+WEAK_MULT+'</span>':'').join('');
@@ -22356,7 +22356,7 @@ function rerender(){
   function of2164ApplyModeScene(mode,idx,head,sub){
     try{
       const arena=document.getElementById('arena'); if(!arena) return;
-      const remove=[...arena.classList].filter(c=>c.indexOf('scene-')===0||['campaign','tower','raid','rift','gauntlet','arena','conquest','siege'].indexOf(c)>=0);
+      const remove=[...arena.classList].filter(c=>c.indexOf('scene-')===0||['campaign','tower','raid','rift','gauntlet','conquest','siege'].indexOf(c)>=0);
       remove.forEach(c=>arena.classList.remove(c));
       const z=of2164ZoneAt(idx||0);
       arena.classList.add(mode,z.c);
