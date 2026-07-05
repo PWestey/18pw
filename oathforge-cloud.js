@@ -88,6 +88,35 @@ function idbPutRawSave(raw) {
   }));
 }
 
+/* ---------- Compression (gzip) so large game-state saves fit Firestore's 1MB doc limit ----------
+   The persisted save is portrait-stripped JSON (heroes + gear), which compresses ~7x. */
+async function gzipToBase64(str) {
+  const cs = new CompressionStream("gzip");
+  const writer = cs.writable.getWriter();
+  writer.write(new TextEncoder().encode(str));
+  writer.close();
+  const buf = await new Response(cs.readable).arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let bin = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(bin);
+}
+
+async function base64ToGunzip(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const ds = new DecompressionStream("gzip");
+  const writer = ds.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const buf = await new Response(ds.readable).arrayBuffer();
+  return new TextDecoder().decode(buf);
+}
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -215,10 +244,24 @@ async function cloudBackup(opts) {
   const force = !!(opts && opts.force);
   const localSave = await getLocalSaveObject();
   const raw = JSON.stringify(localSave);
-  if (raw.length > 900000) {
+
+  // Compress (gzip) so large game-state saves fit Firestore's 1MB doc limit.
+  let payload = raw;
+  let compressed = false;
+  if (typeof CompressionStream !== "undefined") {
+    try {
+      payload = await gzipToBase64(raw);
+      compressed = true;
+    } catch (e) {
+      console.warn("Oathforge cloud: gzip failed, sending uncompressed:", e);
+      payload = raw;
+      compressed = false;
+    }
+  }
+  if (payload.length > 1000000) {
     throw new Error(
-      "Save is too large for this Firestore setup (" + raw.length + " chars). " +
-      "The game normally strips portrait art from the persisted save; if this fires, check that portraits aren't being written into the main save."
+      "Save is too large for Firestore even compressed (" + payload.length + " chars, raw " + raw.length + "). " +
+      "Firestore caps documents at ~1MB. Your game state has grown past what a single doc holds — use the Backup Center's file export for now."
     );
   }
   const ref = getSaveRef();
@@ -240,8 +283,10 @@ async function cloudBackup(opts) {
   }
   const saveVersion = localSave.saveVersion || localSave.SAVE_VERSION || window.SAVE_VERSION || null;
   await setDoc(ref, {
-    schema: 1,
-    saveJson: raw,
+    schema: 2,
+    compressed: compressed,
+    saveJson: payload,
+    rawLength: raw.length,
     updatedAt: serverTimestamp(),
     updatedAtClientMs: Date.now(),
     deviceId: getDeviceId(),
@@ -269,7 +314,8 @@ async function restoreCloudSave() {
     "A local safety backup will be created before restore.\n\nContinue?"
   );
   if (!ok) return;
-  const saveObj = JSON.parse(data.saveJson);
+  const rawJson = data.compressed ? await base64ToGunzip(data.saveJson) : data.saveJson;
+  const saveObj = JSON.parse(rawJson);
   await writeLocalSaveObject(saveObj);
 }
 
