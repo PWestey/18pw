@@ -23,8 +23,9 @@ import {
    - This file builds its own UI panel and hooks the game's
      existing global save() function, so no edits are needed
      inside the large index.html game code.
-   - The local save key is auto-detected at runtime so it keeps
-     working even if the game's storage key differs by build.
+   - The save is read/written from IndexedDB (the game's real
+     storage): database "lifequest" -> object store "sheets"
+     -> key "lifequest_afk_v1", stored as a JSON string.
    ============================================================ */
 
 const firebaseConfig = {
@@ -37,62 +38,54 @@ const firebaseConfig = {
   measurementId: "G-Y33HK9MGCZ"
 };
 
-/* Preferred/known Oathforge localStorage save key. If this key holds
-   data we use it; otherwise we auto-detect the real save key. */
-const PREFERRED_SAVE_KEY = "lifequest_afk_v1";
+/* The game persists its save to IndexedDB, not localStorage. */
+const IDB_NAME = "lifequest";
+const IDB_STORE = "sheets";
+const IDB_SAVE_KEY = "lifequest_afk_v1";
 
 const LOCAL_UPDATED_KEY = "OF_LAST_LOCAL_SAVE_MS";
 const LAST_SYNC_KEY = "OF_LAST_CLOUD_SYNC_MS";
 const DEVICE_ID_KEY = "OF_DEVICE_ID";
-const RESOLVED_KEY_KEY = "OF_RESOLVED_SAVE_KEY";
 
-/* Keys we must never treat as the game save. */
-function isReservedKey(k) {
-  return (
-    k === LOCAL_UPDATED_KEY ||
-    k === LAST_SYNC_KEY ||
-    k === DEVICE_ID_KEY ||
-    k === RESOLVED_KEY_KEY ||
-    k.indexOf("firebase:") === 0 ||
-    k.indexOf("firebaseLocalStorage") === 0 ||
-    k.indexOf("OF_PRE_CLOUD_RESTORE_") === 0 ||
-    k === "oathforge_stability_mode"
-  );
+/* ---------- IndexedDB helpers (match the game's storage) ---------- */
+function ofIdbOpen() {
+  return new Promise((resolve, reject) => {
+    let r;
+    try { r = indexedDB.open(IDB_NAME, 1); }
+    catch (e) { reject(e); return; }
+    r.onupgradeneeded = () => {
+      try {
+        const db = r.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+      } catch (e) {}
+    };
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error || new Error("IndexedDB open failed"));
+  });
 }
 
-function looksLikeSaveValue(raw) {
-  if (!raw || raw.length < 20) return false;
-  const t = raw.trim();
-  if (t[0] !== "{" && t[0] !== "[") return false;
-  try { JSON.parse(t); return true; } catch (e) { return false; }
+function idbGetRawSave() {
+  return ofIdbOpen().then(db => new Promise((resolve, reject) => {
+    let tx;
+    try { tx = db.transaction(IDB_STORE, "readonly"); }
+    catch (e) { resolve(null); return; } // store may not exist yet
+    const rq = tx.objectStore(IDB_STORE).get(IDB_SAVE_KEY);
+    rq.onsuccess = () => {
+      const v = rq.result;
+      resolve(v == null ? null : (typeof v === "string" ? v : JSON.stringify(v)));
+    };
+    rq.onerror = () => reject(rq.error || new Error("IndexedDB get failed"));
+  }));
 }
 
-/* Resolve the localStorage key that holds the real Oathforge save.
-   Order: cached resolved key -> preferred key (if it has data) ->
-   the largest localStorage entry that parses as JSON and is not a
-   reserved key. Returns null if nothing plausible is found. */
-function resolveSaveKey() {
-  const cached = localStorage.getItem(RESOLVED_KEY_KEY);
-  if (cached && localStorage.getItem(cached) != null) return cached;
-
-  if (localStorage.getItem(PREFERRED_SAVE_KEY) != null) {
-    localStorage.setItem(RESOLVED_KEY_KEY, PREFERRED_SAVE_KEY);
-    return PREFERRED_SAVE_KEY;
-  }
-
-  let best = null;
-  let bestLen = 0;
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (!k || isReservedKey(k)) continue;
-    const v = localStorage.getItem(k) || "";
-    if (v.length > bestLen && looksLikeSaveValue(v)) {
-      best = k;
-      bestLen = v.length;
-    }
-  }
-  if (best) localStorage.setItem(RESOLVED_KEY_KEY, best);
-  return best; // may be null
+function idbPutRawSave(raw) {
+  return ofIdbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, "readwrite");
+    tx.objectStore(IDB_STORE).put(raw, IDB_SAVE_KEY);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error || new Error("IndexedDB put failed"));
+    tx.onabort = () => reject(tx.error || new Error("IndexedDB put aborted"));
+  }));
 }
 
 const app = initializeApp(firebaseConfig);
@@ -122,31 +115,31 @@ function getSaveRef() {
   return doc(db, "users", user.uid, "saves", "main");
 }
 
-function getLocalRawSave() {
-  const key = resolveSaveKey();
-  return key ? localStorage.getItem(key) : null;
+async function getLocalRawSave() {
+  return await idbGetRawSave();
 }
 
-function getLocalSaveObject() {
-  const raw = getLocalRawSave();
+async function getLocalSaveObject() {
+  const raw = await getLocalRawSave();
   if (!raw) {
     throw new Error(
-      "No local Oathforge save found. Open the game so it loads/creates a save, then try again. " +
-      "(Looked for key \"" + PREFERRED_SAVE_KEY + "\" and any large JSON save in this browser.)"
+      "No local Oathforge save found in IndexedDB (" + IDB_NAME + "/" + IDB_STORE + "/" + IDB_SAVE_KEY + "). " +
+      "Open the game so it loads/creates a save, then try again."
     );
   }
   return JSON.parse(raw);
 }
 
-function writeLocalSaveObject(saveObj) {
-  const key = resolveSaveKey() || PREFERRED_SAVE_KEY;
+async function writeLocalSaveObject(saveObj) {
   const raw = JSON.stringify(saveObj);
-  const backupKey = "OF_PRE_CLOUD_RESTORE_" + Date.now();
-  const existing = localStorage.getItem(key);
-  if (existing) localStorage.setItem(backupKey, existing);
-  localStorage.setItem(key, raw);
+  // Safety backup of the existing local save before overwriting.
+  try {
+    const existing = await idbGetRawSave();
+    if (existing) localStorage.setItem("OF_PRE_CLOUD_RESTORE_" + Date.now(), existing);
+  } catch (e) {}
+  await idbPutRawSave(raw);
   markLocalSaveUpdated();
-  alert("Cloud save restored. Oathforge will reload now.\n\nSafety backup created in localStorage as:\n" + backupKey);
+  alert("Cloud save restored. Oathforge will reload now.");
   location.reload();
 }
 
@@ -220,10 +213,13 @@ async function getCloudSave() {
 
 async function cloudBackup(opts) {
   const force = !!(opts && opts.force);
-  const localSave = getLocalSaveObject();
+  const localSave = await getLocalSaveObject();
   const raw = JSON.stringify(localSave);
   if (raw.length > 900000) {
-    throw new Error("Save is too large for this simple Firestore setup: " + raw.length + " characters.");
+    throw new Error(
+      "Save is too large for this Firestore setup (" + raw.length + " chars). " +
+      "The game normally strips portrait art from the persisted save; if this fires, check that portraits aren't being written into the main save."
+    );
   }
   const ref = getSaveRef();
   if (!force) {
@@ -274,11 +270,11 @@ async function restoreCloudSave() {
   );
   if (!ok) return;
   const saveObj = JSON.parse(data.saveJson);
-  writeLocalSaveObject(saveObj);
+  await writeLocalSaveObject(saveObj);
 }
 
 async function syncNow() {
-  const localRaw = getLocalRawSave();
+  const localRaw = await getLocalRawSave();
   const cloud = await getCloudSave();
   if (!localRaw && !cloud.exists) {
     alert("No local save or cloud save found.");
@@ -348,7 +344,7 @@ function buildPanel() {
       '<button id="ofCloudBackupBtn" type="button">Cloud Backup</button>' +
       '<button id="ofRestoreCloudBtn" type="button">Restore Cloud Save</button>' +
     '</div>' +
-    '<p class="small-note" style="opacity:0.75;font-size:0.85em;margin-top:8px;">Local save remains primary. Cloud restore always asks before replacing this device.</p>';
+    '<p class="small-note" style="opacity:0.75;font-size:0.85em;margin-top:8px;">Local save remains primary. Cloud stores game state only (portraits stay on-device). Cloud restore always asks before replacing this device.</p>';
 
   const btn = document.getElementById("backupCenter");
   const host =
@@ -429,6 +425,5 @@ window.OathforgeCloud = {
   queueAutoBackup,
   cloudBackup,
   restoreCloudSave,
-  syncNow,
-  resolveSaveKey
+  syncNow
 };
