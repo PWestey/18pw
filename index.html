@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.172.4-banner-duration';
+const APP_BUILD='v2.172.5-expedition-currency-icons';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3596,7 +3596,8 @@ function injectExpStyles(){ if(document.getElementById('expStyles')) return; con
   .expRefresh:active:not(:disabled){transform:scale(.99)}
 `; document.head.appendChild(st); }
 function expRarBadge(rar,color){ if(!rar) return ''; return '<span class="expRar" style="--rc:'+(color||'#9aa7b8')+'">'+esc(rar)+'</span>'; }
-function expRewardText(r){ r=r||{}; const p=['+'+v168Num(r.gold||0)+' \u29bf','+'+v168Num(r.dust||0)+' \u273a']; if(r.exp)p.push('+'+v168Num(r.exp)+' EXP'); if(r.cores)p.push('+'+r.cores+' \u25c8'); if(r.stones)p.push('+'+r.stones+' \u25c7'); if(r.cry)p.push('+'+v168Num(r.cry)+' \u25c6'); if(r.sparks)p.push('+'+r.sparks+' \u2726'); if(r.tickets)p.push('+'+r.tickets+' \ud83c\udf9f'); return p.join(' '); }
+function expRewardText(r){ r=r||{}; const p=['+'+v168Num(r.gold||0)+_cig('gold','\u29bf'),'+'+v168Num(r.dust||0)+_cig('dust','\u273a')]; if(r.exp)p.push('+'+v168Num(r.exp)+' EXP'); if(r.cores)p.push('+'+r.cores+_cig('cores','\u25c8')); if(r.stones)p.push('+'+r.stones+' \u25c7'); if(r.cry)p.push('+'+v168Num(r.cry)+_cig('crystals','\u25c6')); if(r.sparks)p.push('+'+r.sparks+_cig('sparks','\u2726')); if(r.tickets)p.push('+'+r.tickets+_cig('tickets','\ud83c\udf9f')); return p.join(' '); }
+function _cig(k,gl){ try{ if(typeof cicon==='function'&&typeof CURRENCY_ICON==='object'&&CURRENCY_ICON[k]) return ' '+cicon(k,13); }catch(e){} return ' '+gl; }
 function expActiveCardHTML(a){ const ready=expeditionReady(a), left=expeditionTimeLeft(a);
   const heroes=(a.heroIds||[]).map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
   const ports=heroes.map(h=>'<div class="expPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('');
