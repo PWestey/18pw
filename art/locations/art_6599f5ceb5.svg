@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#ffffff"/>
+  <g fill="#111111">
+    <!-- ANVIL -->
+    <!-- top working slab with left horn -->
+    <path d="M150 286
+             L150 270
+             Q150 262 158 262
+             L382 262
+             Q392 262 392 272
+             L392 286
+             L392 300
+             Q392 308 384 308
+             L300 308
+             L300 300
+             L150 300 Z"/>
+    <!-- left horn -->
+    <path d="M150 300 L150 270 L96 280 Q86 282 96 290 Z"/>
+    <!-- neck -->
+    <path d="M236 308 L356 308 L342 352 L250 352 Z"/>
+    <!-- base -->
+    <path d="M196 410
+             Q188 410 190 402
+             L210 362
+             Q212 352 224 352
+             L368 352
+             Q380 352 382 362
+             L398 402
+             Q400 410 392 410 Z"/>
+    <!-- HAMMER striking the anvil top -->
+    <!-- head -->
+    <g transform="rotate(-24 318 210)">
+      <rect x="262" y="182" width="112" height="56" rx="12"/>
+    </g>
+    <!-- handle -->
+    <rect x="352" y="78" width="30" height="150" rx="15" transform="rotate(34 367 153)"/>
+  </g>
+</svg>
