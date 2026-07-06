@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.175.1-auto-resolve-chain';
+const APP_BUILD='v2.175.5-consolidation';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4270,7 +4270,7 @@ function conquestBestTeam(mod){ const champ=conquestChampion(mod); let pool=conq
   if(champ){ pool=pool.filter(h=>h.id!==champ.id); const reserves=pool.slice().sort((a,b)=>(powerOf(b)*mod.mult(b))-(powerOf(a)*mod.mult(a))).slice(0,CONQUEST_TUNE.teamSize-1); return [champ].concat(reserves); }
   return pool.slice().sort((a,b)=>(powerOf(b)*mod.mult(b))-(powerOf(a)*mod.mult(a))).slice(0,CONQUEST_TUNE.teamSize); }
 function conquestBossPower(tier,mod){ const C=ensureConquest(); const base=Math.max(80,Math.round(C.anchor*Math.pow(CONQUEST_TUNE.growth,Math.max(0,tier-1)))); return Math.max(80,Math.round(base*conquestEnemyScale(mod))); }
-function conquestBuildEnemies(tier,mod){ const total=conquestBossPower(tier,mod); const name=CONQ_BOSSES[(tier-1+CONQ_BOSSES.length*99)%CONQ_BOSSES.length];
+function conquestBuildEnemies(tier,mod){ var total=conquestBossPower(tier,mod); try{ var _cq=ensureConquest(); var _att=(_cq.attempts&&_cq.attempts[tier])||0; if(_att>0) total=Math.round(total*(1-Math.min(0.45,_att*0.07))); }catch(e){} const name=CONQ_BOSSES[(tier-1+CONQ_BOSSES.length*99)%CONQ_BOSSES.length];
   const col=(mod&&mod.kind&&mod.kind.indexOf('element')===0&&CONQ_ELEM_COLOR[mod.param])||'#c0392b';
   const bShare=total*0.62; const out=[enemyFromSpec([name,col,'Tank'],Math.max(140,Math.round(bShare*4)),Math.max(22,Math.round(bShare*0.255)),true)];
   const addN=2, share=total*0.38/addN; for(let i=0;i<addN;i++){ out.push(enemyFromSpec(['Vanguard',col,i%2?'Support':'DPS'],Math.max(60,Math.round(share*4)),Math.max(10,Math.round(share*0.255)),false)); }
@@ -4297,11 +4297,11 @@ function conquestMilestone(tier){ return { milestone:tier, sparks:2, cry:Math.ro
 function conquestApplyReward(r){ try{ siegeApplyReward(r); }catch(e){} const C=ensureConquest(); C.tokens=(C.tokens||0)+(r.tokens||0); }
 function conquestEndBattle(win){ const bc=battleConquest||{}; battleConquest=null; try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
   const C=ensureConquest(); const tier=bc.tier||(C.tier+1);
-  if(win){ const first=!C.clears[tier]; if(first){ C.tier=Math.max(C.tier,tier); C.best=Math.max(C.best||0,C.tier); C.clears[tier]=true; }
+  if(win){ try{ if(C.attempts) delete C.attempts[tier]; }catch(e){} const first=!C.clears[tier]; if(first){ C.tier=Math.max(C.tier,tier); C.best=Math.max(C.best||0,C.tier); C.clears[tier]=true; }
     const reward=first?conquestFirstClearReward(tier):conquestRepeatReward(tier); conquestApplyReward(reward);
     let ms=null; if(first && tier%CONQUEST_TUNE.milestoneEvery===0){ ms=conquestMilestone(tier); conquestApplyReward(ms); }
     try{ conquestShowResult(true,{tier:tier,reward:reward,first:first,ms:ms,mod:bc.mod}); }catch(e){ console.error(e); } }
-  else { try{ conquestShowResult(false,{tier:tier,mod:bc.mod}); }catch(e){ console.error(e); } }
+  else { try{ if(!C.attempts)C.attempts={}; C.attempts[tier]=(C.attempts[tier]||0)+1; }catch(e){} try{ conquestShowResult(false,{tier:tier,mod:bc.mod}); }catch(e){ console.error(e); } }
   try{renderHUD();}catch(e){} try{save();}catch(e){} }
 /* ===== end Conquest engine ===== */
 
@@ -6050,7 +6050,7 @@ function setBattleLog(msg){ const el=document.getElementById('battleLogline'); i
 function wireBattleControls(){
   const home=document.getElementById('battleHomeBtn'), sp=document.getElementById('battleSpeedBtn'), sk=document.getElementById('battleSkipBtn'), au=document.getElementById('battleAutoBtn');
   if(home) home.onclick=closeArenaToHome;
-  if(au){ au.textContent=(autoAdvance?((typeof autoResolve!=='undefined'&&autoResolve)?'Auto Resolve':'Auto Watch'):'Auto Off'); au.onclick=()=>{ if(!autoAdvance){ autoAdvance=true; autoResolve=false; } else if(!autoResolve){ autoResolve=true; } else { autoAdvance=false; autoResolve=false; } au.textContent=(autoAdvance?(autoResolve?'Auto Resolve':'Auto Watch'):'Auto Off'); toast('Auto: '+(autoAdvance?(autoResolve?'resolve':'watch'):'off')); }; }
+  if(au){ lqAutoRestore(); au.textContent=(autoAdvance?((typeof autoResolve!=='undefined'&&autoResolve)?'Auto Resolve':'Auto Watch'):'Auto Off'); au.onclick=()=>{ if(!autoAdvance){ autoAdvance=true; autoResolve=false; } else if(!autoResolve){ autoResolve=true; } else { autoAdvance=false; autoResolve=false; } au.textContent=(autoAdvance?(autoResolve?'Auto Resolve':'Auto Watch'):'Auto Off'); lqAutoSave(); toast('Auto: '+(autoAdvance?(autoResolve?'resolve':'watch'):'off')); }; }
   if(sp){ sp.textContent=battleSpeed+'x'; sp.onclick=()=>{ battleSpeed=battleSpeed===1?2:battleSpeed===2?4:1; sp.textContent=battleSpeed+'x'; restartBattleTimer(); toast('Battle speed: '+battleSpeed+'x'); }; }
   if(sk){ sk.onclick=skipBattle; }
 }
@@ -6068,10 +6068,13 @@ function silentStrike(att,tgt){
   if(att.role==='Support') att.support=(att.support||0)+Math.round(actual*(att.supportMult||1));
   if(!legSteadfastSave(tgt,actual)){ tgt.hp-=actual; if(tgt.hp<=0){tgt.hp=0;tgt.dead=true;} }
 }
+function lqAutoRestore(){ try{ var m=(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode); if(m==='off'){ autoAdvance=false; autoResolve=false; } else if(m==='watch'){ autoAdvance=true; autoResolve=false; } else if(m==='resolve'){ autoAdvance=true; autoResolve=true; } else { var mob=false; try{ mob=(typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(pointer:coarse)').matches); }catch(e){} autoAdvance=true; autoResolve=!!mob; } }catch(e){} }
+function lqAutoSave(){ try{ if(typeof S!=='undefined'&&S){ if(!S.appSettings)S.appSettings={}; S.appSettings.autoMode=(autoAdvance?(autoResolve?'resolve':'watch'):'off'); if(typeof save==='function')save(); } }catch(e){} }
 function skipBattle(){
   if(!battleState || battleState.over) return;
   if(battleTimer){ clearInterval(battleTimer); battleTimer=null; }
   try{ if(typeof window!=='undefined') window.__lqResolving=true; }catch(e){}
+  try{ if(battleState&&battleState.awaitingCommand) battleState.awaitingCommand=false; }catch(e){}
   var _g=0;
   try{ while(battleState && !battleState.over && !battleState.ending && _g++<6000){ battleStep(); } }catch(e){}
   try{ if(typeof window!=='undefined') window.__lqResolving=false; }catch(e){}
@@ -16646,7 +16649,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7AdvanceStage(){ if(S.clash.stage>=80){ S.clash.chapter=(S.clash.chapter||1)+1; S.clash.stage=1; } else S.clash.stage=(S.clash.stage||1)+1; }
   function c7AutoStopReason(prevCh,prevStage,nextCh,nextStage){ if(!S||!S.clash||!S.clash.autoBattle) return 'Auto off'; try{ if(prevCh!==nextCh) return 'New chapter — set your lane squad'; }catch(e){} return ''; }
   function c7ScheduleAutoNext(){ if(!battle7||!battle7.result||!battle7.result.win||!S.clash||!S.clash.autoBattle||battle7.result.autoStop) return; battle7.log='Auto battle: next stage starts in 3 seconds.'; c7RenderBattle(); battle7.autoTimer=setTimeout(function(){ try{ if(battle7&&battle7.result&&battle7.result.win&&S.clash&&S.clash.autoBattle) startClashBattle(); }catch(e){ console.error('Clash auto battle failed',e); } },3000); }
-  function c7Resolve(win,reason){ if(!battle7||battle7.ended) return; const prevCh=battle7.chapter, prevStage=battle7.stage; battle7.resolving=true; battle7.ended=true; if(battle7.timer) clearInterval(battle7.timer); if(battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7.timer=null; battle7.autoTimer=null; if(battle7.watchdog){ clearInterval(battle7.watchdog); battle7.watchdog=null; } let result={first:false,reward:{gold:0,dust:0,bondXp:0,extra:[]}}, autoStop=''; try{ const __r=c7ApplyRewards(win); if(__r) result=__r; if(win) c7AdvanceStage(); if(win){ autoStop=c7AutoStopReason(prevCh,prevStage,c7Chapter(),c7Stage()); if(autoStop&&S.clash) S.clash.autoBattle=false; } else if(S.clash){ S.clash.autoBattle=false; autoStop='Defeat'; } }catch(e){ console.error('Clash resolve rewards failed',e); if(S.clash) S.clash.autoBattle=false; if(!win&&!autoStop) autoStop='Defeat'; } battle7.result={win,first:!!result.first,reward:result.reward||{gold:0,dust:0,bondXp:0,extra:[]},reason:reason||'',autoStop}; try{ if(typeof save==='function') save(); if(typeof renderHUD==='function') renderHUD(); }catch(e){} try{ c7RenderBattle(); }catch(e){ console.error('Clash result render failed',e); try{ closeClashBattle(); }catch(_e){} try{ if(typeof safeToast7==='function') safeToast7(win?'Clash cleared':'Clash ended'); }catch(_e){} try{ if(typeof render==='function') render(); }catch(_e){} } try{ c7ScheduleAutoNext(); }catch(e){} }
+  function c7Resolve(win,reason){ if(!battle7||battle7.ended) return; const prevCh=battle7.chapter, prevStage=battle7.stage; battle7.resolving=true; battle7.ended=true; if(battle7.timer) clearInterval(battle7.timer); if(battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7.timer=null; battle7.autoTimer=null; if(battle7.watchdog){ clearInterval(battle7.watchdog); battle7.watchdog=null; } let result={first:false,reward:{gold:0,dust:0,bondXp:0,extra:[]}}, autoStop=''; try{ const __r=c7ApplyRewards(win); if(__r) result=__r; if(win) c7AdvanceStage(); if(win){ autoStop=c7AutoStopReason(prevCh,prevStage,c7Chapter(),c7Stage()); if(autoStop && prevCh!==c7Chapter()){ try{ if(typeof clashAutoOptimize==='function'){ clashAutoOptimize(false); autoStop=''; if(typeof safeToast7==='function') safeToast7('Clash squad auto-optimized for new chapter'); } }catch(e){} } if(autoStop&&S.clash) S.clash.autoBattle=false; } else if(S.clash){ S.clash.autoBattle=false; autoStop='Defeat'; } }catch(e){ console.error('Clash resolve rewards failed',e); if(S.clash) S.clash.autoBattle=false; if(!win&&!autoStop) autoStop='Defeat'; } battle7.result={win,first:!!result.first,reward:result.reward||{gold:0,dust:0,bondXp:0,extra:[]},reason:reason||'',autoStop}; try{ if(typeof save==='function') save(); if(typeof renderHUD==='function') renderHUD(); }catch(e){} try{ c7RenderBattle(); }catch(e){ console.error('Clash result render failed',e); try{ closeClashBattle(); }catch(_e){} try{ if(typeof safeToast7==='function') safeToast7(win?'Clash cleared':'Clash ended'); }catch(_e){} try{ if(typeof render==='function') render(); }catch(_e){} } try{ c7ScheduleAutoNext(); }catch(e){} }
   function c7StartData(){ if(typeof ensureClashState==='function') ensureClashState(); const ch=c7Chapter(), st=c7Stage(), pattern=c7Pattern(ch,st), kind=c7Kind(st), bossInfo=c7Boss(ch,st), ids=c7EnsureSquad(ch), lanes=c7Lanes(ch); const heroes=ids.map((id,i)=>{ const h=c7OwnedHero(id); return h?c7HeroStats(h,c7SlotMeta(i,ch),pattern):null; }).filter(Boolean); const built=c7BuildSpawnPlan(ch,st,kind,pattern,bossInfo,lanes); battle7={chapter:ch,stage:st,kind,pattern,bossInfo,lanes,heroes,enemies:[],wave:0,maxWaves:built.waves,spawnPlan:built.plan,spawned:0,totalEnemies:built.totalEnemies,leaks:0,leakLimit:built.cfg.leakLimit,maxLaneActive:built.cfg.maxLaneActive,totalTime:built.cfg.totalTicks,timeLeft:built.cfg.totalTicks,tickCount:0,damage:0,taken:0,healing:0,blocked:0,advHits:0,badHits:0,defeated:0,log:'Finite enemy swarm incoming.',speed:((S.clash&&S.clash.speed)||1),resolving:false,ended:false,timer:null,autoTimer:null,result:null}; }
   function c7OpenBattle(){ let o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); o=document.createElement('div'); o.id='clashBattleOverlay'; o.className='clashBattleOverlay c7'; document.body.appendChild(o); }
   function c7FxMeta(type){ const map={Flame:{cls:'flame',shot:'#ff6b4a',shot2:'#ffb347'},Tide:{cls:'tide',shot:'#48cfff',shot2:'#a9efff'},Grove:{cls:'grove',shot:'#6fe26a',shot2:'#c8ff8b'},Stone:{cls:'stone',shot:'#caa46a',shot2:'#f0dfbf'},Storm:{cls:'storm',shot:'#ffd94a',shot2:'#fff19a'}}; return map[type]||map.Flame; }
@@ -18747,7 +18750,7 @@ function rerender(){
     try{
       if(typeof renderHome==='function'&&!renderHome.__of2146MissedHome){
         var old=renderHome;
-        renderHome=function(v){ var ret=old.apply(this,arguments); of2146DecorateHome(v); try{ lqWeeklyDash(v); }catch(e){} return ret; };
+        renderHome=function(v){ var ret=old.apply(this,arguments); of2146DecorateHome(v); try{ if(typeof window!=='undefined'&&window.lqWeeklyDash) window.lqWeeklyDash(v); }catch(e){} return ret; };
         renderHome.__of2146MissedHome=true;
       }
     }catch(e){}
@@ -20128,7 +20131,7 @@ function lqWeeklyDash(v){
 }
 try{ if(typeof window!=='undefined'){ window.lqWeeklyDash=lqWeeklyDash; } }catch(e){}
 
-renderHome=function(v){ var r=oldHome.apply(this,arguments); try{ enhanceHome(v); }catch(e){} try{ lqWeeklyDash(v); }catch(e){} return r; };
+renderHome=function(v){ var r=oldHome.apply(this,arguments); try{ enhanceHome(v); }catch(e){} return r; };
     }
   }catch(e){}
   try{
@@ -21178,7 +21181,7 @@ function showAbilityMoment(u,skill,color){
     u.energy=Math.min(100,u.energy+(typeof ULT_ENERGY_PER_TURN==='number'?ULT_ENERGY_PER_TURN:36)*(typeof fxEnergyMult==='function'?fxEnergyMult():1)*(typeof forgeUltMult==='function'?forgeUltMult():1));
   }
   function canCommandBattle(){ return !!battleState && (battleMode==='campaign'||battleMode==='tower') && !battleState.replay; }
-  function shouldManual(){ return manualVisible() && commandMode && canCommandBattle(); }
+  function shouldManual(){ if(typeof window!=='undefined'&&window.__lqResolving) return false; return manualVisible() && commandMode && canCommandBattle(); }
   function commandPanel(){
     let p=document.getElementById('of2161CommandPanel');
     if(!p){
@@ -21372,7 +21375,7 @@ function showAbilityMoment(u,skill,color){
     const controls=document.getElementById('battleControls');
     const au=document.getElementById('battleAutoBtn');
     if(au){
-      au.textContent=(autoAdvance?((typeof autoResolve!=='undefined'&&autoResolve)?'Resolve On':'Advance On'):'Advance Off'); au.onclick=()=>{ if(!autoAdvance){ autoAdvance=true; autoResolve=false; } else if(!autoResolve){ autoResolve=true; } else { autoAdvance=false; autoResolve=false; } au.textContent=(autoAdvance?(autoResolve?'Resolve On':'Advance On'):'Advance Off'); toast('Auto: '+(autoAdvance?(autoResolve?'resolve':'advance'):'off')); };
+      lqAutoRestore(); au.textContent=(autoAdvance?((typeof autoResolve!=='undefined'&&autoResolve)?'Resolve On':'Advance On'):'Advance Off'); au.onclick=()=>{ if(!autoAdvance){ autoAdvance=true; autoResolve=false; } else if(!autoResolve){ autoResolve=true; } else { autoAdvance=false; autoResolve=false; } au.textContent=(autoAdvance?(autoResolve?'Resolve On':'Advance On'):'Advance Off'); lqAutoSave(); toast('Auto: '+(autoAdvance?(autoResolve?'resolve':'advance'):'off')); };
     }
     if(controls && !document.getElementById('battleCommandBtn') && manualVisible()){
       const btn=document.createElement('button');
