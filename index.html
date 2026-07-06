@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.175.5-consolidation';
+const APP_BUILD='v2.176.0-economy-rebalance';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -7602,7 +7602,8 @@ function gearPower(g){
 }
 function gearCostOf(g){
   const m=RARMULT[g.rarity];
-  return {gold:Math.round(5*m*(g.level+1)), dust:Math.round(1*m*(g.level+1))};
+  /* v2.176 economy rebalance: was 5g/1d; gold was the universal bottleneck while dust piled up (income ~2.2:1 gold:dust). 3g/3d gives dust a job and matches cost ratio to income ratio. */
+  return {gold:Math.round(3*m*(g.level+1)), dust:Math.round(3*m*(g.level+1))};
 }
 function salvageValue(g){
   return ({common:15,rare:45,epic:125,legendary:350,mythic:850,eternal:2200})[g.rarity]||15;
