@@ -393,7 +393,7 @@ function buildPanel() {
       '<button id="ofCloudBackupBtn" type="button">Cloud Backup</button>' +
       '<button id="ofRestoreCloudBtn" type="button">Restore Cloud Save</button>' +
     '</div>' +
-    '<p class="small-note" style="opacity:0.75;font-size:0.85em;margin-top:8px;">Local save remains primary. Cloud stores game state only (portraits stay on-device). Cloud restore always asks before replacing this device.</p>';
+    '<p class="small-note" style="opacity:0.75;font-size:0.85em;margin-top:8px;">Cloud stores game state only (portraits stay on-device). Backup is manual: tap <b>Cloud Backup</b> to push this device up. To move progress, back up on the newer device, then <b>Restore Cloud Save</b> on the other. Restore always asks first.</p>';
 
   const btn = document.getElementById("backupCenter");
   const host =
@@ -442,7 +442,11 @@ function hookGameSave() {
     const original = window.save;
     const wrapped = function () {
       const r = original.apply(this, arguments);
-      try { markLocalSaveUpdated(); queueAutoBackup(); } catch (e) {}
+      // Track local-save time for sync comparisons, but do NOT auto-push to
+      // cloud: auto-backup made whatever device was active overwrite the cloud,
+      // which silently defeated cross-device restore. Cloud writes are now
+      // explicit (Cloud Backup / Sync Now) so backup-here -> restore-there works.
+      try { markLocalSaveUpdated(); } catch (e) {}
       return r;
     };
     wrapped.__ofHooked = true;
