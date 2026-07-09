@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.177.2-hero-power-panel';
+const APP_BUILD='v2.178.0-clash25';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -16281,18 +16281,18 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
 /* ===== Clash Trials Pass 7: Chapter 2+ five-lane expansion experiment ===== */
 (function ClashPass7(){
   if(window.__clashPass7Installed) return; window.__clashPass7Installed=true;
-  const C7_ROWS=['front','mid','back','rear'];
+  const C7_ROWS=['front','mid','back','rear','reserve'];
   const C7_LANES_3=[
     {key:'left',label:'Left',typeKey:'left',typed:true},
     {key:'center',label:'Center',typeKey:'center',typed:true},
     {key:'right',label:'Right',typeKey:'right',typed:true}
   ];
   const C7_LANES_5=[
-    {key:'farLeft',label:'Far Left',basic:true,typed:false},
+    {key:'farLeft',label:'Far Left',typeKey:'farLeft',typed:true},
     {key:'left',label:'Left',typeKey:'left',typed:true},
     {key:'center',label:'Center',typeKey:'center',typed:true},
     {key:'right',label:'Right',typeKey:'right',typed:true},
-    {key:'farRight',label:'Far Right',basic:true,typed:false}
+    {key:'farRight',label:'Far Right',typeKey:'farRight',typed:true}
   ];
   const C7={
     get tickMs(){ return (typeof TUNE!=='undefined'&&TUNE.clashTickMs)||560; },
@@ -16314,7 +16314,9 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7SlotCount(ch){ return c7Lanes(ch).length*C7_ROWS.length; }
   function c7SlotMeta(index,ch){ const lanes=c7Lanes(ch), count=lanes.length*C7_ROWS.length; index=Math.max(0,Math.min(count-1,Math.floor(index||0))); const row=C7_ROWS[Math.floor(index/lanes.length)]||'front', lane=lanes[index%lanes.length]||lanes[0]; return {index,row,lane:lane.key,laneLabel:lane.label,typeKey:lane.typeKey||null,basic:!!lane.basic,typed:!!lane.typed,label:lane.label+' · '+cap7(row)}; }
   function c7Pattern(ch,stage){ try{ const cd=getClashChapterData(ch||c7Chapter()); return cd.patterns[getClashPatternIndexForStage(stage||c7Stage())]||{left:'Flame',center:'Grove',right:'Stone'}; }catch(e){ return {left:'Flame',center:'Grove',right:'Stone'}; } }
-  function c7LaneType(lane,ch,stage,pattern){ const cfg=typeof lane==='string'?c7Lanes(ch).find(l=>l.key===lane):lane; if(!cfg) return null; if(cfg.basic) return null; pattern=pattern||c7Pattern(ch,stage); return pattern[cfg.typeKey||cfg.key]||null; }
+  function c7LaneType(lane,ch,stage,pattern){ const cfg=typeof lane==='string'?c7Lanes(ch).find(l=>l.key===lane):lane; if(!cfg) return null; if(cfg.basic) return null; pattern=pattern||c7Pattern(ch,stage); const k=cfg.typeKey||cfg.key; if(pattern[k]) return pattern[k];
+    if(k==='farLeft'||k==='farRight'){ try{ const core=[pattern.left,pattern.center,pattern.right].filter(Boolean); const absent=ELEMENT_TYPES.filter(t=>core.indexOf(t)<0); if(absent.length){ const hsh=(typeof stableHash==='function')?stableHash('c7far:'+(ch||0)+':'+(stage||0)):0; const fl=absent[hsh%absent.length]; const fr=absent.length>1?absent[(hsh+1)%absent.length]:fl; return k==='farLeft'?fl:fr; } }catch(e){} }
+    return pattern[k]||null; }
   function c7ElementBadge(type,small){ if(type && typeof validElementType==='function' && validElementType(type)) return elementBadge(type,small); return '<span class="elementBadge c7basic" style="--el:#9ca3af">◇'+(small?'':' Basic')+'</span>'; }
   function c7CounterBadge(type,small){ return type?elementBadge(elementCounterFor(type),small):c7ElementBadge(null,small); }
   function c7Match(heroType,laneType){ if(!laneType) return 'neutral'; return getElementMatchup(heroType,laneType); }
@@ -16325,14 +16327,15 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       front:{'Tank':2.30,'Melee DPS':1.85,'Ranged DPS':.52,'Support':.42,'Healer':.38},
       mid:{'Tank':1.15,'Melee DPS':1.55,'Ranged DPS':1.00,'Support':.78,'Healer':.80},
       back:{'Tank':.60,'Melee DPS':.82,'Ranged DPS':1.45,'Support':1.18,'Healer':1.22},
-      rear:{'Tank':.42,'Melee DPS':.58,'Ranged DPS':1.28,'Support':1.50,'Healer':1.62}
+      rear:{'Tank':.42,'Melee DPS':.58,'Ranged DPS':1.28,'Support':1.50,'Healer':1.62},
+      reserve:{'Tank':.35,'Melee DPS':.50,'Ranged DPS':1.22,'Support':1.55,'Healer':1.70}
     };
     let v=(table[row]&&table[row][role])||1;
     if(basic){ if(role==='Tank') v*=1.08; if(role==='Melee DPS') v*=1.03; }
     return v;
   }
-  function c7TypeWeight(heroType,laneType){ const m=c7Match(heroType,laneType); if(m==='advantage') return (TUNE&&TUNE.clashOptAdvWeight)||1.6; if(m==='disadvantage') return (TUNE&&TUNE.clashOptDisWeight)||0.45; return 1; }
-  function c7HeroScore(hero,slot,pattern,boss){ if(!hero) return 0; const laneType=slot.basic?null:(pattern[slot.typeKey||slot.lane]||null); let score=Math.max(1,powerOf(hero))*c7TypeWeight(hero.elementType,laneType)*c7RoleWeight(hero.clashRole,slot.row,slot.basic); if((slot.row==='front')&&hero.clashRole==='Tank') score*=1.15; if((slot.row==='front')&&hero.clashRole==='Melee DPS') score*=1.08; if((slot.row==='front')&&(hero.clashRole==='Healer'||hero.clashRole==='Support')) score*=.70; if((slot.row==='rear')&&hero.clashRole==='Tank') score*=.70; if((hero.clashRole==='Support'||hero.clashRole==='Healer')&&(boss&&boss.type)) score*=.92; if(boss&&boss.type&&c7Match(hero.elementType,boss.type)==='advantage') score*=1.05; return score; }
+  function c7TypeWeight(heroType,laneType){ const m=c7Match(heroType,laneType); if(m==='advantage') return (TUNE&&TUNE.clashOptAdvWeight)||1.8; if(m==='disadvantage') return (TUNE&&TUNE.clashOptDisWeight)||0.35; return 1; }
+  function c7HeroScore(hero,slot,pattern,boss){ if(!hero) return 0; const laneType=slot.basic?null:(pattern[slot.typeKey||slot.lane]||null); let score=Math.pow(Math.max(1,powerOf(hero)),(TUNE&&TUNE.clashOptPowerCurve)||0.65)*c7TypeWeight(hero.elementType,laneType)*c7RoleWeight(hero.clashRole,slot.row,slot.basic); if((slot.row==='front')&&hero.clashRole==='Tank') score*=1.15; if((slot.row==='front')&&hero.clashRole==='Melee DPS') score*=1.08; if((slot.row==='front')&&(hero.clashRole==='Healer'||hero.clashRole==='Support')) score*=.70; if((slot.row==='rear')&&hero.clashRole==='Tank') score*=.70; if((hero.clashRole==='Support'||hero.clashRole==='Healer')&&(boss&&boss.type)) score*=.92; if(boss&&boss.type&&c7Match(hero.elementType,boss.type)==='advantage') score*=1.05; return score; }
   function c7SquadKey(ch){ return c7IsFive(ch)?'clashSquad5':'clashSquad'; }
   function c7UniqueIds(ids){ const seen=new Set(), out=[]; (ids||[]).forEach(id=>{ if(!id||seen.has(id)) return; if((S.heroes||[]).some(h=>h.id===id&&h.owned)){ seen.add(id); out.push(id); } }); return out; }
   function c7EnsureSquad(ch){
