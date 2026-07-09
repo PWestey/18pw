@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.176.0-economy-rebalance';
+const APP_BUILD='v2.177.2-hero-power-panel';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3339,13 +3339,27 @@ function siegeWireButtons(v){
   }; });
   v.querySelectorAll('.siegeAuto[data-auto]').forEach(btn=>{ btn.onclick=()=>{
     const N=parseInt(btn.dataset.auto)||5; let did=0,won=0,ms=null,gold=0;
-    var _sgGuard=0; while(_sgGuard++<800){ const mods=siegeDomainMods(), sg=ensureSiege(), base=sg.base||siegeFrontBase(); let pick=null;
-      DOMAINS.forEach(d=>{ const k=d[0], F=sg.fronts[k]; const tm=siegeBestTeamFor(k); if(!tm) return; const wp=siegeWavePower(base,F.wavesCleared+1,mods[k]); if(tm.eff>=wp){ if(!pick||wp>pick.wp) pick={k:k,wp:wp}; } });
-      if(!pick) break; const res=siegeDeployNext(pick.k); did++; if(res.win){ won++; if(res.reward) gold+=res.reward.gold; if(res.milestone) ms=res.milestone; } }
-    if(did===0){ try{toast('No winnable fronts with teams remaining');}catch(e){} }
-    else if(ms){ try{ v175Detonate('Auto-deploy!','Pushed '+won+' waves · milestone hit','#b88af0'); }catch(e){} }
-    else { try{ v172Float(btn,'+'+v168Num(gold)+' ⦿ · '+won+' waves'); }catch(e){} }
-    try{renderHUD();}catch(e){} try{save();}catch(e){} render();
+    if(btn.__sgBusy) return; btn.__sgBusy=true; var _origTxt=btn.textContent; btn.textContent='Running\u2026';
+    var _sgGuard=0;
+    var _sgFinish=function(){
+      btn.__sgBusy=false; btn.textContent=_origTxt;
+      if(did===0){ try{toast('No winnable fronts with teams remaining');}catch(e){} }
+      else if(ms){ try{ v175Detonate('Auto-deploy!','Pushed '+won+' waves \u00b7 milestone hit','#b88af0'); }catch(e){} }
+      else { try{ v172Float(btn,'+'+v168Num(gold)+' \u29bf \u00b7 '+won+' waves'); }catch(e){} }
+      try{renderHUD();}catch(e){} try{save();}catch(e){} render();
+    };
+    var _sgChunk=function(){
+      var t0=Date.now();
+      while(_sgGuard++<800){
+        const mods=siegeDomainMods(), sg=ensureSiege(), base=sg.base||siegeFrontBase(); let pick=null;
+        DOMAINS.forEach(d=>{ const k=d[0], F=sg.fronts[k]; const tm=siegeBestTeamFor(k); if(!tm) return; const wp=siegeWavePower(base,F.wavesCleared+1,mods[k]); if(tm.eff>=wp){ if(!pick||wp>pick.wp) pick={k:k,wp:wp}; } });
+        if(!pick){ _sgFinish(); return; }
+        const res=siegeDeployNext(pick.k); did++; if(res.win){ won++; if(res.reward) gold+=res.reward.gold; if(res.milestone) ms=res.milestone; }
+        if(Date.now()-t0>120){ setTimeout(_sgChunk,0); return; }
+      }
+      _sgFinish();
+    };
+    setTimeout(_sgChunk,0);
   }; });
 }
 function injectSiegeStyles(){ if(document.getElementById('siegeStyles')) return; const st=document.createElement('style'); st.id='siegeStyles'; st.textContent=`
@@ -6068,7 +6082,7 @@ function silentStrike(att,tgt){
   if(att.role==='Support') att.support=(att.support||0)+Math.round(actual*(att.supportMult||1));
   if(!legSteadfastSave(tgt,actual)){ tgt.hp-=actual; if(tgt.hp<=0){tgt.hp=0;tgt.dead=true;} }
 }
-function lqAutoRestore(){ try{ var m=(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode); if(m==='off'){ autoAdvance=false; autoResolve=false; } else if(m==='watch'){ autoAdvance=true; autoResolve=false; } else if(m==='resolve'){ autoAdvance=true; autoResolve=true; } else { var mob=false; try{ mob=(typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(pointer:coarse)').matches); }catch(e){} autoAdvance=true; autoResolve=!!mob; } }catch(e){} }
+function lqAutoRestore(){ try{ var m=(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode); if(m==='off'){ autoAdvance=false; autoResolve=false; } else if(m==='watch'){ autoAdvance=true; autoResolve=false; } else if(m==='resolve'){ autoAdvance=true; autoResolve=true; } else { autoAdvance=true; autoResolve=false; } /* default = Watch everywhere; Resolve is explicit opt-in (mobile-resolve default surprised users by hiding combat) */ }catch(e){} }
 function lqAutoSave(){ try{ if(typeof S!=='undefined'&&S){ if(!S.appSettings)S.appSettings={}; S.appSettings.autoMode=(autoAdvance?(autoResolve?'resolve':'watch'):'off'); if(typeof save==='function')save(); } }catch(e){} }
 function skipBattle(){
   if(!battleState || battleState.over) return;
@@ -20044,6 +20058,107 @@ function lqNavMode(k){
 }
 
 
+
+
+function lqPowerPanel(id){
+  try{
+    var h=(S&&S.heroes||[]).find(function(x){return x&&x.id===id;});
+    var sheet=document.getElementById('sheet');
+    if(!h||!sheet||sheet.querySelector('.lqPowPanel')) return;
+    var F=function(fn){ try{ var v=fn(); return (typeof v==='number'&&isFinite(v))?v:1; }catch(e){ return 1; } };
+    var rows=[
+      ['Rank', F(function(){return rankMult(h);}), 'rank-ups (Iso-8 + credits)'],
+      ['Prestige', F(function(){return prestigeMult(h);}), 'weekly cap = 3 + 4\u00d7domains \u2014 habit-gated'],
+      ['Collection', F(function(){return collectionMult();}), 'heroes owned (account)'],
+      ['Bonds', F(function(){return bondMult(h);}), 'fighting alongside friends'],
+      ['Account', F(function(){return accountMult();}), 'campaign stages cleared (account)'],
+      ['Legend', F(function(){return legendHpMult(h);}), 'legend renewal victories'],
+      ['Forge', F(function(){return forgeHpMult();}), 'forge upgrades (account)'],
+      ['Anvil', F(function(){return anvilMult();}), 'anvil level (account)'],
+      ['Blessings', F(function(){return blessMult(h);}), 'domains you lived \u2014 passive kyber'],
+      ['Ascension', F(function(){return ascMult(h);}), 'ascension tiers']
+    ];
+    var total=rows.reduce(function(a,r){return a*r[1];},1);
+    var body=rows.map(function(r){
+      var hot=r[1]>1.0001;
+      return '<div class="lqppRow'+(hot?' on':'')+'"><span class="lqppN">'+esc(r[0])+'</span><span class="lqppV">\u00d7'+r[1].toFixed(2)+'</span><span class="lqppS">'+esc(r[2])+'</span></div>';
+    }).join('');
+    var p=document.createElement('div');
+    p.className='heroChamberPanelV159 lqPowPanel';
+    p.innerHTML='<h4>Power Sources</h4><div class="lqppTotal">All multipliers combined: <b>\u00d7'+total.toFixed(2)+'</b></div>'+body;
+    var panels=sheet.querySelectorAll('.heroChamberPanelV159');
+    var last=panels.length?panels[panels.length-1]:null;
+    if(last&&last.parentNode){ last.parentNode.insertBefore(p,last.nextSibling); } else { sheet.appendChild(p); }
+    if(!document.getElementById('lqppCss')){
+      var st=document.createElement('style'); st.id='lqppCss';
+      st.textContent='.lqppTotal{font-size:12px;color:#b6c0d8;margin:2px 0 8px;}.lqppTotal b{color:#4fd1a6;}.lqppRow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:4px 0;border-top:1px solid rgba(255,255,255,.05);font-size:12px;}.lqppN{font-weight:800;color:#8f9ab8;min-width:84px;}.lqppRow.on .lqppN{color:#eaf0ff;}.lqppV{font-weight:800;color:#5a6584;}.lqppRow.on .lqppV{color:#4fd1a6;}.lqppS{flex-basis:100%;font-size:10px;color:#6b7699;line-height:1.3;}';
+      document.head.appendChild(st);
+    }
+  }catch(e){}
+}
+try{ if(typeof window!=='undefined'){ window.lqPowerPanel=lqPowerPanel; } }catch(e){}
+setTimeout(function(){
+  try{
+    if(typeof openHeroSheet==='function' && !openHeroSheet.__lqPow){
+      var _prevOHS=openHeroSheet;
+      openHeroSheet=function(id){ var r=_prevOHS.apply(this,arguments); try{ setTimeout(function(){ lqPowerPanel(id); },30); }catch(e){} return r; };
+      openHeroSheet.__lqPow=true;
+    }
+  }catch(e){}
+},900);
+
+function lqLedgerRows(){
+  var C=function(v){ return (typeof v168Num==='function')?v168Num(v||0):String(v||0); };
+  var ic=function(k,gl){ try{ return _cig(k,gl); }catch(e){ return ' '+gl; } };
+  var cur=[
+    {n:'Credits',k:'gold',g:'\u29bf',v:(S.gold||0),s:'Battles, expeditions, quests \u2192 gear levels, prestige, rank-ups'},
+    {n:'Uru',k:'dust',g:'\u273a',v:(S.dust||0),s:'Battles, salvage \u2192 gear levels & promotions'},
+    {n:'Kyber Shards',k:'crystals',g:'\u25c6',v:(S.crystals||0),s:'Milestones, albums, siege \u2192 flows passively into Domain Blessings'},
+    {n:'Infinity Stones',k:'stones',g:'\u25c7',v:(S.stones||0),s:'Battles \u2192 gear rarity promotions'},
+    {n:'Iso-8',k:'cores',g:'\u25c8',v:(S.heroCores||0),s:'Bosses \u2192 hero rank-ups & level acceleration'},
+    {n:'Prime Iso-8',k:'cores',g:'\u2b26',v:(S.bossCores||0),s:'Boss milestones \u2192 high rank-ups'},
+    {n:'Force Sparks',k:'sparks',g:'\u2726',v:(S.sparks||0),s:'Premium \u2192 top rank-ups (never auto-spent)'},
+    {n:'Hero Tickets',k:'tickets',g:'\ud83c\udf9f',v:(S.summonTickets||0),s:'Rewards & shards (10 shards = 1) \u2192 summons'},
+    {n:'Grace Tokens',k:'grace',g:'\ud83d\udd4a\ufe0f',v:(S.grace||0),s:'Weekly & monthly reviews → auto-spent to save your habit streaks when you miss a day'}
+  ];
+  var rows=cur.map(function(c){
+    return '<div class="lqlRow"><span class="lqlIcon">'+ic(c.k,c.g)+'</span><span class="lqlName">'+esc(c.n)+'</span><span class="lqlVal">'+C(c.v)+'</span><div class="lqlSrc">'+esc(c.s)+'</div></div>';
+  }).join('');
+  var f=function(fn){ try{ return fn(); }catch(e){ return 1; } };
+  var bl=0,bd=0; try{ var B=blessState(); bd=Object.keys(B).length; for(var k in B) bl+=(B[k]|0); }catch(e){}
+  var sys=[
+    ['Collection','x'+f(collectionMult).toFixed(2),'Owning heroes \u2014 account-wide'],
+    ['Account','x'+f(accountMult).toFixed(2),'Campaign stages cleared \u2014 account-wide'],
+    ['Anvil','x'+f(anvilMult).toFixed(2),'Anvil level (Forge tab) \u2014 account-wide'],
+    ['Blessings','Lv '+bl+' \u00b7 '+bd+' domains','Kyber auto-converts for domains you lived this week \u2014 passive, permanent'],
+    ['Rank','+8%/rank \u00b7 per hero','Rank-ups (Iso-8 + gold)'],
+    ['Prestige','+10%/tier \u00b7 per hero','Gold; weekly cap = 3 + 4\u00d7domains hit \u2014 the habit gate'],
+    ['Bonds','per hero','Grows from playing heroes together'],
+    ['Legend','per hero','Legend renewal victories'],
+    ['Forge','account','Forge upgrades'],
+    ['Ascension','+%/tier \u00b7 per hero','Ascension tiers']
+  ];
+  var srows=sys.map(function(x){
+    return '<div class="lqlRow"><span class="lqlName" style="min-width:96px">'+esc(x[0])+'</span><span class="lqlVal">'+esc(x[1])+'</span><div class="lqlSrc">'+esc(x[2])+'</div></div>';
+  }).join('');
+  return '<div class="lqlHead">Vault</div>'+rows+'<div class="lqlHead" style="margin-top:12px">Power Systems <span style="opacity:.6;font-weight:600;text-transform:none;letter-spacing:0">\u2014 every hero\u2019s power = base \u00d7 all of these</span></div>'+srows;
+}
+function lqOpenLedger(){
+  try{
+    var ov=document.getElementById('lqLedgerOverlay');
+    if(!ov){
+      ov=document.createElement('div'); ov.id='lqLedgerOverlay';
+      ov.innerHTML='<div class="lqlCard"><button class="lqlClose" type="button">\u2715</button><div class="lqlBody"></div></div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click',function(e){ if(e.target===ov) ov.style.display='none'; });
+      ov.querySelector('.lqlClose').addEventListener('click',function(){ ov.style.display='none'; });
+    }
+    ov.querySelector('.lqlBody').innerHTML=lqLedgerRows();
+    ov.style.display='flex';
+  }catch(e){}
+}
+try{ if(typeof window!=='undefined'){ window.lqOpenLedger=lqOpenLedger; } }catch(e){}
+
 function lqRecommend(){
   try{
     var ms=lqModeSummary(); var by={}; ms.forEach(function(m){ by[m.key]=m; });
@@ -20115,7 +20230,7 @@ function lqModeSummary(){
 function lqDashStyles(){
   if(document.getElementById('lqModeDashCss')) return;
   var st=document.createElement('style'); st.id='lqModeDashCss';
-  st.textContent='.lqModeDash{margin:12px 0;padding:12px 14px;border:1px solid rgba(120,160,255,.18);border-radius:14px;background:linear-gradient(180deg,rgba(20,26,44,.55),rgba(12,16,30,.55));}.lqModeDash .lqmHead{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9ec3ff;margin-bottom:8px;}.lqmRow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,.05);}.lqmRow:first-of-type{border-top:0;}.lqmDot{width:8px;height:8px;border-radius:50%;background:#3d4560;flex:0 0 auto;}.lqmDot.on{background:#4fd1a6;box-shadow:0 0 6px rgba(79,209,166,.6);}.lqmName{font-weight:700;font-size:13px;color:#eaf0ff;flex:0 0 auto;min-width:112px;}.lqmCad{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8891ad;background:rgba(255,255,255,.05);padding:1px 6px;border-radius:6px;flex:0 0 auto;}.lqmStat{font-size:12px;color:#b6c0d8;margin-left:auto;text-align:right;}.lqmWin{font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:6px;flex:0 0 auto;}.lqmWin.clear{color:#0c1a12;background:#4fd1a6;}.lqmWin.close{color:#241c06;background:#e8c24a;}.lqmWin.under{color:#2a1216;background:#d76b7a;}.lqmThr{margin-bottom:12px;}.lqmThrRow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}.lqmThrLbl{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#c9b8ff;}.lqmThrVal{font-size:12px;font-weight:700;color:#eaf0ff;}.lqmThrBar{height:7px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;}.lqmThrFill{height:100%;border-radius:6px;background:linear-gradient(90deg,#7c5cff,#4fd1a6);}.lqmThrNote{font-size:10px;color:#8891ad;margin-top:5px;}.lqmTap{cursor:pointer;border-radius:8px;margin:0 -6px;padding-left:6px;padding-right:6px;transition:background .12s;}.lqmTap:hover{background:rgba(120,160,255,.10);}.lqmTap:active{background:rgba(120,160,255,.18);}.lqmChev{color:#6b7699;font-size:15px;font-weight:700;margin-left:8px;flex:0 0 auto;}.lqmRec{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:9px 11px;border-radius:10px;background:linear-gradient(90deg,rgba(124,92,255,.22),rgba(79,209,166,.14));border:1px solid rgba(124,92,255,.35);}.lqmRecTag{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#0c1a12;background:#4fd1a6;padding:2px 7px;border-radius:6px;flex:0 0 auto;}.lqmRecLbl{font-size:13px;font-weight:800;color:#eaf0ff;flex:0 0 auto;}.lqmRecWhy{font-size:11px;color:#c6cfe6;margin-left:auto;text-align:right;}';
+  st.textContent='.lqModeDash{margin:12px 0;padding:12px 14px;border:1px solid rgba(120,160,255,.18);border-radius:14px;background:linear-gradient(180deg,rgba(20,26,44,.55),rgba(12,16,30,.55));}.lqModeDash .lqmHead{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9ec3ff;margin-bottom:8px;}.lqmRow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,.05);}.lqmRow:first-of-type{border-top:0;}.lqmDot{width:8px;height:8px;border-radius:50%;background:#3d4560;flex:0 0 auto;}.lqmDot.on{background:#4fd1a6;box-shadow:0 0 6px rgba(79,209,166,.6);}.lqmName{font-weight:700;font-size:13px;color:#eaf0ff;flex:0 0 auto;min-width:112px;}.lqmCad{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8891ad;background:rgba(255,255,255,.05);padding:1px 6px;border-radius:6px;flex:0 0 auto;}.lqmStat{font-size:12px;color:#b6c0d8;margin-left:auto;text-align:right;}.lqmWin{font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:6px;flex:0 0 auto;}.lqmWin.clear{color:#0c1a12;background:#4fd1a6;}.lqmWin.close{color:#241c06;background:#e8c24a;}.lqmWin.under{color:#2a1216;background:#d76b7a;}.lqmThr{margin-bottom:12px;}.lqmThrRow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}.lqmThrLbl{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#c9b8ff;}.lqmThrVal{font-size:12px;font-weight:700;color:#eaf0ff;}.lqmThrBar{height:7px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;}.lqmThrFill{height:100%;border-radius:6px;background:linear-gradient(90deg,#7c5cff,#4fd1a6);}.lqmThrNote{font-size:10px;color:#8891ad;margin-top:5px;}.lqmTap{cursor:pointer;border-radius:8px;margin:0 -6px;padding-left:6px;padding-right:6px;transition:background .12s;}.lqmTap:hover{background:rgba(120,160,255,.10);}.lqmTap:active{background:rgba(120,160,255,.18);}.lqmChev{color:#6b7699;font-size:15px;font-weight:700;margin-left:8px;flex:0 0 auto;}.lqmRec{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:9px 11px;border-radius:10px;background:linear-gradient(90deg,rgba(124,92,255,.22),rgba(79,209,166,.14));border:1px solid rgba(124,92,255,.35);}.lqmRecTag{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#0c1a12;background:#4fd1a6;padding:2px 7px;border-radius:6px;flex:0 0 auto;}.lqmRecLbl{font-size:13px;font-weight:800;color:#eaf0ff;flex:0 0 auto;}.lqmRecWhy{font-size:11px;color:#c6cfe6;margin-left:auto;text-align:right;}#lqLedgerOverlay{display:none;position:fixed;inset:0;z-index:9000;background:rgba(4,8,18,.72);align-items:center;justify-content:center;padding:18px;}.lqlCard{position:relative;max-width:560px;width:100%;max-height:82vh;overflow:auto;background:linear-gradient(180deg,#141a2e,#0d1120);border:1px solid rgba(120,160,255,.28);border-radius:16px;padding:16px 16px 20px;}.lqlClose{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.08);border:0;color:#cfd8f2;border-radius:8px;width:30px;height:30px;font-size:14px;}.lqlHead{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9ec3ff;margin:2px 0 8px;}.lqlRow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.05);}.lqlIcon{flex:0 0 auto;}.lqlName{font-weight:800;font-size:13px;color:#eaf0ff;}.lqlVal{margin-left:auto;font-weight:800;font-size:13px;color:#4fd1a6;}.lqlSrc{flex-basis:100%;font-size:11px;color:#8f9ab8;line-height:1.35;}';
   document.head.appendChild(st);
 }
 function lqWeeklyDash(v){
@@ -20126,8 +20241,8 @@ function lqWeeklyDash(v){
       var _wb=m.win?('<span class="lqmWin '+m.win.status+'">'+({clear:'Winnable',close:'Close',under:'Under'}[m.win.status]||'')+'</span>'):''; return '<div class="lqmRow lqmTap" data-lqmode="'+esc(m.key)+'"><span class="lqmDot '+(m.done?'on':'')+'"></span><span class="lqmName">'+esc(m.label)+'</span><span class="lqmCad">'+esc(m.cad)+'</span>'+_wb+'<span class="lqmStat">'+esc(m.stat)+'</span><span class="lqmChev">›</span></div>';
     }).join('');
     var sec=document.createElement('section'); sec.className='lqModeDash';
-    var ht=lqHabitThrottle();var thr='<div class="lqmThr"><div class="lqmThrRow"><span class="lqmThrLbl">Habit Throttle</span><span class="lqmThrVal">'+ht.hit+' / '+ht.tot+' domains this week</span></div><div class="lqmThrBar"><div class="lqmThrFill" style="width:'+ht.pct+'%"></div></div><div class="lqmThrNote">More Life Domains → higher weekly prestige cap</div></div>';var rec=lqRecommend();var recHTML=rec?('<div class="lqmRec lqmTap" data-lqmode="'+esc(rec.key)+'"><span class="lqmRecTag">Do Next</span><span class="lqmRecLbl">'+esc(rec.label)+'</span><span class="lqmRecWhy">'+esc(rec.reason)+'</span><span class="lqmChev">›</span></div>'):'';sec.innerHTML=thr+recHTML+'<div class="lqmHead">Battle Modes</div>'+rows;
-    try{ if(v.firstChild){ v.insertBefore(sec, v.firstChild); } else { v.appendChild(sec); } }catch(e){ try{ v.appendChild(sec); }catch(_e){} }try{ sec.querySelectorAll('[data-lqmode]').forEach(function(el){ el.addEventListener('click',function(){ lqNavMode(el.getAttribute('data-lqmode')); }); }); }catch(e){}
+    var ht=lqHabitThrottle();var thr='<div class="lqmThr"><div class="lqmThrRow"><span class="lqmThrLbl">Habit Throttle</span><span class="lqmThrVal">'+ht.hit+' / '+ht.tot+' domains this week</span></div><div class="lqmThrBar"><div class="lqmThrFill" style="width:'+ht.pct+'%"></div></div><div class="lqmThrNote">More Life Domains → higher weekly prestige cap</div>'+(function(){ try{ var B=blessState(); var bl=0,bd=0; for(var k in B){ bl+=(B[k]|0); bd++; } var g=(S.grace||0); return '<div class="lqmThrNote" style="margin-top:3px">Blessings Lv '+bl+' · '+bd+' domains · kyber flows in as you live them'+(g>0?(' · \ud83d\udd4a '+g+' grace guarding streaks'):'')+'</div>'; }catch(e){ return ''; } })()+'</div>';var rec=lqRecommend();var recHTML=rec?('<div class="lqmRec lqmTap" data-lqmode="'+esc(rec.key)+'"><span class="lqmRecTag">Do Next</span><span class="lqmRecLbl">'+esc(rec.label)+'</span><span class="lqmRecWhy">'+esc(rec.reason)+'</span><span class="lqmChev">›</span></div>'):'';sec.innerHTML=thr+recHTML+'<div class="lqmHead">Battle Modes</div>'+rows+'<div class="lqmRow lqmTap" id="lqVaultRow"><span class="lqmDot on"></span><span class="lqmName">Vault &amp; Systems</span><span class="lqmCad">Ledger</span><span class="lqmStat">Every currency · every power source</span><span class="lqmChev">›</span></div>';
+    try{ if(v.firstChild){ v.insertBefore(sec, v.firstChild); } else { v.appendChild(sec); } }catch(e){ try{ v.appendChild(sec); }catch(_e){} }try{ sec.querySelectorAll('[data-lqmode]').forEach(function(el){ el.addEventListener('click',function(){ lqNavMode(el.getAttribute('data-lqmode')); }); }); }catch(e){}try{ var _vr=sec.querySelector('#lqVaultRow'); if(_vr) _vr.addEventListener('click',function(){ lqOpenLedger(); }); }catch(e){}
   }catch(e){}
 }
 try{ if(typeof window!=='undefined'){ window.lqWeeklyDash=lqWeeklyDash; } }catch(e){}
