@@ -2619,7 +2619,7 @@ function inferEnemyElementType(name,boss){ const t=String(name||'').toLowerCase(
   if(/storm|spark|thunder|lightning|wraith|void|chaos|shade|caster/.test(t)) return 'Storm';
   return pickElementFromSeed((boss?'boss:':'enemy:')+name);
 }
-function ensureElementData(){ if(!S) return; (S.heroes||[]).forEach(h=>{ if(h&&h.id&&BALANCED_CLASH_ELEMENTS[h.id]) h.elementType=BALANCED_CLASH_ELEMENTS[h.id]; else if(!validElementType(h.elementType)) h.elementType=inferHeroElementType(h); if(h&&h.id&&BALANCED_CLASH_ROLES[h.id]) h.clashRole=BALANCED_CLASH_ROLES[h.id]; else if(!CLASH_ROLES.includes(h.clashRole)) h.clashRole=inferClashRole(h); }); }
+function ensureElementData(){ if(!S) return; (S.heroes||[]).forEach(h=>{ if(h&&h.elementCustom&&validElementType(h.elementCustom)){ h.elementType=h.elementCustom; } else if(h&&h.id&&BALANCED_CLASH_ELEMENTS[h.id]) h.elementType=BALANCED_CLASH_ELEMENTS[h.id]; else if(!validElementType(h.elementType)) h.elementType=inferHeroElementType(h); if(h&&h.id&&BALANCED_CLASH_ROLES[h.id]) h.clashRole=BALANCED_CLASH_ROLES[h.id]; else if(!CLASH_ROLES.includes(h.clashRole)) h.clashRole=inferClashRole(h); }); }
 function createRandomSeed(){ return (Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10)); }
 
 /* Clash Chapter Data Core — restored in Clean 4A hotfix.
@@ -2800,7 +2800,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.184.1-editor-perf-type-chips';
+const APP_BUILD='v2.184.3-hero-type-edit';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -5808,7 +5808,7 @@ function applyRosterRoleArchetypeBalance(list,opts){
     h.archKey=bal.arch;
     h.archetype=bal.arch;
     if(typeof inferClashRole==='function') h.clashRole=inferClashRole(h);
-    if(typeof inferHeroElementType==='function') h.elementType=inferHeroElementType(h);
+    if(typeof inferHeroElementType==='function' && !(h.elementCustom&&typeof validElementType==='function'&&validElementType(h.elementCustom))) h.elementType=inferHeroElementType(h);
   });
 }
 function generatedArchetype(h){ if(!h)return null; const opts=ROLE_ARCH[normalizeRole(h.role)]||ROLE_ARCH.DPS; const key=opts[v21Hash(h.id)%opts.length]; return {key,...(ARCHETYPE_DEFS[key]||{})}; }
@@ -6242,30 +6242,22 @@ function ofInjectAutoPills(){ try{
   setTimeout(ofInjectAutoPills,900);
 }catch(e){} })();
 /* v2.183.2: element type filter injected into roster filter rows */
-function ofTypeChipRefresh(){ try{
-  var box=document.getElementById('rosTypeChips'); if(!box) return;
-  box.querySelectorAll('[data-etchip]').forEach(function(b){
-    var on=Array.isArray(rosState.etypes)&&rosState.etypes.includes(b.dataset.etchip);
-    b.classList.toggle('active',on); });
-}catch(e){} }
 function ofInjectTypeFilter(){ try{
+  var stale=document.getElementById('rosTypeChips'); if(stale) stale.remove();
   var ip=document.getElementById('rosIP'); if(!ip||!ip.parentElement) return;
-  if(document.getElementById('rosTypeChips')){ ofTypeChipRefresh(); return; }
-  var box=document.createElement('div'); box.id='rosTypeChips';
-  var chips='';
+  var cur=(Array.isArray(rosState.etypes)&&rosState.etypes[0])||'all';
+  var ex=document.getElementById('rosType');
+  if(ex){ if(ex.value!==cur) ex.value=cur; return; }
+  var sel=document.createElement('select'); sel.id='rosType';
+  sel.setAttribute('style', ip.getAttribute('style')||'padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:12px');
+  var opts='<option value="all"'+(cur==='all'?' selected':'')+'>All types</option>';
   (typeof ELEMENT_TYPES!=='undefined'?ELEMENT_TYPES:['Flame','Storm','Stone','Tide','Grove']).forEach(function(t){
-    var badge=(typeof elementBadge==='function')?elementBadge(t,false):t;
-    chips+='<button type="button" class="rosTypeChip" data-etchip="'+t+'">'+badge+'</button>'; });
-  box.innerHTML=chips;
-  box.addEventListener('click',function(e){ var b=e.target.closest('[data-etchip]'); if(!b) return;
-    try{ e.preventDefault(); }catch(_e){}
-    if(!Array.isArray(rosState.etypes)) rosState.etypes=[];
-    var t=b.dataset.etchip, i=rosState.etypes.indexOf(t);
-    if(i>=0) rosState.etypes.splice(i,1); else rosState.etypes.push(t);
-    ofTypeChipRefresh();
-    try{ var r=document.getElementById('rosRole'); if(r&&r.onchange) r.onchange({target:{value:rosState.role}}); }catch(_e){} });
-  ip.parentElement.insertBefore(box, ip);
-  ofTypeChipRefresh();
+    var ic=(typeof ELEMENT_META!=='undefined'&&ELEMENT_META[t]&&ELEMENT_META[t].icon)||'';
+    opts+='<option value="'+t+'"'+(cur===t?' selected':'')+'>'+ic+' '+t+'</option>'; });
+  sel.innerHTML=opts;
+  sel.onchange=function(e){ rosState.etypes=(e.target.value==='all')?[]:[e.target.value];
+    try{ var r=document.getElementById('rosRole'); if(r&&r.onchange) r.onchange({target:{value:rosState.role}}); }catch(_e){} };
+  ip.parentElement.insertBefore(sel, ip);
 }catch(e){} }
 (function installTypeFilterHook(){ try{
   if(typeof render==='function'&&!render.__ofTypeFilter){ var __r3=render;
@@ -8212,7 +8204,7 @@ function openHeroSheet(id){
       return '<button type="button" data-archpick="'+k+'" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:800;border:2px solid '+(active?'var(--accent)':'var(--line)')+';background:'+(active?'var(--accent)':'var(--panel2)')+';color:'+(active?'#04222a':'var(--ink)')+';cursor:pointer;margin:2px">'+esc(ad.label)+'</button>';
     }).join('');
     const resetChip=archKey?'<button type="button" data-archpick="__default" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;border:2px dashed var(--line);background:var(--panel2);color:var(--muted);cursor:pointer;margin:2px">↺ Default</button>':'';
-    return '<div class="heroPanelV141 hsec hsec-identity"><h4>Ability & Identity <span id="archLabelSpan">'+esc(h.role)+' · '+esc(curKey&&ARCHETYPE_DEFS[curKey]?ARCHETYPE_DEFS[curKey].label:'Specialist')+'</span></h4><p id="archDescP" style="margin-bottom:8px">'+esc(curKey&&ARCHETYPE_DEFS[curKey]?ARCHETYPE_DEFS[curKey].desc:'Flexible combat identity.')+'</p>'+'<div style="margin:0 0 9px;padding:8px 10px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)"><div style="font-size:10px;font-weight:900;letter-spacing:.5px;color:var(--accent);margin-bottom:3px">\u2694 BATTLE ABILITY</div><div id="archAbilityP" style="font-size:12px;color:var(--ink);font-weight:600;line-height:1.45">'+esc(archAbilityText(curKey))+'</div></div>'+'<div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">'+chips+resetChip+'</div>'+(p?'<div class="passivebox" style="margin-top:6px"><div class="pt">Passive · '+esc(p.name)+'</div><div class="pd">'+esc(p.desc)+'</div></div>':'')+'<div style="margin-top:8px">'+(metaChips(h)||'')+'</div></div>';
+    return '<div class="heroPanelV141 hsec hsec-identity"><h4>Ability & Identity <span id="archLabelSpan">'+esc(h.role)+' · '+esc(curKey&&ARCHETYPE_DEFS[curKey]?ARCHETYPE_DEFS[curKey].label:'Specialist')+'</span></h4><p id="archDescP" style="margin-bottom:8px">'+esc(curKey&&ARCHETYPE_DEFS[curKey]?ARCHETYPE_DEFS[curKey].desc:'Flexible combat identity.')+'</p>'+'<div style="margin:0 0 9px;padding:8px 10px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)"><div style="font-size:10px;font-weight:900;letter-spacing:.5px;color:var(--accent);margin-bottom:3px">\u2694 BATTLE ABILITY</div><div id="archAbilityP" style="font-size:12px;color:var(--ink);font-weight:600;line-height:1.45">'+esc(archAbilityText(curKey))+'</div></div>'+'<div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">'+chips+resetChip+'</div>'+(function(){ var curE=h.elementType||''; var ec=(typeof ELEMENT_TYPES!=='undefined'?ELEMENT_TYPES:[]).map(function(t){ var act=(t===curE); var m=(typeof ELEMENT_META!=='undefined'&&ELEMENT_META[t])||{}; return '<button type="button" data-elpick="'+t+'" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:800;border:2px solid '+(act?(m.color||'var(--accent)'):'var(--line)')+';background:'+(act?'color-mix(in srgb,'+(m.color||'#ffffff')+' 22%,var(--panel2))':'var(--panel2)')+';color:var(--ink);cursor:pointer;margin:2px">'+(m.icon||'')+' '+t+'</button>'; }).join(''); var rst=h.elementCustom?'<button type="button" data-elpick="__default" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;border:2px dashed var(--line);background:var(--panel2);color:var(--muted);cursor:pointer;margin:2px">\u21ba Default</button>':''; return '<div style="font-size:10px;font-weight:900;letter-spacing:.5px;color:var(--accent);margin:6px 0 3px">ELEMENT TYPE</div><div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">'+ec+rst+'</div>'; })()+(p?'<div class="passivebox" style="margin-top:6px"><div class="pt">Passive · '+esc(p.name)+'</div><div class="pd">'+esc(p.desc)+'</div></div>':'')+'<div style="margin-top:8px">'+(metaChips(h)||'')+'</div></div>';
   })()+ 
     '<div class="heroPanelV141 hsec hsec-identity"><h4>Bond & Domains <span>Bond Lv '+bondLevel(h)+'</span></h4><div>'+affChips(h.aff)+'</div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:var(--muted);margin:9px 2px 4px"><span>+'+(bondLevel(h)*2)+'% power</span><span>'+((h.bondXp||0)-bondCum(bondLevel(h)))+' / '+(bondCum(bondLevel(h)+1)-bondCum(bondLevel(h)))+'</span></div><div class="xpbar"><i style="width:'+Math.min(100,((h.bondXp||0)-bondCum(bondLevel(h)))/(bondCum(bondLevel(h)+1)-bondCum(bondLevel(h)))*100)+'%;background:linear-gradient(90deg,#ff5d9e,#ffb01f)"></i></div><button class="go" id="h_bond" style="margin-top:10px;background:linear-gradient(135deg,#ff5d9e,#ffb01f);color:#1a0714">Open Bond Journal</button></div>'+ 
     ''+ 
@@ -8225,6 +8217,18 @@ function openHeroSheet(id){
   const persistPortrait=()=>{ setHeroPortraitOverride(h.id,img); h.img=img||null; renderHUD(); render(); save(); };
   document.getElementById('h_name').oninput=e=>{ name=e.target.value; if(!img) syncPortrait(); };
   segPick('h_role',r=>{ role=r; },'r');
+  document.querySelectorAll('[data-elpick]').forEach(btn=>{
+    btn.onclick=()=>{ try{
+      const v=btn.dataset.elpick;
+      if(v==='__default'){ delete h.elementCustom;
+        if(h.id&&typeof BALANCED_CLASH_ELEMENTS==='object'&&BALANCED_CLASH_ELEMENTS[h.id]) h.elementType=BALANCED_CLASH_ELEMENTS[h.id];
+        else if(typeof inferHeroElementType==='function') h.elementType=inferHeroElementType(h);
+        toast('Element restored: '+h.elementType); }
+      else { h.elementCustom=v; h.elementType=v; toast('Element set: '+v); }
+      try{ if(typeof c7EnsureSquad==='function') c7EnsureSquad.__k=null; }catch(_e){}
+      save(); openHeroSheet(h.id);
+    }catch(e){} };
+  });
   document.querySelectorAll('[data-archpick]').forEach(btn=>{
     btn.onclick=()=>{
       const k=btn.dataset.archpick;
