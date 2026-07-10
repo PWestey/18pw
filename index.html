@@ -2800,8 +2800,8 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.182.0-gauntlet-journey';
-const EXPECTED_ROSTER_COUNT=439;
+const APP_BUILD='v2.182.3-heroes-nemona-alera';
+const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
 
@@ -12048,6 +12048,32 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   window.__of2165ReleaseOneCodexAlera=true;
   const RELEASE_HEROES=[
   {
+    "id": "pokemon__nemona",
+    "name": "Nemona",
+    "ip": "Pokemon",
+    "role": "DPS",
+    "color": "#ffcb05",
+    "owned": false,
+    "aff": ["fitness","hobbies","discipline"],
+    "archetype": "Champion Rival",
+    "identity": "Paldea's Champion who trains up her own rival \u2014 she would rather forge a worthy opponent than stand alone at the top.",
+    "desc": "Paldea's Champion who trains up her own rival \u2014 she would rather forge a worthy opponent than stand alone at the top.",
+    "tags": ["pokemon","champion","rival"]
+  },
+  {
+    "id": "codex_alera__alera",
+    "name": "Alera",
+    "ip": "Codex Alera",
+    "role": "Support",
+    "color": "#9bb35a",
+    "owned": false,
+    "aff": ["faith","home","work"],
+    "archetype": "Spirit of the Realm",
+    "identity": "The living spirit of the realm given form \u2014 ancient counsel to those who would lead, spending herself so the land and its people endure.",
+    "desc": "The living spirit of the realm given form \u2014 ancient counsel to those who would lead, spending herself so the land and its people endure.",
+    "tags": ["codex_alera","fury","realm"]
+  },
+  {
     "id": "marvel__black_cat",
     "name": "Black Cat",
     "ip": "Marvel",
@@ -13493,6 +13519,16 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   }
 ];
   const RELEASE_PASSIVES={
+  "pokemon__nemona": {
+    "name": "Rival's Fire",
+    "effect": "rally",
+    "desc": "Nemona's relentless enthusiasm rallies the squad \u2014 allies fight harder while she presses the attack."
+  },
+  "codex_alera__alera": {
+    "name": "Counsel of Ages",
+    "effect": "wisdom",
+    "desc": "The realm's ancient guidance steadies the squad, strengthening support and resolve as the battle lengthens."
+  },
   "marvel__black_cat": {
     "name": "Borrowed Luck",
     "effect": "backCrit",
@@ -13820,6 +13856,8 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   }
 };
   const RELEASE_ULTIMATES={
+  "pokemon__nemona": "Champion's Challenge",
+  "codex_alera__alera": "The Realm Endures",
   "marvel__black_cat": "Probability Theft",
   "marvel__nico_minoru": "Staff of One",
   "disney_pixar__sadness": "Memory That Matters",
@@ -13887,6 +13925,8 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   "pokemon__mollie": "Aerial Clinic Revival"
 };
   const RELEASE_ULT_QUOTES={
+  "pokemon__nemona": "Show me everything you've got \u2014 that's what rivals are for!",
+  "codex_alera__alera": "I have watched a thousand years of your kind. Endure, as the land endures.",
   "marvel__black_cat": "Luck is not fair. That is why I like it.",
   "marvel__nico_minoru": "One word is enough when you mean it.",
   "disney_pixar__sadness": "Sometimes the hard feeling is the one that heals.",
@@ -15317,6 +15357,8 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   }
 };
   const RELEASE_ROLE_ARCH={
+  "pokemon__nemona": { "role": "DPS", "arch": "Striker" },
+  "codex_alera__alera": { "role": "Support", "arch": "Healer" },
   "marvel__black_cat": {
     "role": "DPS",
     "arch": "Assassin"
@@ -15647,6 +15689,8 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   }
 };
   const RELEASE_CLASH_ELEMENTS={
+  "pokemon__nemona": "Stone",
+  "codex_alera__alera": "Grove",
   "marvel__black_cat": "Storm",
   "marvel__nico_minoru": "Tide",
   "disney_pixar__sadness": "Grove",
@@ -15714,6 +15758,8 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   "pokemon__mollie": "Grove"
 };
   const RELEASE_CLASH_ROLES={
+  "pokemon__nemona": "Melee DPS",
+  "codex_alera__alera": "Support",
   "marvel__black_cat": "Melee DPS",
   "marvel__nico_minoru": "Support",
   "disney_pixar__sadness": "Healer",
@@ -16401,10 +16447,10 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7SlotMeta(index,ch){ const lanes=c7Lanes(ch), count=lanes.length*C7_ROWS.length; index=Math.max(0,Math.min(count-1,Math.floor(index||0))); const row=C7_ROWS[Math.floor(index/lanes.length)]||'front', lane=lanes[index%lanes.length]||lanes[0]; return {index,row,lane:lane.key,laneLabel:lane.label,typeKey:lane.typeKey||null,basic:!!lane.basic,typed:!!lane.typed,label:lane.label+' · '+cap7(row)}; }
   function c7Pattern(ch,stage){ let base; const ch2=ch||c7Chapter(), st2=stage||c7Stage(); try{ const cd=getClashChapterData(ch2); base=cd.patterns[getClashPatternIndexForStage(st2)]||{left:'Flame',center:'Grove',right:'Stone'}; }catch(e){ base={left:'Flame',center:'Grove',right:'Stone'}; }
   const p={left:base.left,center:base.center,right:base.right};
-  try{ const core=[p.left,p.center,p.right].filter(Boolean); const absent=ELEMENT_TYPES.filter(t=>core.indexOf(t)<0); if(absent.length){ const hsh=(typeof stableHash==='function')?stableHash('c7far:'+(ch2||0)+':'+(st2||0)):0; p.farLeft=absent[hsh%absent.length]; p.farRight=absent.length>1?absent[(hsh+1)%absent.length]:p.farLeft; } }catch(e){}
+  try{ const core=[p.left,p.center,p.right].filter(Boolean); const absent=ELEMENT_TYPES.filter(t=>core.indexOf(t)<0); if(absent.length){ const hsh=(typeof stableHash==='function')?stableHash('c7far:'+(ch2||0)+':'+getClashPatternIndexForStage(st2||1)):0; p.farLeft=absent[hsh%absent.length]; p.farRight=absent.length>1?absent[(hsh+1)%absent.length]:p.farLeft; } }catch(e){}
   return p; }
   function c7LaneType(lane,ch,stage,pattern){ const cfg=typeof lane==='string'?c7Lanes(ch).find(l=>l.key===lane):lane; if(!cfg) return null; if(cfg.basic) return null; pattern=pattern||c7Pattern(ch,stage); const k=cfg.typeKey||cfg.key; if(pattern[k]) return pattern[k];
-    if(k==='farLeft'||k==='farRight'){ try{ const core=[pattern.left,pattern.center,pattern.right].filter(Boolean); const absent=ELEMENT_TYPES.filter(t=>core.indexOf(t)<0); if(absent.length){ const hsh=(typeof stableHash==='function')?stableHash('c7far:'+(ch||0)+':'+(stage||0)):0; const fl=absent[hsh%absent.length]; const fr=absent.length>1?absent[(hsh+1)%absent.length]:fl; return k==='farLeft'?fl:fr; } }catch(e){} }
+    if(k==='farLeft'||k==='farRight'){ try{ const core=[pattern.left,pattern.center,pattern.right].filter(Boolean); const absent=ELEMENT_TYPES.filter(t=>core.indexOf(t)<0); if(absent.length){ const hsh=(typeof stableHash==='function')?stableHash('c7far:'+(ch||0)+':'+getClashPatternIndexForStage(stage||1)):0; const fl=absent[hsh%absent.length]; const fr=absent.length>1?absent[(hsh+1)%absent.length]:fl; return k==='farLeft'?fl:fr; } }catch(e){} }
     return pattern[k]||null; }
   function c7ElementBadge(type,small){ if(type && typeof validElementType==='function' && validElementType(type)) return elementBadge(type,small); return '<span class="elementBadge c7basic" style="--el:#9ca3af">◇'+(small?'':' Basic')+'</span>'; }
   function c7CounterBadge(type,small){ return type?elementBadge(elementCounterFor(type),small):c7ElementBadge(null,small); }
@@ -16518,7 +16564,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   window.clashSquadFitHTML=function(){
     const st=c7LaneStats();
     const rows=st.lanes.map(l=>{ const x=st.byLane[l.key], type=x.type; return '<div class="clashFitLane '+(st.weak===l.key?'weak':'')+' '+(x.basic?'basic':'')+'"><div><b>'+esc7(l.label)+' Lane</b><span>'+c7ElementBadge(type,true)+(x.basic?' · Basic pressure':' → '+c7CounterBadge(type,true))+'</span></div><div class="fitNums"><b>'+x.adv+'</b><span>adv</span><b>'+x.dis+'</b><span>bad</span></div></div>'; }).join('');
-    const sub=c7IsFive(st.chapter)?'Chapter 2+ unlocks 5 lanes: outer lanes are Basic pressure, middle 3 lanes keep type counters.':'Chapter 1 warm-up uses 3 typed lanes.';
+    const sub=c7IsFive(st.chapter)?'Chapter 2+ unlocks 5 lanes \u2014 all typed. Outer lanes carry the two elements missing from the core, steady across each 10-stage band.':'Chapter 1 warm-up uses 3 typed lanes.';
     return '<div class="clashFitBox c7"><div class="clashBoxHead"><b>Squad Fit</b><span>'+st.coverage+'/'+st.typedSlots+' typed advantage</span></div><div class="clashFitSummary">'+sub+' Weakest lane: <b>'+esc7((st.lanes.find(l=>l.key===st.weak)||{}).label||cap7(st.weak))+'</b>.</div>'+rows+'</div>';
   };
   window.clashFormationPreviewHTML=function(){
@@ -16538,7 +16584,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7BossBehaviorLabel(b){ const map={laneBrute:'Lane Brute',twinLaneCrusher:'Twin-Lane Crusher',fieldTyrant:'Field Tyrant',hopper:'Hopper',summoner:'Summoner',backlineHunter:'Backline Hunter',shieldedBoss:'Shielded Boss',chapterTyrant:'Chapter Tyrant'}; return map[b]||cap7(String(b||'boss')); }
   function c7BossPreviewHTML(chapterData,stage,ch){
     const idx=getClashPatternIndexForStage(stage), boss=chapterData.bosses[idx], kind=getClashStageKind(stage); if(kind!=='boss'&&kind!=='chapterBoss') return '';
-    const label=boss.isChapterBoss?'Final Chapter Boss':'Boss Preview', flank=c7IsFive(ch)?' · outer Basic lanes keep spawning pressure':'';
+    const label=boss.isChapterBoss?'Final Chapter Boss':'Boss Preview', flank=c7IsFive(ch)?' · outer lanes press with the off-pattern elements':'';
     return '<div class="clashBossBox"><div class="clashBoxHead"><b>☠ '+label+'</b><span>Stage '+boss.stage+'</span></div><div class="clashBossGrid"><div><span>Boss Type</span><b>'+elementBadge(boss.type,false)+'</b></div><div><span>Counter</span><b>'+elementBadge(elementCounterFor(boss.type),false)+'</b></div><div><span>Behavior</span><b>'+esc7(c7BossBehaviorLabel(boss.behavior))+'</b></div></div><p>Lane enemies still follow the active formation'+flank+'. The boss adds one extra counter priority.</p></div>';
   }
   function c7ChapterPathHTML(chapterData,currentStage,ch){
@@ -16554,7 +16600,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     return '<div class="stagecard" style="border-color:#cdbcff66"><h3>⚡ '+ofModeTitle('clash')+'</h3><p>Chapter '+ch+' · Stage '+stage+'/80 · '+cap7(kind)+' · '+unlock+'</p></div>'+'<details class="clashDetailsFold"><summary>⚡ Battle details · patterns, rewards & map</summary>'+clashElementWheelHTML()+
       '<div class="clashPatternBox"><div class="clashBoxHead"><b>'+title+'</b><span>Pattern '+(idx+1)+' / 8</span></div>'+c7LanePreviewHTML(pattern,ch)+c7BossPreviewHTML(cd,stage,ch)+'<div class="clashPatternFoot"><span>Typed distribution this chapter: '+c7PatternSummary(cd)+'</span></div></div>'+c7RewardPreviewHTML(ch,stage,kind)+
       '<div class="battleWorld" style="--worldColor:#cdbcff"><div class="bwHead"><b>🗺 Battle Map</b><span>'+(c7IsFive(ch)?'5-lane formation active':'3-lane warm-up')+'</span></div>'+c7ChapterPathHTML(cd,stage,ch)+'<div class="battleWorldStats"><div class="bws"><b>C'+ch+'</b><span>chapter</span></div><div class="bws"><b>'+stage+'</b><span>stage</span></div><div class="bws"><b>'+progress+'%</b><span>chapter</span></div></div></div>'+'</details>'+clashSquadFitHTML()+
-      '<div class="team-strip"><div class="lab"><span>Clash Squad · '+slots+' slots</span><b>PWR '+tp+'</b></div>'+clashFormationPreviewHTML()+'<div class="clashNote">Chapter 1 is a 3-lane warm-up. Chapter 2+ expands to 5 lanes with 4 heroes per lane; outer lanes are Basic pressure lanes with no type counter.</div></div>'+ 
+      '<div class="team-strip"><div class="lab"><span>Clash Squad · '+slots+' slots</span><b>PWR '+tp+'</b></div>'+clashFormationPreviewHTML()+'<div class="clashNote">Chapter 1 is a 3-lane warm-up. Chapter 2+ expands to 5 lanes with 4 heroes per lane; outer lanes are typed with the two elements missing from the middle three \u2014 counter them too.</div></div>'+ 
       '<div class="clashStepRow" style="display:flex;gap:7px;align-items:flex-end;margin-bottom:9px">'+'<label style="flex:1;display:flex;flex-direction:column;gap:3px;font-size:10px;font-weight:800;color:var(--muted)">CHAPTER<input id="clashSetCh" type="number" min="1" value="'+ch+'" style="padding:9px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800;font-family:Orbitron"></label>'+'<label style="flex:1;display:flex;flex-direction:column;gap:3px;font-size:10px;font-weight:800;color:var(--muted)">STAGE<input id="clashSetSt" type="number" min="1" max="80" value="'+stage+'" style="padding:9px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800;font-family:Orbitron"></label>'+'<button class="go" onclick="clashSetStageFromInputs()" style="flex:0 0 auto;background:var(--panel2);color:var(--ink);border:1px solid var(--line);white-space:nowrap;padding:9px 13px">Lower Stage</button>'+'</div>'+'<div class="clashStartRow"><button class="fight fightOpt" onclick="clashAutoOptimize(true)">Optimize</button><button class="fight" onclick="startClashBattle()">Begin Battle</button></div>';
   };
   function c7HeroTile(hero,index,selected){ const ch=c7Chapter(), slot=c7SlotMeta(index,ch), pattern=c7Pattern(ch,c7Stage()), laneType=slot.basic?null:(pattern[slot.typeKey||slot.lane]||null), m=hero?c7Match(hero.elementType,laneType):'neutral'; return '<button class="clashEditSlot '+(selected===index?'selected ':'')+m+' '+(slot.basic?'basic':'')+'" onclick="openClashSquadEditor('+index+')"><div class="cesTop"><b>'+esc7(slot.laneLabel)+'</b><span>'+cap7(slot.row)+'</span></div><div class="cesFace" style="background:'+(hero?hero.color:'#111827')+'">'+(hero?(hero.img?'<img src="'+hero.img+'" alt="">':esc7(hero.name.slice(0,2).toUpperCase())):'—')+'</div><div class="cesName">'+(hero?esc7(hero.name):'Empty')+'</div><div class="cesSub">'+(hero?c7ElementBadge(hero.elementType,true)+' '+esc7(hero.clashRole||'Role'):'No hero')+'</div></button>'; }
@@ -16793,7 +16839,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   window.closeClashBattle=function(){ if(battle7&&battle7.timer) clearInterval(battle7.timer); if(battle7&&battle7.autoTimer) clearTimeout(battle7.autoTimer); if(battle7&&battle7.watchdog) clearInterval(battle7.watchdog); battle7=null; const o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); try{ if(typeof render==='function') render(); }catch(e){} };
   window.c7BattleInterval=function(){ const sp=c7SpeedValue(); return sp===3?220:(sp===2?300:C7.tickMs); };
   window.setClashSpeed=function(){ if(!battle7||battle7.ended) return; const cur=c7SpeedValue(); battle7.speed=cur===1?2:cur===2?3:1; try{ if(S.clash) S.clash.speed=battle7.speed; if(typeof save==='function') save(); }catch(e){} if(battle7.timer) clearInterval(battle7.timer); battle7.timer=setInterval(c7Tick,c7BattleInterval()); c7RenderBattle(); };
-  window.toggleClashAutoBattle=function(){ if(!S.clash) ensureClashState(); if(!S.appSettings) S.appSettings={}; var on=!!S.clash.autoBattle, res=(S.appSettings.autoMode==='resolve'); if(!on){ S.clash.autoBattle=true; S.appSettings.autoMode='watch'; } else if(!res){ S.appSettings.autoMode='resolve'; } else { S.clash.autoBattle=false; S.appSettings.autoMode='off'; } if(typeof save==='function') save(); var m=S.appSettings.autoMode; safeToast7(!S.clash.autoBattle?'Clash auto off.':(m==='resolve'?'Auto Resolve: stages resolve instantly and chain.':'Auto Watch: stages play out and chain.')); c7RenderBattle(); };
+  window.toggleClashAutoBattle=function(){ if(!S.clash) ensureClashState(); if(!S.appSettings) S.appSettings={}; var on=!!S.clash.autoBattle, res=(S.appSettings.autoMode==='resolve'); if(!on){ S.clash.autoBattle=true; S.appSettings.autoMode='watch'; } else if(!res){ S.appSettings.autoMode='resolve'; } else { S.clash.autoBattle=false; S.appSettings.autoMode='off'; } if(typeof save==='function') save(); var m=S.appSettings.autoMode; safeToast7(!S.clash.autoBattle?'Clash auto off.':(m==='resolve'?'Auto Resolve: stages resolve instantly and chain.':'Auto Watch: stages play out and chain.')); if(m==='resolve'&&S.clash.autoBattle){ try{ if(typeof window.skipClashBattle==='function') window.skipClashBattle(); }catch(_e){} } c7RenderBattle(); };
   const oldBMD7=(typeof battleHubModeData==='function')?battleHubModeData:null; if(oldBMD7 && !window.__clashPass7WrappedBMD){ window.__clashPass7WrappedBMD=true; battleHubModeData=function(){ const d=oldBMD7.apply(this,arguments); try{ if(d&&d.clash){ const ch=c7Chapter(); d.clash.pill=c7IsFive(ch)?'5-lane active':'Warm-up'; d.clash.sub=c7IsFive(ch)?'20 heroes · outer basic lanes':'12 heroes · 3 typed lanes'; d.clash.meta='Chapter '+ch+' Clash'; d.clash.stat='C'+ch+' · S'+c7Stage(); } }catch(e){} return d; }; }
   function inject7(){ if(document.getElementById('clashPass7Styles')) return; const st=document.createElement('style'); st.id='clashPass7Styles'; st.textContent=`
     .elementBadge.c7basic{border-color:#9ca3af66;background:#9ca3af18;color:#d1d5db}.clashLaneGrid.c7.five{grid-template-columns:repeat(5,minmax(0,1fr))}.clashLaneCard.basic{border-style:dashed;background:linear-gradient(135deg,rgba(156,163,175,.10),rgba(255,255,255,.025))}.clashFitBox.c7 .clashFitLane.basic{border-style:dashed}.clashFormation.c7.five{grid-template-columns:repeat(5,minmax(0,1fr))}.clashFormation.c7.three{grid-template-columns:repeat(3,minmax(0,1fr))}.clashSlot.c7.basic{border-style:dashed}.clashEditGrid.c7.five{grid-template-columns:repeat(5,minmax(0,1fr))}.clashEditGrid.c7.three{grid-template-columns:repeat(3,minmax(0,1fr))}.clashEditor.c7{max-height:92vh}.clashBattlePanel.c7.five{width:min(720px,100%)}.clashArenaGrid.c7.five{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.clashLaneBattle.basic{border-style:dashed}.clashEnemyToken.basic .enemyFace{opacity:.92}.clashBattlePanel.c7.five .clashHeroCell{grid-template-columns:30px 1fr;min-height:47px}.clashBattlePanel.c7.five .heroTile{width:30px;height:30px;border-radius:9px}.clashBattlePanel.c7.five .heroTags{font-size:7px}.clashBattlePanel.c7.five .clashEnemyToken{width:38px}.clashBattlePanel.c7.five .enemyFace{height:29px}.clashBattlePanel.c7.five .clashEnemyToken.boss{width:48px}.clashBattlePanel.c7.five .clashEnemyToken.boss .enemyFace{height:40px}
