@@ -1064,6 +1064,11 @@ const RANKUP=[{cores:8,gold:75},{cores:18,gold:175},{cores:35,gold:350},{cores:7
 /* ===== Currency -> Core auto-conversion (weekly-capped). Drains oversupplied dust/crystals/sparks into
    Hero (and optionally Boss) Cores automatically at rank-up. Weekly cap preserves core scarcity. Dev-tunable via TUNE.conv*. ===== */
 function domainWeekState(){ var wk=(typeof periodKey==='function')?periodKey('weekly'):'W0'; if(!S.domainWeek||S.domainWeek.week!==wk){ S.domainWeek={week:wk,doms:{}}; } if(!S.domainWeek.doms||typeof S.domainWeek.doms!=='object') S.domainWeek.doms={}; return S.domainWeek; }
+function ofModeTitle(key){
+  try{ var L=(typeof window!=='undefined')&&window.OF2152_LABELS; if(L){ if(L.sub&&L.sub[key]) return L.sub[key]; if(L.war&&L.war[key]&&L.war[key].title) return L.war[key].title; } }catch(e){}
+  var F={campaign:'Victory Road',tower:'Avengers Tower',clash:'Squadron Clash',raid:'Tera Raid',siege:'Z-A Royale',expeditions:'Pok\u00e9 Jobs',conquest:'Outer Rim Conquest',gauntlet:'Jedi Gauntlet',rift:'Daily Hyperspace Rift',arena:'Contest of Champions'};
+  return F[key]||key;
+}
 function logDomainWeek(k){ if(!k) return; try{ if(typeof DKEY!=='undefined' && !DKEY[k]) return; domainWeekState().doms[k]=1; }catch(e){} }
 function domainsHitThisWeek(){ try{ var n=Object.keys(domainWeekState().doms||{}).length; var mx=(typeof DOMAINS!=='undefined'&&DOMAINS.length)?DOMAINS.length:8; return Math.min(n,mx); }catch(e){ return 0; } }
 function prestigeWeekState(){ var wk=(typeof periodKey==='function')?periodKey('weekly'):'W0'; if(!S.prestigeWeek||S.prestigeWeek.week!==wk){ S.prestigeWeek={week:wk,used:0}; } if(typeof S.prestigeWeek.used!=='number') S.prestigeWeek.used=0; return S.prestigeWeek; }
@@ -1341,7 +1346,7 @@ function showResourceSource(topic){
 var FAQ_DATA=[
  {cat:'Game Modes',q:'What is Campaign?',a:'Push campaign stages to raise your idle income. Each stage cleared increases EXP, gold, and dust per hour while away. Bosses appear every few stages.',kw:'campaign stage idle income push'},
  {cat:'Game Modes',q:'What is the Tower?',a:'Pure upgrade fuel - you never lose floors. Mini-bosses drop gear and Stones; major bosses give Sparks and cores. It does not raise idle income.',kw:'tower floor mini boss stones sparks'},
- {cat:'Game Modes',q:'What is Clash Trials?',a:'A lane-strategy auto-battler organized by chapters and stages. First clears pay gold, dust, bond XP, and Stones; replays pay a fraction. You can lower your Clash stage in the lobby to fight easier content.',kw:'clash trials lane chapter stage bond stones lower reduce'},
+ {cat:'Game Modes',q:'What is Squadron Clash?',a:'A lane-strategy auto-battler organized by chapters and stages. First clears pay gold, dust, bond XP, and Stones; replays pay a fraction. You can lower your Clash stage in the lobby to fight easier content.',kw:'clash trials lane chapter stage bond stones lower reduce'},
  {cat:'Game Modes',q:'What is Raid?',a:'Overkill rewards Hero Cores and gold; milestone chests at 75% and 100% give gear, Stones, and a Spark.',kw:'raid overkill cores sparks milestone'},
  {cat:'Game Modes',q:'What are Expeditions?',a:'An idle dispatch mode - send field teams of heroes out to earn idle rewards over time.',kw:'expedition dispatch idle field team board'},
  {cat:'Game Modes',q:'What do Tasks and habits do?',a:'Completing your real-life dailies is the engine of the game: it raises Momentum (an idle-income multiplier), builds each domain Forge level, and deepens hero bonds. The game always points back to the habits.',kw:'tasks habits dailies momentum forge bond'},
@@ -2786,7 +2791,7 @@ function clashTeamPower(){ ensureClashState(); return clashSquad().reduce((s,id)
 function ensureStarterClashSquad(){ ensureClashState(); if(S.clashSquad.length>=12) return; const owned=(S.heroes||[]).filter(h=>h&&h.owned).sort((a,b)=>powerOf(b)-powerOf(a)); owned.forEach(h=>{ if(S.clashSquad.length<12 && !S.clashSquad.includes(h.id)) S.clashSquad.push(h.id); }); }
 function clashElementWheelHTML(){ const chain=['Flame','Grove','Stone','Storm','Tide']; return '<div class="clashWheel"><div class="cwTitle">Type Wheel</div><div class="cwChain">'+chain.map(t=>elementBadge(t,true)+'<span class="arr">›</span>').join('').replace(/<span class="arr">›<\/span>$/,'')+'</div><div class="cwSub">Flame beats Grove · Grove beats Stone · Stone beats Storm · Storm beats Tide · Tide beats Flame</div></div>'; }
 function clashFormationPreviewHTML(){ ensureStarterClashSquad(); const ids=clashSquad(); const cells=[]; CLASH_LANES.forEach(l=>CLASH_ROWS.forEach(r=>{ const idx=cells.length, h=(S.heroes||[]).find(x=>x.id===ids[idx]); cells.push('<div class="clashSlot"><div class="csRow">'+cap(r)+'</div><div class="csFace" style="background:'+(h?h.color:'#111827')+'">'+(h?(h.img?'<img src="'+h.img+'" alt="">':h.name.slice(0,2).toUpperCase()):'—')+'</div><div class="csMeta">'+(h?elementBadge(h.elementType,true)+' '+esc(h.clashRole||'Role'):'Empty')+'</div></div>'); })); return '<div class="clashFormation">'+cells.join('')+'</div>'; }
-function clashFoundationHTML(){ ensureClashState(); ensureStarterClashSquad(); const c=S.clash; const tp=clashTeamPower(); const progress=Math.round(((c.stage-1)/80)*100); return '<div class="stagecard" style="border-color:#cdbcff66"><h3>⚡ Clash Trials</h3><p>Chapter '+c.chapter+' · Stage '+c.stage+'/80 · lane strategy mode</p></div>'+clashElementWheelHTML()+'<div class="team-strip"><div class="lab"><span>Clash Squad · 12 slots</span><b>PWR '+tp+'</b></div>'+clashFormationPreviewHTML()+'<div class="clashNote">Clash Trials uses lane formations, automatic combat, and elemental counters.</div></div><div class="battleWorld" style="--worldColor:#cdbcff"><div class="bwHead"><b>⚡ Procedural Chapter Track</b><span>seeded foundation</span></div><div class="battleWorldStats"><div class="bws"><b>C'+c.chapter+'</b><span>chapter</span></div><div class="bws"><b>'+c.stage+'</b><span>stage</span></div><div class="bws"><b>'+progress+'%</b><span>chapter</span></div></div></div>'; }
+function clashFoundationHTML(){ ensureClashState(); ensureStarterClashSquad(); const c=S.clash; const tp=clashTeamPower(); const progress=Math.round(((c.stage-1)/80)*100); return '<div class="stagecard" style="border-color:#cdbcff66"><h3>⚡ '+ofModeTitle('clash')+'</h3><p>Chapter '+c.chapter+' · Stage '+c.stage+'/80 · lane strategy mode</p></div>'+clashElementWheelHTML()+'<div class="team-strip"><div class="lab"><span>Clash Squad · 12 slots</span><b>PWR '+tp+'</b></div>'+clashFormationPreviewHTML()+'<div class="clashNote">'+ofModeTitle('clash')+' uses lane formations, automatic combat, and elemental counters.</div></div><div class="battleWorld" style="--worldColor:#cdbcff"><div class="bwHead"><b>⚡ Procedural Chapter Track</b><span>seeded foundation</span></div><div class="battleWorldStats"><div class="bws"><b>C'+c.chapter+'</b><span>chapter</span></div><div class="bws"><b>'+c.stage+'</b><span>stage</span></div><div class="bws"><b>'+progress+'%</b><span>chapter</span></div></div></div>'; }
 function domainOf(it){ return it&&it.domain&&DKEY[it.domain]?it.domain:null; }
 function domainLabel(k){ return DKEY[k]?DKEY[k].label:''; }
 function guessDomain(title){ const t=(title||'').toLowerCase(); for(const d of DOMAINS){ if(d[4].some(k=>t.includes(k))) return d[0]; } return null; }
@@ -2795,7 +2800,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.179.3-prestige-habit-scaled';
+const APP_BUILD='v2.180.0-name-sweep-rooms';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3444,7 +3449,7 @@ function startSiegeBattle(k,team){
   if(!team||!team.heroes||!team.heroes.length){ try{toast('No team to deploy');}catch(e){} return; }
   try{ clearAuto(); }catch(e){}
   try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false;
+  battleMode='campaign'; battleReplay=false; battleRoom=null;
   const sg=ensureSiege(), F=sg.fronts[k]||(sg.fronts[k]={wavesCleared:0,bestRatio:0}), mods=siegeDomainMods();
   const waveIdx=(F.wavesCleared||0)+1, wp=siegeWavePower(sg.base||siegeFrontBase(),waveIdx,mods[k]), edge=siegeCollectionEdge();
   const syn=computeSynergy(team.heroes).bonus;
@@ -3453,7 +3458,7 @@ function startSiegeBattle(k,team){
   const enemies=siegeBuildWaveEnemies(k,wp,waveIdx);
   battleSiege={front:k,heroIds:team.heroes.map(h=>h.id),waveIdx:waveIdx};
   const dk=DKEY[k]||{label:'Siege'};
-  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=dk.label+' Front · Wave '+waveIdx+(waveIdx%SIEGE_REWARD.milestoneEvery===0?' · BOSS WAVE':''); }catch(e){}
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('siege')+' · '+dk.label+' · Wave '+waveIdx+(waveIdx%SIEGE_REWARD.milestoneEvery===0?' · BOSS WAVE':''); }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
   document.getElementById('arena').classList.add('show');
@@ -3726,13 +3731,13 @@ function riftEnemies(stage){ const wp=Math.round(riftBase()*Math.pow(RIFT_TUNE.e
   return out; }
 function startRiftBattle(){ const R=ensureRift().run; if(!R||!R.alive) return;
   try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; battleRift=true;
+  battleMode='campaign'; battleReplay=false; battleRoom=null; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; battleRift=true;
   const living=R.squad.filter(id=>!R.dead[id]).map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
   const players=living.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp*R.hpMult)); let hp=(R.hp[h.id]!=null)?Math.min(max,Math.round(R.hp[h.id])):max; if(hp<1)hp=1;
     const np=((h.prestige||0)===0)?(R.nonPrestigeAtk||1):1;
     return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:hp,max:max,atk:Math.round(atkOf(h)*fm.atk*R.atkMult*np),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h)}; });
   const enemies=riftEnemies(R.stage);
-  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=R.label+' \u00b7 Stage '+R.stage+(R.stage%RIFT_TUNE.bossEvery===0?' \u00b7 BOSS':''); }catch(e){}
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('rift')+' \u00b7 '+String(R.label||'').replace(/\s*Rift$/,'')+' \u00b7 Stage '+R.stage+(R.stage%RIFT_TUNE.bossEvery===0?' \u00b7 BOSS':''); }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
   document.getElementById('arena').classList.add('show');
@@ -3811,7 +3816,7 @@ function riftShowResult(state,extra){ injectRiftStyles(); injectGauntletStyles()
   } else { r.className='result lose'; const sum=extra||(S.rift&&S.rift.lastRun)||{stage:0,score:0,best:0,label:'Rift'};
     const claimed=Object.keys(ensureRift().claimedMs||{}).map(Number).sort((a,b)=>a-b);
     const msTxt=claimed.length?('Milestones today: '+claimed.map(s=>'Stage '+s).join(' \u00b7 ')):'No new milestones today.';
-    r.innerHTML='<h2 style="color:#ffd27a">RIFT ENDED</h2><p style="margin:4px 0">'+esc(sum.label||'Rift')+' \u00b7 reached Stage '+sum.stage+' \u00b7 Score '+v168Num(sum.score||0)+'</p><p style="margin:2px 0;color:var(--muted);font-size:12px">'+sum.squads+' squad'+(sum.squads===1?'':'s')+' fielded \u00b7 best Stage '+sum.best+' \u00b7 best Score '+v168Num(sum.bestScore||0)+'</p>'+mvpHtml+'<div class="optSummary" style="text-align:center">'+msTxt+'</div><div class="gRunBtns"><button class="mini-btn primary" id="riftAgain">Run again</button><button class="mini-btn" id="riftLeave">Leave</button></div>';
+    r.innerHTML='<h2 style="color:#ffd27a">'+ofModeTitle('rift').toUpperCase()+' ENDED</h2><p style="margin:4px 0">'+esc(sum.label||'Rift')+' \u00b7 reached Stage '+sum.stage+' \u00b7 Score '+v168Num(sum.score||0)+'</p><p style="margin:2px 0;color:var(--muted);font-size:12px">'+sum.squads+' squad'+(sum.squads===1?'':'s')+' fielded \u00b7 best Stage '+sum.best+' \u00b7 best Score '+v168Num(sum.bestScore||0)+'</p>'+mvpHtml+'<div class="optSummary" style="text-align:center">'+msTxt+'</div><div class="gRunBtns"><button class="mini-btn primary" id="riftAgain">Run again</button><button class="mini-btn" id="riftLeave">Leave</button></div>';
     const ag=document.getElementById('riftAgain'); if(ag) ag.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} const res=riftStartRun(); if(!res.ok){ try{toast('Not enough eligible heroes today');}catch(e){} navTo('rift'); } };
     const lv=document.getElementById('riftLeave'); if(lv) lv.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} navTo('rift'); };
   } }
@@ -3825,7 +3830,7 @@ function renderRift(v){ injectExpStyles(); injectGauntletStyles(); injectRiftSty
   const msChips=RIFT_MILESTONES.map(m=>'<span class="riftMsChip'+(claimed[m.s]?' got':'')+'">St '+m.s+'</span>').join('');
   const fieldable=squad.length>=2;
   const purity=(t.mode==='domain')?('Only heroes devoted to <b>'+esc(t.short)+'</b> can answer this oath \u2014 the part of your roster tied to that part of your life.'):(t.all?'<b>Open</b> \u2014 any element, but spread wide for diversity score.':('Only <b>'+t.key+'</b> heroes can enter today.'));
-  v.innerHTML='<div class="modesWrap"><div class="head"><h2>Daily Rift</h2><button class="backBtn" id="riftBack">\u2039 Modes</button></div>'+
+  v.innerHTML='<div class="modesWrap"><div class="head"><h2>'+ofModeTitle('rift')+'</h2><button class="backBtn" id="riftBack">\u2039 Modes</button></div>'+
     '<div class="stagecard" style="--rc:'+col+'">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px"><span class="riftBadge">'+t.label+'</span><span style="font-size:11px;color:var(--muted);font-weight:800">new element tomorrow</span></div>'+
       '<p style="color:var(--muted);font-size:12px;font-weight:700;line-height:1.45;margin:0 0 8px">'+purity+' Squads fight stage after stage carrying their wounds \u2014 no healing. When a squad falls it is spent for the day, and your next-best '+RIFT_TUNE.squadSize+' step up. Push until your '+(t.all?'roster':(esc(t.short)+' roster'))+' is spent. Boss every '+RIFT_TUNE.bossEvery+', a blessing every '+RIFT_TUNE.blessEvery+'.</p>'+
@@ -3897,9 +3902,9 @@ function renderModes(v){ injectExpStyles();
     (function(){ try{ injectMusterStyles(); return musterPanelHTML(); }catch(e){ return ''; } })()+
     card('⚔️','Z-A Royale','Weekly · your real week sets the difficulty',siegeStatus,'siege','siege',false)+
     card(cicon('expeditions',40),'Expeditions','Idle · send teams, collect over time',expStatus,'exp','expeditions',false)+
-    card(cicon('conquest',40),'Conquest','Boss ladder · modifiers force variety',(ensureConquest().tier?'Conquered '+ensureConquest().tier+' · '+v168Num(ensureConquest().tokens||0)+' ⬡':'Modifier boss ladder'),'cq','conquest',false)+
-    card(cicon('gauntlet',40),'Endless Gauntlet','Roguelike climb · draft boons',(ensureGauntlet().best?'Best depth '+ensureGauntlet().best+' · '+v168Num(ensureGauntlet().shards||0)+' ✷':'One run, climb as far as you can'),'gaunt','gauntlet',false)+
-    (function(){ try{ var t=riftTodayElement(); var rb=ensureRift(); var st=(rb.best&&rb.best[t.key])||0; return card('🌀','Daily Rift','Daily · '+t.short+'-locked survival ladder',(st?(t.short+' best · Stage '+st):'Today: '+t.label),'rift','rift',false); }catch(e){ return ''; } })()+
+    card(cicon('conquest',40),ofModeTitle('conquest'),'Boss ladder · modifiers force variety',(ensureConquest().tier?'Conquered '+ensureConquest().tier+' · '+v168Num(ensureConquest().tokens||0)+' ⬡':'Modifier boss ladder'),'cq','conquest',false)+
+    card(cicon('gauntlet',40),ofModeTitle('gauntlet'),'Roguelike climb · draft boons',(ensureGauntlet().best?'Best depth '+ensureGauntlet().best+' · '+v168Num(ensureGauntlet().shards||0)+' ✷':'One run, climb as far as you can'),'gaunt','gauntlet',false)+
+    (function(){ try{ var t=riftTodayElement(); var rb=ensureRift(); var st=(rb.best&&rb.best[t.key])||0; return card('🌀',ofModeTitle('rift'),'Daily · '+t.short+'-locked survival ladder',(st?(t.short+' best · Stage '+st):'Today: '+t.label),'rift','rift',false); }catch(e){ return ''; } })()+
 
     card(cicon('arena',40),'Contest of Champions','Climb vs themed hero teams',(ensureArena().rank?arenaTierName(ensureArena().rank)+' · Rank '+ensureArena().rank:'Climb the ladder of rivals'),'arena','arena',false)+
     card(cicon('bonds',40),'Bonds','Relationships that grow with your habits',(bondStats().bonded?bondStats().bonded+' heroes bonded':'No combat — pure connection'),'bonds','bonds',false)+
@@ -3974,12 +3979,12 @@ function gauntletEnemies(floor){ const wp=Math.round(gauntletFloorBase()*Math.po
   return out; }
 function startGauntletBattle(){ const R=S.gauntlet&&S.gauntlet.run; if(!R||!R.alive) return;
   try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=true;
+  battleMode='campaign'; battleReplay=false; battleRoom=null; battleSiege=null; battleGauntlet=true;
   const living=R.squad.filter(id=>!R.dead[id]).map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
   const players=living.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp*R.hpMult)); let hp=(R.hp[h.id]!=null)?Math.min(max,Math.round(R.hp[h.id])):max; if(hp<1)hp=1;
     return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:hp,max:max,atk:Math.round(atkOf(h)*fm.atk*R.atkMult*((R.mult&&R.mult[h.id]!=null)?R.mult[h.id]:1)),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h)}; });
   const enemies=gauntletEnemies(R.floor);
-  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent='Gauntlet · Floor '+R.floor+(R.floor%GAUNTLET_TUNE.bossEvery===0?' · BOSS':''); }catch(e){}
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('gauntlet')+' · Floor '+R.floor+(R.floor%GAUNTLET_TUNE.bossEvery===0?' · BOSS':''); }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
   document.getElementById('arena').classList.add('show');
@@ -4070,7 +4075,7 @@ function gauntletShowResult(win, summary){ injectGauntletStyles();
     r.innerHTML='<h2 style="color:#7af0a8">FLOOR '+cleared+' CLEARED</h2><p style="margin:4px 0">'+alive+'/'+R.squad.length+' standing · Floor '+R.floor+' next</p>'+mvpHtml+'<div class="gBoonHead">Choose a boon</div><div class="gBoonRow">'+boons+'</div>';
     r.querySelectorAll('[data-boon]').forEach(b=>{ b.onclick=()=>{ const k=b.dataset.boon; try{v172Float(b,b.querySelector('.gbName').textContent);}catch(e){} gauntletApplyBoon(k); }; });
   } else { const sum=summary||(S.gauntlet&&S.gauntlet.lastRun)||{floor:'?',shards:0,reward:{},best:0}; const rw=sum.reward||{};
-    r.innerHTML='<h2 style="color:#ff8a96">RUN ENDED</h2><p style="margin:4px 0">Reached Floor '+sum.floor+' · Best '+sum.best+'</p>'+mvpHtml+'<div class="siegeResChips"><span>+'+v168Num(rw.gold||0)+' ⦿</span><span>+'+v168Num(rw.dust||0)+' ✺</span>'+(rw.cores?'<span>+'+rw.cores+' ◈</span>':'')+'<span>+'+(sum.shards||0)+' ✷</span></div><div class="gRunBtns"><button class="mini-btn primary" id="gAgain">Run again</button><button class="mini-btn" id="gLeave">Leave</button></div>';
+    r.innerHTML='<h2 style="color:#ff8a96">'+ofModeTitle('gauntlet').toUpperCase()+' ENDED</h2><p style="margin:4px 0">Reached Floor '+sum.floor+' · Best '+sum.best+'</p>'+mvpHtml+'<div class="siegeResChips"><span>+'+v168Num(rw.gold||0)+' ⦿</span><span>+'+v168Num(rw.dust||0)+' ✺</span>'+(rw.cores?'<span>+'+rw.cores+' ◈</span>':'')+'<span>+'+(sum.shards||0)+' ✷</span></div><div class="gRunBtns"><button class="mini-btn primary" id="gAgain">Run again</button><button class="mini-btn" id="gLeave">Leave</button></div>';
     const ag=document.getElementById('gAgain'); if(ag) ag.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} gauntletStartRun(gauntletDefaultSquad()); };
     const lv=document.getElementById('gLeave'); if(lv) lv.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} navTo('gauntlet'); };
   } }
@@ -4089,7 +4094,7 @@ function renderGauntlet(v){ injectExpStyles(); injectGauntletStyles(); const G=e
     optLine='<div class="optSummary">'+body+'</div>'; }
   const dailiesDone=(()=>{ try{return (S.dailies||[]).filter(d=>d&&d.done).length;}catch(e){return 0;} })(); const bonus=Math.round(Math.min(0.30,dailiesDone*0.04)*100);
   const owned=gauntletEligible().length;
-  v.innerHTML='<div class="modesWrap"><div class="head"><h2>Endless Gauntlet</h2><button class="backBtn" id="gBack">‹ Modes</button></div>'+
+  v.innerHTML='<div class="modesWrap"><div class="head"><h2>'+ofModeTitle('gauntlet')+'</h2><button class="backBtn" id="gBack">‹ Modes</button></div>'+
    '<div class="stagecard"><p style="color:var(--muted);font-size:12px;font-weight:700;line-height:1.45;margin:0 0 10px">Climb as far as you can in one run. Your squad carries its wounds between floors — no healing. Draft a boon after each win, and pull fresh heroes from your roster as others fall. Die, and you bank rewards by depth.</p>'+
      '<div class="expMeta"><div class="sm"><b>'+G.best+'</b><span>best depth</span></div><div class="sm"><b>'+v168Num(G.shards||0)+'</b><span>✷ shards</span></div><div class="sm"><b>'+owned+'</b><span>reserves</span></div></div>'+
      (bonus>0?'<div class="expHint good">Today\'s dailies grant +'+bonus+'% starting ATK.</div>':'<div class="expHint">Complete dailies today for a starting ATK boost (up to +30%).</div>')+
@@ -4140,12 +4145,12 @@ function arenaPlayerTeam(cond){ const pool=S.heroes.filter(h=>h&&h.owned); pool.
 function arenaDailyBuff(){ try{ const d=(S.dailies||[]).filter(x=>x&&x.done).length; return 1+Math.min(0.20,d*0.03); }catch(e){ return 1; } }
 function startArenaBattle(rank){ const arCond=arenaRivalCondition(rank); const team=arenaPlayerTeam(arCond); if(team.length<1) return {ok:false,reason:'noteam'}; try{musterMark(team.map(h=>h.id));}catch(e){}
   try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=null; battleArena={rank:rank};
+  battleMode='campaign'; battleReplay=false; battleRoom=null; battleSiege=null; battleGauntlet=null; battleArena={rank:rank};
   const buff=arenaDailyBuff();
   const players=team.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp));
     return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:max,max:max,atk:Math.round(atkOf(h)*fm.atk*buff*(arCond?arCond.mult(h):1)),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h)}; });
   const enemies=arenaBuildEnemies(rank); const rv=arenaRival(rank);
-  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent='Arena · '+rv.name+' · Rank '+rank+(rank%ARENA_TUNE.bossEvery===0?' · CHAMPION':''); }catch(e){}
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('arena')+' · '+rv.name+' · Rank '+rank+(rank%ARENA_TUNE.bossEvery===0?' · CHAMPION':''); }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
   document.getElementById('arena').classList.add('show');
@@ -4300,13 +4305,13 @@ function conquestBuildEnemies(tier,mod){ var total=conquestBossPower(tier,mod); 
   return out; }
 function startConquestBattle(tier){ const mod=conquestModifier(tier); const team=conquestBestTeam(mod); if(team.length<1) return {ok:false,reason:'noteam'}; try{musterMark(team.map(h=>h.id));}catch(e){}
   try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest={tier:tier,mod:mod};
+  battleMode='campaign'; battleReplay=false; battleRoom=null; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest={tier:tier,mod:mod};
   const champ=conquestChampion(mod); const champId=champ?champ.id:null; const aura=champId?(CONQUEST_TUNE.champAura||1.2):1;
   const players=team.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp));
     const isChamp=(h.id===champId); const dmgMult=isChamp?1:(mod.mult(h)*aura);
     return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:max,max:max,atk:Math.max(1,Math.round(atkOf(h)*fm.atk*dmgMult)),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h),champion:isChamp}; });
   const enemies=conquestBuildEnemies(tier,mod); const bn=CONQ_BOSSES[(tier-1+CONQ_BOSSES.length*99)%CONQ_BOSSES.length];
-  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent='Conquest · '+bn+' · '+mod.label; }catch(e){}
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('conquest')+' · '+bn+' · '+mod.label; }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
   document.getElementById('arena').classList.add('show');
@@ -4377,7 +4382,7 @@ function renderConquest(v){ injectExpStyles(); injectGauntletStyles(); injectAre
   if(mod.lock){ const eligN=conquestEligiblePool(mod).length, sc=Math.round(conquestEnemyScale(mod)*100); effLine='Lockout active · '+eligN+' eligible heroes · enemy scaled to your reserves ('+sc+'%)'+champLine; }
   else if(mod.softened){ effLine='Lockout softened (thin roster) — barred heroes fight at 25%'+champLine; }
   else effLine=(mod.boon?(eff.boosted+' of your heroes empowered'):(eff.weak+' of your heroes suppressed'))+' by this rule — fielding your best legal team:';
-  v.innerHTML='<div class="modesWrap"><div class="head"><h2>Conquest</h2><button class="backBtn" id="cqBack">‹ Modes</button></div>'+
+  v.innerHTML='<div class="modesWrap"><div class="head"><h2>'+ofModeTitle('conquest')+'</h2><button class="backBtn" id="cqBack">‹ Modes</button></div>'+
     '<div class="stagecard"><div class="expMeta"><div class="sm"><b>'+C.tier+'</b><span>conquered</span></div><div class="sm"><b>'+v168Num(C.tokens||0)+'</b><span>⬡ tokens</span></div><div class="sm"><b>'+C.best+'</b><span>best</span></div></div></div>'+
     '<div class="expSection">Conquest '+tier+(first?' · first clear':' · farm')+'</div>'+
     '<div class="stagecard cqBoss"><div class="cqBossName">'+esc(boss)+'</div>'+
@@ -6115,7 +6120,7 @@ let battleTimer=null, autoNext=null, battleMode='campaign', battleSpeed=1, battl
 function startBattle(mode,opts){
   opts=opts||{}; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; clearAuto(); clearTransientUI();
   if(battleTimer){ clearInterval(battleTimer); battleTimer=null; }
-  battleMode = (mode==='tower')?'tower':'campaign';
+  battleMode = (mode==='tower')?'tower':'campaign'; battleRoom=null;
   battleReplay=!!opts.replay;
   const replayStage=opts.stage||S.stage, replayFloor=opts.floor||S.tower;
   const sq=squad(battleMode);
@@ -6544,6 +6549,7 @@ function endBattle(win){
   if(battleGauntlet){ try{ gauntletEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
   if(battleArena){ try{ arenaEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
   if(battleConquest){ try{ conquestEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
+  if(battleRoom){ try{ roomEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
   if(battleRift){ try{ riftEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
   const r=document.getElementById('arenaResult'); r.style.display='block'; r.className='result '+(win?'win':'lose'); try{var _ae=document.querySelector('.arena'); if(_ae) _ae.classList.add('arenaEnded');}catch(e){}
   if(battleReplay){
@@ -10800,11 +10806,11 @@ function battleModesPanelHTML(){ injectExpStyles(); injectBmPanelStyles();
   const node=(icon,title,line,mode)=>'<button class="warNode" data-mode="'+mode+'"><span class="wnMedal">'+icon+'</span><span class="wnInfo"><span class="wnName">'+title+'</span><span class="wnStatus">'+line+'</span></span></button>';
   return '<div class="bmPanel warTable"><div class="bmHead"><div class="bmTitle">\u2694 War Table</div><div class="bmSub">Choose a front</div></div><div class="warTrail">'+
     node(raidIcon,'Weekly Raid','Co-op boss \u00b7 bring a raid squad','raid')+
-    node('\u2694\ufe0f','Siege of the Eight Fronts',siegeStatus,'siege')+
+    node('\u2694\ufe0f',ofModeTitle('siege'),siegeStatus,'siege')+
     node((typeof cicon==='function'&&cicon('expeditions',34))||'\u26f0\ufe0f','Expeditions',expStatus,'expeditions')+
-    node((typeof cicon==='function'&&cicon('conquest',34))||'\ud83d\udc79','Conquest',cqS,'conquest')+
-    node((typeof cicon==='function'&&cicon('gauntlet',34))||'\ud83d\uddfc','Endless Gauntlet',gaS,'gauntlet')+
-    node('\ud83c\udf00','Daily Rift',riS,'rift')+
+    node((typeof cicon==='function'&&cicon('conquest',34))||'\ud83d\udc79',ofModeTitle('conquest'),cqS,'conquest')+
+    node((typeof cicon==='function'&&cicon('gauntlet',34))||'\ud83d\uddfc',ofModeTitle('gauntlet'),gaS,'gauntlet')+
+    node('\ud83c\udf00',ofModeTitle('rift'),riS,'rift')+
     node((typeof cicon==='function'&&cicon('arena',34))||'\ud83c\udfdf\ufe0f','Rival Arena',arS,'arena')+
     node((typeof cicon==='function'&&cicon('bonds',34))||'\ud83d\udc9e','Bonds',boS,'bonds')+
   '</div></div>';
@@ -16489,7 +16495,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     const c=S.clash, ch=c.chapter||1, stage=c.stage||1, cd=getClashChapterData(ch), idx=getClashPatternIndexForStage(stage), pattern=cd.patterns[idx], kind=getClashStageKind(stage), progress=Math.round(((stage-1)/80)*100), tp=clashTeamPower(), slots=c7SlotCount(ch);
     const title=(kind==='boss'||kind==='chapterBoss')?'New Threat Pattern':'Current Threat Pattern';
     const unlock=c7IsFive(ch)?'5 lanes · 20 heroes · outer lanes are Basic':'3 lanes · 12 heroes · Chapter 1 warm-up';
-    return '<div class="stagecard" style="border-color:#cdbcff66"><h3>⚡ Clash Trials</h3><p>Chapter '+ch+' · Stage '+stage+'/80 · '+cap7(kind)+' · '+unlock+'</p></div>'+'<details class="clashDetailsFold"><summary>⚡ Battle details · patterns, rewards & map</summary>'+clashElementWheelHTML()+
+    return '<div class="stagecard" style="border-color:#cdbcff66"><h3>⚡ '+ofModeTitle('clash')+'</h3><p>Chapter '+ch+' · Stage '+stage+'/80 · '+cap7(kind)+' · '+unlock+'</p></div>'+'<details class="clashDetailsFold"><summary>⚡ Battle details · patterns, rewards & map</summary>'+clashElementWheelHTML()+
       '<div class="clashPatternBox"><div class="clashBoxHead"><b>'+title+'</b><span>Pattern '+(idx+1)+' / 8</span></div>'+c7LanePreviewHTML(pattern,ch)+c7BossPreviewHTML(cd,stage,ch)+'<div class="clashPatternFoot"><span>Typed distribution this chapter: '+c7PatternSummary(cd)+'</span></div></div>'+c7RewardPreviewHTML(ch,stage,kind)+
       '<div class="battleWorld" style="--worldColor:#cdbcff"><div class="bwHead"><b>🗺 Battle Map</b><span>'+(c7IsFive(ch)?'5-lane formation active':'3-lane warm-up')+'</span></div>'+c7ChapterPathHTML(cd,stage,ch)+'<div class="battleWorldStats"><div class="bws"><b>C'+ch+'</b><span>chapter</span></div><div class="bws"><b>'+stage+'</b><span>stage</span></div><div class="bws"><b>'+progress+'%</b><span>chapter</span></div></div></div>'+'</details>'+clashSquadFitHTML()+
       '<div class="team-strip"><div class="lab"><span>Clash Squad · '+slots+' slots</span><b>PWR '+tp+'</b></div>'+clashFormationPreviewHTML()+'<div class="clashNote">Chapter 1 is a 3-lane warm-up. Chapter 2+ expands to 5 lanes with 4 heroes per lane; outer lanes are Basic pressure lanes with no type counter.</div></div>'+ 
@@ -16693,7 +16699,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   }
   function c7AdvanceStage(){ if(S.clash.stage>=80){ S.clash.chapter=(S.clash.chapter||1)+1; S.clash.stage=1; } else S.clash.stage=(S.clash.stage||1)+1; }
   function c7AutoStopReason(prevCh,prevStage,nextCh,nextStage){ if(!S||!S.clash||!S.clash.autoBattle) return 'Auto off'; try{ if(prevCh!==nextCh) return 'New chapter — set your lane squad'; }catch(e){} return ''; }
-  function c7ScheduleAutoNext(){ if(!battle7||!battle7.result||!battle7.result.win||!S.clash||!S.clash.autoBattle||battle7.result.autoStop) return; battle7.log='Auto battle: next stage starts in 3 seconds.'; c7RenderBattle(); battle7.autoTimer=setTimeout(function(){ try{ if(battle7&&battle7.result&&battle7.result.win&&S.clash&&S.clash.autoBattle) startClashBattle(); }catch(e){ console.error('Clash auto battle failed',e); } },3000); }
+  function c7ScheduleAutoNext(){ if(!battle7||!battle7.result||!battle7.result.win||!S.clash||!S.clash.autoBattle||battle7.result.autoStop) return; var _cres=(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode==='resolve'); battle7.log=_cres?'Auto resolve \u2014 next stage incoming.':'Auto battle: next stage starts in 3 seconds.'; c7RenderBattle(); battle7.autoTimer=setTimeout(function(){ try{ if(battle7&&battle7.result&&battle7.result.win&&S.clash&&S.clash.autoBattle) startClashBattle(); }catch(e){ console.error('Clash auto battle failed',e); } },_cres?500:3000); }
   function c7Resolve(win,reason){ if(!battle7||battle7.ended) return; const prevCh=battle7.chapter, prevStage=battle7.stage; battle7.resolving=true; battle7.ended=true; if(battle7.timer) clearInterval(battle7.timer); if(battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7.timer=null; battle7.autoTimer=null; if(battle7.watchdog){ clearInterval(battle7.watchdog); battle7.watchdog=null; } let result={first:false,reward:{gold:0,dust:0,bondXp:0,extra:[]}}, autoStop=''; try{ const __r=c7ApplyRewards(win); if(__r) result=__r; if(win) c7AdvanceStage(); if(win){ autoStop=c7AutoStopReason(prevCh,prevStage,c7Chapter(),c7Stage()); if(autoStop && prevCh!==c7Chapter()){ try{ if(typeof clashAutoOptimize==='function'){ clashAutoOptimize(false); autoStop=''; if(typeof safeToast7==='function') safeToast7('Clash squad auto-optimized for new chapter'); } }catch(e){} } if(autoStop&&S.clash) S.clash.autoBattle=false; } else if(S.clash){ S.clash.autoBattle=false; autoStop='Defeat'; } }catch(e){ console.error('Clash resolve rewards failed',e); if(S.clash) S.clash.autoBattle=false; if(!win&&!autoStop) autoStop='Defeat'; } battle7.result={win,first:!!result.first,reward:result.reward||{gold:0,dust:0,bondXp:0,extra:[]},reason:reason||'',autoStop}; try{ if(typeof save==='function') save(); if(typeof renderHUD==='function') renderHUD(); }catch(e){} try{ c7RenderBattle(); }catch(e){ console.error('Clash result render failed',e); try{ closeClashBattle(); }catch(_e){} try{ if(typeof safeToast7==='function') safeToast7(win?'Clash cleared':'Clash ended'); }catch(_e){} try{ if(typeof render==='function') render(); }catch(_e){} } try{ c7ScheduleAutoNext(); }catch(e){} }
   function c7StartData(){ if(typeof ensureClashState==='function') ensureClashState(); const ch=c7Chapter(), st=c7Stage(), pattern=c7Pattern(ch,st), kind=c7Kind(st), bossInfo=c7Boss(ch,st), ids=c7EnsureSquad(ch), lanes=c7Lanes(ch); const heroes=ids.map((id,i)=>{ const h=c7OwnedHero(id); return h?c7HeroStats(h,c7SlotMeta(i,ch),pattern):null; }).filter(Boolean); const built=c7BuildSpawnPlan(ch,st,kind,pattern,bossInfo,lanes); battle7={chapter:ch,stage:st,kind,pattern,bossInfo,lanes,heroes,enemies:[],wave:0,maxWaves:built.waves,spawnPlan:built.plan,spawned:0,totalEnemies:built.totalEnemies,leaks:0,leakLimit:built.cfg.leakLimit,maxLaneActive:built.cfg.maxLaneActive,totalTime:built.cfg.totalTicks,timeLeft:built.cfg.totalTicks,tickCount:0,damage:0,taken:0,healing:0,blocked:0,advHits:0,badHits:0,defeated:0,log:'Finite enemy swarm incoming.',speed:((S.clash&&S.clash.speed)||1),resolving:false,ended:false,timer:null,autoTimer:null,result:null}; }
   function c7OpenBattle(){ let o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); o=document.createElement('div'); o.id='clashBattleOverlay'; o.className='clashBattleOverlay c7'; document.body.appendChild(o); }
@@ -16726,7 +16732,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     }catch(e){ try{ c7RenderBattle(); }catch(_e){} }
   }
   function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['front','mid','back','rear','reserve']; /* v2.106 clash: front rank renders at top of stack, facing the descending swarm */ battle7.heroes.forEach(h=>h.acted=0); const advChart=['Flame','Grove','Stone','Storm','Tide','Flame'].map(e=>c7ElementBadge(e,true)).join('<span class="clashAdvArrow">▸</span>'); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; const _cz=BATTLE_ZONES[(((battle7.chapter||1)-1)%BATTLE_ZONES.length+BATTLE_ZONES.length)%BATTLE_ZONES.length], _cbg=(typeof v156BgForClass==='function'&&_cz)?v156BgForClass(_cz.c):''; o.innerHTML='<div class="clashBattlePanel c7 hasArt '+(battle7.lanes.length===5?'five':'three')+'" style="--clashArt:url('+_cbg+')"><div class="clashBattleHead"><div><b>⚡ Squadron Clash</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">'+((S.clash&&S.clash.autoBattle)?'Auto Battle On':'Auto Battle Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Resolve</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashAdvChart">'+advChart+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+' '+c7ElementBadge(t,true)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
-  window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); battle7._wd={t:battle7.tickCount||0,at:Date.now()}; if(battle7.watchdog) clearInterval(battle7.watchdog); battle7.watchdog=setInterval(c7Watchdog,1500); }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
+  window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); battle7._wd={t:battle7.tickCount||0,at:Date.now()}; if(battle7.watchdog) clearInterval(battle7.watchdog); battle7.watchdog=setInterval(c7Watchdog,1500); if(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode==='resolve'){ try{ if(typeof window.skipClashBattle==='function') window.skipClashBattle(); }catch(_e){} } }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
   window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; battle7.resolving=true; let guard=0; while(battle7&&!battle7.ended&&guard++<900){ battle7.resolving=false; c7Tick(); if(!battle7||battle7.ended) break; battle7.resolving=true; } if(battle7&&!battle7.ended){ battle7.resolving=false; c7Resolve(false); } };
   window.closeClashBattle=function(){ if(battle7&&battle7.timer) clearInterval(battle7.timer); if(battle7&&battle7.autoTimer) clearTimeout(battle7.autoTimer); if(battle7&&battle7.watchdog) clearInterval(battle7.watchdog); battle7=null; const o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); try{ if(typeof render==='function') render(); }catch(e){} };
   window.c7BattleInterval=function(){ const sp=c7SpeedValue(); return sp===3?220:(sp===2?300:C7.tickMs); };
@@ -22923,6 +22929,156 @@ function showAbilityMoment(u,skill,color){
 
 </script>
 
+
+<script>
+/* ===== Room of Requirement — hazard trials engine (v2.180.0) =====
+   Each domain's room enforces a signature rule; a tier dial scales difficulty
+   and rewards. Max tier is gated by roomLevel (habits raise the ceiling). */
+var battleRoom=null;
+const ROOM_HAZARDS={
+  fitness:{name:'Endurance Hall',rule:'No healing. Your squad bleeds each turn \u2014 outlast it.',color:'#ff7a5c'},
+  faith:{name:'Hall of Silence',rule:'All passives and signatures are silenced. Fundamentals only.',color:'#ffd95a'},
+  discipline:{name:'The Metronome',rule:'Attack power surges on-beat and falters off-beat.',color:'#8bd0ff'},
+  fatherhood:{name:"Guardian's Trial",rule:'A fragile Ward fights beside you. If the Ward falls, you fail.',color:'#7dffb0'},
+  work:{name:'Deadline Room',rule:'A hard turn limit. Clear every enemy before time expires.',color:'#cdbcff'},
+  home:{name:'The Hearth',rule:'Defend the Hearth at your front line. If it is destroyed, you fail.',color:'#ffb01f'},
+  marriage:{name:'Two as One',rule:'Heroes fight in bonded pairs. Losing one halves the partner\u2019s attack.',color:'#ff8ad8'},
+  hobbies:{name:'The Playroom',rule:'The room acts on its own \u2014 random twists strike every few turns.',color:'#36e0e6'}
+};
+const ROOM_TUNE={ squadSize:8, baseFactor:0.115, tierGrowth:1.22, affBoost:1.15, drainPct:0.028,
+  beatHigh:1.6, beatLow:0.7, deadlineTurns:26, wardHpPct:0.30, hearthHpPct:1.1, playEvery:3, repeatFrac:0.2 };
+function ensureRooms(){ const wk=periodKey('weekly');
+  if(!S.rooms||S.rooms.wk!==wk) S.rooms={wk:wk,clears:{},runs:0};
+  if(!S.rooms.clears) S.rooms.clears={}; return S.rooms; }
+function roomTierCap(k){ return Math.max(2, roomLevel(k)*2); }
+function roomBestTier(k){ return (ensureRooms().clears[k]|0); }
+function roomSquad(k){ const owned=(S.heroes||[]).filter(h=>h&&h.owned);
+  return owned.slice().sort((a,b)=>{ const am=(Array.isArray(a.aff)&&a.aff.includes(k))?ROOM_TUNE.affBoost:1, bm=(Array.isArray(b.aff)&&b.aff.includes(k))?ROOM_TUNE.affBoost:1;
+    return powerOf(b)*bm-powerOf(a)*am; }).slice(0,ROOM_TUNE.squadSize); }
+function roomEnemies(k,tier,baseLine){ const wp=Math.max(60,Math.round(baseLine*ROOM_TUNE.baseFactor*Math.pow(ROOM_TUNE.tierGrowth,tier-1)));
+  const cls=(typeof SIEGE_FRONT_ART!=='undefined'&&SIEGE_FRONT_ART[k]&&SIEGE_FRONT_ART[k][0])||'scene-city';
+  const zone=(typeof BATTLE_ZONES!=='undefined'?BATTLE_ZONES.find(z=>z.c===cls):null)||{enemies:[['Room Construct','#8a8a8a','DPS']],bosses:[['Room Warden','#ff5d6c','Tank']]};
+  const ens=zone.enemies&&zone.enemies.length?zone.enemies:[['Room Construct','#8a8a8a','DPS']];
+  const bss=zone.bosses&&zone.bosses.length?zone.bosses:[['Room Warden','#ff5d6c','Tank']];
+  const out=[], mk=(sp,share,boss)=>enemyFromSpec(sp,Math.max(24,Math.round(share*4)),Math.max(6,Math.round(share*0.25)),boss);
+  out.push(mk(bss[0],wp*0.42,true)); const n=4; for(let i=0;i<n;i++) out.push(mk(ens[i%ens.length],wp*0.58/n,false));
+  return out; }
+function roomStartRun(k,tier){
+  const haz=ROOM_HAZARDS[k]; if(!haz){ toast('Unknown room'); return {ok:false}; }
+  tier=Math.max(1,Math.min(roomTierCap(k),Math.round(tier||1)));
+  const heroes=roomSquad(k); if(heroes.length<2){ toast('Not enough heroes'); return {ok:false}; }
+  try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; battleRift=null;
+  const noPassives=(k==='faith'), noSupport=(k==='fitness'||k==='faith');
+  const players=heroes.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row);
+    const affm=(Array.isArray(h.aff)&&h.aff.includes(k))?ROOM_TUNE.affBoost:1;
+    const max=Math.max(1,Math.round(hpOf(h)*fm.hp*affm));
+    return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:max,max:max,
+      atk:Math.round(atkOf(h)*fm.atk*affm),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,
+      supportMult:noSupport?0:fm.support,passive:noPassives?null:passiveOf(h),archetype:heroArchetype(h),legSig:noPassives?null:legendSigOf(h)}; });
+  const baseLine=players.reduce((a,p)=>a+Math.round(p.max/8+p.atk*2),0);
+  let wardId=null, hearthId=null;
+  if(k==='fatherhood'){ wardId='__room_ward'; const whp=Math.max(30,Math.round(players.reduce((a,p)=>a+p.max,0)/players.length*ROOM_TUNE.wardHpPct));
+    players.push({id:wardId,name:'The Ward',img:'',color:'#7dffb0',role:'Support',row:formationRow(players.length),pos:players.length,hp:whp,max:whp,atk:1,side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:1,supportMult:0,passive:null,archetype:null,legSig:null}); }
+  if(k==='home'){ hearthId='__room_hearth'; const hhp=Math.max(60,Math.round(players.reduce((a,p)=>a+p.max,0)/players.length*ROOM_TUNE.hearthHpPct));
+    players.unshift({id:hearthId,name:'The Hearth',img:'',color:'#ffb01f',role:'Tank',row:'front',pos:0,hp:hhp,max:hhp,atk:1,side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:1,supportMult:0,passive:null,archetype:null,legSig:null});
+    players.forEach((p,i)=>{ p.pos=i; }); }
+  let pairs=null;
+  if(k==='marriage'){ pairs={}; for(let i=0;i+1<heroes.length;i+=2){ pairs[heroes[i].id]=heroes[i+1].id; pairs[heroes[i+1].id]=heroes[i].id; } }
+  const enemies=roomEnemies(k,tier,baseLine);
+  battleRoom={k:k,tier:tier,haz:haz,turn:0,wardId:wardId,hearthId:hearthId,pairs:pairs,pairHit:{},
+    baseAtk:players.map(p=>p.atk),limit:(k==='work')?Math.max(10,ROOM_TUNE.deadlineTurns-tier):0,expired:false};
+  ensureRooms().runs=(S.rooms.runs||0)+1;
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent='Room of Requirement \u00b7 '+haz.name+' \u00b7 Tier '+tier; }catch(e){}
+  try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
+  drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
+  document.getElementById('arena').classList.add('show');
+  try{ wireBattleControls(); }catch(e){}
+  battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
+  try{ passiveBanner(haz.name+' \u00b7 Tier '+tier,haz.color); }catch(e){}
+  try{ setBattleLog(haz.rule); }catch(e){}
+  battleTimer=setInterval(function(){ battleStep(); },battleDelay());
+  if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} }
+  return {ok:true}; }
+function roomHazardTick(){
+  const RB=battleRoom, B=battleState; if(!RB||!B||!B.players) return;
+  RB.turn++;
+  const alive=B.players.filter(p=>!p.dead&&p.hp>0);
+  if(RB.k==='discipline'){ const on=(RB.turn%2===0);
+    B.players.forEach((p,i)=>{ if(RB.baseAtk[i]!=null&&p.id!==RB.wardId&&p.id!==RB.hearthId) p.atk=Math.max(1,Math.round(RB.baseAtk[i]*(on?ROOM_TUNE.beatHigh:ROOM_TUNE.beatLow))); });
+    if(RB.turn<=2) battleEvent('The Metronome ticks \u2014 strike on the beat.','event'); }
+  if(RB.k==='fitness'){ alive.forEach(p=>{ p.hp=Math.max(1,p.hp-Math.round(p.max*ROOM_TUNE.drainPct)); }); if(RB.turn===1) battleEvent('The hall drains your strength \u2014 no healing here.','event'); }
+  if(RB.k==='hobbies'&&RB.turn%ROOM_TUNE.playEvery===0){ const pool=alive.concat(B.enemies.filter(e=>!e.dead&&e.hp>0));
+    if(pool.length){ const u=pool[Math.floor(Math.random()*pool.length)], roll=Math.random();
+      if(roll<0.34){ u.hp=Math.min(u.max,u.hp+Math.round(u.max*0.12)); battleEvent('The Playroom mends '+u.name+'.','event'); }
+      else if(roll<0.67){ u.atk=Math.round(u.atk*1.12); battleEvent('The Playroom charges '+u.name+'.','event'); }
+      else { u.atk=Math.max(1,Math.round(u.atk*0.88)); battleEvent('The Playroom softens '+u.name+'.','event'); } } }
+  if(RB.pairs){ B.players.forEach(p=>{ if((p.dead||p.hp<=0)&&RB.pairs[p.id]&&!RB.pairHit[p.id]){ RB.pairHit[p.id]=1;
+    const mate=B.players.find(x=>x.id===RB.pairs[p.id]); if(mate&&!mate.dead){ mate.atk=Math.max(1,Math.round(mate.atk*0.5)); battleEvent(mate.name+' falters \u2014 their partner has fallen.','event'); } } }); }
+  const guard=(RB.wardId&&B.players.find(p=>p.id===RB.wardId))||(RB.hearthId&&B.players.find(p=>p.id===RB.hearthId));
+  if(guard&&(guard.dead||guard.hp<=0)&&!RB.expired){ RB.expired=true; battleEvent(guard.name+' is lost. The room claims victory.','event');
+    B.players.forEach(p=>{ p.hp=0; p.dead=true; }); }
+  if(RB.limit&&RB.turn>=RB.limit&&!RB.expired){ const foes=B.enemies.filter(e=>!e.dead&&e.hp>0).length;
+    if(foes>0){ RB.expired=true; battleEvent('The deadline passes \u2014 the room seals shut.','event'); B.players.forEach(p=>{ p.hp=0; p.dead=true; }); } } }
+(function installRoomHook(){ try{
+  if(typeof battleStep==='function'&&!battleStep.__roomHook){ const __rs=battleStep;
+    battleStep=function(){ try{ if(battleRoom) roomHazardTick(); }catch(e){} return __rs.apply(this,arguments); };
+    battleStep.__roomHook=true; } }catch(e){} })();
+function roomReward(k,tier,firstClear){ const base=dungeonReward(k), mult=firstClear?tier:Math.max(0.2,tier*ROOM_TUNE.repeatFrac);
+  const r={gold:Math.round((base.gold||0)*mult),cry:Math.round((base.cry||0)*mult),dust:Math.round((base.dust||0)*mult),
+    cores:Math.round((base.cores||0)*(firstClear?tier:0)),shards:firstClear?Math.round((base.shards||0)*Math.ceil(tier/2)):0,
+    sparks:firstClear&&tier>=6?1:0};
+  S.gold=(S.gold||0)+r.gold; S.crystals=(S.crystals||0)+r.cry; S.dust=(S.dust||0)+r.dust;
+  if(r.cores) S.heroCores=(S.heroCores||0)+r.cores; if(r.shards) S.legendShards=(S.legendShards||0)+r.shards;
+  if(r.sparks) S.sparks=(S.sparks||0)+r.sparks; return r; }
+function roomEndBattle(win){ const RB=battleRoom; battleRoom=null;
+  try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  if(!RB) return; const R=ensureRooms(); const haz=RB.haz||{name:'Room'};
+  const r=document.getElementById('arenaResult'); if(!r){ try{ save(); }catch(e){} return; }
+  r.style.display='block'; try{ var _ae=document.querySelector('.arena'); if(_ae) _ae.classList.add('arenaEnded'); }catch(e){}
+  if(win){ const first=RB.tier>(R.clears[RB.k]|0); if(first) R.clears[RB.k]=RB.tier;
+    const rw=roomReward(RB.k,RB.tier,first);
+    try{ addWin('Room Cleared',haz.name+' \u00b7 Tier '+RB.tier,RB.k); }catch(e){}
+    const chips='<div class="siegeResChips">'+(rw.gold?'<span>+'+v168Num(rw.gold)+' \u29bf</span>':'')+(rw.dust?'<span>+'+v168Num(rw.dust)+' \u273a</span>':'')+(rw.cry?'<span>+'+rw.cry+' \u25c6</span>':'')+(rw.cores?'<span>+'+rw.cores+' \u25c8</span>':'')+(rw.shards?'<span>+'+rw.shards+' \u2737</span>':'')+(rw.sparks?'<span>+'+rw.sparks+' \u2726\u2726</span>':'')+'</div>';
+    const nextT=Math.min(roomTierCap(RB.k),RB.tier+1), canNext=nextT>RB.tier;
+    r.className='result win';
+    r.innerHTML='<h2 style="color:#7af0a8">ROOM CLEARED</h2><p style="margin:4px 0">'+esc(haz.name)+' \u00b7 Tier '+RB.tier+(first?'':' \u00b7 repeat')+'</p>'+chips+
+      '<div class="gRunBtns">'+(canNext?'<button class="mini-btn primary" id="roomNext">Tier '+nextT+'</button>':'')+'<button class="mini-btn" id="roomAgain">Run again</button><button class="mini-btn" id="roomLeave">Leave</button></div>';
+    const nb=document.getElementById('roomNext'); if(nb) nb.onclick=()=>roomStartRun(RB.k,nextT);
+    const ab=document.getElementById('roomAgain'); if(ab) ab.onclick=()=>roomStartRun(RB.k,RB.tier);
+  } else {
+    r.className='result lose';
+    r.innerHTML='<h2 style="color:#ff8a96">THE ROOM PREVAILS</h2><p style="margin:4px 0">'+esc(haz.name)+' \u00b7 Tier '+RB.tier+'</p><p style="margin:2px 0;color:var(--muted);font-size:12px">'+esc(haz.rule)+'</p>'+
+      '<div class="gRunBtns"><button class="mini-btn primary" id="roomAgain">Retry</button>'+(RB.tier>1?'<button class="mini-btn" id="roomDown">Tier '+(RB.tier-1)+'</button>':'')+'<button class="mini-btn" id="roomLeave">Leave</button></div>';
+    const ab=document.getElementById('roomAgain'); if(ab) ab.onclick=()=>roomStartRun(RB.k,RB.tier);
+    const db=document.getElementById('roomDown'); if(db) db.onclick=()=>roomStartRun(RB.k,RB.tier-1);
+  }
+  const lb=document.getElementById('roomLeave'); if(lb) lb.onclick=()=>{ try{ document.getElementById('arena').classList.remove('show'); }catch(e){} try{ showDungeons(); }catch(e){} };
+  try{ renderHUD(); save(); }catch(e){} }
+/* redesigned Room of Requirement modal */
+function roomCardRoR(k){ const d=DKEY[k]||{}, haz=ROOM_HAZARDS[k]||{}, cap=roomTierCap(k), best=roomBestTier(k);
+  const tid='roomTier_'+k, start=Math.min(cap,Math.max(1,best+1));
+  return '<div style="text-align:left;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--bg)">'+
+    '<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b style="color:'+(haz.color||'#fff')+'">'+esc(haz.name||k)+'</b><span style="color:var(--muted);font-size:11px;font-weight:800">'+esc(d.label||k)+' \u00b7 best T'+best+' / cap T'+cap+'</span></div>'+
+    '<div style="color:var(--muted);font-size:12px;font-weight:700;margin:4px 0 8px">'+esc(haz.rule||'')+'</div>'+
+    '<div style="display:flex;gap:6px;align-items:center"><button class="mini-btn" data-rtd="'+k+'">\u2212</button><b id="'+tid+'" data-cap="'+cap+'" style="min-width:44px;text-align:center">T'+start+'</b><button class="mini-btn" data-rtu="'+k+'">+</button><button class="mini-btn primary" style="flex:1" data-roomgo="'+k+'">Enter</button></div></div>'; }
+function showDungeonsRoR(){
+  const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
+  ensureRooms();
+  box.innerHTML='<div class="ico">\ud83d\uded5</div><h2>Room of Requirement</h2><p>Each room becomes the trial you require. Living a domain raises that room\u2019s tier cap \u2014 higher tiers, richer rewards.</p>'+
+    '<div style="max-height:52vh;overflow:auto">'+DOMAINS.map(d=>roomCardRoR(d[0])).join('')+'</div>'+
+    '<button id="dungeonClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px 18px;font-family:Orbitron;font-weight:900;width:100%">Done</button>';
+  modal.classList.add('show');
+  document.getElementById('dungeonClose').onclick=()=>modal.classList.remove('show');
+  const cur=k=>parseInt((document.getElementById('roomTier_'+k)||{}).textContent.replace('T',''),10)||1;
+  const setT=(k,v)=>{ const el=document.getElementById('roomTier_'+k); if(!el)return; const cap=parseInt(el.dataset.cap,10)||2; el.textContent='T'+Math.max(1,Math.min(cap,v)); };
+  box.querySelectorAll('[data-rtu]').forEach(b=>b.onclick=()=>setT(b.dataset.rtu,cur(b.dataset.rtu)+1));
+  box.querySelectorAll('[data-rtd]').forEach(b=>b.onclick=()=>setT(b.dataset.rtd,cur(b.dataset.rtd)-1));
+  box.querySelectorAll('[data-roomgo]').forEach(b=>b.onclick=()=>{ const k=b.dataset.roomgo, t=cur(k); modal.classList.remove('show'); roomStartRun(k,t); });
+}
+try{ showDungeons=showDungeonsRoR; }catch(e){}
+/* ===== end Room of Requirement ===== */
+</script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){try{navigator.serviceWorker.register('./sw.js').catch(function(){});}catch(e){}});}</script><script type="module" src="oathforge-cloud.js"></script>
 </body>
 </html>
