@@ -2800,7 +2800,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.180.0-name-sweep-rooms';
+const APP_BUILD='v2.182.0-gauntlet-journey';
 const EXPECTED_ROSTER_COUNT=439;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3449,7 +3449,7 @@ function startSiegeBattle(k,team){
   if(!team||!team.heroes||!team.heroes.length){ try{toast('No team to deploy');}catch(e){} return; }
   try{ clearAuto(); }catch(e){}
   try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false; battleRoom=null;
+  battleMode='campaign'; battleReplay=false; battleRoom=null; battleRaidSA=null;
   const sg=ensureSiege(), F=sg.fronts[k]||(sg.fronts[k]={wavesCleared:0,bestRatio:0}), mods=siegeDomainMods();
   const waveIdx=(F.wavesCleared||0)+1, wp=siegeWavePower(sg.base||siegeFrontBase(),waveIdx,mods[k]), edge=siegeCollectionEdge();
   const syn=computeSynergy(team.heroes).bonus;
@@ -3731,7 +3731,7 @@ function riftEnemies(stage){ const wp=Math.round(riftBase()*Math.pow(RIFT_TUNE.e
   return out; }
 function startRiftBattle(){ const R=ensureRift().run; if(!R||!R.alive) return;
   try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false; battleRoom=null; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; battleRift=true;
+  battleMode='campaign'; battleReplay=false; battleRoom=null; battleRaidSA=null; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; battleRift=true;
   const living=R.squad.filter(id=>!R.dead[id]).map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
   const players=living.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp*R.hpMult)); let hp=(R.hp[h.id]!=null)?Math.min(max,Math.round(R.hp[h.id])):max; if(hp<1)hp=1;
     const np=((h.prestige||0)===0)?(R.nonPrestigeAtk||1):1;
@@ -3964,12 +3964,12 @@ function gauntletStartRun(squadIds){ const G=ensureGauntlet(); if(!squadIds||!sq
   const baseLine=heroes.reduce((s,h)=>s+powerOf(h),0);
   const dailiesDone=(()=>{ try{ return (S.dailies||[]).filter(d=>d&&d.done).length; }catch(e){ return 0; } })();
   const enterMult={}; heroes.forEach(h=>{ enterMult[h.id]=gauntletUseMult(h.id); });
-  G.run={ floor:1, squad:heroes.map(h=>h.id), fatigued:(G.prevSquad||[]).slice(), mult:enterMult, hp:{}, dead:{}, atkMult:1+Math.min(0.30,dailiesDone*0.04), hpMult:1, baseLine:baseLine, alive:true, startedAt:Date.now(), pendingBoons:null, habitStart:dailiesDone }; G.prevSquad=heroes.map(h=>h.id);
+  G.run={ floor:1, squad:heroes.map(h=>h.id), fatigued:(G.prevSquad||[]).slice(), mult:enterMult, hp:{}, dead:{}, atkMult:1+Math.min(0.30,dailiesDone*0.04), hpMult:1, baseLine:baseLine, alive:true, startedAt:Date.now(), pendingBoons:null, habitStart:dailiesDone, coins:0, pathMod:null, eliteDraft:false, atCrossroads:false }; G.prevSquad=heroes.map(h=>h.id);
   heroes.forEach(h=>{ G.weekUses[h.id]=(G.weekUses[h.id]||0)+1; });
   G.runs=(G.runs||0)+1;
   startGauntletBattle(); return {ok:true}; }
 function gauntletFloorBase(){ const R=S.gauntlet&&S.gauntlet.run; return Math.max(50,Math.round((R?R.baseLine:1000)*GAUNTLET_TUNE.baseFactor)); }
-function gauntletEnemies(floor){ const wp=Math.round(gauntletFloorBase()*Math.pow(GAUNTLET_TUNE.esc,floor-1));
+function gauntletEnemies(floor){ let wp=Math.round(gauntletFloorBase()*Math.pow(GAUNTLET_TUNE.esc,floor-1)); try{ const R=S.gauntlet&&S.gauntlet.run; if(R&&R.pathMod&&R.pathMod.power) wp=Math.round(wp*R.pathMod.power); }catch(e){}
   const zone=(typeof BATTLE_ZONES!=='undefined'?BATTLE_ZONES[(floor-1)%BATTLE_ZONES.length]:null)||{enemies:[['Raider','#8a8a8a','DPS']],bosses:[['Warlord','#ff5d6c','Tank']]};
   const ens=zone.enemies&&zone.enemies.length?zone.enemies:[['Raider','#8a8a8a','DPS']], bss=zone.bosses&&zone.bosses.length?zone.bosses:[['Warlord','#ff5d6c','Tank']];
   const isBoss=floor%GAUNTLET_TUNE.bossEvery===0, out=[];
@@ -3979,7 +3979,7 @@ function gauntletEnemies(floor){ const wp=Math.round(gauntletFloorBase()*Math.po
   return out; }
 function startGauntletBattle(){ const R=S.gauntlet&&S.gauntlet.run; if(!R||!R.alive) return;
   try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false; battleRoom=null; battleSiege=null; battleGauntlet=true;
+  battleMode='campaign'; battleReplay=false; battleRoom=null; battleRaidSA=null; battleSiege=null; battleGauntlet=true;
   const living=R.squad.filter(id=>!R.dead[id]).map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
   const players=living.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp*R.hpMult)); let hp=(R.hp[h.id]!=null)?Math.min(max,Math.round(R.hp[h.id])):max; if(hp<1)hp=1;
     return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:hp,max:max,atk:Math.round(atkOf(h)*fm.atk*R.atkMult*((R.mult&&R.mult[h.id]!=null)?R.mult[h.id]:1)),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h)}; });
@@ -4027,7 +4027,7 @@ function gauntletApplyBoon(key){ const G=ensureGauntlet(), R=G.run; if(!R||!R.al
   else if(key==='rally'){ gauntletFill(R); }
   else if(key==='resurrection'){ R.squad.filter(id=>R.dead[id]).forEach(id=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return; R.dead[id]=false; R.hp[id]=gauntletHeroMax(h,R)*0.60; }); }
   else if(key==='spoils'){ R.bonusShards=(R.bonusShards||0)+Math.max(5,Math.round(R.floor*2.5)); }
-  R.pendingBoons=null; startGauntletBattle(); return {ok:true}; }
+  R.pendingBoons=null; try{ gauntletShowCrossroads(); }catch(e){ startGauntletBattle(); } return {ok:true}; }
 function gauntletMetaReward(floor){ return { gold:Math.round(150*floor*(1+floor*0.03)), dust:Math.round(60*floor), cores:Math.round(floor*0.4), cry:Math.round(floor*0.2) }; }
 function gauntletEndRun(){ const G=ensureGauntlet(), R=G.run; if(!R) return null; const floorReached=R.floor; R.alive=false;
   G.best=Math.max(G.best||0,floorReached); const shards=floorReached+((R&&R.bonusShards)||0); G.shards=(G.shards||0)+shards;
@@ -4037,7 +4037,7 @@ function gauntletEndBattle(win){ battleGauntlet=null; try{ if(battleTimer){ clea
   const G=ensureGauntlet(), R=G.run; if(!R){ return; }
   (battleState&&battleState.players||[]).forEach(u=>{ R.hp[u.id]=Math.max(0,u.hp); if(u.hp<=0||u.dead) R.dead[u.id]=true; });
   const livingLeft=R.squad.filter(id=>!R.dead[id]).length;
-  if(win && livingLeft>0){ R.floor++; R.pendingBoons=gauntletBoonOffer(); try{ gauntletShowResult(true); }catch(e){ console.error(e); } }
+  if(win && livingLeft>0){ const _pm=(R.pathMod&&R.pathMod.coins)||1; R.coins=(R.coins||0)+Math.round((8+2*Math.max(0,R.floor-1))*_pm); R.pathMod=null; R.floor++; R.pendingBoons=gauntletBoonOffer(); try{ gauntletShowResult(true); }catch(e){ console.error(e); } }
   else { const sum=gauntletEndRun(); try{ gauntletShowResult(false,sum); }catch(e){ console.error(e); } }
   try{renderHUD();}catch(e){} try{save();}catch(e){} }
 /* ===== end Endless Gauntlet engine ===== */
@@ -4103,6 +4103,61 @@ function renderGauntlet(v){ injectExpStyles(); injectGauntletStyles(); const G=e
   const st=document.getElementById('gStart'); if(st) st.onclick=()=>{ const res=gauntletStartRun(gauntletDefaultSquad()); if(!res||!res.ok){ try{toast('Need at least 2 heroes to run');}catch(e){} } };
   const bk=document.getElementById('gBack'); if(bk) bk.onclick=()=>navTo('modes');
 }
+
+/* ===== Gauntlet Journey layer (v2.182.0): path choices, Valor, Supply Cache ===== */
+const GAUNTLET_PATHS={
+  trial:{key:'trial',name:'Trial',icon:'\u2694',desc:'A standard floor. Standard spoils.',power:1,coins:1},
+  elite:{key:'elite',name:'Elite Trial',icon:'\u2620',desc:'A brutal floor. \u00d72.5 Valor, and the next boon draft skews rare.',power:1.5,coins:2.5},
+  steady:{key:'steady',name:'Steady Path',icon:'\u26f0',desc:'An easier floor. Half Valor, squad mends 20% on entry.',power:0.85,coins:0.5}
+};
+function gauntletCacheItems(R){ const f=Math.max(1,(R&&R.floor)||1);
+  return [
+    {key:'repair',name:'Field Repair',desc:'Heal living heroes 35%',cost:30+6*f},
+    {key:'revival',name:'Revival Rite',desc:'Revive strongest fallen hero at 50%',cost:50+8*f},
+    {key:'whetstone',name:'Whetstone',desc:'+8% ATK for the rest of the run',cost:45+7*f},
+    {key:'cleanse',name:'Fresh Legs',desc:'Clear entry fatigue from this squad',cost:40}
+  ]; }
+function gauntletBuyCache(key){ const G=ensureGauntlet(), R=G.run; if(!R||!R.alive) return {ok:false};
+  const item=gauntletCacheItems(R).find(i=>i.key===key); if(!item) return {ok:false};
+  if((R.coins||0)<item.cost){ toast('Not enough Valor'); return {ok:false,reason:'coins'}; }
+  if(key==='revival'&&!R.squad.some(id=>R.dead[id])){ toast('No fallen heroes'); return {ok:false,reason:'nodead'}; }
+  R.coins-=item.cost;
+  if(key==='repair') gauntletHeal(R,0.35);
+  else if(key==='revival'){ const dead=R.squad.filter(id=>R.dead[id]); if(dead.length){ const id=dead.sort((a,b)=>{const ha=S.heroes.find(x=>x.id===a),hb=S.heroes.find(x=>x.id===b);return powerOf(hb)-powerOf(ha);})[0]; const h=S.heroes.find(x=>x.id===id); R.dead[id]=false; R.hp[id]=gauntletHeroMax(h,R)*0.50; } }
+  else if(key==='whetstone') R.atkMult*=1.08;
+  else if(key==='cleanse') R.squad.forEach(id=>{ if((R.mult[id]||1)<1) R.mult[id]=1; });
+  try{ save(); }catch(e){}
+  gauntletShowCache(); return {ok:true}; }
+function gauntletShowCache(){ const R=S.gauntlet&&S.gauntlet.run; const r=document.getElementById('arenaResult'); if(!r||!R) return;
+  const rows=gauntletCacheItems(R).map(i=>'<button class="gBoon gt-uncommon" data-cache="'+i.key+'"'+((R.coins||0)<i.cost?' style="opacity:.45"':'')+'><div class="gbIcon">\u25c9</div><div class="gbWrap"><div class="gbName">'+i.name+' \u00b7 '+i.cost+'</div><div class="gbDesc">'+i.desc+'</div></div></button>').join('');
+  r.innerHTML='<h2 style="color:#ffd27a">SUPPLY CACHE</h2><p style="margin:4px 0">\u25c9 '+v168Num(R.coins||0)+' Valor \u00b7 Floor '+R.floor+' ahead</p><div class="gBoonRow" style="flex-direction:column">'+rows+'</div><div class="gRunBtns"><button class="mini-btn primary" id="gCacheBack">Back to the crossroads</button></div>';
+  r.querySelectorAll('[data-cache]').forEach(b=>{ b.onclick=()=>gauntletBuyCache(b.dataset.cache); });
+  const bb=document.getElementById('gCacheBack'); if(bb) bb.onclick=()=>gauntletShowCrossroads(); }
+function gauntletChoosePath(key){ const G=ensureGauntlet(), R=G.run; if(!R||!R.alive) return {ok:false};
+  const p=GAUNTLET_PATHS[key]||GAUNTLET_PATHS.trial; R.pathMod={power:p.power,coins:p.coins}; R.atCrossroads=false;
+  if(key==='elite') R.eliteDraft=true;
+  if(key==='steady') gauntletHeal(R,0.20);
+  try{ save(); }catch(e){}
+  startGauntletBattle(); return {ok:true}; }
+function gauntletShowCrossroads(){ injectGauntletStyles(); const R=S.gauntlet&&S.gauntlet.run; const r=document.getElementById('arenaResult'); if(!r||!R||!R.alive) return;
+  R.atCrossroads=true;
+  r.style.display='block'; r.className='result win'; try{document.querySelector('.arena').classList.add('arenaEnded');}catch(e){}
+  const isBoss=R.floor%GAUNTLET_TUNE.bossEvery===0;
+  const opts=['trial','elite','steady'].map(k=>{ const p=GAUNTLET_PATHS[k]; return '<button class="gBoon '+(k==='elite'?'gt-epic':k==='steady'?'gt-common':'gt-rare')+'" data-gpath="'+k+'"><div class="gbIcon">'+p.icon+'</div><div class="gbWrap"><div class="gbName">'+p.name+'</div><div class="gbDesc">'+p.desc+'</div></div></button>'; }).join('');
+  r.innerHTML='<h2 style="color:#8bd0ff">THE CROSSROADS</h2><p style="margin:4px 0">\u25c9 '+v168Num(R.coins||0)+' Valor \u00b7 Floor '+R.floor+(isBoss?' \u00b7 BOSS AHEAD':'')+' \u00b7 choose your path</p><div class="gBoonRow">'+opts+'</div><div class="gRunBtns"><button class="mini-btn" id="gOpenCache">\u25c9 Supply Cache</button><button class="mini-btn" id="gRetire">Retire \u00b7 bank rewards</button></div>';
+  r.querySelectorAll('[data-gpath]').forEach(b=>{ b.onclick=()=>{ try{v172Float(b,b.querySelector('.gbName').textContent);}catch(e){} gauntletChoosePath(b.dataset.gpath); }; });
+  const oc=document.getElementById('gOpenCache'); if(oc) oc.onclick=()=>gauntletShowCache();
+  const rt=document.getElementById('gRetire'); if(rt) rt.onclick=()=>{ const sum=gauntletEndRun(); try{ gauntletShowResult(false,sum); }catch(e){} }; }
+/* elite drafts skew rare/epic */
+if(typeof gauntletBoonOffer==='function' && !gauntletBoonOffer.__journey){ const __gbo=gauntletBoonOffer;
+  gauntletBoonOffer=function(){ const R=S.gauntlet&&S.gauntlet.run;
+    if(!(R&&R.eliteDraft)) return __gbo();
+    const saved=GAUNTLET_BOONS.map(b=>b.w);
+    GAUNTLET_BOONS.forEach(b=>{ if(b.tier==='rare'||b.tier==='epic') b.w=(b.w||1)*3; });
+    let out; try{ out=__gbo(); } finally { GAUNTLET_BOONS.forEach((b,i)=>{ b.w=saved[i]; }); R.eliteDraft=false; }
+    return out; };
+  gauntletBoonOffer.__journey=true; }
+/* ===== end Gauntlet Journey layer ===== */
 /* ===== end Endless Gauntlet UI ===== */
 
 /* ===== Rival Arena — themed ladder engine (v2.32.0) ===== */
@@ -4145,7 +4200,7 @@ function arenaPlayerTeam(cond){ const pool=S.heroes.filter(h=>h&&h.owned); pool.
 function arenaDailyBuff(){ try{ const d=(S.dailies||[]).filter(x=>x&&x.done).length; return 1+Math.min(0.20,d*0.03); }catch(e){ return 1; } }
 function startArenaBattle(rank){ const arCond=arenaRivalCondition(rank); const team=arenaPlayerTeam(arCond); if(team.length<1) return {ok:false,reason:'noteam'}; try{musterMark(team.map(h=>h.id));}catch(e){}
   try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false; battleRoom=null; battleSiege=null; battleGauntlet=null; battleArena={rank:rank};
+  battleMode='campaign'; battleReplay=false; battleRoom=null; battleRaidSA=null; battleSiege=null; battleGauntlet=null; battleArena={rank:rank};
   const buff=arenaDailyBuff();
   const players=team.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp));
     return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:max,max:max,atk:Math.round(atkOf(h)*fm.atk*buff*(arCond?arCond.mult(h):1)),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h)}; });
@@ -4305,7 +4360,7 @@ function conquestBuildEnemies(tier,mod){ var total=conquestBossPower(tier,mod); 
   return out; }
 function startConquestBattle(tier){ const mod=conquestModifier(tier); const team=conquestBestTeam(mod); if(team.length<1) return {ok:false,reason:'noteam'}; try{musterMark(team.map(h=>h.id));}catch(e){}
   try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false; battleRoom=null; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest={tier:tier,mod:mod};
+  battleMode='campaign'; battleReplay=false; battleRoom=null; battleRaidSA=null; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest={tier:tier,mod:mod};
   const champ=conquestChampion(mod); const champId=champ?champ.id:null; const aura=champId?(CONQUEST_TUNE.champAura||1.2):1;
   const players=team.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp));
     const isChamp=(h.id===champId); const dmgMult=isChamp?1:(mod.mult(h)*aura);
@@ -6120,7 +6175,7 @@ let battleTimer=null, autoNext=null, battleMode='campaign', battleSpeed=1, battl
 function startBattle(mode,opts){
   opts=opts||{}; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; clearAuto(); clearTransientUI();
   if(battleTimer){ clearInterval(battleTimer); battleTimer=null; }
-  battleMode = (mode==='tower')?'tower':'campaign'; battleRoom=null;
+  battleMode = (mode==='tower')?'tower':'campaign'; battleRoom=null; battleRaidSA=null;
   battleReplay=!!opts.replay;
   const replayStage=opts.stage||S.stage, replayFloor=opts.floor||S.tower;
   const sq=squad(battleMode);
@@ -6549,6 +6604,7 @@ function endBattle(win){
   if(battleGauntlet){ try{ gauntletEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
   if(battleArena){ try{ arenaEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
   if(battleConquest){ try{ conquestEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
+  if(typeof battleRaidSA!=='undefined'&&battleRaidSA){ try{ raidSAEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
   if(battleRoom){ try{ roomEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
   if(battleRift){ try{ riftEndBattle(win); }catch(e){ battleEndFallback(win,e); } return; }
   const r=document.getElementById('arenaResult'); r.style.display='block'; r.className='result '+(win?'win':'lose'); try{var _ae=document.querySelector('.arena'); if(_ae) _ae.classList.add('arenaEnded');}catch(e){}
@@ -16731,13 +16787,13 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       const headSpan=o.querySelector('.clashBattleHead span'); if(headSpan) headSpan.textContent='Chapter '+battle7.chapter+' \u00b7 Stage '+battle7.stage+' \u00b7 '+c7FmtTime(battle7.timeLeft||0)+' left \u00b7 '+battle7.lanes.length+' lanes';
     }catch(e){ try{ c7RenderBattle(); }catch(_e){} }
   }
-  function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['front','mid','back','rear','reserve']; /* v2.106 clash: front rank renders at top of stack, facing the descending swarm */ battle7.heroes.forEach(h=>h.acted=0); const advChart=['Flame','Grove','Stone','Storm','Tide','Flame'].map(e=>c7ElementBadge(e,true)).join('<span class="clashAdvArrow">▸</span>'); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; const _cz=BATTLE_ZONES[(((battle7.chapter||1)-1)%BATTLE_ZONES.length+BATTLE_ZONES.length)%BATTLE_ZONES.length], _cbg=(typeof v156BgForClass==='function'&&_cz)?v156BgForClass(_cz.c):''; o.innerHTML='<div class="clashBattlePanel c7 hasArt '+(battle7.lanes.length===5?'five':'three')+'" style="--clashArt:url('+_cbg+')"><div class="clashBattleHead"><div><b>⚡ Squadron Clash</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">'+((S.clash&&S.clash.autoBattle)?'Auto Battle On':'Auto Battle Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Resolve</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashAdvChart">'+advChart+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+' '+c7ElementBadge(t,true)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
+  function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['front','mid','back','rear','reserve']; /* v2.106 clash: front rank renders at top of stack, facing the descending swarm */ battle7.heroes.forEach(h=>h.acted=0); const advChart=['Flame','Grove','Stone','Storm','Tide','Flame'].map(e=>c7ElementBadge(e,true)).join('<span class="clashAdvArrow">▸</span>'); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; const _cz=BATTLE_ZONES[(((battle7.chapter||1)-1)%BATTLE_ZONES.length+BATTLE_ZONES.length)%BATTLE_ZONES.length], _cbg=(typeof v156BgForClass==='function'&&_cz)?v156BgForClass(_cz.c):''; o.innerHTML='<div class="clashBattlePanel c7 hasArt '+(battle7.lanes.length===5?'five':'three')+'" style="--clashArt:url('+_cbg+')"><div class="clashBattleHead"><div><b>⚡ Squadron Clash</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">'+((S.clash&&S.clash.autoBattle)?((S.appSettings&&S.appSettings.autoMode==='resolve')?'Auto Resolve':'Auto Watch'):'Auto Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Resolve</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashAdvChart">'+advChart+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+' '+c7ElementBadge(t,true)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
   window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); battle7._wd={t:battle7.tickCount||0,at:Date.now()}; if(battle7.watchdog) clearInterval(battle7.watchdog); battle7.watchdog=setInterval(c7Watchdog,1500); if(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode==='resolve'){ try{ if(typeof window.skipClashBattle==='function') window.skipClashBattle(); }catch(_e){} } }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
   window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; battle7.resolving=true; let guard=0; while(battle7&&!battle7.ended&&guard++<900){ battle7.resolving=false; c7Tick(); if(!battle7||battle7.ended) break; battle7.resolving=true; } if(battle7&&!battle7.ended){ battle7.resolving=false; c7Resolve(false); } };
   window.closeClashBattle=function(){ if(battle7&&battle7.timer) clearInterval(battle7.timer); if(battle7&&battle7.autoTimer) clearTimeout(battle7.autoTimer); if(battle7&&battle7.watchdog) clearInterval(battle7.watchdog); battle7=null; const o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); try{ if(typeof render==='function') render(); }catch(e){} };
   window.c7BattleInterval=function(){ const sp=c7SpeedValue(); return sp===3?220:(sp===2?300:C7.tickMs); };
   window.setClashSpeed=function(){ if(!battle7||battle7.ended) return; const cur=c7SpeedValue(); battle7.speed=cur===1?2:cur===2?3:1; try{ if(S.clash) S.clash.speed=battle7.speed; if(typeof save==='function') save(); }catch(e){} if(battle7.timer) clearInterval(battle7.timer); battle7.timer=setInterval(c7Tick,c7BattleInterval()); c7RenderBattle(); };
-  window.toggleClashAutoBattle=function(){ if(!S.clash) ensureClashState(); S.clash.autoBattle=!S.clash.autoBattle; if(typeof save==='function') save(); safeToast7(S.clash.autoBattle?'Clash auto battle on. Stops at bosses/new type setups.':'Clash auto battle off.'); c7RenderBattle(); };
+  window.toggleClashAutoBattle=function(){ if(!S.clash) ensureClashState(); if(!S.appSettings) S.appSettings={}; var on=!!S.clash.autoBattle, res=(S.appSettings.autoMode==='resolve'); if(!on){ S.clash.autoBattle=true; S.appSettings.autoMode='watch'; } else if(!res){ S.appSettings.autoMode='resolve'; } else { S.clash.autoBattle=false; S.appSettings.autoMode='off'; } if(typeof save==='function') save(); var m=S.appSettings.autoMode; safeToast7(!S.clash.autoBattle?'Clash auto off.':(m==='resolve'?'Auto Resolve: stages resolve instantly and chain.':'Auto Watch: stages play out and chain.')); c7RenderBattle(); };
   const oldBMD7=(typeof battleHubModeData==='function')?battleHubModeData:null; if(oldBMD7 && !window.__clashPass7WrappedBMD){ window.__clashPass7WrappedBMD=true; battleHubModeData=function(){ const d=oldBMD7.apply(this,arguments); try{ if(d&&d.clash){ const ch=c7Chapter(); d.clash.pill=c7IsFive(ch)?'5-lane active':'Warm-up'; d.clash.sub=c7IsFive(ch)?'20 heroes · outer basic lanes':'12 heroes · 3 typed lanes'; d.clash.meta='Chapter '+ch+' Clash'; d.clash.stat='C'+ch+' · S'+c7Stage(); } }catch(e){} return d; }; }
   function inject7(){ if(document.getElementById('clashPass7Styles')) return; const st=document.createElement('style'); st.id='clashPass7Styles'; st.textContent=`
     .elementBadge.c7basic{border-color:#9ca3af66;background:#9ca3af18;color:#d1d5db}.clashLaneGrid.c7.five{grid-template-columns:repeat(5,minmax(0,1fr))}.clashLaneCard.basic{border-style:dashed;background:linear-gradient(135deg,rgba(156,163,175,.10),rgba(255,255,255,.025))}.clashFitBox.c7 .clashFitLane.basic{border-style:dashed}.clashFormation.c7.five{grid-template-columns:repeat(5,minmax(0,1fr))}.clashFormation.c7.three{grid-template-columns:repeat(3,minmax(0,1fr))}.clashSlot.c7.basic{border-style:dashed}.clashEditGrid.c7.five{grid-template-columns:repeat(5,minmax(0,1fr))}.clashEditGrid.c7.three{grid-template-columns:repeat(3,minmax(0,1fr))}.clashEditor.c7{max-height:92vh}.clashBattlePanel.c7.five{width:min(720px,100%)}.clashArenaGrid.c7.five{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.clashLaneBattle.basic{border-style:dashed}.clashEnemyToken.basic .enemyFace{opacity:.92}.clashBattlePanel.c7.five .clashHeroCell{grid-template-columns:30px 1fr;min-height:47px}.clashBattlePanel.c7.five .heroTile{width:30px;height:30px;border-radius:9px}.clashBattlePanel.c7.five .heroTags{font-size:7px}.clashBattlePanel.c7.five .clashEnemyToken{width:38px}.clashBattlePanel.c7.five .enemyFace{height:29px}.clashBattlePanel.c7.five .clashEnemyToken.boss{width:48px}.clashBattlePanel.c7.five .clashEnemyToken.boss .enemyFace{height:40px}
@@ -18041,7 +18097,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       var depthBase=of2142RosterDepthAnchor(gauntletOwned(),(GAUNTLET_TUNE&&GAUNTLET_TUNE.squadSize)||6,function(h){return gauntletUseMult(h.id);});
       var dailiesDone=0; try{ dailiesDone=(S.dailies||[]).filter(function(d){return d&&d.done;}).length; }catch(e){}
       var enterMult={}; heroes.forEach(function(h){ enterMult[h.id]=gauntletUseMult(h.id); });
-      G.run={ floor:1, squad:heroes.map(function(h){return h.id;}), fatigued:(G.prevSquad||[]).slice(), mult:enterMult, hp:{}, dead:{}, atkMult:1+Math.min(0.30,dailiesDone*0.04), hpMult:1, baseLine:baseLine, depthBaseLine:depthBase, depthOrder:'weakest-viable-first', alive:true, startedAt:Date.now(), pendingBoons:null, habitStart:dailiesDone, rotationNotice:'Reserve squad entered early while pressure was lower.' };
+      G.run={ floor:1, squad:heroes.map(function(h){return h.id;}), fatigued:(G.prevSquad||[]).slice(), mult:enterMult, hp:{}, dead:{}, atkMult:1+Math.min(0.30,dailiesDone*0.04), hpMult:1, baseLine:baseLine, depthBaseLine:depthBase, depthOrder:'weakest-viable-first', alive:true, startedAt:Date.now(), pendingBoons:null, habitStart:dailiesDone, coins:0, pathMod:null, eliteDraft:false, atCrossroads:false, rotationNotice:'Reserve squad entered early while pressure was lower.' };
       G.prevSquad=heroes.map(function(h){return h.id;});
       heroes.forEach(function(h){ G.weekUses[h.id]=(G.weekUses[h.id]||0)+1; });
       G.runs=(G.runs||0)+1;
@@ -18100,6 +18156,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
             return;
           }
         }
+        try{ var _pm=(R.pathMod&&R.pathMod.coins)||1; R.coins=(R.coins||0)+Math.round((8+2*Math.max(0,R.floor-1))*_pm); R.pathMod=null; }catch(e){}
         R.floor++;
         of2142ClampGauntlet();
         R.pendingBoons=gauntletBoonOffer();
@@ -22968,7 +23025,7 @@ function roomStartRun(k,tier){
   tier=Math.max(1,Math.min(roomTierCap(k),Math.round(tier||1)));
   const heroes=roomSquad(k); if(heroes.length<2){ toast('Not enough heroes'); return {ok:false}; }
   try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; battleRift=null;
+  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; battleRift=null; battleRaidSA=null;
   const noPassives=(k==='faith'), noSupport=(k==='fitness'||k==='faith');
   const players=heroes.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row);
     const affm=(Array.isArray(h.aff)&&h.aff.includes(k))?ROOM_TUNE.affBoost:1;
@@ -23079,6 +23136,102 @@ function showDungeonsRoR(){
 try{ showDungeons=showDungeonsRoR; }catch(e){}
 /* ===== end Room of Requirement ===== */
 </script>
+
+<script>
+/* ===== Tera Raid Score-Attack (v2.181.0) =====
+   The weekly boss is now fought directly: limited daily strike attempts on the
+   shared battle engine. Strike damage feeds the same R.dmg pool and tier
+   rewards as habit damage. Habits amplify strike power. */
+var battleRaidSA=null;
+const RAID_SA={ attemptsPerDay:3, slice:0.055, ampPerDomain:0.08, enemyFactor:0.14, squadSize:8 };
+function ensureRaidSA(){ const R=ensureRaid(); const day=periodKey('daily');
+  if(!R.sa||R.sa.day!==day) R.sa={day:day,used:0,runs:(R.sa&&R.sa.runs)||0,bestPct:(R.sa&&R.sa.bestPct)||0};
+  return R.sa; }
+function raidAttemptsLeft(){ const sa=ensureRaidSA(); return Math.max(0,RAID_SA.attemptsPerDay-(sa.used||0)); }
+function raidHabitAmp(){ try{ return 1+RAID_SA.ampPerDomain*Math.max(0,Math.min(8,domainsHitThisWeek())); }catch(e){ return 1; } }
+function raidSASquad(){ const ids=(typeof squad==='function'?squad('raid'):[])||[];
+  let heroes=ids.map(id=>S.heroes.find(h=>h&&h.id===id&&h.owned)).filter(Boolean);
+  if(heroes.length<2) heroes=(S.heroes||[]).filter(h=>h&&h.owned).slice().sort((a,b)=>powerOf(b)-powerOf(a)).slice(0,RAID_SA.squadSize);
+  return heroes.slice(0,RAID_SA.squadSize); }
+function raidSAEnemies(baseLine){ const boss=currentBoss();
+  const wp=Math.max(60,Math.round(baseLine*RAID_SA.enemyFactor));
+  const mk=(sp,share,b)=>enemyFromSpec(sp,Math.max(30,Math.round(share*4)),Math.max(8,Math.round(share*0.25)),b);
+  const out=[mk([boss.name,'#ffb01f','Tank'],wp*0.6,true)];
+  out.push(mk(['Nightmare Herald','#9e7cff','DPS'],wp*0.2,false));
+  out.push(mk(['Dream Shade','#58d0ff','Support'],wp*0.2,false));
+  return out; }
+function startRaidStrike(){
+  if(raidAttemptsLeft()<=0){ toast('No strikes left today \u2014 resets at midnight.'); return {ok:false,reason:'attempts'}; }
+  const R=ensureRaid(); if(R.dmg>=R.max){ toast('The boss is already defeated this week.'); return {ok:false,reason:'dead'}; }
+  const heroes=raidSASquad(); if(heroes.length<2){ toast('Not enough heroes'); return {ok:false,reason:'noteam'}; }
+  try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  battleMode='campaign'; battleReplay=false; battleSiege=null; battleGauntlet=null; battleArena=null; battleConquest=null; battleRift=null; battleRoom=null;
+  const cond=(typeof raidWardCondition==='function')?raidWardCondition():null;
+  const amp=raidHabitAmp();
+  const players=heroes.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row);
+    const wm=cond?Math.max(0.2,cond.mult(h)):1;
+    const max=Math.max(1,Math.round(hpOf(h)*fm.hp));
+    return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:max,max:max,
+      atk:Math.round(atkOf(h)*fm.atk*wm*amp),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,
+      supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h)}; });
+  const baseLine=players.reduce((a,p)=>a+Math.round(p.max/8+p.atk*2),0);
+  const enemies=raidSAEnemies(baseLine);
+  ensureRaidSA().used=(ensureRaidSA().used||0)+1; ensureRaidSA().runs=(ensureRaidSA().runs||0)+1;
+  battleRaidSA={amp:amp,ward:cond?cond.label:'',startedAt:Date.now()};
+  try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('raid')+' \u00b7 '+currentBoss().name+' \u00b7 Strike '+ensureRaidSA().runs; }catch(e){}
+  try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
+  drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
+  document.getElementById('arena').classList.add('show');
+  try{ wireBattleControls(); }catch(e){}
+  battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
+  try{ passiveBanner(currentBoss().name+' \u00b7 x'+amp.toFixed(2)+' habit power','#ffb01f'); }catch(e){}
+  battleTimer=setInterval(function(){ battleStep(); },battleDelay());
+  if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} }
+  try{ save(); }catch(e){}
+  return {ok:true}; }
+function raidSAEndBattle(win){ const RS=battleRaidSA; battleRaidSA=null;
+  try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
+  if(!RS) return; const R=ensureRaid();
+  let dealtRatio=0; try{ const B=battleState; const tot=B.enemies.reduce((a,e)=>a+(e.max||0),0);
+    const destroyed=B.enemies.reduce((a,e)=>a+Math.max(0,(e.max||0)-Math.max(0,e.hp||0)),0);
+    dealtRatio=tot>0?Math.max(0,Math.min(1,destroyed/tot)):0; }catch(e){}
+  if(win) dealtRatio=1;
+  const dmgAdd=Math.min(Math.max(0,R.max-R.dmg),Math.round(R.max*RAID_SA.slice*dealtRatio*(RS.amp||1)));
+  R.dmg+=dmgAdd;
+  const pct=Math.round(dealtRatio*100); const sa=ensureRaidSA(); if(pct>(sa.bestPct||0)) sa.bestPct=pct;
+  let msgs=[]; try{ msgs=checkRaidThresholds()||[]; }catch(e){}
+  const bossPct=Math.round(R.dmg/R.max*100);
+  const r=document.getElementById('arenaResult'); if(!r){ try{ save(); renderHUD(); }catch(e){} return; }
+  r.style.display='block'; try{ var _ae=document.querySelector('.arena'); if(_ae) _ae.classList.add('arenaEnded'); }catch(e){}
+  r.className='result '+(win?'win':'lose');
+  const left=raidAttemptsLeft();
+  r.innerHTML='<h2 style="color:'+(win?'#7af0a8':'#ffb01f')+'">'+(win?'STRIKE DEVASTATES':'STRIKE LANDED')+'</h2>'+
+    '<p style="margin:4px 0">'+esc(currentBoss().name)+' \u00b7 '+pct+'% of the fight cleared \u00b7 x'+(RS.amp||1).toFixed(2)+' habit power</p>'+
+    '<p style="margin:2px 0;color:var(--muted);font-size:12px">+'+v168Num(dmgAdd)+' raid damage \u00b7 boss at '+bossPct+'%'+(RS.ward?' \u00b7 '+esc(RS.ward):'')+'</p>'+
+    (msgs.length?'<div class="siegeResChips">'+msgs.map(m=>'<span>'+esc(m)+'</span>').join('')+'</div>':'')+
+    '<div class="gRunBtns">'+(left>0&&R.dmg<R.max?'<button class="mini-btn primary" id="raidSAAgain">Strike again \u00b7 '+left+' left</button>':'')+'<button class="mini-btn" id="raidSALeave">Leave</button></div>';
+  const ab=document.getElementById('raidSAAgain'); if(ab) ab.onclick=()=>startRaidStrike();
+  const lb=document.getElementById('raidSALeave'); if(lb) lb.onclick=()=>{ try{ document.getElementById('arena').classList.remove('show'); }catch(e){} try{ if(typeof render==='function') render(); }catch(e){} };
+  try{ renderHUD(); save(); }catch(e){} }
+function raidStrikePanelHTML(){ try{ const left=raidAttemptsLeft(), amp=raidHabitAmp(), R=ensureRaid();
+  const dead=R.dmg>=R.max;
+  return '<div style="margin-top:9px;display:flex;gap:8px;align-items:center">'+
+    (dead?'<span style="font-size:11px;font-weight:900;color:#7dffb0">Boss defeated \u2014 new boss '+weekEndsIn()+'</span>'
+    :'<button class="go" style="flex:1;padding:9px 12px" onclick="startRaidStrike()">\u2694 Strike \u00b7 '+left+'/'+RAID_SA.attemptsPerDay+' today</button>')+
+    '<span style="font-size:10px;font-weight:900;color:var(--muted)">x'+amp.toFixed(2)+' from domains lived</span></div>'; }catch(e){ return ''; } }
+function raidSAInjectPanel(){ try{
+  const host=document.querySelector('.raidArenaWorld > div:last-child'); if(!host) return;
+  let d=document.getElementById('raidSAPanel');
+  if(!d){ d=document.createElement('div'); d.id='raidSAPanel'; host.appendChild(d); }
+  d.innerHTML=raidStrikePanelHTML(); }catch(e){} }
+(function installRaidSAHook(){ try{
+  if(typeof render==='function'&&!render.__raidSA){ const __r=render;
+    render=function(){ const out=__r.apply(this,arguments); try{ raidSAInjectPanel(); }catch(e){} return out; };
+    render.__raidSA=true; }
+  setTimeout(raidSAInjectPanel,800); }catch(e){} })();
+/* ===== end Tera Raid Score-Attack ===== */
+</script>
+
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){try{navigator.serviceWorker.register('./sw.js').catch(function(){});}catch(e){}});}</script><script type="module" src="oathforge-cloud.js"></script>
 </body>
 </html>
