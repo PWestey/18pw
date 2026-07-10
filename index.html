@@ -2605,7 +2605,7 @@ function inferHeroElementType(h){ if(h&&h.id&&BALANCED_CLASH_ELEMENTS[h.id]) ret
   if((h&&h.role)==='Support') return (stableHash(txt)%2?'Grove':'Tide');
   return pickElementFromSeed(txt);
 }
-function inferClashRole(h){ if(h&&h.id&&BALANCED_CLASH_ROLES[h.id]) return BALANCED_CLASH_ROLES[h.id]; const n=String((h&&h.name)||'').toLowerCase(), id=String((h&&h.id)||'').toLowerCase(), role=normalizeRole((h&&h.role)||'DPS');
+function inferClashRole(h){ if(h&&h.id&&!h.roleCustom&&BALANCED_CLASH_ROLES[h.id]) return BALANCED_CLASH_ROLES[h.id]; const n=String((h&&h.name)||'').toLowerCase(), id=String((h&&h.id)||'').toLowerCase(), role=normalizeRole((h&&h.role)||'DPS');
   if(role==='Tank') return 'Tank';
   if(role==='Support') return /heal|healer|mantis|mirabel|isobel|pike|cleric|baymax|doc|doctor|wong|shadowheart|halsin|triss/.test(n+' '+id)?'Healer':'Support';
   if(/iron man|hawkeye|rocket|jaina|elsa|gandalf|hermione|storm|cyclops|caitlyn|miss fortune|pikachu|gale|wizard|caster|archer|gun|ranged|mage|blaster|rifle/.test(n+' '+id)) return 'Ranged DPS';
@@ -2619,7 +2619,7 @@ function inferEnemyElementType(name,boss){ const t=String(name||'').toLowerCase(
   if(/storm|spark|thunder|lightning|wraith|void|chaos|shade|caster/.test(t)) return 'Storm';
   return pickElementFromSeed((boss?'boss:':'enemy:')+name);
 }
-function ensureElementData(){ if(!S) return; (S.heroes||[]).forEach(h=>{ if(h&&h.elementCustom&&validElementType(h.elementCustom)){ h.elementType=h.elementCustom; } else if(h&&h.id&&BALANCED_CLASH_ELEMENTS[h.id]) h.elementType=BALANCED_CLASH_ELEMENTS[h.id]; else if(!validElementType(h.elementType)) h.elementType=inferHeroElementType(h); if(h&&h.id&&BALANCED_CLASH_ROLES[h.id]) h.clashRole=BALANCED_CLASH_ROLES[h.id]; else if(!CLASH_ROLES.includes(h.clashRole)) h.clashRole=inferClashRole(h); }); }
+function ensureElementData(){ if(!S) return; (S.heroes||[]).forEach(h=>{ if(h&&h.elementCustom&&validElementType(h.elementCustom)){ h.elementType=h.elementCustom; } else if(h&&h.id&&BALANCED_CLASH_ELEMENTS[h.id]) h.elementType=BALANCED_CLASH_ELEMENTS[h.id]; else if(!validElementType(h.elementType)) h.elementType=inferHeroElementType(h); if(h&&h.id&&!h.roleCustom&&BALANCED_CLASH_ROLES[h.id]) h.clashRole=BALANCED_CLASH_ROLES[h.id]; else if(!CLASH_ROLES.includes(h.clashRole)) h.clashRole=inferClashRole(h); }); }
 function createRandomSeed(){ return (Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10)); }
 
 /* Clash Chapter Data Core — restored in Clean 4A hotfix.
@@ -2800,7 +2800,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.185.1-prime-iso-label';
+const APP_BUILD='v2.185.3-clash-role-follows';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -5795,8 +5795,8 @@ function balancedArchFromText(h,role,preferred){
 function balancedRosterRoleArch(h){
   if(!h) return {role:'DPS',arch:'Striker'};
   const exact=rosterRoleArchOverride(h);
-  const role=normalizeRole((exact&&exact.role)||h.role);
-  const preferred=(exact&&exact.arch)||(CUSTOM_HERO_ARCHETYPES[h.id]&&CUSTOM_HERO_ARCHETYPES[h.id].key)||h.archKey||h.archetype;
+  const role=normalizeRole((h.roleCustom&&h.role)||(exact&&exact.role)||h.role);
+  const preferred=(h.archCustom&&(h.archKey||h.archetype))||(exact&&exact.arch)||(CUSTOM_HERO_ARCHETYPES[h.id]&&CUSTOM_HERO_ARCHETYPES[h.id].key)||h.archKey||h.archetype;
   return {role,arch:normArchKey(balancedArchFromText(h,role,preferred),role)};
 }
 function applyRosterRoleArchetypeBalance(list,opts){
@@ -8238,7 +8238,7 @@ function openHeroSheet(id){
   const syncPortrait=()=>{ const prev=document.getElementById('hPrev'); if(prev) prev.innerHTML=img?'<img src="'+img+'">':(initials(name)||'?'); const adj=document.getElementById('hAdjust'), rem=document.getElementById('hRemoveImg'), up=document.getElementById('hUpload'); if(adj) adj.style.display=img?'block':'none'; if(rem) rem.style.display=img?'block':'none'; if(up) up.textContent=img?'Replace image':'Upload image'; };
   const persistPortrait=()=>{ setHeroPortraitOverride(h.id,img); h.img=img||null; renderHUD(); render(); save(); };
   document.getElementById('h_name').oninput=e=>{ name=e.target.value; if(!img) syncPortrait(); };
-  segPick('h_role',r=>{ role=r; },'r');
+  segPick('h_role',r=>{ role=r; try{ h.role=r; h.roleCustom=true; h.clashRole=inferClashRole(h); save(); toast('Role set: '+r+' \u00b7 Clash: '+h.clashRole); }catch(_e){} },'r');
   document.querySelectorAll('[data-elpick]').forEach(btn=>{
     btn.onclick=()=>{ try{
       const v=btn.dataset.elpick;
@@ -8255,6 +8255,11 @@ function openHeroSheet(id){
     btn.onclick=()=>{
       const k=btn.dataset.archpick;
       archKey=(k==='__default')?null:k;
+      try{
+        if(archKey){ h.archKey=archKey; h.archetype=archKey; h.archCustom=true; }
+        else { delete h.archCustom; h.archKey=null; h.archetype=null; const bal=(typeof balancedRosterRoleArch==='function')?balancedRosterRoleArch(h):null; if(bal){ h.archKey=bal.arch; h.archetype=bal.arch; } }
+        save(); toast(archKey?('Archetype set: '+archKey):'Archetype restored to default');
+      }catch(_e){}
       document.querySelectorAll('[data-archpick]').forEach(b=>{
         const bk=b.dataset.archpick,isDefault=bk==='__default';
         const active=archKey?(bk===archKey):(isDefault);
@@ -10453,7 +10458,7 @@ openHeroSheet = function(id){
   document.getElementById('h_reset').onclick=()=>{ const refund=heroResetRefund(h), hasRefund=refund.cores||refund.gold||refund.boss||refund.sparks; if(!hasRefund&&h.level<=1&&rankIdx(h)===0&&!(h.prestige||0)){ toast('Nothing to reset yet'); return; } if(!confirm('Reset '+h.name+' to Recruit Lv 1?\n\nRefunds: '+refundText(refund)+'\nKeeps unlock, image, favorite, bonds, and equipped gear.')) return; resetHeroInvestment(h); toast(h.name+' reset · refunded '+refundText(refund)); rerender(); renderHUD(); save(); };
   document.getElementById('h_del').onclick=()=>{ if(!confirm('Delete '+h.name+'? Equipped gear returns to your inventory.')) return; if(h.gear) SLOTS.forEach(sl=>{ if(h.gear[sl]){ S.inventory.push(h.gear[sl]); h.gear[sl]=null; } }); if(S.focus===id) S.focus=null; if(Array.isArray(S.favorites)) S.favorites=S.favorites.filter(x=>x!==id); S.heroes=S.heroes.filter(x=>x.id!==id); SQUADS.forEach(sd=>{ S.squads[sd[0]]=squad(sd[0]).filter(x=>x!==id); }); recalcCollection(); hideScrim(); renderHUD(); render(); save(); };
   const nameInput=document.getElementById('h_name'); if(nameInput) nameInput.oninput=e=>{ name=e.target.value; if(!img) syncPortrait(); };
-  const roleSeg=document.getElementById('h_role'); if(roleSeg) segPick('h_role',r=>{ role=r; },'r');
+  const roleSeg=document.getElementById('h_role'); if(roleSeg) segPick('h_role',r=>{ role=r; try{ h.role=r; h.roleCustom=true; h.clashRole=inferClashRole(h); save(); toast('Role set: '+r+' \u00b7 Clash: '+h.clashRole); }catch(_e){} },'r');
   const col=document.getElementById('h_color'); if(col) col.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; color=b.dataset.c; col.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); const prev=document.getElementById('hPrev'); if(prev){ prev.style.background='linear-gradient(160deg,'+color+',#0008)'; prev.style.setProperty('--hero-color',color); } };
   const up=document.getElementById('hUpload'); if(up) up.onclick=()=>pickImage(dataUrl=>{ img=dataUrl; syncPortrait(); persistPortraitV159(); toast('Portrait saved'); });
   const adj=document.getElementById('hAdjust'); if(adj) adj.onclick=()=>{ if(img) pickImage(dataUrl=>{ img=dataUrl; syncPortrait(); persistPortraitV159(); toast('Portrait saved'); },img); };
@@ -16114,7 +16119,7 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
     const existing=new Map(S.heroes.filter(Boolean).map(function(h){return [h.id,h];}));
     RELEASE_HEROES.forEach(function(base){ if(!existing.has(base.id)){ const h=makeSaveHero(base); S.heroes.push(h); existing.set(h.id,h); } });
     MANUAL_ROSTER_UPDATES.forEach(function(u){ const h=existing.get(u.id); if(h) applyHeroShape(h,u,!!u.name); });
-    S.heroes.forEach(function(h){ if(!h||!h.id) return; const ra=RELEASE_ROLE_ARCH[h.id]; if(ra){ h.role=ra.role; h.archetype=ra.arch; h.archKey=ra.arch; } if(RELEASE_CLASH_ELEMENTS[h.id]) h.elementType=RELEASE_CLASH_ELEMENTS[h.id]; if(RELEASE_CLASH_ROLES[h.id]) h.clashRole=RELEASE_CLASH_ROLES[h.id]; });
+    S.heroes.forEach(function(h){ if(!h||!h.id) return; const ra=RELEASE_ROLE_ARCH[h.id]; if(ra){ if(!h.roleCustom) h.role=ra.role; if(!h.archCustom){ h.archetype=ra.arch; h.archKey=ra.arch; } } if(RELEASE_CLASH_ELEMENTS[h.id]&&!h.elementCustom) h.elementType=RELEASE_CLASH_ELEMENTS[h.id]; if(RELEASE_CLASH_ROLES[h.id]&&!h.roleCustom) h.clashRole=RELEASE_CLASH_ROLES[h.id]; });
     S._releaseOneCodexAlera=true;
   }
   applyReleaseStatic();
