@@ -931,7 +931,7 @@ body.compact-mode{font-size:15px}body.compact-mode .wrap{padding-left:10px;paddi
   <div id="devToolsWrap" style="display:none">
     <div class="safehint" style="margin-top:8px"><b>Developer tools:</b> diagnostics and field-test utilities stay hidden during normal daily use.</div>
     <style>.devGroup{border:1px solid var(--line);border-radius:12px;margin-top:10px;background:rgba(255,255,255,.02);overflow:hidden}.devGroup>summary{cursor:pointer;list-style:none;padding:11px 12px;font-family:Orbitron;font-weight:800;font-size:11px;letter-spacing:.5px;color:var(--ink);display:flex;align-items:center;justify-content:space-between}.devGroup>summary::-webkit-details-marker{display:none}.devGroup>summary::after{content:'+';color:var(--muted);font-weight:900;font-size:15px;margin-left:10px}.devGroup[open]>summary::after{content:'\2013'}.devGroup>summary:hover{background:rgba(255,255,255,.04)}.devGroupBody{padding:2px 12px 12px}</style>
-    <details class="devGroup" open><summary>Diagnostics &amp; QA</summary><div class="devGroupBody"><button class="go" id="healthCheck" style="background:linear-gradient(135deg,#36e0e6,#37d67a);color:#06170d;margin-top:8px">Run Save Health Check</button>
+    <details class="devGroup" open><summary>Diagnostics &amp; QA</summary><div class="devGroupBody"><button class="go" id="healthCheck" style="background:linear-gradient(135deg,#36e0e6,#37d67a);color:#06170d;margin-top:8px">Run Save Health Check</button><button class="go" id="saveSizeReport" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">Save Size Breakdown</button>
     <button class="go" id="versionHistory" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:8px">Version & Migration Status</button>
     <button class="go" id="v1Checklist" style="background:linear-gradient(135deg,#ffb01f,#37d67a);color:#06170d;margin-top:8px">V1 Readiness Checklist</button>
     <button class="go" id="fieldTest" style="background:linear-gradient(135deg,#8bd0ff,#ffb01f);color:#06170d;margin-top:8px">Field Test Mode</button>
@@ -2800,7 +2800,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.184.3-hero-type-edit';
+const APP_BUILD='v2.184.4-save-size-report';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -6191,6 +6191,28 @@ function ofResolveOutside(){
 function ofZoneElement(mode){ try{ var i=(mode==='tower')?Math.floor(((S.tower||1)-1)/10):Math.floor(((S.stage||1)-1)/10); return ELEMENT_TYPES[((i%5)+5)%5]; }catch(e){ return null; } }
 function ofZoneAtkMult(h,mode){ try{ var ze=ofZoneElement(mode); if(!ze||!h) return 1; var el=h.elementType||(typeof inferHeroElementType==='function'?inferHeroElementType(h):null); return getElementMatchup(el,ze)==='advantage'?1.2:1; }catch(e){ return 1; } }
 function ofZoneBadgeHTML(mode){ try{ var ze=ofZoneElement(mode); if(!ze) return ''; var ic=(ELEMENT_META[ze]&&ELEMENT_META[ze].icon)||''; var ctr=ELEMENT_TYPES.find(function(t){return getElementMatchup(t,ze)==='advantage';}); var cic=(ELEMENT_META[ctr]&&ELEMENT_META[ctr].icon)||''; return '<div style="text-align:center;font-size:11px;font-weight:900;color:var(--muted);margin:2px 0 7px">Zone: '+ic+' '+ze+' \u00b7 '+cic+' '+ctr+' heroes +20% ATK</div>'; }catch(e){ return ''; } }
+function ofSaveSizeReport(){
+  try{
+    var raw=JSON.stringify(S); var total=raw.length;
+    var rows=Object.keys(S).map(function(k){ var n=0; try{ n=JSON.stringify(S[k]==null?null:S[k]).length; }catch(e){}
+      return {k:k,n:n}; }).sort(function(a,b){ return b.n-a.n; });
+    var top=rows.slice(0,14).map(function(r){ var pct=total?Math.round(r.n/total*100):0;
+      var extra='';
+      try{ var v=S[r.k];
+        if(Array.isArray(v)) extra=' \u00b7 '+v.length+' items';
+        else if(v&&typeof v==='object') extra=' \u00b7 '+Object.keys(v).length+' keys';
+      }catch(e){}
+      return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;font-weight:700;padding:4px 0;border-bottom:1px solid var(--line)"><span>'+r.k+extra+'</span><span style="white-space:nowrap">'+v168Num(r.n)+' \u00b7 '+pct+'%</span></div>'; }).join('');
+    var heroBytes=0, heroN=(S.heroes||[]).length;
+    try{ heroBytes=JSON.stringify(S.heroes||[]).length; }catch(e){}
+    var box=document.getElementById('revealBox'), modal=document.getElementById('revealModal');
+    if(!box||!modal){ toast('Total save: '+v168Num(total)+' chars'); return; }
+    box.innerHTML='<h2>Save Size Breakdown</h2><p style="margin:4px 0 10px">Total: <b>'+v168Num(total)+'</b> chars raw'+(heroN?(' \u00b7 heroes avg '+v168Num(Math.round(heroBytes/Math.max(1,heroN)))+' ea'):'')+'</p><div style="max-height:52vh;overflow:auto;text-align:left">'+top+'</div><button id="dungeonClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px 18px;font-family:Orbitron;font-weight:900;width:100%">Done</button>';
+    modal.classList.add('show');
+    var c=document.getElementById('dungeonClose'); if(c) c.onclick=function(){ modal.classList.remove('show'); };
+  }catch(e){ try{ toast('Report failed: '+e.message); }catch(_e){} }
+}
+(function wireSaveSizeReport(){ try{ var t=setInterval(function(){ var b=document.getElementById('saveSizeReport'); if(b&&!b.__wired){ b.__wired=true; b.onclick=ofSaveSizeReport; clearInterval(t); } },800); setTimeout(function(){ try{ clearInterval(t); }catch(e){} },20000); }catch(e){} })();
 function ofOutsideReveal(){
   try{
     if(!window.__ofOutside) return;
