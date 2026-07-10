@@ -2641,7 +2641,7 @@ function generateClashBosses(chapter,seed,patterns){ const rng=clashCoreRng(Stri
 function generateClashChapter(chapterNumber,saveSeed){ chapterNumber=Math.max(1,Math.floor(chapterNumber||1)); const seed=saveSeed||((S&&S.clash&&S.clash.seed)||'oathforge'); const patterns=generateClashPatterns(chapterNumber,seed); const bosses=generateClashBosses(chapterNumber,seed,patterns); const counts={}; ELEMENT_TYPES.forEach(t=>counts[t]=0); patterns.forEach(p=>{ counts[p.left]++; counts[p.center]++; counts[p.right]++; }); return {chapter:chapterNumber,patterns,bosses,typeCounts:counts,difficulty:{stageGrowth:1.012,eliteMult:1.15,bossMult:1.35,chapterBossMult:1.75},rewards:{replayMult:.2}}; }
 function getClashStageKind(stage){ stage=Math.max(1,Math.min(80,Math.floor(stage||1))); if(stage===80) return 'chapterBoss'; if(stage%10===0) return 'boss'; if(stage%10===5) return 'elite'; return 'normal'; }
 function getClashPatternIndexForStage(stage){ stage=Math.max(1,Math.min(80,Math.floor(stage||1))); if(stage<=9) return 0; if(stage>=70) return 7; return Math.floor(stage/10); }
-function getClashChapterData(chapter){ ensureClashState(); return generateClashChapter(chapter||S.clash.chapter,S.clash.seed); }
+function getClashChapterData(chapter){ ensureClashState(); var ch=chapter||S.clash.chapter, key=ch+':'+((S.clash&&S.clash.seed)||''); var c=(getClashChapterData.__cache=getClashChapterData.__cache||{}); if(!c[key]) c[key]=generateClashChapter(ch,S.clash.seed); return c[key]; }
 function clashStageKey(chapter,stage){ return chapter+'-'+stage; }
 function clashIsFirstClear(chapter,stage){ ensureClashState(); return !S.clash.clears[clashStageKey(chapter,stage)]; }
 function getClashRewardPreview(chapter,stage,kind,isFirstClear){ const globalStage=(chapter-1)*80+stage; let scale=Math.pow(1.025,globalStage-1); /* v2.107 reward soft-cap: early game untouched (<1000x); beyond that, growth turns logarithmic so deep chapters still trend up but stay bounded and integer-safe (no overflow/Infinity/save corruption) */ var _RWSOFT=1000; if(scale>_RWSOFT) scale=_RWSOFT*(1+Math.log(scale/_RWSOFT)); var _T=(typeof TUNE!=='undefined')?TUNE:{}; let gold=Math.round(25*scale*(_T.clashGoldMult!=null?_T.clashGoldMult:0.12)), dust=Math.round(8*scale*(_T.clashDustMult!=null?_T.clashDustMult:0.25)); let bond=Math.round((_T.clashBondBase!=null?_T.clashBondBase:10)+globalStage*(_T.clashBondPerStage!=null?_T.clashBondPerStage:1.2)); let stones=Math.round((_T.clashStoneBase!=null?_T.clashStoneBase:2)+globalStage*(_T.clashStonePerStage!=null?_T.clashStonePerStage:0.025)); let extra=[]; if(kind==='elite'){ gold=Math.round(gold*1.5); dust=Math.round(dust*1.5); bond=Math.round(bond*1.25); stones=Math.round(stones*1.5); extra.push('elite cache'); } if(kind==='boss'){ gold=Math.round(gold*3); dust=Math.round(dust*3); bond=Math.round(bond*2); stones=Math.round(stones*2); extra.push('1 ticket shard','1 boss core'); } if(kind==='chapterBoss'){ gold=Math.round(gold*5); dust=Math.round(dust*5); bond=Math.round(bond*3); stones=Math.round(stones*3); extra.push('3 ticket shards','3 boss cores','premium chest'); } if(!isFirstClear){ const rm=(typeof TUNE!=='undefined'&&TUNE.clashReplayRewardMult)||.2; gold=Math.round(gold*rm); dust=Math.round(dust*rm); bond=Math.round(bond*rm); stones=Math.round(stones*rm); extra=['replay rewards']; } return {gold,dust,bondXp:bond,stones,extra}; }
@@ -2800,7 +2800,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.184.0-type-advantage';
+const APP_BUILD='v2.184.1-editor-perf-type-chips';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -5153,9 +5153,9 @@ function onTaskClick(e){
 
 
 /* ----- ROSTER ----- */
-let rosState={tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', etype:'all', quick:'all', sort:'power', filtersOpen:false};
-function defaultRosState(){ return {tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', etype:'all', quick:'all', sort:'power'}; }
-function rosterFiltersActive(){ return !!(rosState.q || rosState.tab!=='owned' || rosState.role!=='all' || rosState.ip!=='all' || rosState.domain!=='all' || rosState.archetype!=='all' || (rosState.etype&&rosState.etype!=='all') || rosState.quick!=='all' || rosState.sort!=='power'); }
+let rosState={tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', etypes:[], quick:'all', sort:'power', filtersOpen:false};
+function defaultRosState(){ return {tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', etypes:[], quick:'all', sort:'power'}; }
+function rosterFiltersActive(){ return !!(rosState.q || rosState.tab!=='owned' || rosState.role!=='all' || rosState.ip!=='all' || rosState.domain!=='all' || rosState.archetype!=='all' || (Array.isArray(rosState.etypes)&&rosState.etypes.length>0) || rosState.quick!=='all' || rosState.sort!=='power'); }
 function __rosActiveCount(){ let n=0; if(rosState.q)n++; if(rosState.tab!=='owned')n++; if(rosState.role!=='all')n++; if(rosState.ip!=='all')n++; if(rosState.domain!=='all')n++; if(rosState.archetype!=='all')n++; if(rosState.quick!=='all')n++; if(rosState.sort!=='power')n++; return n; }
 function resetRosterFilters(){ rosState=defaultRosState(); }
 function rosterIPs(){ sanitizeHeroes(); return Array.from(new Set(S.heroes.map(h=>h.ip||'Custom'))).sort(); }
@@ -5195,7 +5195,7 @@ function rosterFiltered(){
   if(rosState.ip!=='all') list=list.filter(h=>h.ip===rosState.ip);
   if(rosState.domain!=='all') list=list.filter(h=>Array.isArray(h.aff)&&h.aff.includes(rosState.domain));
   if(rosState.archetype!=='all') list=list.filter(h=>heroArchetype(h)&&heroArchetype(h).key===rosState.archetype);
-  if(rosState.etype&&rosState.etype!=='all'){ try{ if(typeof ensureElementData==='function') ensureElementData(); }catch(e){} list=list.filter(h=>h.elementType===rosState.etype); }
+  if(Array.isArray(rosState.etypes)&&rosState.etypes.length){ try{ if(typeof ensureElementData==='function') ensureElementData(); }catch(e){} list=list.filter(h=>rosState.etypes.includes(h.elementType)); }
   if(rosState.q) list=list.filter(h=>rosterMatchesQuery(h,rosState.q));
   const s=rosState.sort;
   if(rosState.quick!=='recent'){
@@ -6234,7 +6234,7 @@ function ofInjectAutoPills(){ try{
 }catch(e){} }
 (function installAutoPillHook(){ try{
   var st=document.createElement('style');
-  st.textContent='.ofAutoPill{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:11px;padding:10px 12px;font-weight:900;font-size:11px;font-family:inherit;white-space:nowrap;cursor:pointer;margin:6px 8px 6px 0;flex:0 0 auto}';
+  st.textContent='.ofAutoPill{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:11px;padding:10px 12px;font-weight:900;font-size:11px;font-family:inherit;white-space:nowrap;cursor:pointer;margin:6px 8px 6px 0;flex:0 0 auto}#rosTypeChips{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 8px}.rosTypeChip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 10px;cursor:pointer;opacity:.5;display:inline-flex;align-items:center}.rosTypeChip.active{opacity:1;border-color:var(--accent);box-shadow:0 0 8px color-mix(in srgb,var(--accent) 35%,transparent)}';
   document.head.appendChild(st);
   if(typeof render==='function'&&!render.__ofAutoPill){ var __r2=render;
     render=function(){ var out=__r2.apply(this,arguments); try{ ofInjectAutoPills(); }catch(e){} return out; };
@@ -6242,20 +6242,30 @@ function ofInjectAutoPills(){ try{
   setTimeout(ofInjectAutoPills,900);
 }catch(e){} })();
 /* v2.183.2: element type filter injected into roster filter rows */
+function ofTypeChipRefresh(){ try{
+  var box=document.getElementById('rosTypeChips'); if(!box) return;
+  box.querySelectorAll('[data-etchip]').forEach(function(b){
+    var on=Array.isArray(rosState.etypes)&&rosState.etypes.includes(b.dataset.etchip);
+    b.classList.toggle('active',on); });
+}catch(e){} }
 function ofInjectTypeFilter(){ try{
   var ip=document.getElementById('rosIP'); if(!ip||!ip.parentElement) return;
-  if(document.getElementById('rosType')){ var ex=document.getElementById('rosType'); var want=(rosState&&rosState.etype)||'all'; if(ex.value!==want) ex.value=want; return; }
-  var sel=document.createElement('select'); sel.id='rosType';
-  sel.setAttribute('style', ip.getAttribute('style')||'padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:12px');
-  var cur=(rosState&&rosState.etype)||'all';
-  var opts='<option value="all"'+(cur==='all'?' selected':'')+'>All types</option>';
+  if(document.getElementById('rosTypeChips')){ ofTypeChipRefresh(); return; }
+  var box=document.createElement('div'); box.id='rosTypeChips';
+  var chips='';
   (typeof ELEMENT_TYPES!=='undefined'?ELEMENT_TYPES:['Flame','Storm','Stone','Tide','Grove']).forEach(function(t){
-    var ic=(typeof ELEMENT_META!=='undefined'&&ELEMENT_META[t]&&ELEMENT_META[t].icon)||'';
-    opts+='<option value="'+t+'"'+(cur===t?' selected':'')+'>'+ic+' '+t+'</option>'; });
-  sel.innerHTML=opts;
-  sel.onchange=function(e){ rosState.etype=e.target.value;
-    try{ var r=document.getElementById('rosRole'); if(r&&r.onchange) r.onchange({target:{value:rosState.role}}); }catch(_e){} };
-  ip.parentElement.insertBefore(sel, ip);
+    var badge=(typeof elementBadge==='function')?elementBadge(t,false):t;
+    chips+='<button type="button" class="rosTypeChip" data-etchip="'+t+'">'+badge+'</button>'; });
+  box.innerHTML=chips;
+  box.addEventListener('click',function(e){ var b=e.target.closest('[data-etchip]'); if(!b) return;
+    try{ e.preventDefault(); }catch(_e){}
+    if(!Array.isArray(rosState.etypes)) rosState.etypes=[];
+    var t=b.dataset.etchip, i=rosState.etypes.indexOf(t);
+    if(i>=0) rosState.etypes.splice(i,1); else rosState.etypes.push(t);
+    ofTypeChipRefresh();
+    try{ var r=document.getElementById('rosRole'); if(r&&r.onchange) r.onchange({target:{value:rosState.role}}); }catch(_e){} });
+  ip.parentElement.insertBefore(box, ip);
+  ofTypeChipRefresh();
 }catch(e){} }
 (function installTypeFilterHook(){ try{
   if(typeof render==='function'&&!render.__ofTypeFilter){ var __r3=render;
@@ -16571,12 +16581,18 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7EnsureSquad(ch){
     if(!S) return [];
     try{ if(typeof ensureClashState==='function') ensureClashState(); }catch(e){}
-    ch=ch||c7Chapter(); const key=c7SquadKey(ch), need=c7SlotCount(ch), owned=c7Owned().sort((a,b)=>powerOf(b)-powerOf(a));
+    ch=ch||c7Chapter(); const key=c7SquadKey(ch), need=c7SlotCount(ch);
+    /* v2.184.1: burst memo — editor renders call this per candidate row; reuse
+       the result while the underlying squad is unchanged. */
+    const __mk=ch+'|'+((S[key]||[]).join(','));
+    if(c7EnsureSquad.__k===__mk && Array.isArray(c7EnsureSquad.__v)) return c7EnsureSquad.__v.slice();
+    const owned=(function(){ const o=c7Owned(); const pw={}; o.forEach(h=>{ pw[h.id]=powerOf(h); }); return o.sort((a,b)=>pw[b.id]-pw[a.id]); })();
     let arr=c7UniqueIds(S[key]||[]);
     if(c7IsFive(ch) && !arr.length) arr=c7UniqueIds((S.clashSquad||[]).concat(owned.map(h=>h.id)));
     if(!c7IsFive(ch) && !arr.length && typeof ensureStarterClashSquad==='function'){ try{ ensureStarterClashSquad(); }catch(e){} arr=c7UniqueIds(S.clashSquad||[]); }
     owned.forEach(h=>{ if(arr.length<need && !arr.includes(h.id)) arr.push(h.id); });
     S[key]=arr.slice(0,need);
+    c7EnsureSquad.__k=__mk; c7EnsureSquad.__v=S[key].slice();
     return S[key];
   }
   const oldEnsureStarter7=(typeof ensureStarterClashSquad==='function')?ensureStarterClashSquad:null;
@@ -16716,7 +16732,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     const selected=window.__clashEditingSlot, slot=c7SlotMeta(selected,ch), pattern=c7Pattern(ch,c7Stage()), laneType=slot.basic?null:(pattern[slot.typeKey||slot.lane]||null), ids=c7EnsureSquad(ch);
     const typeFilter=(window.__clashTypeFilter||'all'), roleFilter=(window.__clashRoleFilter||'all'), q=(window.__clashSearch||'').toLowerCase();
     let heroes=c7Owned().slice(); if(typeFilter!=='all') heroes=heroes.filter(h=>h.elementType===typeFilter); if(roleFilter!=='all') heroes=heroes.filter(h=>h.clashRole===roleFilter); if(q) heroes=heroes.filter(h=>String(h.name||'').toLowerCase().includes(q)||String(h.ip||'').toLowerCase().includes(q));
-    heroes.sort((a,b)=>c7HeroScore(b,slot,pattern,c7Boss(ch,c7Stage()))-c7HeroScore(a,slot,pattern,c7Boss(ch,c7Stage())));
+    (function(){ const __b=c7Boss(ch,c7Stage()); const __sc={}; heroes.forEach(h=>{ __sc[h.id]=c7HeroScore(h,slot,pattern,__b); }); heroes.sort((a,b)=>(__sc[b.id]||0)-(__sc[a.id]||0)); })();
     const slotGrid=[]; for(let i=0;i<need;i++){ slotGrid.push(c7HeroTile((S.heroes||[]).find(h=>h.id===ids[i]),i,selected)); }
     const visibleHeroes=heroes.slice(0,90);
     const hiddenCount=Math.max(0,heroes.length-visibleHeroes.length);
