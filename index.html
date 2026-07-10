@@ -2800,7 +2800,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.183.0-outside-resolve';
+const APP_BUILD='v2.184.0-type-advantage';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3982,7 +3982,7 @@ function startGauntletBattle(){ const R=S.gauntlet&&S.gauntlet.run; if(!R||!R.al
   battleMode='campaign'; battleReplay=false; battleRoom=null; battleRaidSA=null; battleSiege=null; battleGauntlet=true;
   const living=R.squad.filter(id=>!R.dead[id]).map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
   const players=living.map((h,i)=>{ const row=formationRow(i), fm=formationMultiplier(h,row); const max=Math.max(1,Math.round(hpOf(h)*fm.hp*R.hpMult)); let hp=(R.hp[h.id]!=null)?Math.min(max,Math.round(R.hp[h.id])):max; if(hp<1)hp=1;
-    return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:hp,max:max,atk:Math.round(atkOf(h)*fm.atk*R.atkMult*((R.mult&&R.mult[h.id]!=null)?R.mult[h.id]:1)),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h)}; });
+    return {id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row:row,pos:i,hp:hp,max:max,atk:Math.round(atkOf(h)*fm.atk*R.atkMult*((R.mult&&R.mult[h.id]!=null)?R.mult[h.id]:1)*((R.pathElem&&typeof getElementMatchup==='function'&&getElementMatchup(h.elementType||'',R.pathElem)==='advantage')?1.2:1)),side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk,supportMult:fm.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h)}; });
   const enemies=gauntletEnemies(R.floor);
   try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('gauntlet')+' · Floor '+R.floor+(R.floor%GAUNTLET_TUNE.bossEvery===0?' · BOSS':''); }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
@@ -4037,7 +4037,7 @@ function gauntletEndBattle(win){ battleGauntlet=null; try{ if(battleTimer){ clea
   const G=ensureGauntlet(), R=G.run; if(!R){ return; }
   (battleState&&battleState.players||[]).forEach(u=>{ R.hp[u.id]=Math.max(0,u.hp); if(u.hp<=0||u.dead) R.dead[u.id]=true; });
   const livingLeft=R.squad.filter(id=>!R.dead[id]).length;
-  if(win && livingLeft>0){ const _pm=(R.pathMod&&R.pathMod.coins)||1; R.coins=(R.coins||0)+Math.round((8+2*Math.max(0,R.floor-1))*_pm); R.pathMod=null; R.floor++; R.pendingBoons=gauntletBoonOffer(); try{ gauntletShowResult(true); }catch(e){ console.error(e); } }
+  if(win && livingLeft>0){ const _pm=(R.pathMod&&R.pathMod.coins)||1; R.coins=(R.coins||0)+Math.round((8+2*Math.max(0,R.floor-1))*_pm); R.pathMod=null; R.pathElem=null; R.floor++; R.pendingBoons=gauntletBoonOffer(); try{ gauntletShowResult(true); }catch(e){ console.error(e); } }
   else { const sum=gauntletEndRun(); try{ gauntletShowResult(false,sum); }catch(e){ console.error(e); } }
   try{renderHUD();}catch(e){} try{save();}catch(e){} }
 /* ===== end Endless Gauntlet engine ===== */
@@ -4133,8 +4133,10 @@ function gauntletShowCache(){ const R=S.gauntlet&&S.gauntlet.run; const r=docume
   r.innerHTML='<h2 style="color:#ffd27a">SUPPLY CACHE</h2><p style="margin:4px 0">\u25c9 '+v168Num(R.coins||0)+' Valor \u00b7 Floor '+R.floor+' ahead</p><div class="gBoonRow" style="flex-direction:column">'+rows+'</div><div class="gRunBtns"><button class="mini-btn primary" id="gCacheBack">Back to the crossroads</button></div>';
   r.querySelectorAll('[data-cache]').forEach(b=>{ b.onclick=()=>gauntletBuyCache(b.dataset.cache); });
   const bb=document.getElementById('gCacheBack'); if(bb) bb.onclick=()=>gauntletShowCrossroads(); }
+function gauntletPathElem(){ try{ const G=ensureGauntlet(), R=G.run; if(!R) return null; const h=(typeof stableHash==='function')?stableHash('gpe:'+(G.runs||0)+':'+R.floor):R.floor; return ELEMENT_TYPES[((h%5)+5)%5]; }catch(e){ return null; } }
 function gauntletChoosePath(key){ const G=ensureGauntlet(), R=G.run; if(!R||!R.alive) return {ok:false};
   const p=GAUNTLET_PATHS[key]||GAUNTLET_PATHS.trial; R.pathMod={power:p.power,coins:p.coins}; R.atCrossroads=false;
+  R.pathElem=(key==='elite')?gauntletPathElem():null;
   if(key==='elite') R.eliteDraft=true;
   if(key==='steady') gauntletHeal(R,0.20);
   try{ save(); }catch(e){}
@@ -4143,7 +4145,8 @@ function gauntletShowCrossroads(){ injectGauntletStyles(); const R=S.gauntlet&&S
   R.atCrossroads=true;
   r.style.display='block'; r.className='result win'; try{document.querySelector('.arena').classList.add('arenaEnded');}catch(e){}
   const isBoss=R.floor%GAUNTLET_TUNE.bossEvery===0;
-  const opts=['trial','elite','steady'].map(k=>{ const p=GAUNTLET_PATHS[k]; return '<button class="gBoon '+(k==='elite'?'gt-epic':k==='steady'?'gt-common':'gt-rare')+'" data-gpath="'+k+'"><div class="gbIcon">'+p.icon+'</div><div class="gbWrap"><div class="gbName">'+p.name+'</div><div class="gbDesc">'+p.desc+'</div></div></button>'; }).join('');
+  const _ge=gauntletPathElem(); const _gtx=(function(){ try{ if(!_ge) return ''; var ic=(ELEMENT_META[_ge]&&ELEMENT_META[_ge].icon)||''; var ctr=ELEMENT_TYPES.find(function(t){return getElementMatchup(t,_ge)==='advantage';}); var cic=(ELEMENT_META[ctr]&&ELEMENT_META[ctr].icon)||''; return ' '+ic+' '+_ge+'-aligned \u2014 '+cic+' '+ctr+' heroes +20% ATK.'; }catch(e){ return ''; } })();
+  const opts=['trial','elite','steady'].map(k=>{ const p=GAUNTLET_PATHS[k]; return '<button class="gBoon '+(k==='elite'?'gt-epic':k==='steady'?'gt-common':'gt-rare')+'" data-gpath="'+k+'"><div class="gbIcon">'+p.icon+'</div><div class="gbWrap"><div class="gbName">'+p.name+'</div><div class="gbDesc">'+p.desc+(k==='elite'?_gtx:'')+'</div></div></button>'; }).join('');
   r.innerHTML='<h2 style="color:#8bd0ff">THE CROSSROADS</h2><p style="margin:4px 0">\u25c9 '+v168Num(R.coins||0)+' Valor \u00b7 Floor '+R.floor+(isBoss?' \u00b7 BOSS AHEAD':'')+' \u00b7 choose your path</p><div class="gBoonRow">'+opts+'</div><div class="gRunBtns"><button class="mini-btn" id="gOpenCache">\u25c9 Supply Cache</button><button class="mini-btn" id="gRetire">Retire \u00b7 bank rewards</button></div>';
   r.querySelectorAll('[data-gpath]').forEach(b=>{ b.onclick=()=>{ try{v172Float(b,b.querySelector('.gbName').textContent);}catch(e){} gauntletChoosePath(b.dataset.gpath); }; });
   const oc=document.getElementById('gOpenCache'); if(oc) oc.onclick=()=>gauntletShowCache();
@@ -5150,9 +5153,9 @@ function onTaskClick(e){
 
 
 /* ----- ROSTER ----- */
-let rosState={tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', quick:'all', sort:'power', filtersOpen:false};
-function defaultRosState(){ return {tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', quick:'all', sort:'power'}; }
-function rosterFiltersActive(){ return !!(rosState.q || rosState.tab!=='owned' || rosState.role!=='all' || rosState.ip!=='all' || rosState.domain!=='all' || rosState.archetype!=='all' || rosState.quick!=='all' || rosState.sort!=='power'); }
+let rosState={tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', etype:'all', quick:'all', sort:'power', filtersOpen:false};
+function defaultRosState(){ return {tab:'owned', q:'', role:'all', ip:'all', domain:'all', archetype:'all', etype:'all', quick:'all', sort:'power'}; }
+function rosterFiltersActive(){ return !!(rosState.q || rosState.tab!=='owned' || rosState.role!=='all' || rosState.ip!=='all' || rosState.domain!=='all' || rosState.archetype!=='all' || (rosState.etype&&rosState.etype!=='all') || rosState.quick!=='all' || rosState.sort!=='power'); }
 function __rosActiveCount(){ let n=0; if(rosState.q)n++; if(rosState.tab!=='owned')n++; if(rosState.role!=='all')n++; if(rosState.ip!=='all')n++; if(rosState.domain!=='all')n++; if(rosState.archetype!=='all')n++; if(rosState.quick!=='all')n++; if(rosState.sort!=='power')n++; return n; }
 function resetRosterFilters(){ rosState=defaultRosState(); }
 function rosterIPs(){ sanitizeHeroes(); return Array.from(new Set(S.heroes.map(h=>h.ip||'Custom'))).sort(); }
@@ -5192,6 +5195,7 @@ function rosterFiltered(){
   if(rosState.ip!=='all') list=list.filter(h=>h.ip===rosState.ip);
   if(rosState.domain!=='all') list=list.filter(h=>Array.isArray(h.aff)&&h.aff.includes(rosState.domain));
   if(rosState.archetype!=='all') list=list.filter(h=>heroArchetype(h)&&heroArchetype(h).key===rosState.archetype);
+  if(rosState.etype&&rosState.etype!=='all'){ try{ if(typeof ensureElementData==='function') ensureElementData(); }catch(e){} list=list.filter(h=>h.elementType===rosState.etype); }
   if(rosState.q) list=list.filter(h=>rosterMatchesQuery(h,rosState.q));
   const s=rosState.sort;
   if(rosState.quick!=='recent'){
@@ -5343,7 +5347,7 @@ function renderCampaign(v){
       '<div class="stagecard" style="border-color:#7c4dff66"><h3>Floor '+f+tag+'</h3><p>Enemy power ~'+ep+' · Your team '+tp+'</p></div>'+
       '<div class="team-strip"><div class="lab"><span>Climb Team</span><b>PWR '+tp+'</b></div>'+slots+
         '<div style="color:var(--muted);font-size:12px;font-weight:600;margin-top:9px">Next mini-boss: floor '+nextMini+' (◆ + gear + stone chance). Major boss every 50 (✦✦ spark + core bundle). Tower is pure upgrade fuel — it doesn\'t raise idle income, and you never lose floors.</div>'+enemyRoleTipHTML('tower')+'<button class="ghost" data-lineup-edit="tower" style="margin-top:10px;width:100%">Edit Tower Lineup</button></div>'+
-      '<button class="fight" id="climbBtn"'+(sq.length?'':' disabled')+'>'+(sq.length?'⛰ CLIMB FLOOR '+f:'ASSIGN A TOWER SQUAD')+'</button>'+
+      ofZoneBadgeHTML('tower')+'<button class="fight" id="climbBtn"'+(sq.length?'':' disabled')+'>'+(sq.length?'⛰ CLIMB FLOOR '+f:'ASSIGN A TOWER SQUAD')+'</button>'+
       '<div class="head" style="margin-top:18px"><h2>Materials</h2></div>'+
       '<div class="empty">◈ '+S.heroCores+' cores · ◆ '+S.bossCores+' boss · ◇ '+S.stones+' stones · ✦✦ '+S.sparks+' sparks</div>';
     const cb=document.getElementById('climbBtn'); if(cb) cb.onclick=()=>startBattle('tower');
@@ -5353,7 +5357,7 @@ function renderCampaign(v){
       '<div class="team-strip"><div class="lab"><span>Battle Team · live drill</span><b>PWR '+tp+'</b></div>'+slots+
         (sq.length?'<div class="dummy"><div class="dummyface" id="dummyFace">🎯</div><div class="dummywrap"><div class="dummylab">Training dummy</div><div class="dummybar"><i id="dummyHp"></i></div></div></div>':'')+
         '<div style="color:var(--muted);font-size:12px;font-weight:600;margin-top:9px">Edit your Campaign formation here: slots 1-3 front, 4-6 back.</div>'+enemyRoleTipHTML('campaign')+'<button class="ghost" data-lineup-edit="campaign" style="margin-top:10px;width:100%">Edit Campaign Lineup</button></div>'+
-      v21MatchupBadgeHTML('campaign')+'<button class="fight" id="fightBtn"'+(sq.length?'':' disabled')+'>'+(sq.length?'⚔ AUTO-BATTLE':'ASSIGN A CAMPAIGN SQUAD')+'</button>'+
+      v21MatchupBadgeHTML('campaign')+ofZoneBadgeHTML('campaign')+'<button class="fight" id="fightBtn"'+(sq.length?'':' disabled')+'>'+(sq.length?'⚔ AUTO-BATTLE':'ASSIGN A CAMPAIGN SQUAD')+'</button>'+
       '<div class="head" style="margin-top:18px"><h2>Progress</h2></div>'+
       '<div class="empty">Cleared '+S.maxCleared+' stages · idle/hr (×'+momentumMult().toFixed(2)+' Momentum): +'+Math.round(expRate()*momentumMult())+' ✦ · +'+Math.round(afkGoldRate()*momentumMult())+' ⦿ · +'+Math.round(afkDustRate()*momentumMult())+' ❖ · gear & cores scale with stage · capped at '+(TUNE.afkCapHours||12)+'h away</div>';
     const fb=document.getElementById('fightBtn'); if(fb) fb.onclick=()=>startBattle('campaign');
@@ -6182,6 +6186,11 @@ function ofResolveOutside(){
   try{ window.__ofOutside=true; }catch(e){}
   try{ skipBattle(); }catch(e){}
 }
+/* v2.184.0: zone/path element alignment — campaign & tower zones and Gauntlet
+   elite paths carry an element; heroes that counter it strike +20% harder. */
+function ofZoneElement(mode){ try{ var i=(mode==='tower')?Math.floor(((S.tower||1)-1)/10):Math.floor(((S.stage||1)-1)/10); return ELEMENT_TYPES[((i%5)+5)%5]; }catch(e){ return null; } }
+function ofZoneAtkMult(h,mode){ try{ var ze=ofZoneElement(mode); if(!ze||!h) return 1; var el=h.elementType||(typeof inferHeroElementType==='function'?inferHeroElementType(h):null); return getElementMatchup(el,ze)==='advantage'?1.2:1; }catch(e){ return 1; } }
+function ofZoneBadgeHTML(mode){ try{ var ze=ofZoneElement(mode); if(!ze) return ''; var ic=(ELEMENT_META[ze]&&ELEMENT_META[ze].icon)||''; var ctr=ELEMENT_TYPES.find(function(t){return getElementMatchup(t,ze)==='advantage';}); var cic=(ELEMENT_META[ctr]&&ELEMENT_META[ctr].icon)||''; return '<div style="text-align:center;font-size:11px;font-weight:900;color:var(--muted);margin:2px 0 7px">Zone: '+ic+' '+ze+' \u00b7 '+cic+' '+ctr+' heroes +20% ATK</div>'; }catch(e){ return ''; } }
 function ofOutsideReveal(){
   try{
     if(!window.__ofOutside) return;
@@ -6192,6 +6201,68 @@ function ofOutsideReveal(){
     }
   }catch(e){}
 }
+/* v2.183.1: global auto toggle OUTSIDE battles — next to every battle CTA */
+function ofAutoModeLabel(){ try{ var m=(S&&S.appSettings&&S.appSettings.autoMode)||'watch'; return m==='resolve'?'\u26a1 Resolve':(m==='watch'?'\u25b6 Watch':'\u25cb Off'); }catch(e){ return 'Watch'; } }
+function ofCycleAutoMode(){ try{
+  if(!S.appSettings) S.appSettings={};
+  var m=S.appSettings.autoMode||'watch';
+  var next=(m==='off')?'watch':((m==='watch')?'resolve':'off');
+  S.appSettings.autoMode=next;
+  try{ if(typeof lqAutoRestore==='function') lqAutoRestore(); }catch(e){}
+  try{ if(S.clash) S.clash.autoBattle=(next!=='off'); }catch(e){}
+  try{ save(); }catch(e){}
+  try{ toast(next==='resolve'?'Auto Resolve: battles resolve instantly \u2014 no combat shown.':(next==='watch'?'Auto Watch: battles play out.':'Auto off.')); }catch(e){}
+  ofRefreshAutoPills();
+}catch(e){} }
+function ofAutoPillHTML(){ return '<button type="button" class="ofAutoPill" onclick="ofCycleAutoMode()">Auto: '+ofAutoModeLabel()+'</button>'; }
+function ofRefreshAutoPills(){ try{ document.querySelectorAll('.ofAutoPill').forEach(function(b){ b.textContent='Auto: '+ofAutoModeLabel(); }); }catch(e){} }
+function ofInjectAutoPills(){ try{
+  ['fightBtn','climbBtn','riftStart','gStart','arFight','cqFight','siegeContinueBtn'].forEach(function(id){
+    var el=document.getElementById(id); if(!el||!el.parentElement) return;
+    if(el.parentElement.querySelector('.ofAutoPill')) return;
+    var b=document.createElement('button'); b.type='button'; b.className='ofAutoPill';
+    b.onclick=function(ev){ try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){} ofCycleAutoMode(); };
+    el.parentElement.insertBefore(b,el);
+  });
+  var row=document.querySelector('.clashStartRow');
+  if(row && !row.querySelector('.ofAutoPill')){
+    var cb=document.createElement('button'); cb.type='button'; cb.className='ofAutoPill';
+    cb.onclick=function(ev){ try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){} ofCycleAutoMode(); };
+    row.insertBefore(cb,row.firstChild);
+  }
+  ofRefreshAutoPills();
+}catch(e){} }
+(function installAutoPillHook(){ try{
+  var st=document.createElement('style');
+  st.textContent='.ofAutoPill{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:11px;padding:10px 12px;font-weight:900;font-size:11px;font-family:inherit;white-space:nowrap;cursor:pointer;margin:6px 8px 6px 0;flex:0 0 auto}';
+  document.head.appendChild(st);
+  if(typeof render==='function'&&!render.__ofAutoPill){ var __r2=render;
+    render=function(){ var out=__r2.apply(this,arguments); try{ ofInjectAutoPills(); }catch(e){} return out; };
+    render.__ofAutoPill=true; }
+  setTimeout(ofInjectAutoPills,900);
+}catch(e){} })();
+/* v2.183.2: element type filter injected into roster filter rows */
+function ofInjectTypeFilter(){ try{
+  var ip=document.getElementById('rosIP'); if(!ip||!ip.parentElement) return;
+  if(document.getElementById('rosType')){ var ex=document.getElementById('rosType'); var want=(rosState&&rosState.etype)||'all'; if(ex.value!==want) ex.value=want; return; }
+  var sel=document.createElement('select'); sel.id='rosType';
+  sel.setAttribute('style', ip.getAttribute('style')||'padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:12px');
+  var cur=(rosState&&rosState.etype)||'all';
+  var opts='<option value="all"'+(cur==='all'?' selected':'')+'>All types</option>';
+  (typeof ELEMENT_TYPES!=='undefined'?ELEMENT_TYPES:['Flame','Storm','Stone','Tide','Grove']).forEach(function(t){
+    var ic=(typeof ELEMENT_META!=='undefined'&&ELEMENT_META[t]&&ELEMENT_META[t].icon)||'';
+    opts+='<option value="'+t+'"'+(cur===t?' selected':'')+'>'+ic+' '+t+'</option>'; });
+  sel.innerHTML=opts;
+  sel.onchange=function(e){ rosState.etype=e.target.value;
+    try{ var r=document.getElementById('rosRole'); if(r&&r.onchange) r.onchange({target:{value:rosState.role}}); }catch(_e){} };
+  ip.parentElement.insertBefore(sel, ip);
+}catch(e){} }
+(function installTypeFilterHook(){ try{
+  if(typeof render==='function'&&!render.__ofTypeFilter){ var __r3=render;
+    render=function(){ var out=__r3.apply(this,arguments); try{ ofInjectTypeFilter(); }catch(e){} return out; };
+    render.__ofTypeFilter=true; }
+  setTimeout(ofInjectTypeFilter,950);
+}catch(e){} })()
 
 /* ===== BATTLE ENGINE ===== */
 let battleTimer=null, autoNext=null, battleMode='campaign', battleSpeed=1, battleState=null, autoAdvance=true, autoResolve=false, battleLastReplay=null, battleReplay=false;
@@ -6212,7 +6283,7 @@ function startBattle(mode,opts){
   const syn=synergyMultipliers(battleMode);
   const _resKey=battleMode==='tower'?replayFloor:replayStage;
   const _resPct=(!battleReplay && S.resolve && S.resolve.mode===battleMode && S.resolve.key===_resKey)?(S.resolve.pct||0):0;
-  const players=sq.map((id,i)=>{const h=S.heroes.find(x=>x.id===id), row=formationRow(i), fm=formationMultiplier(h,row); const hp=Math.round(hpOf(h)*fm.hp*syn.hp*(1+_resPct)), atk=Math.round(atkOf(h)*fm.atk*syn.atk*(1+_resPct)); return{id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row,pos:i,hp,max:hp,atk,side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk*syn.risk,supportMult:fm.support*syn.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h)};});
+  const players=sq.map((id,i)=>{const h=S.heroes.find(x=>x.id===id), row=formationRow(i), fm=formationMultiplier(h,row); const hp=Math.round(hpOf(h)*fm.hp*syn.hp*(1+_resPct)), atk=Math.round(atkOf(h)*fm.atk*syn.atk*(1+_resPct)*((typeof ofZoneAtkMult==='function')?ofZoneAtkMult(h,battleMode):1)); return{id:h.id,name:h.name,img:h.img,color:h.color,role:h.role,row,pos:i,hp,max:hp,atk,side:'p',dead:false,dealt:0,taken:0,crits:0,support:0,risk:fm.risk*syn.risk,supportMult:fm.support*syn.support,passive:passiveOf(h),archetype:heroArchetype(h),legSig:legendSigOf(h)};});
   let enemies, head, sub;
   if(battleMode==='tower'){
     const f=replayFloor, zone=towerZoneFor(f); enemies=buildTowerEnemies(f);
@@ -7616,7 +7687,8 @@ function suggestSquad(mode){
   const size=TUNE.teamSize||6;
   const owned=(S.heroes||[]).filter(h=>h&&h.owned);
   if(!owned.length){ toast('Unlock some heroes first.'); return; }
-  const byPower=owned.slice().sort((a,b)=>powerOf(b)-powerOf(a));
+  const _zw=h=>{ try{ if(mode!=='campaign'&&mode!=='tower') return 1; return ((typeof ofZoneAtkMult==='function')&&ofZoneAtkMult(h,mode)>1)?1.35:1; }catch(e){ return 1; } };
+  const byPower=owned.slice().sort((a,b)=>powerOf(b)*_zw(b)-powerOf(a)*_zw(a));
   const used=new Set(), pick=[];
   const take=h=>{ if(h&&!used.has(h.id)&&pick.length<size){ used.add(h.id); pick.push(h.id); } };
   const bestRole=r=>byPower.find(h=>h.role===r&&!used.has(h.id));
@@ -18235,7 +18307,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
             return;
           }
         }
-        try{ var _pm=(R.pathMod&&R.pathMod.coins)||1; R.coins=(R.coins||0)+Math.round((8+2*Math.max(0,R.floor-1))*_pm); R.pathMod=null; }catch(e){}
+        try{ var _pm=(R.pathMod&&R.pathMod.coins)||1; R.coins=(R.coins||0)+Math.round((8+2*Math.max(0,R.floor-1))*_pm); R.pathMod=null; R.pathElem=null; }catch(e){}
         R.floor++;
         of2142ClampGauntlet();
         R.pendingBoons=gauntletBoonOffer();
@@ -23201,7 +23273,7 @@ function roomCardRoR(k){ const d=DKEY[k]||{}, haz=ROOM_HAZARDS[k]||{}, cap=roomT
 function showDungeonsRoR(){
   const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
   ensureRooms();
-  box.innerHTML='<div class="ico">\ud83d\uded5</div><h2>Room of Requirement</h2><p>Each room becomes the trial you require. Living a domain raises that room\u2019s tier cap \u2014 higher tiers, richer rewards.</p>'+
+  box.innerHTML='<div class="ico">\ud83d\uded5</div><h2>Room of Requirement</h2>'+((typeof ofAutoPillHTML==='function')?'<div style="margin:4px 0 8px">'+ofAutoPillHTML()+'</div>':'')+'<p>Each room becomes the trial you require. Living a domain raises that room\u2019s tier cap \u2014 higher tiers, richer rewards.</p>'+
     '<div style="max-height:52vh;overflow:auto">'+DOMAINS.map(d=>roomCardRoR(d[0])).join('')+'</div>'+
     '<button id="dungeonClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px 18px;font-family:Orbitron;font-weight:900;width:100%">Done</button>';
   modal.classList.add('show');
@@ -23294,7 +23366,7 @@ function raidSAEndBattle(win){ const RS=battleRaidSA; battleRaidSA=null;
   try{ renderHUD(); save(); }catch(e){} }
 function raidStrikePanelHTML(){ try{ const left=raidAttemptsLeft(), amp=raidHabitAmp(), R=ensureRaid();
   const dead=R.dmg>=R.max;
-  return '<div style="margin-top:9px;display:flex;gap:8px;align-items:center">'+
+  return '<div style="margin-top:9px;display:flex;gap:8px;align-items:center">'+((typeof ofAutoPillHTML==='function')?ofAutoPillHTML():'')+
     (dead?'<span style="font-size:11px;font-weight:900;color:#7dffb0">Boss defeated \u2014 new boss '+weekEndsIn()+'</span>'
     :'<button class="go" style="flex:1;padding:9px 12px" onclick="startRaidStrike()">\u2694 Strike \u00b7 '+left+'/'+RAID_SA.attemptsPerDay+' today</button>')+
     '<span style="font-size:10px;font-weight:900;color:var(--muted)">x'+amp.toFixed(2)+' from domains lived</span></div>'; }catch(e){ return ''; } }
