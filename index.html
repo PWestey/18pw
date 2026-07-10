@@ -2800,7 +2800,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.182.4-clash-optimizer-fairness';
+const APP_BUILD='v2.183.0-outside-resolve';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3466,7 +3466,7 @@ function startSiegeBattle(k,team){
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner(dk.label+' Front · Wave '+waveIdx,(dk.color||'#b88af0')); }catch(e){}
   try{ const _sl=teamSynLabel(team.heroes); if(_sl) passiveBanner(_sl+' · Team Synergy','#ffd24a'); }catch(e){}
-  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} }
+  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ ofResolveOutside(); }catch(_e){} }
 }
 function siegeKillFlash(att){ try{ ultimateMoment(att,'Finishing Blow',(att&&att.color)||'#ffd24a'); }catch(e){} }
 function fxLadder(){ return !!(battleGauntlet||battleArena||battleConquest); }
@@ -3744,7 +3744,7 @@ function startRiftBattle(){ const R=ensureRift().run; if(!R||!R.alive) return;
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner(R.label+' \u00b7 Stage '+R.stage,RIFT_ELEM_COLOR[R.element]||'#b18bff'); }catch(e){}
-  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} } }
+  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ ofResolveOutside(); }catch(_e){} } }
 function riftHeroMax(h,R){ const fm=formationMultiplier(h,formationRow(0)); return Math.max(1,Math.round(hpOf(h)*fm.hp*R.hpMult)); }
 function riftHeal(R,frac){ R.squad.filter(id=>!R.dead[id]).forEach(id=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return; const max=riftHeroMax(h,R); R.hp[id]=Math.min(max,(R.hp[id]!=null?R.hp[id]:max)+max*frac); }); }
 function riftBlessingOffer(){ const p=RIFT_BLESSINGS.slice(); const out=[]; while(out.length<3 && p.length){ let tot=0; for(let i=0;i<p.length;i++) tot+=(p[i].w||1); let r=Math.random()*tot, idx=p.length-1; for(let i=0;i<p.length;i++){ r-=(p[i].w||1); if(r<=0){ idx=i; break; } } out.push(p.splice(idx,1)[0]); } return out.map(b=>b.key); }
@@ -3991,7 +3991,7 @@ function startGauntletBattle(){ const R=S.gauntlet&&S.gauntlet.run; if(!R||!R.al
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner('Gauntlet · Floor '+R.floor,'#ff9f43'); }catch(e){}
-  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} } }
+  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ ofResolveOutside(); }catch(_e){} } }
 function gauntletBoonOffer(){ const R=S.gauntlet.run; const pool=GAUNTLET_BOONS.filter(b=>{
     if(b.cond==='dead') return R.squad.some(id=>R.dead[id]);
     if(b.cond==='fresh') return gauntletOwned().some(h=>R.squad.indexOf(h.id)<0);
@@ -4212,7 +4212,7 @@ function startArenaBattle(rank){ const arCond=arenaRivalCondition(rank); const t
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner('Challenging '+rv.name,'#ff6ec7'); }catch(e){}
-  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} } return {ok:true}; }
+  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ ofResolveOutside(); }catch(_e){} } return {ok:true}; }
 function arenaRankReward(rank){ return { gold:Math.round(300*rank*(1+rank*0.04)), dust:Math.round(120*rank), exp:Math.round(200*rank), cores:(rank%5===0?Math.round(rank*0.6)+1:0) }; }
 function arenaTierReward(rank){ return { milestone:rank, cores:Math.round(rank*1.1)+2, cry:Math.round(rank*0.8)+1, sparks:1 }; }
 function arenaEndBattle(win){ const ba=battleArena||{}; battleArena=null; try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
@@ -4373,7 +4373,7 @@ function startConquestBattle(tier){ const mod=conquestModifier(tier); const team
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner(mod.label,mod.color); }catch(e){}
-  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} } return {ok:true}; }
+  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ ofResolveOutside(); }catch(_e){} } return {ok:true}; }
 function conquestFirstClearReward(tier){ return { gold:Math.round(500*tier*(1+tier*0.05)), dust:Math.round(200*tier), cores:Math.round(tier*1.5)+2, cry:Math.round(tier*1.1)+1, exp:Math.round(250*tier), tokens:3+tier }; }
 function conquestRepeatReward(tier){ return { gold:Math.round(110*tier), dust:Math.round(45*tier), cores:0, exp:Math.round(60*tier), tokens:1 }; }
 function conquestMilestone(tier){ return { milestone:tier, sparks:2, cry:Math.round(tier*0.8)+1, cores:Math.round(tier*0.6)+1 }; }
@@ -6140,7 +6140,7 @@ function wireBattleControls(){
 function restartBattleTimer(){
   if(!battleState||!battleTimer) return;
   clearInterval(battleTimer);
-  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} }
+  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ ofResolveOutside(); }catch(_e){} }
 }
 function silentStrike(att,tgt){
   let dmg=Math.max(1,Math.round(att.atk*(0.9+Math.random()*0.2)*passiveDmgMult(att,tgt)));
@@ -6158,16 +6158,39 @@ function skipBattle(){
   if(battleTimer){ clearInterval(battleTimer); battleTimer=null; }
   try{ if(typeof window!=='undefined') window.__lqResolving=true; }catch(e){}
   try{ if(battleState&&battleState.awaitingCommand) battleState.awaitingCommand=false; }catch(e){}
-  var _g=0;
-  try{ while(battleState && !battleState.over && !battleState.ending && _g++<6000){ battleStep(); } }catch(e){}
-  try{ if(typeof window!=='undefined') window.__lqResolving=false; }catch(e){}
-  if(battleState && !battleState.over){
-    var _en=battleState.enemies||[], _pl=battleState.players||[];
-    var _win = !_en.some(function(u){return !u.dead;}) && _pl.some(function(u){return !u.dead;});
-    try{ refreshBars('enemySide',_en); refreshBars('playerSide',_pl); }catch(e){}
-    try{ setBattleLog('Battle resolved.'); }catch(e){}
-    try{ endBattle(_win); }catch(e){}
-  }
+  var _id=(skipBattle.__id=(skipBattle.__id||0)+1), _st=battleState;
+  (function pump(_g){
+    if(skipBattle.__id!==_id || battleState!==_st) return;
+    var n=0;
+    try{ while(battleState && !battleState.over && !battleState.ending && n++<60 && _g<6000){ battleStep(); _g++; } }catch(e){ _g=6000; }
+    if(battleState && !battleState.over && !battleState.ending && _g<6000){ setTimeout(function(){ pump(_g); },0); return; }
+    try{ if(typeof window!=='undefined') window.__lqResolving=false; }catch(e){}
+    if(battleState && !battleState.over){
+      var _en=battleState.enemies||[], _pl=battleState.players||[];
+      var _win = !_en.some(function(u){return !u.dead;}) && _pl.some(function(u){return !u.dead;});
+      try{ refreshBars('enemySide',_en); refreshBars('playerSide',_pl); }catch(e){}
+      try{ setBattleLog('Battle resolved.'); }catch(e){}
+      try{ endBattle(_win); }catch(e){}
+    }
+    try{ if(typeof ofOutsideReveal==='function') ofOutsideReveal(); }catch(e){}
+  })(0);
+}
+/* v2.183.0: resolve from OUTSIDE the battle — hide the arena, simulate in async
+   chunks, then reveal only the result/draft screen. Entering a battle = watching. */
+function ofResolveOutside(){
+  try{ var a=document.getElementById('arena'); if(a) a.classList.remove('show'); }catch(e){}
+  try{ window.__ofOutside=true; }catch(e){}
+  try{ skipBattle(); }catch(e){}
+}
+function ofOutsideReveal(){
+  try{
+    if(!window.__ofOutside) return;
+    var r=document.getElementById('arenaResult');
+    if(r && r.style.display==='block'){
+      window.__ofOutside=false;
+      var a=document.getElementById('arena'); if(a) a.classList.add('show');
+    }
+  }catch(e){}
 }
 
 /* ===== BATTLE ENGINE ===== */
@@ -6212,7 +6235,7 @@ function startBattle(mode,opts){
   battleState={players,enemies,turn:0,events:[],replay:battleReplay,meta:battleLastReplay};
   const sy=teamSynergy(battleMode); if(sy.active.length) passiveBanner('Team Synergy · '+sy.active.slice(0,2).map(x=>x.name).join(' + '),'#36e0e6');
   if(_resPct>0) passiveBanner('Resolve +'+Math.round(_resPct*100)+'% · powered by your habits','#ffb01f');
-  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} }
+  battleTimer=setInterval(battleStep,battleDelay()); if(typeof autoResolve!=='undefined'&&autoResolve){ try{ ofResolveOutside(); }catch(_e){} }
 }
 
 /* ===== v2.1 Hero Ultimates, Signatures, Squad Identity, Matchup ===== */
@@ -16806,7 +16829,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7AdvanceStage(){ if(S.clash.stage>=80){ S.clash.chapter=(S.clash.chapter||1)+1; S.clash.stage=1; } else S.clash.stage=(S.clash.stage||1)+1; }
   function c7AutoStopReason(prevCh,prevStage,nextCh,nextStage){ if(!S||!S.clash||!S.clash.autoBattle) return 'Auto off'; try{ if(prevCh!==nextCh) return 'New chapter — set your lane squad'; }catch(e){} return ''; }
   function c7ScheduleAutoNext(){ if(!battle7||!battle7.result||!battle7.result.win||!S.clash||!S.clash.autoBattle||battle7.result.autoStop) return; var _cres=(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode==='resolve'); battle7.log=_cres?'Auto resolve \u2014 next stage incoming.':'Auto battle: next stage starts in 3 seconds.'; c7RenderBattle(); battle7.autoTimer=setTimeout(function(){ try{ if(battle7&&battle7.result&&battle7.result.win&&S.clash&&S.clash.autoBattle) startClashBattle(); }catch(e){ console.error('Clash auto battle failed',e); } },_cres?500:3000); }
-  function c7Resolve(win,reason){ if(!battle7||battle7.ended) return; const prevCh=battle7.chapter, prevStage=battle7.stage; battle7.resolving=true; battle7.ended=true; if(battle7.timer) clearInterval(battle7.timer); if(battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7.timer=null; battle7.autoTimer=null; if(battle7.watchdog){ clearInterval(battle7.watchdog); battle7.watchdog=null; } let result={first:false,reward:{gold:0,dust:0,bondXp:0,extra:[]}}, autoStop=''; try{ const __r=c7ApplyRewards(win); if(__r) result=__r; if(win) c7AdvanceStage(); if(win){ autoStop=c7AutoStopReason(prevCh,prevStage,c7Chapter(),c7Stage()); if(autoStop && prevCh!==c7Chapter()){ try{ if(typeof clashAutoOptimize==='function'){ clashAutoOptimize(false); autoStop=''; if(typeof safeToast7==='function') safeToast7('Clash squad auto-optimized for new chapter'); } }catch(e){} } if(autoStop&&S.clash) S.clash.autoBattle=false; } else if(S.clash){ S.clash.autoBattle=false; autoStop='Defeat'; } }catch(e){ console.error('Clash resolve rewards failed',e); if(S.clash) S.clash.autoBattle=false; if(!win&&!autoStop) autoStop='Defeat'; } battle7.result={win,first:!!result.first,reward:result.reward||{gold:0,dust:0,bondXp:0,extra:[]},reason:reason||'',autoStop}; try{ if(typeof save==='function') save(); if(typeof renderHUD==='function') renderHUD(); }catch(e){} try{ c7RenderBattle(); }catch(e){ console.error('Clash result render failed',e); try{ closeClashBattle(); }catch(_e){} try{ if(typeof safeToast7==='function') safeToast7(win?'Clash cleared':'Clash ended'); }catch(_e){} try{ if(typeof render==='function') render(); }catch(_e){} } try{ c7ScheduleAutoNext(); }catch(e){} }
+  function c7Resolve(win,reason){ if(!battle7||battle7.ended) return; const prevCh=battle7.chapter, prevStage=battle7.stage; battle7.resolving=true; battle7.ended=true; if(battle7.timer) clearInterval(battle7.timer); if(battle7.autoTimer) clearTimeout(battle7.autoTimer); battle7.timer=null; battle7.autoTimer=null; if(battle7.watchdog){ clearInterval(battle7.watchdog); battle7.watchdog=null; } let result={first:false,reward:{gold:0,dust:0,bondXp:0,extra:[]}}, autoStop=''; try{ const __r=c7ApplyRewards(win); if(__r) result=__r; if(win) c7AdvanceStage(); if(win){ autoStop=c7AutoStopReason(prevCh,prevStage,c7Chapter(),c7Stage()); if(autoStop && prevCh!==c7Chapter()){ try{ if(typeof clashAutoOptimize==='function'){ clashAutoOptimize(false); autoStop=''; if(typeof safeToast7==='function') safeToast7('Clash squad auto-optimized for new chapter'); } }catch(e){} } if(autoStop&&S.clash) S.clash.autoBattle=false; } else if(S.clash){ S.clash.autoBattle=false; autoStop='Defeat'; } }catch(e){ console.error('Clash resolve rewards failed',e); if(S.clash) S.clash.autoBattle=false; if(!win&&!autoStop) autoStop='Defeat'; } battle7.result={win,first:!!result.first,reward:result.reward||{gold:0,dust:0,bondXp:0,extra:[]},reason:reason||'',autoStop}; try{ if(typeof save==='function') save(); if(typeof renderHUD==='function') renderHUD(); }catch(e){} try{ c7RenderBattle(); }catch(e){ console.error('Clash result render failed',e); try{ closeClashBattle(); }catch(_e){} try{ if(typeof safeToast7==='function') safeToast7(win?'Clash cleared':'Clash ended'); }catch(_e){} try{ if(typeof render==='function') render(); }catch(_e){} } try{ c7ScheduleAutoNext(); }catch(e){} try{ if(window.__clashOutside){ var _cr=battle7&&battle7.result; var _chain=!!(S.clash&&S.clash.autoBattle)&&_cr&&_cr.win&&!_cr.autoStop; if(!_chain){ window.__clashOutside=false; c7OpenBattle(); c7RenderBattle(); } } }catch(e){} }
   function c7StartData(){ if(typeof ensureClashState==='function') ensureClashState(); const ch=c7Chapter(), st=c7Stage(), pattern=c7Pattern(ch,st), kind=c7Kind(st), bossInfo=c7Boss(ch,st), ids=c7EnsureSquad(ch), lanes=c7Lanes(ch); const heroes=ids.map((id,i)=>{ const h=c7OwnedHero(id); return h?c7HeroStats(h,c7SlotMeta(i,ch),pattern):null; }).filter(Boolean); const built=c7BuildSpawnPlan(ch,st,kind,pattern,bossInfo,lanes); battle7={chapter:ch,stage:st,kind,pattern,bossInfo,lanes,heroes,enemies:[],wave:0,maxWaves:built.waves,spawnPlan:built.plan,spawned:0,totalEnemies:built.totalEnemies,leaks:0,leakLimit:built.cfg.leakLimit,maxLaneActive:built.cfg.maxLaneActive,totalTime:built.cfg.totalTicks,timeLeft:built.cfg.totalTicks,tickCount:0,damage:0,taken:0,healing:0,blocked:0,advHits:0,badHits:0,defeated:0,log:'Finite enemy swarm incoming.',speed:((S.clash&&S.clash.speed)||1),resolving:false,ended:false,timer:null,autoTimer:null,result:null}; }
   function c7OpenBattle(){ let o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); o=document.createElement('div'); o.id='clashBattleOverlay'; o.className='clashBattleOverlay c7'; document.body.appendChild(o); }
   function c7FxMeta(type){ const map={Flame:{cls:'flame',shot:'#ff6b4a',shot2:'#ffb347'},Tide:{cls:'tide',shot:'#48cfff',shot2:'#a9efff'},Grove:{cls:'grove',shot:'#6fe26a',shot2:'#c8ff8b'},Stone:{cls:'stone',shot:'#caa46a',shot2:'#f0dfbf'},Storm:{cls:'storm',shot:'#ffd94a',shot2:'#fff19a'}}; return map[type]||map.Flame; }
@@ -16838,8 +16861,14 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     }catch(e){ try{ c7RenderBattle(); }catch(_e){} }
   }
   function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['front','mid','back','rear','reserve']; /* v2.106 clash: front rank renders at top of stack, facing the descending swarm */ battle7.heroes.forEach(h=>h.acted=0); const advChart=['Flame','Grove','Stone','Storm','Tide','Flame'].map(e=>c7ElementBadge(e,true)).join('<span class="clashAdvArrow">▸</span>'); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; const _cz=BATTLE_ZONES[(((battle7.chapter||1)-1)%BATTLE_ZONES.length+BATTLE_ZONES.length)%BATTLE_ZONES.length], _cbg=(typeof v156BgForClass==='function'&&_cz)?v156BgForClass(_cz.c):''; o.innerHTML='<div class="clashBattlePanel c7 hasArt '+(battle7.lanes.length===5?'five':'three')+'" style="--clashArt:url('+_cbg+')"><div class="clashBattleHead"><div><b>⚡ Squadron Clash</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">'+((S.clash&&S.clash.autoBattle)?((S.appSettings&&S.appSettings.autoMode==='resolve')?'Auto Resolve':'Auto Watch'):'Auto Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Resolve</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashAdvChart">'+advChart+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+' '+c7ElementBadge(t,true)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
-  window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); battle7._wd={t:battle7.tickCount||0,at:Date.now()}; if(battle7.watchdog) clearInterval(battle7.watchdog); battle7.watchdog=setInterval(c7Watchdog,1500); if(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode==='resolve'){ try{ if(typeof window.skipClashBattle==='function') window.skipClashBattle(); }catch(_e){} } }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
-  window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; battle7.resolving=true; let guard=0; while(battle7&&!battle7.ended&&guard++<900){ battle7.resolving=false; c7Tick(); if(!battle7||battle7.ended) break; battle7.resolving=true; } if(battle7&&!battle7.ended){ battle7.resolving=false; c7Resolve(false); } };
+  window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); battle7._wd={t:battle7.tickCount||0,at:Date.now()}; if(battle7.watchdog) clearInterval(battle7.watchdog); battle7.watchdog=setInterval(c7Watchdog,1500); if(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode==='resolve'){ try{ if(typeof window.clashResolveOutside==='function'){ window.clashResolveOutside(); } else if(typeof window.skipClashBattle==='function'){ window.skipClashBattle(); } }catch(_e){} } }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
+  window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; battle7.resolving=true;
+    var run=battle7, guard=0;
+    (function pump(){ if(!battle7||battle7!==run||battle7.ended) return; var n=0;
+      while(battle7&&!battle7.ended&&n++<80&&guard++<900){ battle7.resolving=false; c7Tick(); if(!battle7||battle7.ended) break; battle7.resolving=true; }
+      if(battle7&&battle7===run&&!battle7.ended){ if(guard<900){ setTimeout(pump,0); } else { battle7.resolving=false; c7Resolve(false); } }
+    })(); };
+  window.clashResolveOutside=function(){ try{ var o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); }catch(e){} try{ window.__clashOutside=true; }catch(e){} window.skipClashBattle(); };
   window.closeClashBattle=function(){ if(battle7&&battle7.timer) clearInterval(battle7.timer); if(battle7&&battle7.autoTimer) clearTimeout(battle7.autoTimer); if(battle7&&battle7.watchdog) clearInterval(battle7.watchdog); battle7=null; const o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); try{ if(typeof render==='function') render(); }catch(e){} };
   window.c7BattleInterval=function(){ const sp=c7SpeedValue(); return sp===3?220:(sp===2?300:C7.tickMs); };
   window.setClashSpeed=function(){ if(!battle7||battle7.ended) return; const cur=c7SpeedValue(); battle7.speed=cur===1?2:cur===2?3:1; try{ if(S.clash) S.clash.speed=battle7.speed; if(typeof save==='function') save(); }catch(e){} if(battle7.timer) clearInterval(battle7.timer); battle7.timer=setInterval(c7Tick,c7BattleInterval()); c7RenderBattle(); };
@@ -23105,7 +23134,7 @@ function roomStartRun(k,tier){
   try{ passiveBanner(haz.name+' \u00b7 Tier '+tier,haz.color); }catch(e){}
   try{ setBattleLog(haz.rule); }catch(e){}
   battleTimer=setInterval(function(){ battleStep(); },battleDelay());
-  if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} }
+  if(typeof autoResolve!=='undefined'&&autoResolve){ try{ ofResolveOutside(); }catch(_e){} }
   return {ok:true}; }
 function roomHazardTick(){
   const RB=battleRoom, B=battleState; if(!RB||!B||!B.players) return;
@@ -23236,7 +23265,7 @@ function startRaidStrike(){
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner(currentBoss().name+' \u00b7 x'+amp.toFixed(2)+' habit power','#ffb01f'); }catch(e){}
   battleTimer=setInterval(function(){ battleStep(); },battleDelay());
-  if(typeof autoResolve!=='undefined'&&autoResolve){ try{ skipBattle(); }catch(_e){} }
+  if(typeof autoResolve!=='undefined'&&autoResolve){ try{ ofResolveOutside(); }catch(_e){} }
   try{ save(); }catch(e){}
   return {ok:true}; }
 function raidSAEndBattle(win){ const RS=battleRaidSA; battleRaidSA=null;
