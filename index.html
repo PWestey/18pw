@@ -2800,7 +2800,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.182.3-heroes-nemona-alera';
+const APP_BUILD='v2.182.4-clash-optimizer-fairness';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -16536,12 +16536,16 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     try{
       const ch=c7Chapter(), st=c7Stage(), need=c7SlotCount(ch), pattern=c7Pattern(ch,st), boss=c7Boss(ch,st), owned=c7Owned().slice();
       if(!owned.length){ if(showToast) safeToast7('No owned heroes available.'); return; }
-      const remaining=owned.slice(), picks=[];
-      for(let i=0;i<need;i++){
-        const slot=c7SlotMeta(i,ch);
-        remaining.sort((a,b)=>c7HeroScore(b,slot,pattern,boss)-c7HeroScore(a,slot,pattern,boss));
-        const h=remaining.shift(); if(h) picks[i]=h.id;
-      }
+      /* v2.182.4: global pair assignment — score every (hero,slot) pair and assign
+         best-first, so counter heroes claim their advantage lanes before stronger
+         off-element heroes consume them as neutral filler. Fixes right-lane starvation. */
+      const picks=new Array(need).fill(null);
+      const slots=[]; for(let i=0;i<need;i++) slots[i]=c7SlotMeta(i,ch);
+      const pairs=[];
+      owned.forEach(h=>{ for(let i=0;i<need;i++){ pairs.push({id:h.id,i:i,s:c7HeroScore(h,slots[i],pattern,boss)}); } });
+      pairs.sort((a,b)=>b.s-a.s);
+      const usedHero=new Set(); let filled=0;
+      for(const p of pairs){ if(filled>=need) break; if(picks[p.i]||usedHero.has(p.id)) continue; picks[p.i]=p.id; usedHero.add(p.id); filled++; }
       c7OptimizeRoleCoverage(picks,owned,['Tank'],c7IsFive(ch)?2:1,ch,pattern,boss);
       c7OptimizeRoleCoverage(picks,owned,['Healer','Support'],c7IsFive(ch)?2:1,ch,pattern,boss);
       c7CapRoleCoverage(picks,owned,['Healer','Support'],c7IsFive(ch)?4:2,ch,pattern,boss);
