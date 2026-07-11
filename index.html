@@ -2831,7 +2831,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.204.4-shutdown-seq';
+const APP_BUILD='v2.205.0-day-phases';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4892,12 +4892,19 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
   }
   if(!items.length){ if(taskIsRecurring(subtab)) items.sort((a,b)=>(taskActiveToday(a)?0:1)-(taskActiveToday(b)?0:1)); const msg=taskListFor(subtab).length?(subtab==='todos'?'All visible quests are done. Add one small quest if you want another win.':'All visible '+subtab+' are done. Switch Done Mode in Settings to review completed ones.'):(subtab==='todos'?'No quests yet.<br>Add one small one-off task to keep momentum.':'No '+subtab+' yet.<br>Add one to start.'); L.innerHTML='<div class="empty">'+msg+'</div>'; return; }
   /* v2.204.1: the dailies list reads as the day's shape — Core gate, Full gate, the day, Shutdown. */
-  const lqGk=d=>d&&d.gate==='preCore'?0:d&&d.gate==='preFull'?1:d&&d.gate==='post'?3:2;
+  const lqGk=d=>{ if(!d) return 2;
+    if(d.gate==='preCore') return 0;
+    if(d.gate==='preFull') return 1;
+    if(d.gate==='post') return 4;
+    const b=d.block||'';
+    if(b==='evening') return 3;
+    if(b==='night') return 4;
+    return 2; };
   const lqBk=d=>({morning:0,midday:1,afternoon:2,evening:3,night:4}[(d&&d.block)||'']??2);
   const lqSeq=d=>(d&&typeof d.gateOrd==='number')?d.gateOrd:(10+lqBk(d));
   if(subtab==='dailies'&&items.some(d=>d&&d.gate)){ items.sort((a,b)=>(lqGk(a)-lqGk(b))||(lqSeq(a)-lqSeq(b))); }
   let lqLastGk=-1;
-  const LQ_GH={0:['🎮 PRE-GAME · CORE','#ff8a8a'],1:['🎮 PRE-GAME · FULL','#ffd95a'],2:['THROUGH THE DAY','#9ec3ff'],3:['🌙 SHUTDOWN','#c9b2ff']};
+  const LQ_GH={0:['🎮 PRE-GAME · CORE','#ff8a8a'],1:['🎮 PRE-GAME · FULL','#ffd95a'],2:['🧹 WORK & CHORES','#5bd0e6'],3:['👨‍👧 FAMILY TIME','#ffb01f'],4:['🌙 SHUTDOWN','#c9b2ff']};
   items.forEach((it,i)=>{
     if(subtab==='dailies'&&items.some(d=>d&&d.gate)){
       const g=lqGk(it);
