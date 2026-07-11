@@ -2831,7 +2831,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.204.3-gate-tints';
+const APP_BUILD='v2.204.4-shutdown-seq';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4894,13 +4894,14 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
   /* v2.204.1: the dailies list reads as the day's shape — Core gate, Full gate, the day, Shutdown. */
   const lqGk=d=>d&&d.gate==='preCore'?0:d&&d.gate==='preFull'?1:d&&d.gate==='post'?3:2;
   const lqBk=d=>({morning:0,midday:1,afternoon:2,evening:3,night:4}[(d&&d.block)||'']??2);
-  if(subtab==='dailies'&&items.some(d=>d&&d.gate)){ items.sort((a,b)=>(lqGk(a)-lqGk(b))||(lqBk(a)-lqBk(b))); }
+  const lqSeq=d=>(d&&typeof d.gateOrd==='number')?d.gateOrd:(10+lqBk(d));
+  if(subtab==='dailies'&&items.some(d=>d&&d.gate)){ items.sort((a,b)=>(lqGk(a)-lqGk(b))||(lqSeq(a)-lqSeq(b))); }
   let lqLastGk=-1;
   const LQ_GH={0:['🎮 PRE-GAME · CORE','#ff8a8a'],1:['🎮 PRE-GAME · FULL','#ffd95a'],2:['THROUGH THE DAY','#9ec3ff'],3:['🌙 SHUTDOWN','#c9b2ff']};
   items.forEach((it,i)=>{
     if(subtab==='dailies'&&items.some(d=>d&&d.gate)){
       const g=lqGk(it);
-      if(g!==lqLastGk){ lqLastGk=g; const hd=document.createElement('div'); hd.style.cssText='font-family:Orbitron;font-weight:900;font-size:10.5px;letter-spacing:.8px;color:'+LQ_GH[g][1]+';margin:12px 2px 4px'; hd.textContent=LQ_GH[g][0]; L.appendChild(hd); }
+      if(g!==lqLastGk){ lqLastGk=g; const hd=document.createElement('div'); hd.style.cssText='font-family:Orbitron;font-weight:900;font-size:14px;letter-spacing:1.2px;color:'+LQ_GH[g][1]+';margin:16px 0 6px;text-align:center'; hd.textContent=LQ_GH[g][0]; L.appendChild(hd); }
     }
     const c=document.createElement('div');
     c.className='card'+(it.done?' done':'')+((taskIsRecurring(subtab)&&!taskActiveToday(it))?' resting':''); c.style.animationDelay=(i*0.03)+'s';
@@ -7188,7 +7189,7 @@ function validateBackupData(data){
 }
 function exportDailiesToFile(){
   try{
-    const list=(Array.isArray(S.dailies)?S.dailies:[]).map(d=>({title:d.title,freq:d.freq||'daily',diff:d.diff||'easy',domain:d.domain||null,notes:typeof d.notes==='string'?d.notes:'',block:typeof d.block==='string'?d.block:'',gate:typeof d.gate==='string'?d.gate:'',review:!!d.review}));
+    const list=(Array.isArray(S.dailies)?S.dailies:[]).map(d=>({title:d.title,freq:d.freq||'daily',diff:d.diff||'easy',domain:d.domain||null,notes:typeof d.notes==='string'?d.notes:'',block:typeof d.block==='string'?d.block:'',gate:typeof d.gate==='string'?d.gate:'',review:!!d.review,gateOrd:(typeof d.gateOrd==='number'?d.gateOrd:undefined)}));
     if(!list.length){ toast('No habits to export'); return; }
     const payload={oathforgeDailies:1,exportedAt:new Date().toISOString(),count:list.length,dailies:list};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
@@ -7216,9 +7217,9 @@ function importDailiesFromFile(){
       let added=0, updated=0, removed=0;
       list.forEach(spec=>{ if(!spec||!spec.title) return; const key=norm(spec.title);
         const ex=S.dailies.find(d=>norm(d.title)===key);
-        if(ex){ ['freq','diff','domain','notes','block'].forEach(k=>{ if(spec[k]!==undefined&&spec[k]!==null) ex[k]=spec[k]; });
+        if(ex){ ['freq','diff','domain','notes','block','gateOrd'].forEach(k=>{ if(spec[k]!==undefined&&spec[k]!==null) ex[k]=spec[k]; });
           ex.gate=typeof spec.gate==='string'?spec.gate:(ex.gate||''); ex.review=!!spec.review; updated++; }
-        else { const nd=makeStarterDaily({title:spec.title,freq:spec.freq||'daily',diff:spec.diff||'easy',domain:spec.domain||null,notes:spec.notes,block:spec.block},null); nd.gate=typeof spec.gate==='string'?spec.gate:''; nd.review=!!spec.review; S.dailies.push(nd); added++; } });
+        else { const nd=makeStarterDaily({title:spec.title,freq:spec.freq||'daily',diff:spec.diff||'easy',domain:spec.domain||null,notes:spec.notes,block:spec.block},null); nd.gate=typeof spec.gate==='string'?spec.gate:''; nd.review=!!spec.review; if(typeof spec.gateOrd==='number') nd.gateOrd=spec.gateOrd; S.dailies.push(nd); added++; } });
       const retire=(!Array.isArray(parsed)&&parsed&&Array.isArray(parsed.retire))?parsed.retire.map(norm):[];
       if(retire.length){ const before=S.dailies.length; S.dailies=S.dailies.filter(d=>!retire.includes(norm(d.title))); removed=before-S.dailies.length; }
       try{ if(typeof save==='function') save(); }catch(e){}
