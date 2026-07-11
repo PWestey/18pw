@@ -2404,8 +2404,8 @@ function grantResearch(n){ n=n||1; S.crystals=(S.crystals||0)+n*5; return '+'+(n
 function strategySummaryHTML(){ return ''; }
 function showStrategyModal(){ toast('Wisdom & Practice retired \u2014 research now reforges into crystals automatically.'); }
 const FELLOWSHIP_TUNE={ shardPerLv:0.02, bondPerLv:0.03, ptsPerLv:6, maxLv:30, prestigeCapPerHero:2 };
-function domainFellowshipScore(domain){ if(!DKEY[domain]) return 0; var s=0; (S.heroes||[]).forEach(function(h){ if(!h.owned||!Array.isArray(h.aff)||h.aff.indexOf(domain)<0) return; var c=1; try{ if(typeof rankIdx==='function'&&rankIdx(h)>=RANKS.length-1) c+=1; }catch(e){} var g=h.gear||{}; try{ if(SLOTS.every(function(x){return g[x];})) c+=1; }catch(e){} c+=Math.min(FELLOWSHIP_TUNE.prestigeCapPerHero,(h.prestige||0)); s+=c; }); return s; }
-function domainFellowshipLevel(domain){ return Math.min(FELLOWSHIP_TUNE.maxLv, Math.floor(domainFellowshipScore(domain)/FELLOWSHIP_TUNE.ptsPerLv)); }
+function domainFellowshipScore(domain){ if(!DKEY[domain]) return 0; var s=0; (S.heroes||[]).forEach(function(h){ if(!h.owned||!Array.isArray(h.aff)||h.aff.indexOf(domain)<0) return; var c=1; try{ if(typeof rankIdx==='function'&&rankIdx(h)>=RANKS.length-1) c+=1; }catch(e){} var g=h.gear||{}; try{ if(SLOTS.every(function(x){return g[x];})) c+=1; }catch(e){} var _p=(h.prestige||0); c+=Math.min(FELLOWSHIP_TUNE.prestigeCapPerHero,_p)+0.5*Math.max(0,_p-FELLOWSHIP_TUNE.prestigeCapPerHero); s+=c; }); return s; }
+function domainFellowshipLevel(domain){ /* v2.203: uncapped — progress scales infinitely; bonuses are economy multipliers, bounded by real prestige breadth. */ return Math.floor(domainFellowshipScore(domain)/FELLOWSHIP_TUNE.ptsPerLv); }
 function fellowshipShardMult(domain){ return 1+domainFellowshipLevel(domain)*FELLOWSHIP_TUNE.shardPerLv; }
 function fellowshipBondMult(domain){ return 1+domainFellowshipLevel(domain)*FELLOWSHIP_TUNE.bondPerLv; }
 function gainBond(domain,amount){ if(!domain||!(amount>0)) return []; const gains=[]; amount=Math.max(1,Math.round(amount*strategyBondMult(domain)*assignmentMult(domain)*fellowshipBondMult(domain)));
@@ -2710,7 +2710,7 @@ const FORGE_BONUS_LABEL={ faith:'team Max HP', fitness:'team ATK', fatherhood:'t
 function forgeBonusPctText(domain){ var b=forgeBonus(domain); if(domain==='fatherhood') b=Math.min(0.35,b); var pct=b*100; var s; if(pct>=10||Math.abs(pct-Math.round(pct))<0.05) s=String(Math.round(pct)); else s=pct.toFixed(1); return '+'+s+'% '+(FORGE_BONUS_LABEL[domain]||domain); }
 function growthHubPointerHTML(){ return '<div class="stagecard" style="display:flex;justify-content:space-between;align-items:center;gap:10px">'+'<div><b>'+ficon('feat_forge',22)+' Forge & '+ficon('tab_greathall',22)+' Fellowship</b><div style="font-size:11px;color:var(--muted);margin-top:2px">Your domain power & roster bonuses now live in Progress.</div></div>'+'<button class="go" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);width:auto;padding:9px 14px;white-space:nowrap" onclick="view=\'progress\';render()">Open</button>'+'</div>'; }
 function fellowshipPanelHTML(){
-  var rows=DOMAINS.map(function(d){ var k=d[0],lab=d[1],color=d[2],emoji=d[3]; var lv=domainFellowshipLevel(k), sc=domainFellowshipScore(k); var nextPts=(lv>=FELLOWSHIP_TUNE.maxLv)?null:((lv+1)*FELLOWSHIP_TUNE.ptsPerLv); var pct=nextPts?Math.max(0,Math.min(100,Math.round((sc/nextPts)*100))):100; var sh=Math.round(lv*FELLOWSHIP_TUNE.shardPerLv*100), bo=Math.round(lv*FELLOWSHIP_TUNE.bondPerLv*100);
+  var rows=DOMAINS.map(function(d){ var k=d[0],lab=d[1],color=d[2],emoji=d[3]; var lv=domainFellowshipLevel(k), sc=domainFellowshipScore(k); var nextPts=(lv+1)*FELLOWSHIP_TUNE.ptsPerLv; var pct=nextPts?Math.max(0,Math.min(100,Math.round((sc/nextPts)*100))):100; var sh=Math.round(lv*FELLOWSHIP_TUNE.shardPerLv*100), bo=Math.round(lv*FELLOWSHIP_TUNE.bondPerLv*100);
     return '<div style="margin:0 0 10px">'
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:800;margin-bottom:3px"><span>'+((typeof DOMAIN_ART==='object'&&DOMAIN_ART[k])?('<img src="'+DOMAIN_ART[k]+'" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:4px" alt="">'):emoji)+' '+esc(lab)+'</span><span style="color:'+color+'">Fellowship '+lv+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px"><span style="color:'+color+'">+'+sh+'% habit shards \u00b7 +'+bo+'% bond XP</span><span>'+sc+' pts</span></div>'
@@ -2760,7 +2760,12 @@ function domainReadinessHTML(){
       +'<div style="font-size:11px;font-weight:700;color:var(--muted)">'+cohortLine+' \u00b7 '+pool.length+' owned</div>'
       +'</div>'; }).join('');
   var forgeCapCtl='';
-  try{ var _fc=forgeDailyCap(); forgeCapCtl='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)"><label style="font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap">Forge EXP cap/day <span style="color:var(--muted);font-weight:600">(0 = \u221e \u00b7 no limit)</span> <input type="number" min="0" step="100" value="'+(isFinite(_fc)?_fc:0)+'" onchange="devSetForgeCap(this.value)" style="width:96px;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label></div>'; }catch(e){}
+  try{ var _fc=forgeDailyCap(); forgeCapCtl='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)"><label style="font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap">Forge EXP cap/day <span style="color:var(--muted);font-weight:600">(0 = \u221e \u00b7 no limit)</span> <input type="number" min="0" step="100" value="'+(isFinite(_fc)?_fc:0)+'" onchange="devSetForgeCap(this.value)" style="width:96px;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label>'
+    +(function(){ try{
+      var inp=function(d,lab,v){ return '<label style="font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px">'+lab+' <input type="number" min="0" step="5" value="'+v+'" onchange="devSetForgeXp(\''+d+'\',this.value)" style="width:74px;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label>'; };
+      return '<div style="margin-top:9px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;font-weight:700">EXP per task</span>'+inp('easy','Easy',forgeXpFor('easy'))+inp('med','Med',forgeXpFor('med'))+inp('hard','Hard',forgeXpFor('hard'))+'</div>';
+    }catch(e){ return ''; } })()
+    +'</div>'; }catch(e){}
   var dev='';
   try{ if(ensureAppSettings().developerTools){ var cap=forgeDailyCap(); var bm=(S.dev&&S.dev.breadthMode)||'normal'; var se=forgeSparkEvery(); var sp=forgeSparkPerMilestone(); var fxe=forgeXpFor('easy'), fxm=forgeXpFor('med'), fxh=forgeXpFor('hard');
     dev='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">'
@@ -2826,7 +2831,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.201.2-earned-today';
+const APP_BUILD='v2.203.2-hall-depth';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4609,11 +4614,9 @@ function renderProgress(v){
   v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I\u2019m becoming</span></div>'
     +((typeof growthHeaderV2==='function')?growthHeaderV2():'')
     +summary
-    +((typeof domainGrowthPanelV2==='function')?domainGrowthPanelV2():'')
+    +((typeof lqDomainsPanel==='function')?lqDomainsPanel():((typeof domainGrowthPanelV2==='function')?domainGrowthPanelV2():'')+fellowshipPanelHTML()+forgePanelHTML())
     +domainReadinessHTML()
-    +fellowshipPanelHTML()
     +((typeof anvilArchivePanel==='function')?anvilArchivePanel():'')
-    +forgePanelHTML()
     +((typeof growthFocusV2==='function')?growthFocusV2():'')
     +((typeof growthToolsV2==='function')?growthToolsV2():'')
     +gallery+links;
@@ -4865,11 +4868,14 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
     questBoardHTML()+
     (subtab==='dailies'&&typeof lqGateChipHTML==='function'?lqGateChipHTML():'')+
     '<div class="tabs" id="subtabs">'+
-      ['dailies','weeklies','monthlies','todos','ownership','reviews'].map(t=>'<button data-s="'+t+'" class="'+(t===subtab?'on':'')+'">'+(t==='todos'?'Quests':t[0].toUpperCase()+t.slice(1))+'</button>').join('')+
+      ['dailies','weeklies','monthlies','todos'].map(t=>'<button data-s="'+t+'" class="'+(t===subtab?'on':'')+'">'+(t==='todos'?'Quests':t[0].toUpperCase()+t.slice(1))+'</button>').join('')+
+    '</div>'+
+    '<div class="tabs" id="subtabs2" style="margin-top:6px">'+
+      [['ownership','\u{1F6E1} Ownership'],['reviews','\u{1F4CB} Reviews']].map(t=>'<button data-s="'+t[0]+'" class="'+(t[0]===subtab?'on':'')+'">'+t[1]+'</button>').join('')+
     '</div>'+
     '<div class="head"><h2>'+(subtab==='todos'?'Quests':subtab[0].toUpperCase()+subtab.slice(1))+'</h2><button class="add" id="addTask">+ Add</button></div>'+
     '<div class="list" id="list"></div>';
-  document.getElementById('subtabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;subtab=b.dataset.s;render();};
+  document.querySelectorAll('#subtabs,#subtabs2').forEach(el=>{ el.onclick=e=>{const b=e.target.closest('button');if(!b)return;subtab=b.dataset.s;render();}; });
   document.getElementById('addTask').onclick=()=>openTaskSheet(null);
   const L=document.getElementById('list');
   /* v2.199: Ownership + Reviews are first-class sections, not modals. */
@@ -24236,6 +24242,52 @@ function raidSAInjectPanel(){ try{
     }catch(e){}
   }
 
+  /* ---------- v2.203.1: ONE domains panel — life + forge + hall per domain (8 cards, not 24 rows) ---------- */
+  window.lqDomainsPanel=function(){
+    try{
+      ensureDomainStats(); ensureForgeState();
+      var rows=DOMAINS.map(function(d){
+        var k=d[0], dk=DKEY[k]||{label:k,icon:'\u2022',color:'#888'};
+        var stx=(S.domainStats&&S.domainStats[k])||{xp:0};
+        var lv=domainLevelFromXp(stx.xp), wk=Math.round(domainTrail7(k)), tr=domainTrend(k);
+        var TM={up:['Growing','#5bd9a0','\u2191'],steady:['Steady','#9ec3ff','\u2192'],down:['Cooling','#ffb27a','\u2193'],idle:['Quiet','#7c8499','\u00b7']}; var t=TM[tr]||TM.steady;
+        var f=(S.forge.domains&&S.forge.domains[k])||{xp:0,lv:0};
+        var need=1; try{ need=forgeLvCost(f.lv); }catch(e){}
+        var fpct=Math.max(2,Math.min(100,Math.round(f.xp/Math.max(1,need)*100)));
+        var fb=''; try{ var b=Math.round(forgeBonus(k)*1000)/10; fb='+'+b+'% '+((typeof FORGE_BONUS_LABEL!=='undefined'&&FORGE_BONUS_LABEL[k])||''); }catch(e){}
+        var hl=domainFellowshipLevel(k);
+        var sh=Math.round(hl*FELLOWSHIP_TUNE.shardPerLv*100), bo=Math.round(hl*FELLOWSHIP_TUNE.bondPerLv*100);
+        return '<div style="padding:10px 2px;border-bottom:1px solid var(--line)">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:900;font-size:13.5px;color:'+dk.color+'">'+dk.icon+' '+esc(dk.label)+'</span><span style="font-weight:900;font-size:12px">Lv '+lv+' <span style="color:'+t[1]+'">'+t[2]+'</span></span></div>'
+          +'<div style="display:flex;justify-content:space-between;color:var(--muted);font-size:11px;font-weight:750;margin-top:3px"><span>'+(wk>0?wk+' XP this week \u00b7 '+t[0]:'quiet this week')+'</span></div>'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-top:5px"><span>\u2692 Forge '+f.lv+' \u00b7 '+fb+'</span><span style="color:var(--muted)">'+Math.round(f.xp)+'/'+Math.round(need)+'</span></div>'
+          +'<div class="xpbar" style="height:6px;margin-top:3px"><i style="width:'+fpct+'%;background:'+dk.color+'"></i></div>'
+          +'<div style="font-size:11px;font-weight:800;margin-top:5px;color:var(--muted)">\u{1F3DB} Hall '+hl+' \u00b7 +'+sh+'% shards \u00b7 +'+bo+'% bond</div>'
+          +'</div>';
+      }).join('');
+      return '<div class="stagecard"><h3>\u2726 Domains</h3><p style="margin:0 0 4px;color:var(--muted);font-size:11.5px;font-weight:750;line-height:1.35">Life level and trend \u00b7 forge power \u00b7 hall bonuses \u2014 one row per domain.</p>'+rows+'</div>';
+    }catch(e){ return ''; }
+  };
+
+  /* ---------- v2.202: home trim — retire the ritual hub + duplicate actions, surface Crucible ---------- */
+  function lqHomeTrim(){
+    try{
+      if(typeof view==='undefined'||view!=='home') return;
+      var v=$id('view'); if(!v) return;
+      v.querySelectorAll('.ofHome,.of2153HomeActions').forEach(function(el){ el.style.display='none'; });
+      if(!$id('lqCrucibleCard')){
+        var target=$id('lqHomeStrip')||$id('lqRoomCard')||$id('nextCard')||v.querySelector('.stagecard')||v.firstElementChild;
+        if(target){
+          var el=document.createElement('button'); el.id='lqCrucibleCard'; el.type='button';
+          el.style.cssText='display:block;width:100%;text-align:left;border:1px solid #a06bff44;background:linear-gradient(135deg,rgba(160,107,255,.10),rgba(107,70,224,.05));border-radius:12px;padding:11px 12px;margin:8px 0;cursor:pointer;font-family:inherit';
+          el.innerHTML='<b style="font-family:Orbitron;font-size:13px;color:#c9b2ff">'+((typeof ficon==='function')?ficon('feat_crucible',18)+' ':'')+'Crucible</b><div style="color:var(--muted);font-size:11px;font-weight:750;margin-top:3px">Forge legendaries — signature weapons and relics.</div>';
+          el.onclick=function(){ try{ if(typeof navTo==='function') navTo('forge'); else { view='forge'; renderHUD(); render(); } }catch(e){} };
+          target.insertAdjacentElement('afterend',el);
+        }
+      }
+    }catch(e){}
+  }
+
   /* ---------- boot ---------- */
   var tries=0;
   (function boot(){
@@ -24245,7 +24297,7 @@ function raidSAInjectPanel(){ try{
     try{ strategySummaryHTML=function(){ return ''; }; }catch(e){}
     setTimeout(function(){ try{ lqAutoClaim(); }catch(e){} },4000);
     setInterval(function(){ try{ lqAutoClaim(); }catch(e){} },12000);
-    setInterval(function(){ try{ lqRaidDeclutter(); }catch(e){} try{ lqHomeStrip(); }catch(e){} },900);
+    setInterval(function(){ try{ lqRaidDeclutter(); }catch(e){} try{ lqHomeStrip(); }catch(e){} try{ lqHomeTrim(); }catch(e){} },900);
   })();
 })();
 
