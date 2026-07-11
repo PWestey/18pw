@@ -998,16 +998,19 @@ const ALBUMS=[{"id":"starter_legacy","name":"Starter Legacy","blurb":"The twelve
 
 /* ===== TUNING (tweak these to balance feel) ===== */
 const TUNE={
-  convEnabled:1, convFragPerCore:100, convWeeklyCoreCap:4, convWeeklyBonus:0,
-  convRateDust:25, convRateCrystal:5, convRateSpark:3, convUseSparks:1,
-  convBossEnabled:1, convWeeklyBossCap:1, convBossCapBase:5, convBossCapPerDomain:3,
+  /* v2.195.0 CONSOLIDATION: the player's hand-tuned power-creep values (71 overrides, months of
+     work) are BAKED IN as defaults below, marked [baked]. The override layer is cleared by a
+     one-time migration; the Pace dial adjusts only the handful of pace keys on top. */
+  convEnabled:1, convFragPerCore:1000/*[baked]*/, convWeeklyCoreCap:100000/*v2.195: weekly caps retired — core autopilot is dust-overflow driven*/, convWeeklyBonus:0,
+  convRateDust:25, convRateCrystal:5, convRateSpark:3, convUseSparks:0, /* v2.195: sparks PROTECTED from core minting — they're for Eternal ranks; dust is the abundant feedstock */
+  convBossEnabled:1, convWeeklyBossCap:100000, convBossCapBase:100000/*v2.195: uncapped — overflow-driven*/, convBossCapPerDomain:3,
   floorRiseBase:0.03, floorRisePerDomain:0.04, floorCoreReserve:500, floorCorePerLevel:60, floorCoreMaxPerHr:0.5,
   prestigeCapBase:3, prestigeCapPerDomain:4, prestigeCapPerRep:4, prestigeUncapped:0,
   anvilRiseBase:0.02, anvilRisePerDomain:0.03, anvilMaxPerHr:0.5, anvilPowerPerLevel:0.03, anvilCapPerLevel:1,
   blessMaxPerHr:0.25, blessCostBase:50, blessCostGrowth:1.12, blessPowerPerLevel:0.02, blessCrystalReserve:200,
   ascShardBase:3, ascCostGrowth:1.5, ascPowerPerTier:0.02, ascMaxTier:10, anvilCostGrowth:1.15, anvilGoldBase:2000000, anvilDustBase:1000000, anvilGoldReserve:1000000, anvilDustReserve:500000, convBossRateDust:200, convBossRateCrystal:40, convBossRateSpark:25,
   chargeByDiff:{easy:2,med:4,hard:6},   // hours banked per task
-  expPerHour:12,                         // base idle income (EXP per real hour of charge)
+  expPerHour:13,                         // [baked] base idle income (EXP per real hour of charge)
   stageRateBonus:0.30,                   // +30% exp rate per cleared stage
   levelCost:lvl=>20*lvl,                 // exp to raise a hero one level
   liveTickMs:1500,                       // how often idle income ticks while open
@@ -1034,14 +1037,15 @@ const TUNE={
   streakBonusPer:3, streakBonusCap:3,  // +1h charge per 3-day streak, capped
   teamSize:8, habitChargeCap:3, dailyChargeCap:24, maxStoredCharge:48,  // heroes per battle team + charge safeguards
   clashStageGrowth:1.012, clashEliteMult:1.15, clashBossMult:1.35, clashChapterBossMult:1.75, clashReplayRewardMult:0.2,
-  clashHeroAdv:2.0, clashHeroDis:0.5, clashEnemyAdv:1.5, clashEnemyDis:0.75, clashOptAdvWeight:1.6, clashOptDisWeight:0.45, clashCapPerChapter:0,
-  ecoDrainPct:0.05, ecoFloorFrac:0.25, ecoFloorGoldMin:5000000, ecoFloorDustMin:5000000, ecoFloorCryMin:8000, ecoFloatFrac:0.008, ecoSinkMinGold:25000, ecoSinkMinCry:25,
+  clashHeroAdv:2.0, clashHeroDis:0.5, clashEnemyAdv:1.5, clashEnemyDis:0.75, clashOptAdvWeight:1.6, clashOptDisWeight:0.45, clashCapPerChapter:0.5, clashWallTau:10, /* v2.193.1 ideal (measured): boost saturates at cap×tau (+5.0) — deep-game chapter bosses ~1/3 win, normals always farmable, never bricks. Measured: tau 9=all wins, 10=bosses 1/3 @ch100, 11=bosses 0/3. */
+  /* v2.191.0: drain 5%→15%/day + price float 0.8%→2% — ~3× hoard burn at similar level pace (levels/day ≈ drain/float × habit amp) */
+  ecoDrainPct:0.15, ecoFloorFrac:0.25, ecoFloorGoldMin:5000000, ecoFloorDustMin:5000000, ecoFloorCryMin:8000, ecoFloatFrac:0.02, ecoSinkMinGold:25000, ecoSinkMinCry:25,
   convCoreCapBase:25, convCoreCapPerDomain:5, convCoreCapPerRep:1, convBossCapPerRep:0.3,
-  prestigeFloorPct:0.4, prestigeCatchMult:3,  // prestige softening (dev-tunable): reset to 40% of cap, 3x catch-up EXP
-  prestigeLevelBonus:10, resonanceTopN:6, gearDropMult:1, clashGoldMult:0.12, clashDustMult:0.25, clashBondBase:10, clashBondPerStage:1.2, clashStoneBase:2, clashStonePerStage:0.025,  // +max level per prestige star · roster level floor (Nth-best leveled, 0=off) · gear drop multiplier
+  prestigeFloorPct:1, prestigeCatchMult:10,  // [baked] lossless prestige + 10x catch-up — the player's design: prestige is pure upside, never a setback
+  prestigeLevelBonus:20, resonanceTopN:8, gearDropMult:10, clashGoldMult:0.12, clashDustMult:0.25, clashBondBase:10, clashBondPerStage:400, clashStoneBase:2, clashStonePerStage:0.5,  // [baked] +max level per prestige star · roster floor top-N · drop rate · clash bond/stone farm rates
 };
 const TUNE_DEFAULTS={};
-['convEnabled','convFragPerCore','convWeeklyCoreCap','convWeeklyBonus','convRateDust','convRateCrystal','convRateSpark','convUseSparks','convBossEnabled','convWeeklyBossCap','convBossCapBase','convBossCapPerDomain','convBossRateDust','convBossRateCrystal','convBossRateSpark','floorRiseBase','floorRisePerDomain','floorCoreReserve','floorCorePerLevel','floorCoreMaxPerHr','prestigeCapBase','prestigeCapPerDomain','prestigeCapPerRep','prestigeUncapped','anvilRiseBase','anvilRisePerDomain','anvilPowerPerLevel','anvilCapPerLevel','blessMaxPerHr','blessCostBase','blessCostGrowth','blessPowerPerLevel','blessCrystalReserve','ascShardBase','ascCostGrowth','ascPowerPerTier','ascMaxTier','anvilMaxPerHr','anvilCostGrowth','anvilGoldBase','anvilDustBase','anvilGoldReserve','anvilDustReserve','enemyGrowth','towerGrowth','enemyHpBase','enemyAtkBase','towerHpBase','towerAtkBase','expPerHour','stageRateBonus','bossEvery','bossRewardMult','prestigeFloorPct','prestigeCatchMult','prestigeLevelBonus','resonanceTopN','gearDropMult','clashGoldMult','clashDustMult','clashBondBase','clashBondPerStage','clashStoneBase','clashStonePerStage','clashStageGrowth','clashEliteMult','clashBossMult','clashChapterBossMult','clashReplayRewardMult','clashHeroAdv','clashHeroDis','clashEnemyAdv','clashEnemyDis','clashOptAdvWeight','clashOptDisWeight','clashCapPerChapter','ecoDrainPct','ecoFloorFrac','ecoFloorGoldMin','ecoFloorDustMin','ecoFloorCryMin','ecoFloatFrac','ecoSinkMinGold','ecoSinkMinCry','convCoreCapBase','convCoreCapPerDomain','convCoreCapPerRep','convBossCapPerRep'].forEach(k=>{ if(typeof TUNE[k]==='number') TUNE_DEFAULTS[k]=TUNE[k]; });
+['convEnabled','convFragPerCore','convWeeklyCoreCap','convWeeklyBonus','convRateDust','convRateCrystal','convRateSpark','convUseSparks','convBossEnabled','convWeeklyBossCap','convBossCapBase','convBossCapPerDomain','convBossRateDust','convBossRateCrystal','convBossRateSpark','floorRiseBase','floorRisePerDomain','floorCoreReserve','floorCorePerLevel','floorCoreMaxPerHr','prestigeCapBase','prestigeCapPerDomain','prestigeCapPerRep','prestigeUncapped','anvilRiseBase','anvilRisePerDomain','anvilPowerPerLevel','anvilCapPerLevel','blessMaxPerHr','blessCostBase','blessCostGrowth','blessPowerPerLevel','blessCrystalReserve','ascShardBase','ascCostGrowth','ascPowerPerTier','ascMaxTier','anvilMaxPerHr','anvilCostGrowth','anvilGoldBase','anvilDustBase','anvilGoldReserve','anvilDustReserve','enemyGrowth','towerGrowth','enemyHpBase','enemyAtkBase','towerHpBase','towerAtkBase','expPerHour','stageRateBonus','bossEvery','bossRewardMult','prestigeFloorPct','prestigeCatchMult','prestigeLevelBonus','resonanceTopN','gearDropMult','clashGoldMult','clashDustMult','clashBondBase','clashBondPerStage','clashStoneBase','clashStonePerStage','clashStageGrowth','clashEliteMult','clashBossMult','clashChapterBossMult','clashReplayRewardMult','clashHeroAdv','clashHeroDis','clashEnemyAdv','clashEnemyDis','clashOptAdvWeight','clashOptDisWeight','clashCapPerChapter','clashWallTau','ecoDrainPct','ecoFloorFrac','ecoFloorGoldMin','ecoFloorDustMin','ecoFloorCryMin','ecoFloatFrac','ecoSinkMinGold','ecoSinkMinCry','convCoreCapBase','convCoreCapPerDomain','convCoreCapPerRep','convBossCapPerRep'].forEach(k=>{ if(typeof TUNE[k]==='number') TUNE_DEFAULTS[k]=TUNE[k]; });
 function applyTuneOverrides(){ try{ if(S&&S.tuneOverrides){ Object.keys(S.tuneOverrides).forEach(k=>{ const v=S.tuneOverrides[k]; if(typeof v==='number'&&isFinite(v)&&typeof TUNE[k]==='number') TUNE[k]=v; }); } }catch(e){} }
 function devTuneFilter(q){ q=(q||'').trim().toLowerCase(); var rows=document.querySelectorAll('.devTuneRow'); for(var i=0;i<rows.length;i++){ var t=(rows[i].getAttribute('data-tune')||'').toLowerCase(); rows[i].style.display=(!q||t.indexOf(q)>=0)?'':'none'; } var gs=document.querySelectorAll('.devTuneGroup'); for(var j=0;j<gs.length;j++){ var rr=gs[j].querySelectorAll('.devTuneRow'),vis=0; for(var k=0;k<rr.length;k++){ if(rr[k].style.display!=='none') vis++; } gs[j].style.display=vis?'':'none'; } }
 function devSetStage(n){ n=Math.max(1,Math.round(+n||1)); S.stage=n; if(n>(S.maxCleared||0)) S.maxCleared=n; save(); renderHUD(); render(); toast('Campaign set to Stage '+n); }
@@ -1083,11 +1087,14 @@ function prestigeWeekAvail(){ return Math.max(0, prestigeWeeklyCap()-(prestigeWe
 function convWeekState(){ var wk=(typeof periodKey==='function')?periodKey('weekly'):'W0'; if(!S.coreConv||S.coreConv.week!==wk){ S.coreConv={week:wk,used:0,bossUsed:0}; } if(typeof S.coreConv.used!=='number')S.coreConv.used=0; if(typeof S.coreConv.bossUsed!=='number')S.coreConv.bossUsed=0; return S.coreConv; }
 function convWeeklyBonus(){ return Math.max(0, TUNE.convWeeklyBonus||0); }
 function convRates(b){ return b?{d:TUNE.convBossRateDust||200,c:TUNE.convBossRateCrystal||40,s:TUNE.convBossRateSpark||25}:{d:TUNE.convRateDust||25,c:TUNE.convRateCrystal||5,s:TUNE.convRateSpark||3}; }
-function convFragsAvail(b){ var r=convRates(b); var us=(TUNE.convUseSparks?1:0); return Math.floor((S.dust||0)/r.d)+(us?Math.floor((S.sparks||0)/r.s):0); }
+/* v2.195: core minting draws only on dust OVERFLOW above the wealth floor (25% of 14-day peak),
+   same protection the anvil uses — so auto-ranking can never strip the dust reserve. */
+function convUsableDust(){ var f=0; try{ if(typeof ecoFloor==='function') f=ecoFloor('d'); }catch(e){} return Math.max(0,(S.dust||0)-f); }
+function convFragsAvail(b){ var r=convRates(b); var us=(TUNE.convUseSparks?1:0); return Math.floor(convUsableDust()/r.d)+(us?Math.floor((S.sparks||0)/r.s):0); }
 function convCoresAvailable(b){ if(!TUNE.convEnabled)return 0; if(b&&!TUNE.convBossEnabled)return 0; var st=convWeekState(); var _reps=ecoWeekReps(); var cap=b?((TUNE.convBossCapBase||0)+(TUNE.convBossCapPerDomain||0)*domainsHitThisWeek()+(TUNE.convBossCapPerRep||0)*_reps):((TUNE.convCoreCapBase||0)+(TUNE.convCoreCapPerDomain||0)*domainsHitThisWeek()+(TUNE.convCoreCapPerRep||0)*_reps+convWeeklyBonus()); cap=Math.floor(cap); var used=b?(st.bossUsed||0):(st.used||0); var byCap=Math.max(0,cap-used); var fpc=TUNE.convFragPerCore||100; var byStock=Math.floor(convFragsAvail(b)/fpc); return Math.max(0,Math.min(byCap,byStock)); }
 function heroCoreHeadroom(){ return (S.heroCores||0)+convCoresAvailable(false); }
 function bossCoreHeadroom(){ return (S.bossCores||0)+convCoresAvailable(true); }
-function convMint(need,b){ if(!TUNE.convEnabled)return 0; if(b&&!TUNE.convBossEnabled)return 0; var tgt=b?'bossCores':'heroCores'; var have=(S[tgt]||0); if(have>=need)return 0; var want=need-have; var mint=Math.min(want,convCoresAvailable(b)); if(mint<=0)return 0; var st=convWeekState(); var fpc=TUNE.convFragPerCore||100; var r=convRates(b); var us=(TUNE.convUseSparks?1:0); var frags=mint*fpc; var takeS=us?Math.min(frags,Math.floor((S.sparks||0)/r.s)):0; if(takeS>0){ S.sparks=(S.sparks||0)-takeS*r.s; frags-=takeS; } if(frags>0){ var takeD=Math.min(frags,Math.floor((S.dust||0)/r.d)); S.dust=(S.dust||0)-takeD*r.d; frags-=takeD; } S[tgt]=(S[tgt]||0)+mint; if(b)st.bossUsed=(st.bossUsed||0)+mint; else st.used=(st.used||0)+mint; return mint; }
+function convMint(need,b){ if(!TUNE.convEnabled)return 0; if(b&&!TUNE.convBossEnabled)return 0; var tgt=b?'bossCores':'heroCores'; var have=(S[tgt]||0); if(have>=need)return 0; var want=need-have; var mint=Math.min(want,convCoresAvailable(b)); if(mint<=0)return 0; var st=convWeekState(); var fpc=TUNE.convFragPerCore||100; var r=convRates(b); var us=(TUNE.convUseSparks?1:0); var frags=mint*fpc; var takeS=us?Math.min(frags,Math.floor((S.sparks||0)/r.s)):0; if(takeS>0){ S.sparks=(S.sparks||0)-takeS*r.s; frags-=takeS; } if(frags>0){ var takeD=Math.min(frags,Math.floor(convUsableDust()/r.d)); /* v2.195: never below the dust wealth floor */ S.dust=(S.dust||0)-takeD*r.d; frags-=takeD; } S[tgt]=(S[tgt]||0)+mint; if(b)st.bossUsed=(st.bossUsed||0)+mint; else st.used=(st.used||0)+mint; return mint; }
 function convMintForRank(r){ if(!r)return; var mh=convMint(r.cores||0,false); var mb=(r.boss?convMint(r.boss,true):0); var parts=[]; if(mh>0)parts.push('+'+mh+' \u25C8'); if(mb>0)parts.push('+'+mb+' \u25C6'); if(parts.length&&typeof toast==='function')toast('Reforged oversupply \u2192 '+parts.join(' ')); }
 /* v2.188.0: heroCoreHeadroom() and bossCoreHeadroom() each assume the FULL dust/spark stock is
    available to them, but convMint drains a shared pool \u2014 so a rank-up that needs both hero AND
@@ -1111,7 +1118,7 @@ function walletHTML(extra){ const l=typeof ensureChargeLedger==='function'?ensur
     ['💤','Idle/hr','+'+afkGoldRate()+'⦿','#ffcf5a'],
     ['⦿','Gold',S.gold||0,'#ffcf5a'],
     ['◆','Crystals',S.crystals||0,'#8bd0ff'],
-    ['🎟','Tickets',(S.summonTickets||0)+' · '+(S.ticketShards||0)+'/10','#5a8bff'],
+    ...((typeof ownedCount==='function'&&S.heroes&&ownedCount()>=S.heroes.length)?[]:[['🎟','Tickets',(S.summonTickets||0)+' · '+(S.ticketShards||0)+'/10','#5a8bff']]), /* v2.195: collection complete — tickets retired */
     ['◈','Hero Cores',S.heroCores||0,'#46d92e'],
     ['◆','Boss Cores',S.bossCores||0,'#c08bff'],
     ['◆½','Boss Frags',(S.bossFrags||0)+'/10','#c8a0ff'],
@@ -2680,7 +2687,7 @@ function getClashPatternIndexForStage(stage){ stage=Math.max(1,Math.min(80,Math.
 function getClashChapterData(chapter){ ensureClashState(); var ch=chapter||S.clash.chapter, key=ch+':'+((S.clash&&S.clash.seed)||''); var c=(getClashChapterData.__cache=getClashChapterData.__cache||{}); if(!c[key]) c[key]=generateClashChapter(ch,S.clash.seed); return c[key]; }
 function clashStageKey(chapter,stage){ return chapter+'-'+stage; }
 function clashIsFirstClear(chapter,stage){ ensureClashState(); return !S.clash.clears[clashStageKey(chapter,stage)]; }
-function getClashRewardPreview(chapter,stage,kind,isFirstClear){ const globalStage=(chapter-1)*80+stage; let scale=Math.pow(1.025,globalStage-1); /* v2.107 reward soft-cap: early game untouched (<1000x); beyond that, growth turns logarithmic so deep chapters still trend up but stay bounded and integer-safe (no overflow/Infinity/save corruption) */ var _RWSOFT=1000; if(scale>_RWSOFT) scale=_RWSOFT*(1+Math.log(scale/_RWSOFT)); var _T=(typeof TUNE!=='undefined')?TUNE:{}; let gold=Math.round(25*scale*(_T.clashGoldMult!=null?_T.clashGoldMult:0.12)), dust=Math.round(8*scale*(_T.clashDustMult!=null?_T.clashDustMult:0.25)); let bond=Math.round((_T.clashBondBase!=null?_T.clashBondBase:10)+globalStage*(_T.clashBondPerStage!=null?_T.clashBondPerStage:1.2)); let stones=Math.round((_T.clashStoneBase!=null?_T.clashStoneBase:2)+globalStage*(_T.clashStonePerStage!=null?_T.clashStonePerStage:0.025)); let extra=[]; if(kind==='elite'){ gold=Math.round(gold*1.5); dust=Math.round(dust*1.5); bond=Math.round(bond*1.25); stones=Math.round(stones*1.5); extra.push('elite cache'); } if(kind==='boss'){ gold=Math.round(gold*3); dust=Math.round(dust*3); bond=Math.round(bond*2); stones=Math.round(stones*2); extra.push('1 ticket shard','1 boss core'); } if(kind==='chapterBoss'){ gold=Math.round(gold*5); dust=Math.round(dust*5); bond=Math.round(bond*3); stones=Math.round(stones*3); extra.push('3 ticket shards','3 boss cores','premium chest'); } if(!isFirstClear){ const rm=(typeof TUNE!=='undefined'&&TUNE.clashReplayRewardMult)||.2; gold=Math.round(gold*rm); dust=Math.round(dust*rm); bond=Math.round(bond*rm); stones=Math.round(stones*rm); extra=['replay rewards']; } return {gold,dust,bondXp:bond,stones,extra}; }
+function getClashRewardPreview(chapter,stage,kind,isFirstClear){ const globalStage=(chapter-1)*80+stage; /* v2.195: compute in LOG SPACE — Math.pow(1.025, 30000+) overflows to Infinity BEFORE the v2.107 soft cap can apply, poisoning gold/dust (simulated 3-year run reproduced it). Same curve, overflow-proof. */ var _RWSOFT=1000, _lg=(globalStage-1)*Math.log(1.025), _lgSoft=Math.log(_RWSOFT); let scale=(_lg<=_lgSoft)?Math.exp(_lg):_RWSOFT*(1+(_lg-_lgSoft)); var _T=(typeof TUNE!=='undefined')?TUNE:{}; let gold=Math.round(25*scale*(_T.clashGoldMult!=null?_T.clashGoldMult:0.12)), dust=Math.round(8*scale*(_T.clashDustMult!=null?_T.clashDustMult:0.25)); let bond=Math.round((_T.clashBondBase!=null?_T.clashBondBase:10)+globalStage*(_T.clashBondPerStage!=null?_T.clashBondPerStage:1.2)); let stones=Math.round((_T.clashStoneBase!=null?_T.clashStoneBase:2)+globalStage*(_T.clashStonePerStage!=null?_T.clashStonePerStage:0.025)); let extra=[]; if(kind==='elite'){ gold=Math.round(gold*1.5); dust=Math.round(dust*1.5); bond=Math.round(bond*1.25); stones=Math.round(stones*1.5); extra.push('elite cache'); } if(kind==='boss'){ gold=Math.round(gold*3); dust=Math.round(dust*3); bond=Math.round(bond*2); stones=Math.round(stones*2); extra.push('1 ticket shard','1 boss core'); } if(kind==='chapterBoss'){ gold=Math.round(gold*5); dust=Math.round(dust*5); bond=Math.round(bond*3); stones=Math.round(stones*3); extra.push('3 ticket shards','3 boss cores','premium chest'); } if(!isFirstClear){ const rm=(typeof TUNE!=='undefined'&&TUNE.clashReplayRewardMult)||.2; gold=Math.round(gold*rm); dust=Math.round(dust*rm); bond=Math.round(bond*rm); stones=Math.round(stones*rm); extra=['replay rewards']; } return {gold,dust,bondXp:bond,stones,extra}; }
 window.generateClashChapter=generateClashChapter;
 window.getClashStageKind=getClashStageKind;
 window.getClashPatternIndexForStage=getClashPatternIndexForStage;
@@ -2691,7 +2698,7 @@ window.getClashRewardPreview=getClashRewardPreview;
 /* ===== The Forge — account-wide domain power from habits (Phase 1: schema+faucet) ===== */
 const FORGE_TUNE={ xpByDiff:{easy:1,med:2,hard:3}, dailyCapPerDomain:18, sparkEvery:10, sparkPerMilestone:1, costBase:8, costGrowth:1.10, bonusPerLevel:{ faith:0.003, fitness:0.003, discipline:0.001, hobbies:0.003, fatherhood:0.0015, marriage:0.005, work:0.004, home:0.002 } };
 function forgeLvCost(lv){ return Math.max(1,Math.round(FORGE_TUNE.costBase*Math.pow(FORGE_TUNE.costGrowth,Math.max(0,lv)))); }
-function forgeDailyCap(){ try{ var d=S&&S.dev; if(d&&typeof d.forgeCap==='number'&&isFinite(d.forgeCap)&&d.forgeCap>0) return d.forgeCap; }catch(e){} return FORGE_TUNE.dailyCapPerDomain; }
+function forgeDailyCap(){ try{ var d=S&&S.dev; if(d&&d.forgeCap===0) return Infinity; /* v2.190.0: 0 = uncapped */ if(d&&typeof d.forgeCap==='number'&&isFinite(d.forgeCap)&&d.forgeCap>0) return d.forgeCap; }catch(e){} return FORGE_TUNE.dailyCapPerDomain; }
 function forgeSparkEvery(){ try{ var d=S&&S.dev; if(d&&typeof d.forgeSparkEvery==='number'&&isFinite(d.forgeSparkEvery)&&d.forgeSparkEvery>=1) return d.forgeSparkEvery; }catch(e){} return (FORGE_TUNE.sparkEvery||0); }
 function forgeSparkPerMilestone(){ try{ var d=S&&S.dev; if(d&&typeof d.forgeSparkPer==='number'&&isFinite(d.forgeSparkPer)&&d.forgeSparkPer>=0) return d.forgeSparkPer; }catch(e){} return (FORGE_TUNE.sparkPerMilestone||0); }
 function devSetForgeSparkEvery(v){ var n=Math.round(+v); if(!isFinite(n)||n<1) n=1; if(n>50) n=50; S.dev=S.dev||{}; S.dev.forgeSparkEvery=n; if(typeof save==='function')save(); if(typeof render==='function')render(); }
@@ -2742,7 +2749,7 @@ function forgeCumToLevel(L){ var x=0; for(var i=0;i<L;i++) x+=forgeLvCost(i); re
 function forgeTotalXp(domain){ var t=(S.forge&&S.forge.domains&&S.forge.domains[domain])||{xp:0,lv:0}; return forgeCumToLevel(t.lv||0)+(t.xp||0); }
 function forgePace(domain){ try{ var H=(S.forge&&S.forge.hist)||[]; var ds=H.filter(function(e){return e&&e.xp&&typeof e.xp[domain]==='number';}); if(ds.length>=2){ var sm=0; ds.forEach(function(e){sm+=e.xp[domain]||0;}); return {rate:sm/ds.length, src:ds.length+'-day avg'}; } var today=(S.forge&&S.forge.dayXp&&S.forge.dayXp[domain])||0; if(today>0) return {rate:today, src:'today so far'}; if(ds.length===1) return {rate:ds[0].xp[domain]||0, src:'1-day'}; }catch(e){} return {rate:0, src:'no recent activity'}; }
 function forgeDaysToTier(domain,tier){ var need=prestigeForgeReqFor(tier); var cur=forgeLevelOf(domain); if(cur>=need) return 0; var pr=forgePace(domain).rate; if(!pr||pr<=0) return Infinity; return Math.ceil((forgeCumToLevel(need)-forgeTotalXp(domain))/pr); }
-function devSetForgeCap(v){ var n=Math.round(+v); if(!isFinite(n)||n<1) n=1; if(n>500) n=500; S.dev=S.dev||{}; S.dev.forgeCap=n; if(typeof save==='function')save(); if(typeof render==='function')render(); }
+function devSetForgeCap(v){ var n=Math.round(+v); if(!isFinite(n)||n<0) n=0; /* v2.190.0: 500 ceiling removed — any value allowed, 0 = uncapped */ S.dev=S.dev||{}; S.dev.forgeCap=n; if(typeof save==='function')save(); if(typeof render==='function')render(); }
 function devSetBreadthMode(m){ S.dev=S.dev||{}; S.dev.breadthMode=(m==='off'||m==='strict')?m:'normal'; if(typeof save==='function')save(); if(typeof render==='function')render(); }
 function forgeXpFor(diff){ var base=(FORGE_TUNE.xpByDiff&&FORGE_TUNE.xpByDiff[diff]); if(typeof base!=='number') base=(FORGE_TUNE.xpByDiff&&FORGE_TUNE.xpByDiff.med)||1; try{ var d=S&&S.dev&&S.dev.forgeXp; if(d&&typeof d[diff]==='number'&&isFinite(d[diff])&&d[diff]>=0) return d[diff]; }catch(e){} return base; }
 function devSetForgeXp(diff,v){ if(diff!=='easy'&&diff!=='med'&&diff!=='hard') return; var n=Math.round(+v); if(!isFinite(n)||n<0) n=0; if(n>500) n=500; S.dev=S.dev||{}; S.dev.forgeXp=S.dev.forgeXp||{}; S.dev.forgeXp[diff]=n; if(typeof save==='function')save(); if(typeof render==='function')render(); }
@@ -2775,7 +2782,7 @@ function domainReadinessHTML(){
     dev='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">'
       +'<div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:7px">\u2699 Dev tuning</div>'
       +'<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
-      +'<label style="font-size:11px;font-weight:700">Forge cap/day <input type="number" min="1" max="500" value="'+cap+'" onchange="devSetForgeCap(this.value)" style="width:62px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label>'
+      +'<label style="font-size:11px;font-weight:700">Forge cap/day <span style="color:var(--muted)">(0 = ∞)</span> <input type="number" min="0" value="'+(isFinite(cap)?cap:0)+'" onchange="devSetForgeCap(this.value)" style="width:62px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label>'
       +'<label style="font-size:11px;font-weight:700">Breadth gate <select onchange="devSetBreadthMode(this.value)" style="padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800">'
       +['off','normal','strict'].map(function(o){return '<option value="'+o+'"'+(bm===o?' selected':'')+'>'+o+'</option>';}).join('')
       +'</select></label>'
@@ -2836,7 +2843,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.189.0-auto-everything';
+const APP_BUILD='v2.195.3-cycles-and-care';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -7585,6 +7592,14 @@ function startTicker(){
     if(usedH>0){
       const mom=momentumMult();
       gainExp(usedH*expRate()*mom);
+      /* v2.190.1: the ticker consumes lastSeen every 1.5s, so the Autopilot Economy sinks
+         (Anvil, Blessings, roster floor, ascension) were ONLY fed by boot-time accrueOffline —
+         time with the app open (or resumed from background) was silently stolen from them.
+         An anvil could sit stalled for weeks with billions of gold/dust. Tick them live too. */
+      try{ if(typeof rosterFloorTick==='function') rosterFloorTick(usedH); }catch(e){}
+      try{ if(typeof anvilTick==='function') anvilTick(usedH); }catch(e){}
+      try{ if(typeof blessTick==='function') blessTick(usedH); }catch(e){}
+      try{ if(typeof ascTick==='function') ascTick(); }catch(e){}
       renderHUD(); save();
     }
     S.lastSeen=now;
@@ -9083,8 +9098,20 @@ function anvilArchivePanel(){
   var lv=(S.anvilLevel||0);
   var pct=Math.round(lv*(TUNE.anvilPowerPerLevel||0)*100);
   var cap=Math.floor(lv*(TUNE.anvilCapPerLevel||0));
-  var nc=(typeof anvilLevelCost==='function')?anvilLevelCost(lv):{gold:0,dust:0};
-  var fmt=function(n){ try{return (n||0).toLocaleString();}catch(e){return ''+(n||0);} };
+  var fmt=function(n){ n=Math.round(n||0); if(n>=1e9) return (n/1e9).toFixed(2)+'B'; if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(0)+'k'; return ''+n; };
+  /* v2.191.0: show the REAL floating economy \u2014 the old anvilLevelCost fixed formula was
+     misleading. Price floats at ecoFloatFrac of the larger overflow; budget drips at
+     ecoDrainPct/day of each overflow \u00d7 habit amp. */
+  var line='';
+  try{
+    var dp=(TUNE.ecoDrainPct!=null?TUNE.ecoDrainPct:0.15), ff=(TUNE.ecoFloatFrac!=null?TUNE.ecoFloatFrac:0.02), amp=ecoHabitAmp();
+    var fG=ecoFloor('g'), fD=ecoFloor('d');
+    var ovG=Math.max(0,(S.gold||0)-fG), ovD=Math.max(0,(S.dust||0)-fD);
+    var price=Math.max((TUNE.ecoSinkMinGold||25000), ff*Math.max(ovG,ovD,1));
+    var perDay=(price>0)?Math.max(0,Math.min(ovG*dp*amp/price, ovD*dp*amp/(price*0.6))):0;
+    line='<div style="font-size:11px;color:#9a8c78;margin-top:8px;text-align:center">Next level: '+fmt(price)+' \u29bf + '+fmt(price*0.6)+' \u2756 \u00b7 draining ~'+fmt(ovG*dp*amp)+' \u29bf/day \u2192 ~'+(Math.round(perDay*10)/10)+' lv/day at \u00d7'+amp.toFixed(2)+' habit amp</div>'
+      +((ovG<=0||ovD<=0)?'<div style="font-size:11px;color:#ffb01f;margin-top:4px;text-align:center">\u26a0 '+(ovG<=0?'Gold':'Dust')+' is at its wealth floor \u2014 the anvil pauses until it rises.</div>':'');
+  }catch(e){ line=''; }
   return '<div style="margin:14px 0;padding:14px 16px;border:1px solid #ffffff1a;border-radius:14px;background:linear-gradient(135deg,#1b1512,#241a12)">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
     +'<div style="font-weight:900;color:#ffcf8a;letter-spacing:.3px">\u2692 The Forge Anvil</div>'
@@ -9094,7 +9121,7 @@ function anvilArchivePanel(){
     +'<div style="flex:1;text-align:center;background:#ffffff08;border-radius:10px;padding:8px 4px"><div style="font-weight:900;color:#7dd3fc;font-size:16px">+'+pct+'%</div><div style="font-size:10px;color:#9ab">roster power</div></div>'
     +'<div style="flex:1;text-align:center;background:#ffffff08;border-radius:10px;padding:8px 4px"><div style="font-weight:900;color:#a7f3d0;font-size:16px">+'+cap+'</div><div style="font-size:10px;color:#9ab">gear level cap</div></div>'
     +'</div>'
-    +'<div style="font-size:11px;color:#9a8c78;margin-top:8px;text-align:center">Next level: '+fmt(nc.gold)+' \u29bf \u00b7 '+fmt(nc.dust)+' \u2756</div>'
+    +line
     +'</div>';
 }
 function renderGrowth(v){
@@ -11209,7 +11236,7 @@ function lq64PatchDeveloperTools(){
   try{
     if(!document.getElementById('convDevPanel')){
       var cp=document.createElement('details'); cp.id='convDevPanel'; cp.className='devGroup'; cp.style.cssText='margin-top:10px';
-      var CK=[['convEnabled','Enabled (1/0)'],['convWeeklyCoreCap','Weekly hero-core cap'],['convWeeklyBonus','Weekly bonus cores'],['convFragPerCore','Frags per core'],['convRateDust','Dust per frag'],['convRateCrystal','Crystal per frag'],['convRateSpark','Spark per frag'],['convUseSparks','Use sparks (1/0)'],['convBossEnabled','Convert boss cores (1/0)'],['convBossCapBase','Boss cap: base/week'],['convBossCapPerDomain','Boss cap: + per domain hit'],['convBossCapPerRep','Boss cap: + per habit rep'],['convCoreCapBase','Hero-core cap: base/week'],['convCoreCapPerDomain','Hero-core cap: + per domain'],['convCoreCapPerRep','Hero-core cap: + per habit rep'],['ecoDrainPct','Autopilot: overflow drain %/day'],['ecoFloorFrac','Autopilot: floor (frac of 14d peak)'],['ecoFloorGoldMin','Autopilot: gold floor min'],['ecoFloorDustMin','Autopilot: dust floor min'],['ecoFloorCryMin','Autopilot: kyber floor min'],['ecoFloatFrac','Autopilot: sink price (frac of overflow)'],['convWeeklyBossCap','Weekly boss-core cap (legacy)'],['convBossRateDust','Dust per boss frag'],['convBossRateCrystal','Crystal per boss frag'],['convBossRateSpark','Spark per boss frag'],['floorRiseBase','Floor: base levels/hr'],['floorRisePerDomain','Floor: +levels/hr per domain'],['floorCoreReserve','Floor: hero-core reserve'],['floorCorePerLevel','Floor: hero-cores per level'],['floorCoreMaxPerHr','Floor: max core-accel levels/hr'],['prestigeCapBase','Prestige cap: base/week'],['prestigeCapPerDomain','Prestige cap: + per domain hit'],['prestigeCapPerRep','Prestige cap: + per habit rep this week'],['prestigeUncapped','Weekly prestige cap OFF (1=uncapped, 0=on)'],['clashCapPerChapter','Clash: +enemy cap per chapter (0=flat, try 0.15)'],['anvilRiseBase','Anvil: base levels/hr'],['anvilRisePerDomain','Anvil: +levels/hr per domain'],['anvilMaxPerHr','Anvil: max levels/hr'],['anvilCostGrowth','Anvil: cost growth/level'],['anvilGoldBase','Anvil: base gold/level'],['anvilDustBase','Anvil: base dust/level'],['anvilPowerPerLevel','Anvil: +power% per level'],['anvilCapPerLevel','Anvil: +gear-level cap per level'],['blessMaxPerHr','Blessings: levels/hr cap'],['blessCostBase','Blessings: base crystal cost'],['blessCostGrowth','Blessings: cost growth'],['blessPowerPerLevel','Blessings: +power% per level'],['ascShardBase','Ascension: base shard cost'],['ascPowerPerTier','Ascension: +power% per tier'],['ascMaxTier','Ascension: max tier']];
+      var CK=[['convEnabled','Enabled (1/0)'],['convWeeklyCoreCap','Weekly hero-core cap'],['convWeeklyBonus','Weekly bonus cores'],['convFragPerCore','Frags per core'],['convRateDust','Dust per frag'],['convRateCrystal','Crystal per frag'],['convRateSpark','Spark per frag'],['convUseSparks','Use sparks (1/0)'],['convBossEnabled','Convert boss cores (1/0)'],['convBossCapBase','Boss cap: base/week'],['convBossCapPerDomain','Boss cap: + per domain hit'],['convBossCapPerRep','Boss cap: + per habit rep'],['convCoreCapBase','Hero-core cap: base/week'],['convCoreCapPerDomain','Hero-core cap: + per domain'],['convCoreCapPerRep','Hero-core cap: + per habit rep'],['ecoDrainPct','Autopilot: overflow drain %/day'],['ecoFloorFrac','Autopilot: floor (frac of 14d peak)'],['ecoFloorGoldMin','Autopilot: gold floor min'],['ecoFloorDustMin','Autopilot: dust floor min'],['ecoFloorCryMin','Autopilot: kyber floor min'],['ecoFloatFrac','Autopilot: sink price (frac of overflow)'],['convWeeklyBossCap','Weekly boss-core cap (legacy)'],['convBossRateDust','Dust per boss frag'],['convBossRateCrystal','Crystal per boss frag'],['convBossRateSpark','Spark per boss frag'],['floorRiseBase','Floor: base levels/hr'],['floorRisePerDomain','Floor: +levels/hr per domain'],['floorCoreReserve','Floor: hero-core reserve'],['floorCorePerLevel','Floor: hero-cores per level'],['floorCoreMaxPerHr','Floor: max core-accel levels/hr'],['prestigeCapBase','Prestige cap: base/week'],['prestigeCapPerDomain','Prestige cap: + per domain hit'],['prestigeCapPerRep','Prestige cap: + per habit rep this week'],['prestigeUncapped','Weekly prestige cap OFF (1=uncapped, 0=on)'],['clashCapPerChapter','Clash: +enemy cap per chapter (default 0.5, 0=flat)'],['clashWallTau','Clash: wall ramp chapters (boost maxes at cap×tau; default 10)'],['anvilRiseBase','Anvil: base levels/hr'],['anvilRisePerDomain','Anvil: +levels/hr per domain'],['anvilMaxPerHr','Anvil: max levels/hr'],['anvilCostGrowth','Anvil: cost growth/level'],['anvilGoldBase','Anvil: base gold/level'],['anvilDustBase','Anvil: base dust/level'],['anvilPowerPerLevel','Anvil: +power% per level'],['anvilCapPerLevel','Anvil: +gear-level cap per level'],['blessMaxPerHr','Blessings: levels/hr cap'],['blessCostBase','Blessings: base crystal cost'],['blessCostGrowth','Blessings: cost growth'],['blessPowerPerLevel','Blessings: +power% per level'],['ascShardBase','Ascension: base shard cost'],['ascPowerPerTier','Ascension: +power% per tier'],['ascMaxTier','Ascension: max tier']];
       var rowsH=CK.map(function(k){ return '<div style="display:flex;justify-content:space-between;gap:8px;margin:3px 0;align-items:center"><label style="font-size:12px;color:#bcd">'+k[1]+'</label><input id="dev_'+k[0]+'" type="number" step="0.01" style="width:96px" value="'+(TUNE[k[0]]!=null?TUNE[k[0]]:'')+'"></div>'; }).join('');
       var st=(typeof convWeekState==='function')?convWeekState():{used:0,bossUsed:0};
       cp.innerHTML='<summary>Currency \u2192 Core Conversion</summary><div class="devGroupBody"><div style="font-size:11px;color:#9ab;margin:2px 0 8px">Auto-drains dust/crystals/sparks into cores at rank-up, capped weekly. Used this week: '+(st.used||0)+' \u25C8 / '+(st.bossUsed||0)+' \u25C6</div>'+'<div style="font-size:11px;color:#cdbcff;margin:2px 0 8px">Prestige throttle \u2014 domains hit: '+domainsHitThisWeek()+' \u00b7 weekly cycle cap: '+(isFinite(prestigeWeeklyCap())?prestigeWeeklyCap():'\u221e uncapped')+' \u00b7 used: '+(prestigeWeekState().used||0)+'</div>'+'<div style="font-size:11px;color:#9dd;margin:2px 0 8px">Blessings: '+Object.keys(blessState()).map(function(k){return k+' L'+blessLevel(k);}).join(', ')+(Object.keys(blessState()).length?'':'none yet')+' \u00b7 Asc shards: '+(S.ascendantShards||0)+'</div>'+'<div style="font-size:11px;color:#ffcf8a;margin:2px 0 8px">Anvil: L'+(S.anvilLevel||0)+' \u00b7 +'+Math.round((S.anvilLevel||0)*(TUNE.anvilPowerPerLevel||0)*100)+'% power'+' \u00b7 gear cap +'+Math.floor((S.anvilLevel||0)*(TUNE.anvilCapPerLevel||0))+'</div>'+rowsH+'<div style="display:flex;gap:8px;margin-top:8px"><button class="go" id="convApply" style="flex:1">Apply</button><button class="go" id="convReset" style="flex:1;background:#3a2b2b">Reset defaults</button></div></div>';
@@ -11422,7 +11449,7 @@ function v166InjectStyles(){
 function v166EnsureAutomation(){
   const a=ensureAppSettings();
   if(!a.automation||typeof a.automation!=='object') a.automation={};
-  const d={autoSalvageCommons:true,autoEquipClearUpgrades:true,autoCollapseDone:true,dailyAutoBackup:true,autoTomorrowFocus:true,quietReadyStates:true};
+  const d={autoSalvageCommons:true,autoEquipClearUpgrades:true,autoCollapseDone:true,dailyAutoBackup:true,autoTomorrowFocus:true,quietReadyStates:true,autoRankUp:true};
   Object.keys(d).forEach(k=>{ if(a.automation[k]===undefined) a.automation[k]=d[k]; });
   return a.automation;
 }
@@ -11547,7 +11574,7 @@ renderHome=function(v){
   v166InjectStyles(); v166AutoTomorrowFocus(); __renderHome_v166.apply(this,arguments);
   try{
     const target=document.getElementById('nextCard')||v.querySelector('.stagecard');
-    if(target&&!v.querySelector('.v166AutoPanel')){ target.insertAdjacentHTML('afterend',v166AutomationPanelHTML()); v166BindAutomationPanel(); }
+    if(target&&!v.querySelector('.v166AutoPanel')&&!window.__v2195Consolidated){ target.insertAdjacentHTML('afterend',v166AutomationPanelHTML()); v166BindAutomationPanel(); } /* v2.195: home panel retired — cleanup lives in Squadron Management, autopilot runs itself */
     const dn=document.getElementById('doNext'); if(dn) dn.textContent='Start next real action';
   }catch(e){}
 };
@@ -11571,6 +11598,7 @@ renderCampaign=function(v){
   }catch(e){}
 };
 function v166InjectSettingsPanel(){
+  if(window.__v2195Consolidated) return; /* v2.195: folded into the consolidated settings panel */
   v166InjectStyles();
   const sheet=document.querySelector('#setScrim .sheet'); if(!sheet||sheet.querySelector('.v166Settings')) return;
   const anchor=document.getElementById('compactSeg')||document.getElementById('motionSeg');
@@ -11642,6 +11670,7 @@ function v167Apply(){
 const __v167_applyAppSettings = typeof applyAppSettings==='function' ? applyAppSettings : null;
 if(__v167_applyAppSettings){ applyAppSettings=function(){ const r=__v167_applyAppSettings.apply(this,arguments); v167Apply(); return r; }; }
 function v167InjectSettingsPanel(){
+  if(window.__v2195Consolidated) return; /* v2.195: folded into the consolidated settings panel */
   v167InjectStyles();
   const sheet=document.querySelector('#setScrim .sheet'); if(!sheet||sheet.querySelector('.v167Settings')) return;
   const anchor=document.querySelector('.v166Settings')||document.getElementById('compactSeg')||document.getElementById('motionSeg');
@@ -11726,7 +11755,7 @@ if(__v168_walletHTML){
         ['⦿','Gold',v168Num(S.gold),'#ffcf5a',true],
         ['❖','Dust',v168Num(S.dust),'#7ee787',true],
         ['◆','Crystals',v168Num(S.crystals),'#8bd0ff',false],
-        ['🎟','Summons',(S.summonTickets||0)+' · '+(S.ticketShards||0)+'/10','#f7c531',false],
+        ...((typeof ownedCount==='function'&&S.heroes&&ownedCount()>=S.heroes.length)?[]:[['🎟','Summons',(S.summonTickets||0)+' · '+(S.ticketShards||0)+'/10','#f7c531',false]]), /* v2.195: collection complete */
         ['◈','Cores',v168Num(S.heroCores),'#5fe0c8',false]
       ];
       if(advanced>0 || !e.hideBossCores) rows.push(['◇','Rare Mats',v168Num(advanced),'#cdbcff',false]);
@@ -11770,6 +11799,7 @@ function v168EconomyGuideHTML(){ return '<div class="v168EconomyGuide">'+[
   ['⦿','Gold','Spend on hero levels and fast power growth.'],['❖','Dust','Spend on gear improvement.'],['◈','Cores','Spend only when rank-ups ask for them.'],['◇','Rare Mats','Stones, Sparks, and Prime Iso-8 are advanced upgrade materials.']
 ].map(r=>'<div class="row"><div class="ic">'+r[0]+'</div><div><b>'+r[1]+'</b><span>'+r[2]+'</span></div></div>').join('')+'</div>'; }
 function v168InjectSettingsPanel(){
+  if(window.__v2195Consolidated) return; /* v2.195: folded into the consolidated settings panel */
   v168InjectStyles();
   const sheet=document.querySelector('#setScrim .sheet'); if(!sheet||sheet.querySelector('.v168EconomySettings')) return;
   const anchor=document.querySelector('.v167Settings')||document.querySelector('.v166Settings')||document.getElementById('compactSeg')||document.getElementById('motionSeg');
@@ -12193,6 +12223,7 @@ function v174Punch(h, wish){
 const __v171_showAway = showAway;
 showAway = function(){ const r=__v171_showAway.apply(this,arguments); try{ v171Feedback('reward'); }catch(e){} return r; };
 function v171InjectSettingsPanel(){
+  if(window.__v2195Consolidated) return; /* v2.195: folded into the consolidated settings panel */
   const sheet=document.querySelector('#setScrim .sheet'); if(!sheet||sheet.querySelector('.v171Settings')) return;
   const app=v171EnsureSettings();
   const anchor=document.querySelector('.v168EconomySettings')||document.querySelector('.v167Settings')||document.querySelector('.v166Settings')||document.getElementById('compactSeg')||document.getElementById('motionSeg');
@@ -16831,8 +16862,19 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   }
   function c7HeroStats(h,slot,pattern){ const role=c7Role(h), p=Math.max(1,powerOf(h)), laneType=slot.basic?null:(pattern[slot.typeKey||slot.lane]||null); let hp=Math.max(70,Math.round(hpOf(h)/22+p*.23)), atk=Math.max(9,Math.round(atkOf(h)*.85+p*.035)); if(role==='Tank'){hp=Math.round(hp*1.85);atk=Math.round(atk*.62);} if(role==='Melee DPS'){hp=Math.round(hp*1.22);atk=Math.round(atk*1.03);} if(role==='Ranged DPS'){hp=Math.round(hp*.90);atk=Math.round(atk*1.02);} if(role==='Support'){hp=Math.round(hp*.98);atk=Math.round(atk*.56);} if(role==='Healer'){hp=Math.round(hp*.94);atk=Math.round(atk*.45);} return {id:h.id,name:h.name,img:c7HeroPortraitImg(h),color:h.color,type:h.elementType,role,row:slot.row,lane:slot.lane,laneLabel:slot.laneLabel,basic:slot.basic,maxHp:hp,hp,atk,power:p,laneType,buffed:0,shield:0,acted:0}; }
   function c7LanePower(lane,heroes){ return heroes.filter(h=>h.lane===lane).reduce((s,h)=>s+(h.power||0),0); }
-  function c7ScaleCap(base){ var per=(typeof TUNE!=='undefined'&&TUNE.clashCapPerChapter!=null)?TUNE.clashCapPerChapter:0; var ch=(S&&S.clash&&S.clash.chapter)||1; return base+per*Math.max(0,ch-1); }
-  function c7EnemyStats(lane,type,wave,kind,boss){ const heroes=battle7?battle7.heroes:[], lanePower=Math.max(120,c7LanePower(lane==='all'?'center':lane,heroes)), gStage=((S.clash.chapter-1)*80+S.clash.stage), scale=Math.pow((TUNE&&TUNE.clashStageGrowth)||1.012,Math.max(0,gStage-1)), kindMult=kind==='chapterBoss'?1.65:kind==='boss'?1.28:kind==='elite'?1.12:1, waveMult=1+(wave-1)*.055, basicMult=type?1:.88, bossMinionHpSoft=(!boss&&(kind==='boss'||kind==='chapterBoss'))?.92:1; var chAtk=1+(((typeof TUNE!=='undefined'&&TUNE.clashCapPerChapter)||0)*0.4*Math.max(0,((S&&S.clash&&S.clash.chapter)||1)-1)); if(boss) return {maxHp:Math.round((lanePower*1.45+180)*kindMult*Math.min(c7ScaleCap(2.4),scale)*(kind==='chapterBoss'?1.25:1)*basicMult),atk:Math.round((lanePower*.018+10)*kindMult*waveMult*basicMult*chAtk)}; const countAdj=Math.max(1,heroes.filter(h=>h.lane===lane).length||4); return {maxHp:Math.round((lanePower/(countAdj*1.55)+34)*kindMult*waveMult*Math.min(c7ScaleCap(2.2),scale)*basicMult*bossMinionHpSoft),atk:Math.round((lanePower*.009+7)*kindMult*waveMult*basicMult*chAtk)}; }
+  /* v2.193.1: the per-chapter cap boost SATURATES instead of growing linearly forever.
+     Linear was a brick wall for deep saves (chapter 100 → ~52× HP, ~1000× ATK = unwinnable).
+     chEff = tau·(1-e^-((ch-1)/tau)) ramps like linear early, then levels off at tau chapters'
+     worth — so max boost = clashCapPerChapter × clashWallTau (default 0.5×8 = +4.0), which the
+     grid measured as the hard-but-possible zone. Deep chapters stay challenging, never bricked. */
+  function c7ChEff(){ var ch=(S&&S.clash&&S.clash.chapter)||1, tau=(typeof TUNE!=='undefined'&&TUNE.clashWallTau>0)?TUNE.clashWallTau:10; return tau*(1-Math.exp(-Math.max(0,ch-1)/tau)); }
+  function c7ScaleCap(base){ var per=(typeof TUNE!=='undefined'&&TUNE.clashCapPerChapter!=null)?TUNE.clashCapPerChapter:0; return base+per*c7ChEff(); }
+  /* v2.192.0: clashStageGrowth was silently neutered — the HP scale hit its ×2.2 cap by stage ~9
+     (clashCapPerChapter defaulted to 0, so the cap never rose) and enemy ATK ignored stage growth
+     entirely. Result: every stage past the first handful was identical difficulty, rubber-banded to
+     the player's own lane power. Now: the cap rises per chapter (default +0.2), and ATK gets its
+     own stage scale at 60% of the HP growth rate with a rising cap — deep chapters actually bite. */
+  function c7EnemyStats(lane,type,wave,kind,boss){ const heroes=battle7?battle7.heroes:[], lanePower=Math.max(120,c7LanePower(lane==='all'?'center':lane,heroes)), gStage=((S.clash.chapter-1)*80+S.clash.stage), growth=(TUNE&&TUNE.clashStageGrowth)||1.012, scale=Math.pow(growth,Math.max(0,gStage-1)), atkScale=Math.min(c7ScaleCap(1.6),Math.pow(growth,Math.max(0,gStage-1)*0.6)), kindMult=kind==='chapterBoss'?1.65:kind==='boss'?1.28:kind==='elite'?1.12:1, waveMult=1+(wave-1)*.055, basicMult=type?1:.88, bossMinionHpSoft=(!boss&&(kind==='boss'||kind==='chapterBoss'))?.92:1; var chAtk=1+(((typeof TUNE!=='undefined'&&TUNE.clashCapPerChapter)||0)*0.4*c7ChEff()); /* v2.193.1: saturating, not linear */ if(boss) return {maxHp:Math.round((lanePower*1.45+180)*kindMult*Math.min(c7ScaleCap(2.4),scale)*(kind==='chapterBoss'?1.25:1)*basicMult),atk:Math.round((lanePower*.018+10)*kindMult*waveMult*basicMult*chAtk*atkScale)}; const countAdj=Math.max(1,heroes.filter(h=>h.lane===lane).length||4); return {maxHp:Math.round((lanePower/(countAdj*1.55)+34)*kindMult*waveMult*Math.min(c7ScaleCap(2.2),scale)*basicMult*bossMinionHpSoft),atk:Math.round((lanePower*.009+7)*kindMult*waveMult*basicMult*chAtk*atkScale)}; }
   function c7EnemyName(type,boss){ if(boss) return (type||'Dread')+' Warlord'; if(!type) return 'Marauder'; return ({Flame:'Ember Fiend',Tide:'Tide Revenant',Grove:'Grove Stalker',Stone:'Stone Golem',Storm:'Storm Shade'})[type]||'Marauder'; }
   function c7EnemyRole(type,boss){ if(boss) return 'boss'; if(!type) return 'brute'; return ({Flame:'caster',Tide:'healer',Grove:'healer',Stone:'shieldbearer',Storm:'assassin'})[type]||'brute'; }
   function c7EnemyArt(type,boss,seed,name){
@@ -17418,19 +17460,26 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   // Rank up every owned hero at level cap that's affordable. Never auto-spends Sparks (premium).
   function rosterRankUpAll(){
     var owned=(S.heroes||[]).filter(function(h){return h&&h.owned;});
-    var ranked=0, sparkSkipped=0, spent={cores:0,gold:0,boss:0};
-    var cands=owned.filter(function(h){ var i=rankIdx(h); return i<RANKUP.length && (h.level||1)>=rankCap(h); })
-      .sort(function(a,b){ return rankIdx(a)-rankIdx(b) || powerOf(b)-powerOf(a); });
+    /* v2.190.0: Eternal ranks (the Spark-costing final rank) are now included — the button spends
+       Sparks for them and only skips a hero when Sparks run out. Prestige (New Cycles) is a
+       separate system this button never touches. Strongest heroes rank first so a limited Spark
+       stock goes to your best. */
+    var ranked=0, eternals=0, sparkShort=0, spent={cores:0,gold:0,boss:0,sparks:0};
+    var _pw={}; /* v2.195 perf: powerOf is expensive — compute once per candidate, not per sort comparison */
+    var cands=owned.filter(function(h){ var i=rankIdx(h); return i<RANKUP.length && (h.level||1)>=rankCap(h); });
+    cands.forEach(function(h){ _pw[h.id]=powerOf(h); });
+    cands.sort(function(a,b){ return rankIdx(a)-rankIdx(b) || _pw[b.id]-_pw[a.id]; });
     cands.forEach(function(h){ var i=rankIdx(h), r=RANKUP[i];
-      if(r.sparks){ sparkSkipped++; return; }
+      if(r.sparks&&(S.sparks||0)<r.sparks){ sparkShort++; return; }
       if(heroCoreHeadroom()>=(r.cores||0) && (S.gold||0)>=(r.gold||0) && bossCoreHeadroom()>=(r.boss||0)){
         if(!rankSpendSafe(r)) return; // v2.188.0: shared dust pool under-minted — skip, nothing spent
-        spent.cores+=(r.cores||0); spent.gold+=(r.gold||0); spent.boss+=(r.boss||0);
-        h.rank=i+1; applyLevels(h); ranked++;
+        spent.cores+=(r.cores||0); spent.gold+=(r.gold||0); spent.boss+=(r.boss||0); spent.sparks+=(r.sparks||0);
+        h.rank=i+1; applyLevels(h); ranked++; if(h.rank>=RANKUP.length) eternals++;
       }
     });
-    return {ranked:ranked, sparkSkipped:sparkSkipped, spent:spent};
+    return {ranked:ranked, eternals:eternals, sparkShort:sparkShort, spent:spent};
   }
+  window.rosterRankUpAll=rosterRankUpAll; // v2.195: exposed for the Autopilot sweep
 
   // Level up equipped gear across the whole roster (strongest first). Spends gold/dust/stones; bounded by gear max level.
   function rosterUpgradeGearAll(){
@@ -17440,8 +17489,9 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     return {n:n, promos:promos, heroes:heroes};
   }
 
-  function rmRankReady(){ return (S.heroes||[]).filter(function(h){ if(!h||!h.owned) return false; var i=rankIdx(h); if(i>=RANKUP.length) return false; if((h.level||1)<rankCap(h)) return false; var r=RANKUP[i]; if(r.sparks) return false; return (S.heroCores||0)>=(r.cores||0)&&(S.gold||0)>=(r.gold||0)&&(S.bossCores||0)>=(r.boss||0); }).length; }
-  function rmSparkBlocked(){ return (S.heroes||[]).filter(function(h){ if(!h||!h.owned) return false; var i=rankIdx(h); if(i>=RANKUP.length) return false; if((h.level||1)<rankCap(h)) return false; return !!RANKUP[i].sparks; }).length; }
+  function rmRankReady(){ return (S.heroes||[]).filter(function(h){ if(!h||!h.owned) return false; var i=rankIdx(h); if(i>=RANKUP.length) return false; if((h.level||1)<rankCap(h)) return false; var r=RANKUP[i]; return (S.heroCores||0)>=(r.cores||0)&&(S.gold||0)>=(r.gold||0)&&(S.bossCores||0)>=(r.boss||0)&&(S.sparks||0)>=(r.sparks||0); }).length; }
+  /* v2.190.0: how many Eternal candidates exceed the current Spark stock (they'll wait) */
+  function rmSparkBlocked(){ var need=(S.heroes||[]).filter(function(h){ if(!h||!h.owned) return false; var i=rankIdx(h); if(i>=RANKUP.length) return false; if((h.level||1)<rankCap(h)) return false; return !!RANKUP[i].sparks; }).length; return Math.max(0, need-(S.sparks||0)); }
 
   function rmNum(n){ return (typeof v168Num==='function')?v168Num(n):(''+n); }
 
@@ -17453,19 +17503,22 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       '<span>⦿ '+rmNum(S.gold||0)+'</span><span>❖ '+rmNum(S.dust||0)+'</span><span>◈ '+rmNum(S.heroCores||0)+'</span><span>◇ '+rmNum(S.stones||0)+'</span><span>◆ '+rmNum(S.bossCores||0)+'</span>'+
     '</div>';
     var msg=_rmMsg?('<div class="rmMsg">'+_rmMsg+'</div>'):'';
+    var bondLine=''; try{ if(typeof window.lqBondStats==='function'){ var _b=window.lqBondStats(); bondLine='<div style="font-size:11.5px;font-weight:900;color:#ff9bd7;margin:-3px 0 9px">💞 Bond +'+rmNum(_b.today)+' today · '+rmNum(_b.total)+' total</div>'; } }catch(e){}
     function btn(id,title,sub,scope){ return '<button class="rmAct" id="'+id+'"><div class="rmActTitle">'+title+(scope?' <span class="rmScope">'+scope+'</span>':'')+'</div><div class="rmActSub">'+sub+'</div></button>'; }
     return '<div class="rmSheet">'+
       '<h3>⚔ Roster Management</h3>'+
       '<div class="rmHead"><b>'+owned.length+'</b> heroes · <b>'+rmNum(totalPow)+'</b> total power</div>'+
-      wallet+msg+
+      wallet+bondLine+msg+
       '<div class="rmActs">'+
-        btn('rmRank','Rank up all eligible','Ranks up every hero at its level cap. Uses Cores, Gold, Boss Cores — never Sparks.', ready+' ready')+
+        btn('rmRank','Rank up all eligible','Ranks up every hero at its level cap — including the final Eternal rank, which spends Sparks. Never prestiges.', ready+' ready')+
         btn('rmUpgrade','Upgrade all gear','Levels up equipped gear across the whole roster (strongest first). Spends gold, dust, stones.','')+
         btn('rmEquip','Equip best gear → all','Assigns each hero the best available pieces from your inventory.','')+
         btn('rmSpread','Spread gear → raise floor','Fills empty slots across the roster — best for Siege & lockout modes that need depth.','')+
         btn('rmSalvage','Salvage junk gear → dust','Dusts unequipped gear matching your auto-salvage settings. Epic+, Ascendant, locked, and starred pieces are always protected.','')+
+        btn('rmCleanup','Smart cleanup — all of the above','One tap: equip best across roster, hand down spares, salvage the junk. Autopilot also runs this after battles.','')+
+        btn('rmPrestige','★ Prestige all ready','Begins a New Cycle for every hero meeting ALL requirements (Eternal at cap, forge tier, cohort, weekly allowance). Lossless at your settings — lowest stars first.', (function(){ try{ var n=(S.heroes||[]).filter(function(h){return h&&h.owned&&typeof canPrestige==='function'&&canPrestige(h);}).length; return n?(n+' ready'):''; }catch(e){ return ''; } })())+
       '</div>'+
-      (sparkB>0?'<div class="rmFoot">'+sparkB+' hero'+(sparkB===1?'':'s')+' at cap need Sparks to rank — do those manually so you control your Sparks.</div>':'')+
+      (sparkB>0?'<div class="rmFoot">Sparks won\'t cover every Eternal rank-up — '+sparkB+' hero'+(sparkB===1?'':'s')+' will wait until you earn more. Prestige is never automated.</div>':'')+
       '<button class="ghost" id="rmClose" style="margin-top:10px">Close</button>'+
     '</div>';
   }
@@ -17475,11 +17528,35 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   window.openRosterMgmt=function(){
     var s=document.getElementById('sheet'); if(!s) return;
     s.innerHTML=rosterMgmtHTML(); showScrim('scrim');
-    var R=document.getElementById('rmRank'); if(R) R.onclick=function(){ var r=rosterRankUpAll(); _rmMsg= r.ranked?('Ranked up '+r.ranked+' hero'+(r.ranked===1?'':'s')+'.'+(r.sparkSkipped?(' '+r.sparkSkipped+' left for manual Spark ranks.'):'')):'No heroes were ready and affordable to rank.'; rmAfter(); };
+    var R=document.getElementById('rmRank'); if(R) R.onclick=function(){ var r=rosterRankUpAll(); _rmMsg= r.ranked?('Ranked up '+r.ranked+(r.ranked===1?' hero':' heroes')+'.'+(r.eternals?(' '+r.eternals+' reached Eternal ('+r.spent.sparks+' Spark'+(r.spent.sparks===1?'':'s')+' spent).'):'')+(r.sparkShort?(' '+r.sparkShort+' more Eternal rank'+(r.sparkShort===1?'':'s')+' waiting on Sparks.'):'')):(r.sparkShort?('Out of Sparks — '+r.sparkShort+(r.sparkShort===1?' hero':' heroes')+' waiting on the Eternal rank.'):'No heroes were ready and affordable to rank.'); rmAfter(); };
     var U=document.getElementById('rmUpgrade'); if(U) U.onclick=function(){ var r=rosterUpgradeGearAll(); _rmMsg= (r.n||r.promos)?('Upgraded gear on '+r.heroes+' hero'+(r.heroes===1?'':'es')+' — '+r.n+' level'+(r.n===1?'':'s')+(r.promos?(' · '+r.promos+' promotion'+(r.promos===1?'':'s')):'')+'.'):'No affordable gear upgrades left.'; rmAfter(); };
     var E=document.getElementById('rmEquip'); if(E) E.onclick=function(){ var r=autoEquipAllOwned(); _rmMsg= r.totalChanged?('Re-equipped '+r.heroesImproved+' hero'+(r.heroesImproved===1?'':'es')+' with '+r.totalChanged+' better piece'+(r.totalChanged===1?'':'s')+'.'):'Everyone already has their best gear.'; rmAfter(); };
     var P=document.getElementById('rmSpread'); if(P) P.onclick=function(){ var r=distributeGearSpread()||{}; var bits=[]; if(r.filled)bits.push('filled '+r.filled+' slot'+(r.filled===1?'':'s')); if(r.upgraded)bits.push('upgraded '+r.upgraded); _rmMsg= bits.length?('Spread gear — '+bits.join(' · ')+'.'):'No spare gear to spread.'; rmAfter(); };
     var V=document.getElementById('rmSalvage'); if(V) V.onclick=function(){ var r=(typeof v166AutoSalvageJunkGear==='function')?v166AutoSalvageJunkGear():{count:0,dust:0}; _rmMsg= r.count?('Salvaged '+r.count+' item'+(r.count===1?'':'s')+' → +'+r.dust+' dust'+(r.shards?(' · +'+r.shards+' shards'):'')+'.'):'Nothing matched your auto-salvage settings — the vault is clean.'; rmAfter(); };
+    var K=document.getElementById('rmCleanup'); if(K) K.onclick=function(){ var r=(typeof v166SmartCleanup==='function')?v166SmartCleanup(true):{equipped:0,salvaged:0,dust:0}; var bits=[]; if(r.equipped)bits.push('equipped '+r.equipped+' slot'+(r.equipped===1?'':'s')); if(r.salvaged)bits.push('salvaged '+r.salvaged+' → +'+r.dust+' dust'); _rmMsg= bits.length?('Smart cleanup: '+bits.join(' · ')+'.'):'Everything already tidy.'; rmAfter(); };
+    /* v2.195.3: bulk New Cycles — one per hero per tap, lowest stars first, all real gates respected
+       (prestigeEligible + weekly allowance + gold via canPrestige). Mirrors the single-hero handler
+       exactly (target computed BEFORE the star increments), minus the confirm/celebration. */
+    var PR=document.getElementById('rmPrestige'); if(PR) PR.onclick=function(){
+      if(typeof canPrestige!=='function'){ _rmMsg='Prestige system not ready.'; rmAfter(); return; }
+      try{ ensurePrestigeState(); }catch(e){}
+      var owned=(S.heroes||[]).filter(function(h){return h&&h.owned;}).sort(function(a,b){ return (a.prestige||0)-(b.prestige||0); });
+      var done=0, goldSpent=0, topStar=0;
+      for(var i=0;i<owned.length;i++){ var h=owned[i];
+        if(!canPrestige(h)) continue;
+        var c=prestigeCost(h), target=rankCap(h), np=(h.prestige||0)+1;
+        prestigeWeekState().used=(prestigeWeekState().used||0)+1;
+        S.gold-=(c.gold||0); goldSpent+=(c.gold||0);
+        h.prestige=np; h.prestigeCatch=target; h.level=prestigeResetLevel(h); h.exp=0;
+        S.prestigeHistory.unshift({id:h.id,name:h.name,prestige:np,catchTarget:target,at:Date.now()});
+        if(np>topStar) topStar=np; done++;
+      }
+      S.prestigeHistory=S.prestigeHistory.slice(0,30);
+      if(done){ try{ addWin('New Cycles Started',done+' heroes began New Cycles.','discipline'); }catch(e){} try{ recalcCollection(); }catch(e){} }
+      var avail=0; try{ avail=Math.floor(prestigeWeekAvail()); }catch(e){}
+      _rmMsg= done?('★ Began '+done+' New Cycle'+(done===1?'':'s')+' (lowest stars first, up to ★'+topStar+') · '+rmNum(goldSpent)+' gold · '+avail+' weekly allowance left.'):'No heroes meet every New Cycle requirement right now (rank, level cap, forge tier, cohort, or weekly allowance).';
+      rmAfter();
+    };
     var C=document.getElementById('rmClose'); if(C) C.onclick=function(){ _rmMsg=''; hideScrim(); };
   };
 
@@ -22454,6 +22531,7 @@ function showAbilityMoment(u,skill,color){
       changed++;
     });
     const after=gearScore(h);
+    if(changed) of2188GearChanged(); /* v2.195: invalidate the salvage-guard thresholds */
     return {changed,before,after};
   };
   function of2163HeroPriorityRank(h){
@@ -22538,20 +22616,42 @@ function showAbilityMoment(u,skill,color){
      by the auto-equip margin, it is kept. Cheap per drop: the item is scored once per pure role
      (3 calls), and each hero's current-slot score is cached until that slot's gear changes. */
   const of2188CurScoreCache=new Map(); // 'heroId:slot' -> {gid, glvl, score}
+  /* v2.195 perf: instead of scanning all owned heroes PER DROP, precompute per-slot thresholds —
+     "does any hero have this slot empty?" and "minimum current score per blend profile" — and
+     compare each item against those (a handful of lookups). Semantically identical to the full
+     scan. Cache invalidates whenever auto-equip changes gear, and expires every 800 checks. */
+  let of2188Thresh=null, of2188ThreshUses=0;
+  function of2188BlendKey(h){ const b=of2163RoleBlend(h); return Object.keys(b).sort().map(k=>k+':'+b[k]).join('|'); }
+  function of2188BlendScore(bk,itemScores){ let total=0,wt=0; bk.split('|').forEach(part=>{ const p=part.split(':'), w=+p[1]||0; total+=(itemScores[p[0]]||0)*w; wt+=w; }); return wt?total/wt:(itemScores.dps||0); }
+  function of2188Thresholds(){
+    if(of2188Thresh&&of2188ThreshUses++<800) return of2188Thresh;
+    const out={empty:{},min:{}};
+    GEAR_SLOT_ORDER.forEach(sl=>{ out.empty[sl]=false; out.min[sl]={}; });
+    const heroes=(S&&S.heroes)||[];
+    for(let i=0;i<heroes.length;i++){
+      const h=heroes[i]; if(!h||!h.owned) continue;
+      const bk=of2188BlendKey(h);
+      for(let s=0;s<GEAR_SLOT_ORDER.length;s++){
+        const sl=GEAR_SLOT_ORDER[s], cur=(h.gear&&h.gear[sl])||null;
+        if(!cur){ out.empty[sl]=true; continue; }
+        let c=of2188CurScoreCache.get(h.id+':'+sl);
+        if(!c||c.gid!==cur.id||c.glvl!==(cur.level||0)){ c={gid:cur.id,glvl:cur.level||0,score:of2163RoleScore(cur,h)}; of2188CurScoreCache.set(h.id+':'+sl,c); }
+        const m=out.min[sl]; if(m[bk]==null||c.score<m[bk]) m[bk]=c.score;
+      }
+    }
+    of2188Thresh=out; of2188ThreshUses=0; return out;
+  }
+  function of2188GearChanged(){ of2188Thresh=null; }
   function of2188IsUpgradeForRoster(item){
     try{
       const slot=of2163NormalizeSlot(item.slot);
+      const th=of2188Thresholds();
+      if(th.empty[slot]) return true; // fills an empty slot somewhere on the roster
+      const mins=th.min[slot], keys=Object.keys(mins);
+      if(!keys.length) return true; // nobody owns this slot yet — keep
       const itemScores={tank:of2163ItemRoleScore(item,'tank'),dps:of2163ItemRoleScore(item,'dps'),support:of2163ItemRoleScore(item,'support')};
-      const heroes=(S&&S.heroes)||[];
-      for(let i=0;i<heroes.length;i++){
-        const h=heroes[i]; if(!h||!h.owned) continue;
-        const cur=(h.gear&&h.gear[slot])||null;
-        if(!cur) return true; // fills an empty slot somewhere on the roster
-        let c=of2188CurScoreCache.get(h.id+':'+slot);
-        if(!c||c.gid!==cur.id||c.glvl!==(cur.level||0)){ c={gid:cur.id,glvl:cur.level||0,score:of2163RoleScore(cur,h)}; of2188CurScoreCache.set(h.id+':'+slot,c); }
-        const blend=of2163RoleBlend(h); let total=0,wt=0;
-        Object.keys(blend).forEach(r=>{ total+=(itemScores[r]||0)*blend[r]; wt+=blend[r]; });
-        if((wt?total/wt:itemScores.dps)>c.score+AUTO_EQUIP_MIN_SCORE_GAIN) return true;
+      for(let i=0;i<keys.length;i++){
+        if(of2188BlendScore(keys[i],itemScores)>mins[keys[i]]+AUTO_EQUIP_MIN_SCORE_GAIN) return true;
       }
       return false;
     }catch(e){ return true; } // if the check itself fails, err on KEEPING the item
@@ -22574,6 +22674,16 @@ function showAbilityMoment(u,skill,color){
       const over=S.inventory.length-MAX_GEAR_INVENTORY;
       const junk=S.inventory.filter(g=>g&&!g.locked&&!g.favorite&&of2163RarityRank(g.rarity)<of2163RarityRank('epic')).sort((a,b)=>gearPower(a)-gearPower(b)).slice(0,over);
       junk.forEach(j=>of2163SalvageInventoryItem(j.id,true));
+      /* v2.195: the sub-epic trim alone can't hold the line when drop rates skew epic+ (the vault
+         was found at 3,260 items and growing). When still 100+ over cap, salvage the weakest
+         epic+ pieces too — but ONLY ones the roster upgrade guard confirms nobody could use.
+         Ascendant/locked/starred always survive. */
+      if(S.inventory.length>MAX_GEAR_INVENTORY+100){
+        const over2=S.inventory.length-MAX_GEAR_INVENTORY;
+        const cands=S.inventory.filter(g=>g&&!g.locked&&!g.favorite&&!g.ascendant&&!of2188IsUpgradeForRoster(g))
+          .sort((a,b)=>gearPower(a)-gearPower(b)).slice(0,over2);
+        cands.forEach(j=>of2163SalvageInventoryItem(j.id,true));
+      }
     }
     return item;
   };
@@ -23492,9 +23602,25 @@ function raidStrikePanelHTML(){ try{ const left=raidAttemptsLeft(), amp=raidHabi
     :'<button class="go" style="flex:1;padding:9px 12px" onclick="startRaidStrike()">\u2694 Strike \u00b7 '+left+'/'+RAID_SA.attemptsPerDay+' today</button>')+
     '<span style="font-size:10px;font-weight:900;color:var(--muted)">x'+amp.toFixed(2)+' from domains lived</span></div>'; }catch(e){ return ''; } }
 function raidSAInjectPanel(){ try{
-  const host=document.querySelector('.raidArenaWorld > div:last-child'); if(!host) return;
+  /* v2.191.1: the raid screen was rebuilt (v155 BossShowcase / v158 FormationStage) and
+     .raidArenaWorld stopped rendering — this panel silently never appeared, making the
+     playable Score-Attack mode (v2.181.0) unreachable from the UI. Anchor to the legacy
+     host if present, otherwise to the current raid view's boss showcase / stage. */
+  let host=document.querySelector('.raidArenaWorld > div:last-child'), legacy=!!host;
+  if(!host){
+    if(typeof campSub==='undefined'||campSub!=='raid') return;
+    const v=document.getElementById('view'); if(!v) return;
+    const anchor=v.querySelector('.v155BossShowcase')||v.querySelector('.v158FormationStage')||v.querySelector('.v156SceneCard')||v.querySelector('.stagecard');
+    if(!anchor) return;
+    let card=document.getElementById('raidSACard');
+    if(!card){ card=document.createElement('div'); card.id='raidSACard'; card.className='stagecard'; card.style.cssText='margin:10px 0;padding:12px 13px'; anchor.insertAdjacentElement('afterend',card); }
+    card.innerHTML='<div style="font-family:Orbitron;font-weight:1000;font-size:12px;letter-spacing:.5px;color:#ffb01f;margin-bottom:2px">⚔ Boss Strikes</div>'
+      +'<div style="font-size:11px;font-weight:800;color:var(--muted);line-height:1.35">Fight the weekly boss directly — strike damage feeds the same reward tiers as habit damage.</div>';
+    host=card;
+  }
   let d=document.getElementById('raidSAPanel');
   if(!d){ d=document.createElement('div'); d.id='raidSAPanel'; host.appendChild(d); }
+  else if(!legacy && d.parentElement!==host){ host.appendChild(d); }
   d.innerHTML=raidStrikePanelHTML(); }catch(e){} }
 (function installRaidSAHook(){ try{
   if(typeof render==='function'&&!render.__raidSA){ const __r=render;
@@ -23534,7 +23660,20 @@ function raidSAInjectPanel(){ try{
       var hs=targets(); if(!hs.length) return;
       var changed=0, improved=0;
       hs.forEach(function(h){ var r=autoEquipBestGear(h); if(r&&r.changed){ changed+=r.changed; improved++; } });
-      if(changed){
+      /* v2.195 Autopilot: quiet bulk rank-up rides the same idle sweep — cores auto-mint from
+         dust overflow (floor-guarded), so ranks flow without the player managing anything.
+         Per-mint toasts are muted; one summary toast if anything ranked. */
+      var rankedN=0, etN=0;
+      try{
+        if(auto.autoRankUp!==false && typeof window.rosterRankUpAll==='function'){
+          var _t=toast; toast=function(){};
+          try{ var rr=window.rosterRankUpAll(); rankedN=(rr&&rr.ranked)||0; etN=(rr&&rr.eternals)||0; }
+          finally{ toast=_t; }
+          if(rankedN){ try{ if(typeof recalcCollection==='function') recalcCollection(); }catch(e){} try{ toast('Autopilot: ranked up '+rankedN+(rankedN===1?' hero':' heroes')+(etN?(' · '+etN+' Eternal'):'')); }catch(e){} }
+        }
+      }catch(e){}
+      try{ if(typeof window.lqAutoMuster==='function') window.lqAutoMuster(); }catch(e){} /* v2.195: muster rewards auto-claim */
+      if(changed||rankedN){
         S.v2188LastAutoEquip={at:Date.now(),changed:changed,heroes:improved};
         try{ renderHUD(); }catch(e){}
         try{ save(); }catch(e){}
@@ -23587,8 +23726,283 @@ function raidSAInjectPanel(){ try{
       try{ save(); }catch(e){}
     }catch(e){ if(tries++<80) setTimeout(apply,200); }
   })();
+  /* v2.190.0: forge cap ceiling removed — a save sitting at the old 500 max was really asking
+     for "no cap"; migrate it to 0 (uncapped) once. Any other custom value is left alone. */
+  var tries2=0;
+  (function uncap(){
+    try{
+      if(typeof S==='undefined'||!S){ if(tries2++<80) setTimeout(uncap,200); return; }
+      if(S.v2190ForgeUncapApplied) return;
+      if(S.dev&&S.dev.forgeCap===500) S.dev.forgeCap=0;
+      S.v2190ForgeUncapApplied=true;
+      /* v2.193.0: ideal clash tuning (measured) = growth 1.012 + capPerChapter 0.5. Clear the
+         user's hand-set overrides ONCE so the measured defaults apply; re-tuning later sticks. */
+      if(!S.v2193ClashIdealApplied){
+        if(S.tuneOverrides){ delete S.tuneOverrides.clashStageGrowth; delete S.tuneOverrides.clashCapPerChapter; }
+        try{ if(typeof applyTuneOverrides==='function'){ TUNE.clashStageGrowth=TUNE_DEFAULTS.clashStageGrowth||1.012; TUNE.clashCapPerChapter=TUNE_DEFAULTS.clashCapPerChapter!=null?TUNE_DEFAULTS.clashCapPerChapter:0.5; applyTuneOverrides(); } }catch(e){}
+        S.v2193ClashIdealApplied=true;
+      }
+      try{ save(); }catch(e){}
+    }catch(e){ if(tries2++<80) setTimeout(uncap,200); }
+  })();
 })();
 /* ===== end v2.189.0 Automation Defaults ===== */
+
+/* ===== v2.195.0 THE CONSOLIDATION =====
+   One pass, four goals:
+   C — Pace dial (Relaxed/Standard/Spicy) over baked-in ideal defaults; the 71-override
+       tuning layer is cleared once (its values ARE the new defaults) and every tuning UI
+       retreats behind the developer flag. Play, don't manage.
+   B — One consolidated settings panel replaces five stacked injected panels (Smart
+       Automation, Premium Focus, Economy Simplification, Game Feel). Home automation
+       panel retired; Squadron Management gains Smart Cleanup.
+   A — Collection complete (all heroes owned): summon/albums/locked-roster/wishlist
+       surfaces retire, tickets convert to Sparks, Weekly Muster auto-claims, trophy shows.
+   D — (elsewhere) core autopilot: rank-ups mint cores from dust overflow, floor-guarded. */
+(function(){
+  if(window.__v2195Consolidated) return;
+  window.__v2195Consolidated=true;
+
+  /* ---------- Pace dial ---------- */
+  /* Pace touches ONLY forward-acting knobs. enemyGrowth/towerGrowth are deliberately excluded:
+     changing them re-prices every EXISTING stage (simulated: spicy froze campaign for 9 months,
+     relaxed handed out +200 free stages on day one). Clash is rubber-banded so its knobs are safe. */
+  var PACE_KEYS=['clashWallTau','clashCapPerChapter','ecoDrainPct','expPerHour'];
+  var PACE={
+    relaxed:{clashWallTau:9,clashCapPerChapter:0.45,ecoDrainPct:0.20,expPerHour:16},
+    standard:{}, /* pure measured defaults */
+    spicy:{clashWallTau:10.5,clashCapPerChapter:0.55,ecoDrainPct:0.10,expPerHour:11}
+  };
+  var PACE_DESC={relaxed:'Faster growth, softer walls. Pure comfort.',standard:'The measured ideal. Steady progress, real (beatable) walls.',spicy:'Slower growth, harder chapter bosses. For when Standard feels tame.'};
+  /* v2.195.1: fine-speed stepper — ±5% steps (clamped ±30%) stacked ON TOP of the chosen profile.
+     Multiplies only forward-acting PROGRESS keys; difficulty keys stay with the profile so
+     "faster" never re-prices existing content.
+     v2.195.2: bond XP from game modes (clash payout keys) and the weekly prestige ALLOWANCE
+     now ride the dial too — prestige taps stay manual (the player chooses), the dial just
+     widens/narrows how many the week permits. Task-driven bond XP from real-life reps stays
+     fixed: the life→game contract is not a dial. */
+  var FINE_KEYS=['expPerHour','ecoDrainPct','gearDropMult','clashBondBase','clashBondPerStage','prestigeCapBase','prestigeCapPerDomain','prestigeCapPerRep'];
+  function lqApplyPace(){
+    if(!S.tuneOverrides) S.tuneOverrides={};
+    var name=S.paceProfile||'standard', prof=PACE[name]||{};
+    PACE_KEYS.concat(FINE_KEYS).forEach(function(k){ delete S.tuneOverrides[k]; if(typeof TUNE_DEFAULTS[k]==='number') TUNE[k]=TUNE_DEFAULTS[k]; });
+    Object.keys(prof).forEach(function(k){ S.tuneOverrides[k]=prof[k]; });
+    var m=1+((S.paceFine||0)/100);
+    if(m!==1){
+      FINE_KEYS.forEach(function(k){
+        var base=(S.tuneOverrides[k]!=null)?S.tuneOverrides[k]:TUNE_DEFAULTS[k];
+        if(typeof base==='number') S.tuneOverrides[k]=Math.round(base*m*1000)/1000;
+      });
+    }
+    try{ applyTuneOverrides(); }catch(e){}
+    try{ save(); }catch(e){}
+  }
+  window.lqSetPace=function(name){
+    if(!PACE[name]) name='standard';
+    S.paceProfile=name;
+    lqApplyPace();
+    try{ toast('Pace: '+name.charAt(0).toUpperCase()+name.slice(1)+' — '+PACE_DESC[name]); }catch(e){}
+  };
+  window.lqNudgePace=function(delta){
+    S.paceFine=Math.max(-30,Math.min(30,(S.paceFine||0)+delta));
+    lqApplyPace();
+    try{ toast('Speed: '+(S.paceFine>0?'+':'')+(S.paceFine||0)+'% '+(S.paceFine>0?'faster':S.paceFine<0?'slower':'(profile baseline)')); }catch(e){}
+  };
+
+  /* ---------- Collection complete ---------- */
+  function lqDone(){ try{ return S&&Array.isArray(S.heroes)&&S.heroes.length>0&&(typeof ownedCount==='function')&&ownedCount()>=S.heroes.length; }catch(e){ return false; } }
+  function lqAutoMuster(){
+    try{
+      if(typeof ensureWeeklyMuster!=='function'||typeof MUSTER_TIERS==='undefined') return;
+      var M=ensureWeeklyMuster(), got=[];
+      MUSTER_TIERS.forEach(function(t,i){ if(!M.claimed[i]&&musterCount()>=t.n){ var r=musterClaim(i); if(r&&r.ok) got.push(musterRewardText(t.reward)); } });
+      if(got.length){ try{ toast('Muster auto-claimed: '+got.join(' · ')); }catch(e){} try{ renderHUD(); }catch(e){} try{ save(); }catch(e){} }
+    }catch(e){}
+  }
+  window.lqAutoMuster=lqAutoMuster;
+  /* v2.195.3: Bond Flow meter — the "fun meter to watch go up as I care for my heroes."
+     Total bond levels across the owned roster, with a today-so-far delta (daily anchor stored
+     in S.bondMeter). Bond flows from real-life reps (fixed) + game modes (rides the fine dial). */
+  window.lqBondStats=function(){
+    try{
+      var total=0, hs=(S&&S.heroes)||[];
+      for(var i=0;i<hs.length;i++){ var h=hs[i]; if(h&&h.owned){ try{ total+=bondLevel(h); }catch(e){} } }
+      var dk=(typeof periodKey==='function')?periodKey('daily'):'d';
+      if(!S.bondMeter||S.bondMeter.day!==dk) S.bondMeter={day:dk,start:total};
+      return {total:total, today:Math.max(0,total-(S.bondMeter.start||total))};
+    }catch(e){ return {total:0,today:0}; }
+  };
+  function lqBondChip(){
+    try{
+      if(typeof view==='undefined'||view!=='heroes') return;
+      if(document.querySelector('.lqBondChip')) return;
+      var vw=document.getElementById('view'); if(!vw||!vw.firstElementChild) return;
+      var b=lqBondStats();
+      vw.firstElementChild.insertAdjacentHTML('beforebegin',
+        '<div class="lqBondChip" style="text-align:center;font-weight:900;font-size:12px;margin:0 0 8px;color:#ff9bd7">💞 Bond +'+v168Num(b.today)+' today <span style="color:var(--muted);font-weight:800">· '+v168Num(b.total)+' total levels of care</span></div>');
+    }catch(e){}
+  }
+  function lqCollectionDecorate(){
+    try{
+      lqBondChip();
+      if(!lqDone()) return;
+      ['[data-t="locked"]','[data-t="all"]','[data-qk="wishlist"]','#albumsBtn'].forEach(function(sel){
+        document.querySelectorAll(sel).forEach(function(el){ el.style.display='none'; });
+      });
+      document.querySelectorAll('.muHead').forEach(function(el){ var p=el.parentElement; if(p&&!p.__lqHidden){ p.__lqHidden=true; p.style.display='none'; } });
+      var rs=document.querySelector('.rosterstats');
+      if(rs&&!rs.querySelector('.lqTrophy')) rs.insertAdjacentHTML('beforeend','<span class="lqTrophy" style="color:#ffd95a;font-weight:900">🏆 Collection complete</span>');
+      else if(!document.querySelector('.lqTrophy')&&typeof view!=='undefined'&&view==='heroes'){
+        var vw=document.getElementById('view');
+        if(vw&&vw.firstElementChild) vw.firstElementChild.insertAdjacentHTML('beforebegin','<div class="lqTrophy" style="text-align:center;color:#ffd95a;font-weight:900;font-size:12px;margin:0 0 8px">🏆 Collection complete — all '+S.heroes.length+' heroes recruited</div>');
+      }
+    }catch(e){}
+  }
+
+  /* ---------- Consolidated settings panel ---------- */
+  function injectStyles(){
+    if(document.getElementById('v2195Styles')) return;
+    var st=document.createElement('style'); st.id='v2195Styles';
+    st.textContent='.v2195Settings{margin:14px 0;padding:13px;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}'+
+      '.v2195Settings h4{margin:0 0 4px;font-family:Orbitron;color:var(--ink);font-size:13px;letter-spacing:.6px;text-transform:uppercase}'+
+      '.v2195Settings .sub{color:var(--muted);font-size:11.5px;font-weight:750;line-height:1.35;margin:0 0 10px}'+
+      '.v2195Pace{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:0 0 4px}'+
+      '.v2195Pace button{border-radius:12px;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:10px 6px;font-weight:950;font-size:12px}'+
+      '.v2195Pace button.on{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent);background:color-mix(in srgb,var(--accent) 12%,var(--bg))}'+
+      '.v2195PaceNote{font-size:11px;color:var(--muted);font-weight:800;line-height:1.35;margin:0 0 12px;min-height:15px}'+
+      '.v2195Master{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03);margin-bottom:8px}'+
+      '.v2195Master b{font-size:13px;color:var(--ink)}.v2195Master span{display:block;font-size:11px;color:var(--muted);font-weight:750;line-height:1.3;margin-top:2px}'+
+      '.v2195Master button{min-width:64px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-weight:1000;padding:9px 11px}'+
+      '.v2195Master button.on{background:linear-gradient(135deg,#37d67a,#8bd0ff);border:none;color:#06111f}'+
+      '.v2195Settings details{margin:8px 0 0;border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:rgba(0,0,0,.12)}'+
+      '.v2195Settings summary{cursor:pointer;font-size:12px;font-weight:950;color:var(--ink)}'+
+      '.v2195Row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}'+
+      '.v2195Row:last-child{border-bottom:none}'+
+      '.v2195Row b{font-size:12px;color:var(--ink);font-weight:850}.v2195Row span{display:block;font-size:10.5px;color:var(--muted);font-weight:750;line-height:1.3}'+
+      '.v2195Row button{min-width:52px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-weight:1000;padding:7px 9px;font-size:11px}'+
+      '.v2195Row button.on{background:linear-gradient(135deg,#8bd0ff,#62f2aa);border:none;color:#06111f}'+
+      '.v2195Seg{display:flex;gap:6px}.v2195Seg button{flex:1}';
+    document.head.appendChild(st);
+  }
+  function row(kind,key,label,sub){ return '<div class="v2195Row" data-kind="'+kind+'" data-key="'+key+'"><div><b>'+label+'</b>'+(sub?'<span>'+sub+'</span>':'')+'</div><button type="button">—</button></div>'; }
+  var AUTO_KEYS=['autoSalvageCommons','autoEquipClearUpgrades','autoRankUp','autoCollapseDone','dailyAutoBackup','autoTomorrowFocus','quietReadyStates'];
+  function getVal(kind,key){
+    try{
+      if(kind==='auto') return !!v166EnsureAutomation()[key];
+      if(kind==='app') return !!ensureAppSettings()[key];
+      if(kind==='eco') return !!v168Ensure()[key];
+    }catch(e){} return false;
+  }
+  function setVal(kind,key,val){
+    try{
+      if(kind==='auto') v166EnsureAutomation()[key]=val;
+      else if(kind==='app'){ ensureAppSettings()[key]=val; try{ if(typeof v167Apply==='function') v167Apply(); }catch(e){} }
+      else if(kind==='eco') v168Ensure()[key]=val;
+      save();
+    }catch(e){}
+  }
+  function inject(){
+    try{
+      injectStyles();
+      var sheet=document.querySelector('#setScrim .sheet'); if(!sheet||sheet.querySelector('.v2195Settings')) return;
+      var anchor=document.getElementById('compactSeg')||document.getElementById('motionSeg');
+      var p=document.createElement('div'); p.className='v2195Settings';
+      p.innerHTML='<h4>⚙ Game</h4><div class="sub">One dial, one switch. Everything else runs itself.</div>'+
+        '<div class="v2195Pace">'+['relaxed','standard','spicy'].map(function(k){ return '<button type="button" data-pace="'+k+'">'+k.charAt(0).toUpperCase()+k.slice(1)+'</button>'; }).join('')+'</div>'+
+        '<div class="v2195PaceNote" id="v2195PaceNote"></div>'+
+        '<div class="v2195Master" style="margin-top:0"><div><b>Fine speed</b><span id="v2195FineNote">Profile baseline</span></div><div class="v2195Seg" style="min-width:150px"><button type="button" id="v2195FineDown">−5%</button><button type="button" id="v2195FineUp">+5%</button></div></div>'+
+        '<div class="v2195Master"><div><b>Full Autopilot</b><span>Auto-equip, hand-me-downs, salvage (upgrades always kept), rank-ups from dust overflow, muster claims, cleanup, daily backup.</span></div><button type="button" id="v2195Master">—</button></div>'+
+        '<details><summary>Individual switches</summary>'+
+          row('auto','autoSalvageCommons','Auto-salvage junk gear','Roster-upgrade guard: anything useful is always kept.')+
+          row('auto','autoEquipClearUpgrades','Auto-equip after battles','Main team first, hand-me-downs to favorites (≤25 heroes, idle time).')+
+          row('auto','autoRankUp','Auto rank-up','Cores mint from dust overflow (floor-guarded). Eternal ranks spend Sparks.')+
+          row('auto','autoCollapseDone','Auto-collapse done tasks','')+
+          row('auto','dailyAutoBackup','Daily auto-backup','')+
+          row('auto','autoTomorrowFocus','Auto tomorrow focus','')+
+          row('auto','quietReadyStates','Quiet ready-states','')+
+        '</details>'+
+        '<details><summary>Interface & feel</summary>'+
+          row('app','premiumFocus','Premium Focus Mode','Calmer, art-driven screens.')+
+          row('app','showDetailText','Show helper text','')+
+          row('app','showLowPriorityVisuals','Show low-priority badges','')+
+          row('app','soundOn','Sound','')+
+          row('app','hapticsOn','Haptics','')+
+          '<div class="v2195Row"><div><b>Feel intensity</b></div><div class="v2195Seg" id="v2195Feel">'+['low','medium','high'].map(function(k){ return '<button type="button" data-feel="'+k+'">'+k+'</button>'; }).join('')+'</div></div>'+
+        '</details>'+
+        '<details><summary>Wallet display</summary>'+
+          row('eco','simplifiedWallet','Simplified wallet','')+
+          row('eco','hideBossCores','Hide rare cores from daily wallet','')+
+          row('eco','collapseSmallRewards','Collapse minor reward lines','')+
+          row('eco','showPurposeHints','Resource purpose hints','')+
+        '</details>';
+      (anchor&&anchor.parentNode?anchor.parentNode:sheet).insertBefore(p,anchor?anchor.nextSibling:sheet.children[3]||null);
+      function refresh(){
+        p.querySelectorAll('.v2195Row[data-kind]').forEach(function(r){
+          var b=r.querySelector('button'); if(!b) return;
+          var on=getVal(r.dataset.kind,r.dataset.key);
+          b.classList.toggle('on',on); b.textContent=on?'On':'Off';
+        });
+        var master=AUTO_KEYS.every(function(k){ return getVal('auto',k); });
+        var mb=p.querySelector('#v2195Master'); if(mb){ mb.classList.toggle('on',master); mb.textContent=master?'On':'Off'; }
+        var pace=(S&&S.paceProfile)||'standard';
+        p.querySelectorAll('[data-pace]').forEach(function(b){ b.classList.toggle('on',b.dataset.pace===pace); });
+        var note=p.querySelector('#v2195PaceNote'); if(note) note.textContent=PACE_DESC[pace]||'';
+        var fine=(S&&S.paceFine)||0;
+        var fn=p.querySelector('#v2195FineNote'); if(fn) fn.textContent=fine===0?'Profile baseline · steps of 5% (±30% max)':((fine>0?'+':'')+fine+'% '+(fine>0?'faster':'slower')+' than '+pace);
+        var feel=(ensureAppSettings().gameFeelIntensity)||'medium';
+        p.querySelectorAll('[data-feel]').forEach(function(b){ b.classList.toggle('on',b.dataset.feel===feel); });
+      }
+      p.querySelectorAll('.v2195Row[data-kind]').forEach(function(r){
+        var b=r.querySelector('button'); if(!b) return;
+        b.onclick=function(){ setVal(r.dataset.kind,r.dataset.key,!getVal(r.dataset.kind,r.dataset.key)); refresh(); try{ render(); }catch(e){} };
+      });
+      var mb=p.querySelector('#v2195Master');
+      if(mb) mb.onclick=function(){ var target=!AUTO_KEYS.every(function(k){ return getVal('auto',k); }); AUTO_KEYS.forEach(function(k){ v166EnsureAutomation()[k]=target; }); save(); refresh(); try{ render(); }catch(e){} };
+      p.querySelectorAll('[data-pace]').forEach(function(b){ b.onclick=function(){ lqSetPace(b.dataset.pace); refresh(); }; });
+      var fd=p.querySelector('#v2195FineDown'); if(fd) fd.onclick=function(){ lqNudgePace(-5); refresh(); };
+      var fu=p.querySelector('#v2195FineUp'); if(fu) fu.onclick=function(){ lqNudgePace(5); refresh(); };
+      p.querySelectorAll('[data-feel]').forEach(function(b){ b.onclick=function(){ ensureAppSettings().gameFeelIntensity=b.dataset.feel; save(); refresh(); }; });
+      refresh();
+    }catch(e){ try{ console.warn('v2195 settings inject failed',e); }catch(_e){} }
+  }
+  var sBtn=document.getElementById('openSettings');
+  if(sBtn){ var _old=sBtn.onclick; sBtn.onclick=function(e){ if(_old) _old.call(this,e); setTimeout(inject,90); }; }
+
+  /* ---------- render decorator + muster autopilot ---------- */
+  var tries=0;
+  (function wrap(){
+    if(typeof render!=='function'){ if(tries++<80) setTimeout(wrap,150); return; }
+    if(render.__v2195) return;
+    var _r=render;
+    render=function(){ var out=_r.apply(this,arguments); try{ lqCollectionDecorate(); }catch(e){} return out; };
+    render.__v2195=true;
+  })();
+  setTimeout(function(){ try{ lqAutoMuster(); }catch(e){} },7000);
+
+  /* ---------- one-time migration ---------- */
+  var mTries=0;
+  (function migrate(){
+    try{
+      if(typeof S==='undefined'||!S||typeof TUNE_DEFAULTS==='undefined'){ if(mTries++<120) setTimeout(migrate,200); return; }
+      if(S.v2195ConsolidationApplied) return;
+      /* The 71-override layer is retired: its values are BAKED INTO the new defaults
+         (nothing is lost) and the pace-relevant keys use the measured ideals. */
+      S.tuneOverrides={};
+      Object.keys(TUNE_DEFAULTS).forEach(function(k){ TUNE[k]=TUNE_DEFAULTS[k]; });
+      try{ ensureAppSettings().developerTools=false; }catch(e){}
+      try{ v166EnsureAutomation().autoRankUp=true; }catch(e){}
+      S.paceProfile='standard';
+      if(lqDone()){
+        var t=(S.summonTickets||0)+Math.floor((S.ticketShards||0)/10);
+        if(t>0){ S.sparks=(S.sparks||0)+t; try{ toast('Collection complete — '+t+' summon ticket'+(t===1?'':'s')+' reforged into Sparks.'); }catch(e){} }
+        S.summonTickets=0; S.ticketShards=(S.ticketShards||0)%10;
+      }
+      S.v2195ConsolidationApplied=true;
+      try{ save(); }catch(e){}
+    }catch(e){ if(mTries++<120) setTimeout(migrate,200); }
+  })();
+})();
+/* ===== end v2.195.0 THE CONSOLIDATION ===== */
 </script>
 
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){try{navigator.serviceWorker.register('./sw.js').catch(function(){});}catch(e){}});}</script><script type="module" src="oathforge-cloud.js"></script>
