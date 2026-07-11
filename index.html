@@ -2582,9 +2582,9 @@ function prevPeriodDate(freq,d){ const x=new Date(d||new Date());
 }
 const FREQS=['daily','weekly','monthly'];
 const TASK_FREQ_OF={dailies:'daily',weeklies:'weekly',monthlies:'monthly'};
-function taskIsRecurring(st){ return st==='dailies'||st==='weeklies'||st==='monthlies'; }
+function taskIsRecurring(st){ return st==='dailies'||st==='weeklies'||st==='monthlies'||st==='reviews'; }
 function taskBaseArr(st){ return taskIsRecurring(st)?(S.dailies||[]):(S[st]||[]); }
-function taskListFor(st){ if(taskIsRecurring(st)){ const fr=TASK_FREQ_OF[st]; return (S.dailies||[]).filter(d=>(d.freq||'daily')===fr&&!d.review); } return (S[st]||[]).slice(); }
+function taskListFor(st){ if(st==='reviews'){ const ord={weekly:0,monthly:1,quarterly:2}; return (S.dailies||[]).filter(d=>d&&d.review).sort((a,b)=>(ord[a.freq]??9)-(ord[b.freq]??9)); } if(taskIsRecurring(st)){ const fr=TASK_FREQ_OF[st]; return (S.dailies||[]).filter(d=>(d.freq||'daily')===fr&&!d.review); } return (S[st]||[]).slice(); }
 function taskActiveOnDay(d,dow){ if(!d) return true; if((d.freq||'daily')!=='daily') return true; const ad=d.activeDays; if(!Array.isArray(ad)||!ad.length) return true; return ad.indexOf(dow)>=0; }
 function taskActiveToday(d){ return taskActiveOnDay(d,new Date().getDay()); }
 const DOMAINS=[
@@ -2831,7 +2831,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.203.2-hall-depth';
+const APP_BUILD='v2.204.0-reviews-native';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4879,14 +4879,13 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
   document.getElementById('addTask').onclick=()=>openTaskSheet(null);
   const L=document.getElementById('list');
   /* v2.199: Ownership + Reviews are first-class sections, not modals. */
-  if(subtab==='ownership'||subtab==='reviews'){
+  if(subtab==='ownership'){
     if(subtab==='ownership'&&typeof lqOwnSectionHTML==='function'){ L.innerHTML=lqOwnSectionHTML(); if(typeof lqOwnWire==='function') lqOwnWire(L); }
-    else if(subtab==='reviews'&&typeof lqReviewRowsHTML==='function'){ L.innerHTML=lqReviewRowsHTML(); L.onclick=onTaskClick; }
     else L.innerHTML='<div class="empty">Loading…</div>';
     return;
   }
   let items=taskListFor(subtab).slice();
-  if(taskIsRecurring(subtab) && S.hideOffDayTasks!==false) items=items.filter(it=>taskActiveToday(it));
+  if(taskIsRecurring(subtab) && subtab!=='reviews' && S.hideOffDayTasks!==false) items=items.filter(it=>taskActiveToday(it));
   if(S.doneMode!=='keep'){
     if(S.doneMode==='hide') items=items.filter(it=>!it.done);
     else items.sort((a,b)=>(a.done?1:0)-(b.done?1:0));
@@ -24049,22 +24048,22 @@ function raidSAInjectPanel(){ try{
   function dkey(){ return (typeof periodKey==='function')?periodKey('daily'):new Date().toISOString().slice(0,10); }
 
   var LQ_OWN=[
-    {id:'meals',    ic:'🍽', n:'Meals',                     dom:'home',      p:['Week planned?','Groceries covered?','Who is fed tonight?']},
+    {id:'meals',    ic:'🍽', n:'Meals',                     dom:'home',      p:['Week planned?','Groceries covered?','Who is fed tonight?','Breakfast decided for tomorrow?','Anything to prep ahead?']},
     {id:'laundry',  ic:'🧺', n:'Laundry',                   dom:'home',      p:['Everyone\'s laundry moving?','Detergent stocked?','Loop closed — put away?']},
-    {id:'inventory',ic:'📦', n:'Household Inventory',        dom:'home',      p:['Pantry / toiletries / paper low?','Dog food?','Cleaning supplies?']},
-    {id:'maint',    ic:'🔧', n:'Home Maintenance',           dom:'home',      p:['Filters, detectors, leaks?','Anything nagging getting worse?','Yard / appliances?']},
-    {id:'vehicle',  ic:'🚗', n:'Vehicle',                    dom:'home',      p:['Registration / insurance current?','Oil / tires?','Clean enough to respect?']},
-    {id:'tech',     ic:'📱', n:'Household Technology',       dom:'home',      p:['Backups + photos safe?','Updates / passwords?','Kids\' devices + controls?']},
-    {id:'medical',  ic:'🩺', n:'Medical Admin',              dom:'home',      p:['Appointments due (dr/dentist/vision)?','Prescriptions / refills?','Claims or forms open?']},
-    {id:'seasonal', ic:'🗓', n:'Seasonal Planning',          dom:'home',      p:['Next 30-60 days: holidays, breaks?','Clothing / camps?','Anything to book early?']},
+    {id:'inventory',ic:'📦', n:'Household Inventory',        dom:'home',      p:['Pantry staples?','Toilet paper / paper towels?','Soap / toothpaste / detergent?','Dishwasher pods / cleaning supplies?','Dog food?','Kids snacks?','Batteries / bulbs / filters?']},
+    {id:'maint',    ic:'🔧', n:'Home Maintenance',           dom:'home',      p:['HVAC + fridge filters?','Smoke detector batteries?','Leaks / water softener?','Appliances acting up?','Garage / yard?','Pest control?','Trash + recycling day handled?']},
+    {id:'vehicle',  ic:'🚗', n:'Vehicle',                    dom:'home',      p:['Registration current?','Insurance current?','Oil change due?','Tires / windshield fluid?','Any strange noises?','Clean enough to respect?']},
+    {id:'tech',     ic:'📱', n:'Household Technology',       dom:'home',      p:['Photos backed up?','Device updates?','Password manager current?','Wi-Fi healthy?','Kids\' tablets + parental controls?','Streaming subscriptions worth it?','Cameras / smart home ok?']},
+    {id:'medical',  ic:'🩺', n:'Medical Admin',              dom:'home',      p:['Doctor / dentist / vision due?','Therapy scheduled?','Prescriptions + refills?','Insurance claims open?','Vaccinations current?','Medical forms outstanding?']},
+    {id:'seasonal', ic:'🗓', n:'Seasonal Planning',          dom:'home',      p:['Next 30-60 days: holidays?','School breaks + childcare?','Season-right clothing?','Camps / registrations opening?','Christmas or birthday shopping to stage?','Decorations / traditions?']},
     {id:'finn',     ic:'🐕', n:'Finn Care',                  dom:'home',      p:['Food / meds stocked?','Vet or grooming due?','Getting his walks?']},
-    {id:'travel',   ic:'✈️', n:'Travel Planning',            dom:'home',      p:['Trip coming? Reservations set?','Packing / pet care planned?','Tickets + documents?']},
-    {id:'money',    ic:'💰', n:'Money',                      dom:'home',      p:['Bills paid / autopays ok?','Spending trend this week?','Any expense to stage ahead?']},
-    {id:'school',   ic:'🏫', n:'School Admin',               dom:'fatherhood',p:['School emails / slips handled?','Events + spirit days known?','Clothes & shoes still fit? Grooming due?']},
+    {id:'travel',   ic:'✈️', n:'Travel Planning',            dom:'home',      p:['Trip coming? Reservations set?','Tickets + documents ready?','Packing lists started?','Finn care arranged?','Chargers / medicines / snacks?','Weather checked?']},
+    {id:'money',    ic:'💰', n:'Money',                      dom:'home',      p:['Bills paid / autopays ok?','Spending trend this week?','Any expense coming to stage?','Subscriptions worth keeping?','Giving handled?','Anything Megan is tracking that I should own?']},
+    {id:'school',   ic:'🏫', n:'School Admin',               dom:'fatherhood',p:['School emails / ParentSquare read?','Permission slips signed?','Homework + library books?','Spirit days + events known?','School supplies stocked?','Clothes & shoes still fit?','Haircuts / grooming due?']},
     {id:'kidsheart',ic:'💜', n:'Kids\' Emotional Check-In',  dom:'fatherhood',p:['Who needs encouragement?','Does each girl feel seen this week?','Meaningful 1:1 time with each recently?']},
     {id:'parenting',ic:'🤝', n:'Parenting Alignment',        dom:'fatherhood',p:['Megan and I on the same page?','Any boundary drifting?','Discipline consistent?']},
     {id:'us',       ic:'❤️', n:'Marriage / Relationship',    dom:'marriage',  p:['What is Megan carrying alone?','What can I own for her this week?','Decision she has postponed?']},
-    {id:'celebrate',ic:'🎉', n:'Celebrations',               dom:'marriage',  p:['Birthdays / anniversaries next 30 days?','Gifts or cards needed?','Invites to answer?']},
+    {id:'celebrate',ic:'🎉', n:'Celebrations',               dom:'marriage',  p:['Birthdays / anniversaries next 30 days?','Gifts or cards needed?','Kids\' party invites to answer?','Thank-you notes owed?','Extended family occasions?']},
     {id:'faith',    ic:'✝️', n:'Faith Reflection',           dom:'faith',     p:['Rule of life holding?','Where am I drifting?','Purity honest this week?']},
     {id:'body',     ic:'💪', n:'Fitness Ownership',          dom:'fitness',   p:['Training mix balanced?','Recovery / sleep respected?','Body being maintained, not punished?']},
     {id:'lead',     ic:'🧭', n:'Leadership',                 dom:'work',      p:['Team supported + unblocked?','Anyone need coaching or recognition?','Am I ahead of problems?']},
@@ -24121,7 +24120,7 @@ function raidSAInjectPanel(){ try{
   window.lqOwnSectionHTML=function(){
     var rot=lqOwnRotation();
     var today=rot.map(function(id){ var a=lqOwnArea(id); return a?lqOwnRow(a,true):''; }).join('');
-    var rest=LQ_OWN.filter(function(a){ return rot.indexOf(a.id)<0; }).map(function(a){ return lqOwnRow(a,false); }).join('');
+    var rest=LQ_OWN.filter(function(a){ return rot.indexOf(a.id)<0; }).map(function(a){ return lqOwnRow(a,true); }).join('');
     return '<div style="color:var(--muted);font-size:11.5px;font-weight:750;line-height:1.4;margin:2px 0 8px">Is each area handled? Today\'s three rotate daily — a glance earns forge XP once per area per day, and catching a 🟡 counts a little more than a 🟢.</div>'
       +'<div style="font-family:Orbitron;font-weight:900;font-size:11px;letter-spacing:.5px;color:#8fb8ff;margin:2px 0 6px">TODAY\'S GLANCE</div>'+today
       +'<div style="font-family:Orbitron;font-weight:900;font-size:11px;letter-spacing:.5px;color:var(--muted);margin:12px 0 6px">ALL AREAS</div>'+rest;
@@ -24199,7 +24198,16 @@ function raidSAInjectPanel(){ try{
           try{ grantQuestReward(q.reward); }catch(e){}
         });
       });
-      try{ if(typeof heroQuestCounts==='function'&&typeof claimHeroQuest==='function'){ (heroQuestCounts().ready||[]).slice(0,12).forEach(function(h){ try{ claimHeroQuest(h.id); n++; }catch(e){} }); } }catch(e){}
+      try{ if(typeof heroQuestCounts==='function'&&typeof claimHeroQuest==='function'){ (heroQuestCounts().ready||[]).forEach(function(h){ try{ claimHeroQuest(h.id); n++; }catch(e){} }); } }catch(e){}
+      /* v2.203.3: residual Holo-Invites auto-flow into Sparks, uncapped; weekly dividend auto-claims. */
+      try{
+        if(lqCollectionDone&&lqCollectionDone()&&(S.summonTickets||0)>0){
+          var tk=S.summonTickets; S.summonTickets=0; S.sparks=(S.sparks||0)+tk;
+          try{ toast('\u2726 '+tk+' Holo-Invite'+(tk===1?'':'s')+' reforged into Sparks'); }catch(e){}
+          try{ save(); }catch(e){}
+        }
+      }catch(e){}
+      try{ if(typeof of2154ClaimRosterDividend==='function'&&lqCollectionDone&&lqCollectionDone()) of2154ClaimRosterDividend(); }catch(e){}
       var chest='';
       try{
         var st=balanceChestStatus();
@@ -24275,6 +24283,10 @@ function raidSAInjectPanel(){ try{
       if(typeof view==='undefined'||view!=='home') return;
       var v=$id('view'); if(!v) return;
       v.querySelectorAll('.ofHome,.of2153HomeActions').forEach(function(el){ el.style.display='none'; });
+    }catch(e){}
+    /* v2.203.3: the Holo-Invite exchange card is obsolete — invites auto-flow into Sparks. */
+    try{
+      document.querySelectorAll('.of2154InvitePanel').forEach(function(el){ el.style.display='none'; });
       if(!$id('lqCrucibleCard')){
         var target=$id('lqHomeStrip')||$id('lqRoomCard')||$id('nextCard')||v.querySelector('.stagecard')||v.firstElementChild;
         if(target){
