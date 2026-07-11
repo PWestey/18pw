@@ -2831,7 +2831,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.204.0-reviews-native';
+const APP_BUILD='v2.204.3-gate-tints';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4891,9 +4891,20 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
     else items.sort((a,b)=>(a.done?1:0)-(b.done?1:0));
   }
   if(!items.length){ if(taskIsRecurring(subtab)) items.sort((a,b)=>(taskActiveToday(a)?0:1)-(taskActiveToday(b)?0:1)); const msg=taskListFor(subtab).length?(subtab==='todos'?'All visible quests are done. Add one small quest if you want another win.':'All visible '+subtab+' are done. Switch Done Mode in Settings to review completed ones.'):(subtab==='todos'?'No quests yet.<br>Add one small one-off task to keep momentum.':'No '+subtab+' yet.<br>Add one to start.'); L.innerHTML='<div class="empty">'+msg+'</div>'; return; }
+  /* v2.204.1: the dailies list reads as the day's shape — Core gate, Full gate, the day, Shutdown. */
+  const lqGk=d=>d&&d.gate==='preCore'?0:d&&d.gate==='preFull'?1:d&&d.gate==='post'?3:2;
+  const lqBk=d=>({morning:0,midday:1,afternoon:2,evening:3,night:4}[(d&&d.block)||'']??2);
+  if(subtab==='dailies'&&items.some(d=>d&&d.gate)){ items.sort((a,b)=>(lqGk(a)-lqGk(b))||(lqBk(a)-lqBk(b))); }
+  let lqLastGk=-1;
+  const LQ_GH={0:['🎮 PRE-GAME · CORE','#ff8a8a'],1:['🎮 PRE-GAME · FULL','#ffd95a'],2:['THROUGH THE DAY','#9ec3ff'],3:['🌙 SHUTDOWN','#c9b2ff']};
   items.forEach((it,i)=>{
+    if(subtab==='dailies'&&items.some(d=>d&&d.gate)){
+      const g=lqGk(it);
+      if(g!==lqLastGk){ lqLastGk=g; const hd=document.createElement('div'); hd.style.cssText='font-family:Orbitron;font-weight:900;font-size:10.5px;letter-spacing:.8px;color:'+LQ_GH[g][1]+';margin:12px 2px 4px'; hd.textContent=LQ_GH[g][0]; L.appendChild(hd); }
+    }
     const c=document.createElement('div');
     c.className='card'+(it.done?' done':'')+((taskIsRecurring(subtab)&&!taskActiveToday(it))?' resting':''); c.style.animationDelay=(i*0.03)+'s';
+    if(subtab==='dailies'&&it&&it.gate){ const tc={preCore:'255,138,138',preFull:'255,217,90',post:'201,178,255'}[it.gate]; if(tc){ c.style.border='1px solid rgba('+tc+',.33)'; c.style.background='linear-gradient(135deg,rgba('+tc+',.08),rgba(0,0,0,0) 60%)'; } }
     let right='';
     if(taskIsRecurring(subtab)) right=(!taskActiveToday(it))?'<div class="chk resting" title="Rest day">💤</div>':'<div class="chk '+(it.done?'on':'')+'" data-act="daily" data-id="'+it.id+'">'+(it.done?'✓':'')+'</div>';
     else if(subtab==='habits') right='<div class="btnset">'+(it.down?'<button class="sq minus" data-act="hminus" data-id="'+it.id+'">−</button>':'')+(it.up?'<button class="sq plus" data-act="hplus" data-id="'+it.id+'">+</button>':'')+'</div>';
