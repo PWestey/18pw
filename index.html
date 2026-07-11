@@ -2777,13 +2777,14 @@ function domainReadinessHTML(){
       +'<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:2px">'+forgeLine+'</div>'
       +'<div style="font-size:11px;font-weight:700;color:var(--muted)">'+cohortLine+' \u00b7 '+pool.length+' owned</div>'
       +'</div>'; }).join('');
+  var forgeCapCtl='';
+  try{ var _fc=forgeDailyCap(); forgeCapCtl='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)"><label style="font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap">Forge EXP cap/day <span style="color:var(--muted);font-weight:600">(0 = \u221e \u00b7 no limit)</span> <input type="number" min="0" step="100" value="'+(isFinite(_fc)?_fc:0)+'" onchange="devSetForgeCap(this.value)" style="width:96px;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label></div>'; }catch(e){}
   var dev='';
   try{ if(ensureAppSettings().developerTools){ var cap=forgeDailyCap(); var bm=(S.dev&&S.dev.breadthMode)||'normal'; var se=forgeSparkEvery(); var sp=forgeSparkPerMilestone(); var fxe=forgeXpFor('easy'), fxm=forgeXpFor('med'), fxh=forgeXpFor('hard');
     dev='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">'
       +'<div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:7px">\u2699 Dev tuning</div>'
       +'<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
-      +'<label style="font-size:11px;font-weight:700">Forge cap/day <span style="color:var(--muted)">(0 = ∞)</span> <input type="number" min="0" value="'+(isFinite(cap)?cap:0)+'" onchange="devSetForgeCap(this.value)" style="width:62px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label>'
-      +'<label style="font-size:11px;font-weight:700">Breadth gate <select onchange="devSetBreadthMode(this.value)" style="padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800">'
+            +'<label style="font-size:11px;font-weight:700">Breadth gate <select onchange="devSetBreadthMode(this.value)" style="padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800">'
       +['off','normal','strict'].map(function(o){return '<option value="'+o+'"'+(bm===o?' selected':'')+'>'+o+'</option>';}).join('')
       +'</select></label>'
       +'<label style="font-size:11px;font-weight:700">Spark/milestone <input type="number" min="0" max="9" value="'+sp+'" onchange="devSetForgeSparkPer(this.value)" style="width:52px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label>'
@@ -2793,7 +2794,7 @@ function domainReadinessHTML(){
       +'<label style="font-size:11px;font-weight:700">Forge XP \u00b7 hard <input type="number" min="0" max="500" value="'+fxh+'" onchange="devSetForgeXp(\'hard\',this.value)" style="width:52px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label>'
       +'</div></div>';
   } }catch(e){}
-  return '<div class="stagecard"><h3>\u2696 Domain Readiness</h3><p style="margin-bottom:12px">Your Forge level per domain, the next prestige tier it unlocks at your current pace, and whether your roster is deep enough to climb.</p>'+rows+dev+'</div>';
+  return '<div class="stagecard"><h3>\u2696 Domain Readiness</h3><p style="margin-bottom:12px">Your Forge level per domain, the next prestige tier it unlocks at your current pace, and whether your roster is deep enough to climb.</p>'+rows+forgeCapCtl+dev+'</div>';
 }
 function grantForgeXp(domain,diff){
   try{
@@ -2843,7 +2844,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.195.3-cycles-and-care';
+const APP_BUILD='v2.198.1-friends-hobbies';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4600,7 +4601,7 @@ function renderHUD(){
   document.getElementById('exp').textContent=v168Num(expRate());
   document.getElementById('gold').textContent=v168Num(S.gold);
   document.getElementById('dust').textContent=v168Num(S.dust);
-  try{ const ig=document.getElementById('iconGold'); if(ig) ig.innerHTML=cicon('gold',16); const idu=document.getElementById('iconDust'); if(idu) idu.innerHTML=cicon('dust',16); const ic=document.getElementById('iconCharge'); if(ic) ic.innerHTML=cicon('momentum',16); const ie=document.getElementById('iconExp'); if(ie) ie.innerHTML=cicon('exp',16); const lg=document.getElementById('hudLogo'); if(lg&&!lg.getAttribute('src')) lg.src=CURRENCY_ICON.logo; }catch(e){}
+  try{ var _setHudIcon=function(id,key){ var el=document.getElementById(id); if(!el)return; var want=(typeof CURRENCY_ICON==='object'&&CURRENCY_ICON[key])?CURRENCY_ICON[key]:''; var im=el.querySelector('img'); if(im){ if(want&&im.getAttribute('src')!==want) im.setAttribute('src',want); } else { el.innerHTML=cicon(key,16); } }; _setHudIcon('iconGold','gold'); _setHudIcon('iconDust','dust'); _setHudIcon('iconCharge','momentum'); _setHudIcon('iconExp','exp'); const lg=document.getElementById('hudLogo'); if(lg&&!lg.getAttribute('src')) lg.src=CURRENCY_ICON.logo; }catch(e){}
   const rl=document.getElementById('rateLine');
   const act=activeIds().size;
   rl.innerHTML = (act>0)
@@ -5698,8 +5699,9 @@ function raidRecapHTML(){
   return '<div class="raidRecap"><div class="rh"><b>'+b.icon+' '+esc(b.name)+'</b><span>'+pct.toFixed(0)+'%</span></div><div class="xpbar" style="height:10px;margin:8px 0"><i style="width:'+pct+'%;background:linear-gradient(90deg,#ff5d6c,#ffb01f)"></i></div><div style="font-size:12px;color:var(--muted);font-weight:750;line-height:1.35">Weak to '+weak+'<br>'+(ni.ready?'Reward tier ready.':'Need '+ni.need.toLocaleString()+' damage for '+ni.tier+'% tier.')+'</div><div class="raidTierDots">'+tiers+'</div></div>';
 }
 function questBoardHTML(){
-  const qc=questCounts(), hn=holdLineCount(), hd=holdLineComplete(); const qcBoardReady=qc.d.concat(qc.w,qc.c).filter(function(q){return q.ready&&!q.claimed;}).length;
-  return '<div class="questBoard"><div class="qh"><img class="qbIcon" src="art/locations/art_dcf1dc11de.webp"><b>Quest Board</b><span>'+qc.ready+' ready · '+qc.done+' claimed</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">One board for today, this week, hard-day anchors, chains, hero quests, and raid progress.</p>'+oathChestNudgeHTML()+'<div class="questMiniGrid"><div class="questMini"><b>'+qc.d.filter(q=>q.ready).length+'/'+qc.d.length+'</b><span>Daily</span></div><div class="questMini"><b>'+qc.w.filter(q=>q.ready).length+'/'+qc.w.length+'</b><span>Weekly</span></div><div class="questMini"><b>'+qc.c.filter(q=>q.ready).length+'/'+qc.c.length+'</b><span>Chains</span></div><div class="questMini"><b>'+(hd?'✓':hn+'/3')+'</b><span>Hold</span></div></div>'+(qcBoardReady>0?'<button data-claimall="1" style="width:100%;margin:11px 0 2px;padding:11px;border:none;border-radius:12px;background:linear-gradient(135deg,#ffb01f,#ff8a3d);color:#231603;font-weight:900;font-size:15px;font-family:inherit;cursor:pointer">\u2728 Claim All Ready ('+qcBoardReady+')</button>':'')+'<div class="lifeactions"><button class="primary" id="openQuestBoard">Open Quest Board</button></div>'+raidRecapHTML()+'</div>';
+  /* v2.198: quests & chests auto-claim - board reduced to a passive recap (no claim clicks). */
+  var nudge=''; try{ nudge=oathChestNudgeHTML(); }catch(e){}
+  return '<div class="questBoard"><div class="qh"><img class="qbIcon" src="art/locations/art_dcf1dc11de.webp"><b>Quest Board</b><span>auto-claim on</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">Quests and chests claim themselves the moment real actions make them ready - rewards land automatically.</p>'+nudge+raidRecapHTML()+'</div>';
 }
 function showQuestBoard(){
   const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
@@ -7193,7 +7195,7 @@ function validateBackupData(data){
 }
 function exportDailiesToFile(){
   try{
-    const list=(Array.isArray(S.dailies)?S.dailies:[]).map(d=>({title:d.title,freq:d.freq||'daily',diff:d.diff||'easy',domain:d.domain||null,notes:typeof d.notes==='string'?d.notes:'',block:typeof d.block==='string'?d.block:''}));
+    const list=(Array.isArray(S.dailies)?S.dailies:[]).map(d=>({title:d.title,freq:d.freq||'daily',diff:d.diff||'easy',domain:d.domain||null,notes:typeof d.notes==='string'?d.notes:'',block:typeof d.block==='string'?d.block:'',gate:typeof d.gate==='string'?d.gate:'',review:!!d.review}));
     if(!list.length){ toast('No habits to export'); return; }
     const payload={oathforgeDailies:1,exportedAt:new Date().toISOString(),count:list.length,dailies:list};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
@@ -7215,13 +7217,21 @@ function importDailiesFromFile(){
       const list=Array.isArray(parsed)?parsed:(parsed&&Array.isArray(parsed.dailies)?parsed.dailies:null);
       if(!list){ toast('That file has no dailies list'); cleanup(); return; }
       if(!Array.isArray(S.dailies)) S.dailies=[];
-      const have=new Set(S.dailies.map(d=>String(d.title||'').toLowerCase().trim()));
-      let added=0;
-      list.forEach(spec=>{ if(!spec||!spec.title) return; const key=String(spec.title).toLowerCase().trim(); if(have.has(key)) return; S.dailies.push(makeStarterDaily({title:spec.title,freq:spec.freq||'daily',diff:spec.diff||'easy',domain:spec.domain||null,notes:spec.notes,block:spec.block},null)); have.add(key); added++; });
+      /* v2.198 upsert import: add new, UPDATE existing by title (streaks/done preserved),
+         apply gate/review tags, and honor a top-level retire:[titles] list. */
+      const norm=t=>String(t||'').toLowerCase().trim();
+      let added=0, updated=0, removed=0;
+      list.forEach(spec=>{ if(!spec||!spec.title) return; const key=norm(spec.title);
+        const ex=S.dailies.find(d=>norm(d.title)===key);
+        if(ex){ ['freq','diff','domain','notes','block'].forEach(k=>{ if(spec[k]!==undefined&&spec[k]!==null) ex[k]=spec[k]; });
+          ex.gate=typeof spec.gate==='string'?spec.gate:(ex.gate||''); ex.review=!!spec.review; updated++; }
+        else { const nd=makeStarterDaily({title:spec.title,freq:spec.freq||'daily',diff:spec.diff||'easy',domain:spec.domain||null,notes:spec.notes,block:spec.block},null); nd.gate=typeof spec.gate==='string'?spec.gate:''; nd.review=!!spec.review; S.dailies.push(nd); added++; } });
+      const retire=(!Array.isArray(parsed)&&parsed&&Array.isArray(parsed.retire))?parsed.retire.map(norm):[];
+      if(retire.length){ const before=S.dailies.length; S.dailies=S.dailies.filter(d=>!retire.includes(norm(d.title))); removed=before-S.dailies.length; }
       try{ if(typeof save==='function') save(); }catch(e){}
       try{ if(typeof renderHUD==='function') renderHUD(); }catch(e){}
       try{ if(typeof render==='function') render(); }catch(e){}
-      toast('Imported '+added+' dailies'+((list.length-added)>0?(' ('+(list.length-added)+' already present)'):''));
+      toast('Imported: +'+added+' new · '+updated+' updated'+(removed?(' · '+removed+' retired'):''));
     }catch(e){ toast('Could not read that dailies file: '+(e&&e.message||e)); } cleanup(); };
     fr.onerror=()=>{ toast('Could not read that file'); cleanup(); };
     fr.readAsText(file); };
@@ -19579,7 +19589,10 @@ function rerender(){
       of2149Card('conquest','Roster Check','Conquest','Field deep teams against scaling weekly bosses.',conquest,'#c084fc'),
       of2149Card('gauntlet','Rotation','Gauntlet','Endless floors with squad use limits and boon decisions.',gauntlet,'#34d399'),
       of2149Card('rift','Daily Burst','Rift','Fast daily combat for focused rewards and mode variety.',rift,'#f472b6'),
-      of2149Card('arena','Rivalry','Arena','Eight-hero teams fight rival squads for ranking energy.',arena,'#60a5fa')
+      of2149Card('arena','Rivalry','Arena','Eight-hero teams fight rival squads for ranking energy.',arena,'#60a5fa'),
+      /* v2.196: Room of Requirement promoted out of Life Base into the War Table */
+      of2149Card('rooms','Weekly Trials','Room of Requirement','Eight hazard rooms, one per life domain. Living a domain raises its tier cap.',
+        of2149Safe(function(){ ensureRooms(); var open=0, cleared=0; DOMAINS.forEach(function(d){ var b=roomBestTier(d[0]); if(b>0) cleared++; if(b<roomTierCap(d[0])) open++; }); return open?(open+' tiers winnable'):'All caps cleared'; },'8 rooms'),'#ffd95a')
     ].join('');
   }
   function of2149RenderWarTable(v){
@@ -19619,6 +19632,7 @@ function rerender(){
         return;
       }
       window.__of2149WarSub=null;
+      if(t==='rooms'){ try{ showDungeons(); }catch(e){ try{ toast('Room of Requirement unavailable'); }catch(_e){} } return; } /* v2.196 */
       var direct={expeditions:'expeditions',conquest:'conquest',gauntlet:'gauntlet',rift:'rift',arena:'arena'};
       if(direct[t]) navTo(direct[t]);
     }catch(e){ try{ toast('War Table route failed'); }catch(_e){} }
@@ -23842,9 +23856,40 @@ function raidSAInjectPanel(){ try{
         '<div class="lqBondChip" style="text-align:center;font-weight:900;font-size:12px;margin:0 0 8px;color:#ff9bd7">💞 Bond +'+v168Num(b.today)+' today <span style="color:var(--muted);font-weight:800">· '+v168Num(b.total)+' total levels of care</span></div>');
     }catch(e){}
   }
+  /* v2.196: Room of Requirement on the home screen — "what to do next, what's winnable."
+     Shows the top winnable rooms (next tier vs weekly best) with one-tap entry; hides itself
+     when every room is cleared to its cap. */
+  function lqRoomCard(){
+    try{
+      if(typeof view==='undefined'||view!=='home') return;
+      if(document.getElementById('lqRoomCard')) return;
+      if(typeof ensureRooms!=='function'||typeof ROOM_HAZARDS==='undefined') return;
+      ensureRooms();
+      var open=[];
+      DOMAINS.forEach(function(d){
+        var k=d[0], best=roomBestTier(k), cap=roomTierCap(k);
+        if(best<cap) open.push({k:k,next:best+1,cap:cap,haz:ROOM_HAZARDS[k]||{},dom:d[1]});
+      });
+      if(!open.length) return;
+      open.sort(function(a,b){ return a.next-b.next; }); // easiest wins first = "what's winnable"
+      var v=document.getElementById('view'); if(!v) return;
+      var target=document.getElementById('nextCard')||v.querySelector('.stagecard')||v.firstElementChild; if(!target) return;
+      var chips=open.slice(0,3).map(function(r){ return '<span style="border:1px solid '+(r.haz.color||'#ffd95a')+'55;background:'+(r.haz.color||'#ffd95a')+'14;color:'+(r.haz.color||'#ffd95a')+';border-radius:999px;padding:4px 9px;font-size:10.5px;font-weight:900;white-space:nowrap">'+(r.haz.name||r.dom)+' → T'+r.next+'</span>'; }).join(' ');
+      var more=open.length>3?('<span style="color:var(--muted);font-size:10.5px;font-weight:800">+'+(open.length-3)+' more</span>'):'';
+      var card=document.createElement('button');
+      card.id='lqRoomCard'; card.type='button';
+      card.style.cssText='display:block;width:100%;text-align:left;border:1px solid #ffd95a44;background:linear-gradient(135deg,rgba(255,217,90,.10),rgba(255,217,90,.03));border-radius:14px;padding:12px 13px;margin:10px 0;cursor:pointer';
+      card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-family:Orbitron;font-size:13px;color:#ffd95a">🛕 Room of Requirement</b><span style="font-size:10.5px;font-weight:900;color:#7af0a8">'+open.length+' winnable</span></div>'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:7px">'+chips+' '+more+'</div>'+
+        '<div style="color:var(--muted);font-size:11px;font-weight:750;margin-top:6px">Next tiers within reach this week — tap to enter.</div>';
+      card.onclick=function(){ try{ showDungeons(); }catch(e){} };
+      target.insertAdjacentElement('afterend',card);
+    }catch(e){}
+  }
   function lqCollectionDecorate(){
     try{
       lqBondChip();
+      lqRoomCard();
       if(!lqDone()) return;
       ['[data-t="locked"]','[data-t="all"]','[data-qk="wishlist"]','#albumsBtn'].forEach(function(sel){
         document.querySelectorAll(sel).forEach(function(el){ el.style.display='none'; });
@@ -24003,6 +24048,252 @@ function raidSAInjectPanel(){ try{
   })();
 })();
 /* ===== end v2.195.0 THE CONSOLIDATION ===== */
+
+/* ================= v2.198.0 — Ownership, Gate, Shutdown, Reviews, quest auto-claim =================
+   Design contract (locked with Peter 2026-07-11):
+   - Tasks remain the single source of truth; Gate/Shutdown/Reviews are VIEWS over S.dailies via tags
+     (d.gate='preCore'|'preFull'|'post', d.review=true) carried by the upgraded import.
+   - Ownership = NEW lightweight layer: 25 areas, 2-3 surfaced per day on rotation (full coverage ~9 days).
+     Reward attaches to the GLANCE (once/day/area), never to the status itself; catching a Yellow/Red
+     pays slightly more than Green so honesty beats box-ticking. XP rides the existing pipes
+     (grantForgeXp + trackLifeAction) — no new economy, no save migration (S.ownership lazily created).
+   - Quests + Balance Chest auto-claim (the fold); Quest Board card reduced to a passive recap. */
+(function(){
+  'use strict';
+  function $id(x){ return document.getElementById(x); }
+  function dkey(){ return (typeof periodKey==='function')?periodKey('daily'):new Date().toISOString().slice(0,10); }
+
+  /* ---------- Ownership areas (25, locked list) ---------- */
+  var LQ_OWN=[
+    {id:'meals',    ic:'🍽', n:'Meals',                     dom:'home',      p:['Week planned?','Groceries covered?','Who is fed tonight?']},
+    {id:'laundry',  ic:'🧺', n:'Laundry',                   dom:'home',      p:['Everyone\'s laundry moving?','Detergent stocked?','Loop closed — put away?']},
+    {id:'inventory',ic:'📦', n:'Household Inventory',        dom:'home',      p:['Pantry / toiletries / paper low?','Dog food?','Cleaning supplies?']},
+    {id:'maint',    ic:'🔧', n:'Home Maintenance',           dom:'home',      p:['Filters, detectors, leaks?','Anything nagging getting worse?','Yard / appliances?']},
+    {id:'vehicle',  ic:'🚗', n:'Vehicle',                    dom:'home',      p:['Registration / insurance current?','Oil / tires?','Clean enough to respect?']},
+    {id:'tech',     ic:'📱', n:'Household Technology',       dom:'home',      p:['Backups + photos safe?','Updates / passwords?','Kids\' devices + controls?']},
+    {id:'medical',  ic:'🩺', n:'Medical Admin',              dom:'home',      p:['Appointments due (dr/dentist/vision)?','Prescriptions / refills?','Claims or forms open?']},
+    {id:'seasonal', ic:'🗓', n:'Seasonal Planning',          dom:'home',      p:['Next 30-60 days: holidays, breaks?','Clothing / camps?','Anything to book early?']},
+    {id:'finn',     ic:'🐕', n:'Finn Care',                  dom:'home',      p:['Food / meds stocked?','Vet or grooming due?','Getting his walks?']},
+    {id:'travel',   ic:'✈️', n:'Travel Planning',            dom:'home',      p:['Trip coming? Reservations set?','Packing / pet care planned?','Tickets + documents?']},
+    {id:'money',    ic:'💰', n:'Money',                      dom:'home',      p:['Bills paid / autopays ok?','Spending trend this week?','Any expense to stage ahead?']},
+    {id:'school',   ic:'🏫', n:'School Admin',               dom:'fatherhood',p:['School emails / slips handled?','Events + spirit days known?','Clothes & shoes still fit? Grooming due?']},
+    {id:'kidsheart',ic:'💜', n:'Kids\' Emotional Check-In',  dom:'fatherhood',p:['Who needs encouragement?','Does each girl feel seen this week?','Meaningful 1:1 time with each recently?']},
+    {id:'parenting',ic:'🤝', n:'Parenting Alignment',        dom:'fatherhood',p:['Megan and I on the same page?','Any boundary drifting?','Discipline consistent?']},
+    {id:'us',       ic:'❤️', n:'Marriage / Relationship',    dom:'marriage',  p:['What is Megan carrying alone?','What can I own for her this week?','Decision she has postponed?']},
+    {id:'celebrate',ic:'🎉', n:'Celebrations',               dom:'marriage',  p:['Birthdays / anniversaries next 30 days?','Gifts or cards needed?','Invites to answer?']},
+    {id:'faith',    ic:'✝️', n:'Faith Reflection',           dom:'faith',     p:['Rule of life holding?','Where am I drifting?','Purity honest this week?']},
+    {id:'body',     ic:'💪', n:'Fitness Ownership',          dom:'fitness',   p:['Training mix balanced?','Recovery / sleep respected?','Body being maintained, not punished?']},
+    {id:'lead',     ic:'🧭', n:'Leadership',                 dom:'work',      p:['Team supported + unblocked?','Anyone need coaching or recognition?','Am I ahead of problems?']},
+    {id:'gtd',      ic:'🗂', n:'Work System',                dom:'work',      p:['Inboxes current?','Projects have next actions?','Anything rotting in a queue?']},
+    {id:'career',   ic:'📈', n:'Career',                     dom:'work',      p:['Brag doc current?','Trajectory intentional?','Skill being built?']},
+    {id:'screens',  ic:'🎮', n:'Screens / Gaming',           dom:'discipline',p:['Gaming staying in its one window?','Boundary honest this week?','Phone serving me or pulling me?']},
+    {id:'photo',    ic:'📷', n:'Photography',                dom:'hobbies',   p:['Practicing the craft?','Anything captured worth keeping?','Skill to try next?']},
+    {id:'friends',  ic:'🫂', n:'Friendships & Extended Family',dom:'hobbies',p:['Parents / siblings — who needs a call?','Friend to reach out to?','Hospitality or service this season?']},
+    {id:'learning', ic:'📚', n:'Learning',                   dom:'hobbies',   p:['Learning AND applying?','One idea to use this week?','Consuming or growing?']}
+  ];
+
+  function lqOwn(){
+    if(!S.ownership||typeof S.ownership!=='object') S.ownership={st:{},rot:{day:'',ids:[]},ptr:0,gl:{day:'',ids:{}}};
+    var o=S.ownership;
+    if(!o.st)o.st={}; if(!o.rot)o.rot={day:'',ids:[]}; if(typeof o.ptr!=='number')o.ptr=0; if(!o.gl)o.gl={day:'',ids:{}};
+    return o;
+  }
+  function lqOwnRotation(){
+    var o=lqOwn(), dk=dkey(), n=LQ_OWN.length;
+    if(o.rot.day!==dk){
+      var ids=[]; for(var i=0;i<3;i++) ids.push(LQ_OWN[(o.ptr+i)%n].id);
+      o.ptr=(o.ptr+3)%n; o.rot={day:dk,ids:ids};
+      try{ save(); }catch(e){}
+    }
+    return o.rot.ids;
+  }
+  function lqOwnArea(id){ for(var i=0;i<LQ_OWN.length;i++) if(LQ_OWN[i].id===id) return LQ_OWN[i]; return null; }
+  window.lqOwnSet=function(id,st){
+    var a=lqOwnArea(id); if(!a) return;
+    var o=lqOwn(), dk=dkey();
+    o.st[id]={s:st,at:Date.now()};
+    if(o.gl.day!==dk) o.gl={day:dk,ids:{}};
+    if(!o.gl.ids[id]){
+      o.gl.ids[id]=1;
+      /* Reward the GLANCE once/day/area — green small, yellow/red slightly more (honesty > perfection). */
+      var diff=(st==='g')?'easy':'med', fx=null;
+      try{ trackLifeAction(a.dom,diff,'ownership'); }catch(e){}
+      try{ fx=grantForgeXp(a.dom,diff); }catch(e){}
+      var em=st==='g'?'🟢':(st==='y'?'🟡':'🔴');
+      try{ toast(em+' '+a.n+(fx&&fx.gain?(' · +'+fx.gain+' forge XP'):'')+(st!=='g'?' — noticing counts':'')); }catch(e){}
+    } else { try{ toast('Status updated'); }catch(e){} }
+    try{ save(); }catch(e){}
+    try{ showOwnership(); }catch(e){}
+  };
+  function lqDot(st){ var c=st==='g'?'#37d67a':st==='y'?'#ffd95a':st==='r'?'#ff5d6c':'#5a6a78'; return '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+c+';margin-right:6px"></span>'; }
+  function lqOwnRow(a,open){
+    var o=lqOwn(), st=(o.st[a.id]||{}).s||'', glanced=o.gl.day===dkey()&&o.gl.ids[a.id];
+    var dl=(typeof DKEY!=='undefined'&&DKEY[a.dom])?DKEY[a.dom].label:a.dom;
+    var btn=function(v,em){ return '<button data-own="'+a.id+'" data-st="'+v+'" style="border:1px solid '+(st===v?'#fff':'transparent')+';background:rgba(255,255,255,.06);border-radius:9px;padding:6px 10px;font-size:14px;cursor:pointer">'+em+'</button>'; };
+    return '<div class="questRow" style="display:block">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="qt" style="font-size:13px">'+lqDot(st)+a.ic+' '+esc(a.n)+(glanced?' <span style="color:#7af0a8;font-size:10px;font-weight:900">✓</span>':'')+'</div>'
+      +'<div style="display:flex;gap:5px">'+btn('g','🟢')+btn('y','🟡')+btn('r','🔴')+'</div></div>'
+      +'<div class="qm" style="margin-top:3px">'+esc(dl)+(open?(' · '+a.p.map(esc).join(' · ')):'')+'</div></div>';
+  }
+  window.showOwnership=function(){
+    var box=$id('revealBox'), modal=$id('revealModal'); if(!box||!modal) return;
+    var rot=lqOwnRotation();
+    var today=rot.map(function(id){ var a=lqOwnArea(id); return a?lqOwnRow(a,true):''; }).join('');
+    var rest=LQ_OWN.filter(function(a){ return rot.indexOf(a.id)<0; }).map(function(a){ return lqOwnRow(a,false); }).join('');
+    box.innerHTML='<div class="ico">🛡</div><h2>Ownership</h2><p style="font-size:12px">Is each area handled? Today\'s three, then the rest. The glance earns forge XP once per day per area — catching a 🟡 counts a little more than a 🟢.</p>'
+      +'<div style="text-align:left"><b>Today</b>'+today+'</div>'
+      +'<div style="text-align:left;margin-top:10px"><b>All areas</b>'+rest+'</div>'
+      +'<button id="lqOwnClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-family:Orbitron;font-weight:900;width:100%">Close</button>';
+    modal.classList.add('show');
+    box.querySelectorAll('[data-own]').forEach(function(b){ b.onclick=function(){ lqOwnSet(b.dataset.own,b.dataset.st); }; });
+    var c=$id('lqOwnClose'); if(c) c.onclick=function(){ modal.classList.remove('show'); };
+  };
+
+  /* ---------- Gate + Shutdown + Reviews (views over S.dailies) ---------- */
+  function lqActive(d){ try{ return typeof taskActiveToday!=='function'||taskActiveToday(d); }catch(e){ return true; } }
+  function lqByGate(g){ return (S.dailies||[]).filter(function(d){ return d&&d.gate===g&&lqActive(d); }); }
+  window.lqGateStatus=function(){
+    var c=lqByGate('preCore'), f=lqByGate('preFull');
+    var cd=c.filter(function(d){return d.done;}).length, fd=f.filter(function(d){return d.done;}).length;
+    return {core:c,full:f,coreDone:cd,fullDone:fd,tagged:c.length+f.length>0,earned:c.length>0&&cd===c.length};
+  };
+  function lqTaskRow(d){
+    var di=(typeof DKEY!=='undefined'&&DKEY[d.domain])?DKEY[d.domain].label:(d.domain||'');
+    return '<div class="questRow '+(d.done?'done':'')+'"><div><div class="qt">'+(d.done?'✓ ':'')+esc(d.title)+'</div><div class="qm">'+esc(di)+' · '+esc(d.diff||'easy')+'</div></div>'
+      +'<button data-act="daily" data-id="'+d.id+'" class="'+(d.done?'donebtn':'claim')+'">'+(d.done?'Done':'Complete')+'</button></div>';
+  }
+  function lqWireTasks(box,refresh){
+    box.onclick=function(e){
+      var el=e.target.closest('[data-act]');
+      if(el){ try{ onTaskClick(e); }catch(_){} setTimeout(refresh,120); }
+    };
+  }
+  function lqUntaggedHint(){
+    return '<p style="font-size:12px;color:var(--muted)">No gate tags yet — import the updated dailies file (Settings → Import dailies) to load the Core/Full gate.</p>';
+  }
+  window.showPreGame=function(){
+    var box=$id('revealBox'), modal=$id('revealModal'); if(!box||!modal) return;
+    var g=lqGateStatus();
+    var banner=g.tagged?(g.earned
+      ?'<div style="border:1px solid #37d67a66;background:#37d67a14;border-radius:12px;padding:10px;margin:8px 0;color:#7af0a8;font-weight:900">🎮 Window earned — core clear. Play free.</div>'
+      :'<div style="border:1px solid #ffd95a55;background:#ffd95a10;border-radius:12px;padding:10px;margin:8px 0;color:#ffd95a;font-weight:900">'+(g.core.length-g.coreDone)+' core item'+((g.core.length-g.coreDone)===1?'':'s')+' left before the window.</div>'):'';
+    box.innerHTML='<div class="ico">🎮</div><h2>Pre-Game Gate</h2><p style="font-size:12px">One earned window, around noon. Core = the day isn\'t wrecked. Full = a clean sweep.</p>'+banner
+      +(g.tagged
+        ?('<div style="text-align:left"><b style="color:#ff8a8a">Core · '+g.coreDone+'/'+g.core.length+'</b>'+g.core.map(lqTaskRow).join('')+'</div>'
+          +'<div style="text-align:left;margin-top:10px"><b>Full · '+g.fullDone+'/'+g.full.length+'</b>'+g.full.map(lqTaskRow).join('')+'</div>')
+        :lqUntaggedHint())
+      +'<button id="lqGateClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-family:Orbitron;font-weight:900;width:100%">Close</button>';
+    modal.classList.add('show');
+    lqWireTasks(box,window.showPreGame);
+    var c=$id('lqGateClose'); if(c) c.onclick=function(){ modal.classList.remove('show'); box.onclick=null; };
+  };
+  window.showPostGame=function(){
+    var box=$id('revealBox'), modal=$id('revealModal'); if(!box||!modal) return;
+    var list=lqByGate('post'), dn=list.filter(function(d){return d.done;}).length;
+    box.innerHTML='<div class="ico">🌙</div><h2>Post-Game Shutdown</h2><p style="font-size:12px">The real battle: one window stays one window. Set the end time before you start. When it hits — stand up, water, two-minute walk, review the next task.</p>'
+      +(list.length
+        ?('<div style="text-align:left"><b>Shutdown · '+dn+'/'+list.length+'</b>'+list.map(lqTaskRow).join('')+'</div>')
+        :lqUntaggedHint())
+      +'<button id="lqPostClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-family:Orbitron;font-weight:900;width:100%">Close</button>';
+    modal.classList.add('show');
+    lqWireTasks(box,window.showPostGame);
+    var c=$id('lqPostClose'); if(c) c.onclick=function(){ modal.classList.remove('show'); box.onclick=null; };
+  };
+  window.showReviews=function(){
+    var box=$id('revealBox'), modal=$id('revealModal'); if(!box||!modal) return;
+    var rv=(S.dailies||[]).filter(function(d){ return d&&d.review; });
+    var groups=[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(g){
+      var list=rv.filter(function(d){ return (d.freq||'daily')===g[0]; });
+      if(!list.length) return '';
+      return '<div style="text-align:left;margin-top:10px"><b>'+g[1]+'</b>'+list.map(lqTaskRow).join('')+'</div>';
+    }).join('');
+    box.innerHTML='<div class="ico">📋</div><h2>Reviews</h2><p style="font-size:12px">The handful that look across ownerships. These are real sit-downs — everything else is a rotating glance.</p>'
+      +(rv.length?groups:lqUntaggedHint())
+      +'<button id="lqRevClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-family:Orbitron;font-weight:900;width:100%">Close</button>';
+    modal.classList.add('show');
+    lqWireTasks(box,window.showReviews);
+    var c=$id('lqRevClose'); if(c) c.onclick=function(){ modal.classList.remove('show'); box.onclick=null; };
+  };
+
+  /* ---------- Home "Today's Path" card ---------- */
+  function lqTodayCard(){
+    try{
+      if(typeof view==='undefined'||view!=='home') return;
+      if($id('lqTodayCard')) return;
+      var v=$id('view'); if(!v) return;
+      var target=$id('lqRoomCard')||$id('nextCard')||v.querySelector('.stagecard')||v.firstElementChild; if(!target) return;
+      var g=lqGateStatus();
+      var o=lqOwn(), rot=lqOwnRotation();
+      var glanced=rot.filter(function(id){ return o.gl.day===dkey()&&o.gl.ids[id]; }).length;
+      var rv=(S.dailies||[]).filter(function(d){ return d&&d.review&&lqActive(d)&&!d.done; }).length;
+      var gateTxt=!g.tagged?'Gate: import tags':(g.earned?'🎮 Window earned':('Gate '+g.coreDone+'/'+g.core.length+' core'));
+      var gateCol=g.earned?'#7af0a8':'#ffd95a';
+      var card=document.createElement('div');
+      card.id='lqTodayCard';
+      card.style.cssText='border:1px solid #8fb8ff44;background:linear-gradient(135deg,rgba(143,184,255,.10),rgba(143,184,255,.03));border-radius:14px;padding:12px 13px;margin:10px 0';
+      card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-family:Orbitron;font-size:13px;color:#8fb8ff">🎯 Today\'s Path</b><span style="font-size:10.5px;font-weight:900;color:'+gateCol+'">'+gateTxt+'</span></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:9px">'
+        +'<button id="lqBtnGate" style="border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:10px;padding:8px 4px;font-size:11px;font-weight:900;color:var(--ink);cursor:pointer">🎮 Gate</button>'
+        +'<button id="lqBtnPost" style="border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:10px;padding:8px 4px;font-size:11px;font-weight:900;color:var(--ink);cursor:pointer">🌙 Shutdown</button>'
+        +'<button id="lqBtnOwn" style="border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:10px;padding:8px 4px;font-size:11px;font-weight:900;color:var(--ink);cursor:pointer">🛡 Own'+(glanced<3?(' <span style="color:#ffd95a">'+glanced+'/3</span>'):' ✓')+'</button>'
+        +'<button id="lqBtnRev" style="border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:10px;padding:8px 4px;font-size:11px;font-weight:900;color:var(--ink);cursor:pointer">📋 Reviews'+(rv?(' <span style="color:#ffd95a">'+rv+'</span>'):'')+'</button>'
+        +'</div>';
+      target.insertAdjacentElement('afterend',card);
+      $id('lqBtnGate').onclick=function(){ showPreGame(); };
+      $id('lqBtnPost').onclick=function(){ showPostGame(); };
+      $id('lqBtnOwn').onclick=function(){ showOwnership(); };
+      $id('lqBtnRev').onclick=function(){ showReviews(); };
+    }catch(e){}
+  }
+
+  /* ---------- Quest + Balance Chest auto-claim (the fold) ---------- */
+  var lqClaimBusy=false;
+  window.lqAutoClaim=function(){
+    if(lqClaimBusy) return; lqClaimBusy=true;
+    try{
+      if(typeof ensureQuestState!=='function'||typeof dailyQuestDefs!=='function'){ lqClaimBusy=false; return; }
+      var qs=ensureQuestState(), n=0;
+      [['daily',dailyQuestDefs(),qs.daily.claimed],['weekly',weeklyQuestDefs(),qs.weekly.claimed],['chains',chainDefs(),qs.chains.claimed]].forEach(function(g){
+        (g[1]||[]).forEach(function(q){
+          if(!q||g[2][q.id]) return;
+          var ready=false;
+          try{ if(g[0]==='chains'){ var cp=chainProgress(q); ready=cp.done>=cp.total; } else ready=q.progress()>=q.goal; }catch(e){ ready=false; }
+          if(!ready) return;
+          g[2][q.id]=true; n++;
+          try{ grantQuestReward(q.reward); }catch(e){}
+        });
+      });
+      var chest='';
+      try{
+        var st=balanceChestStatus();
+        if(st.ready&&st.tier){
+          var W=ensureLifeWeek(); W.balanceClaimed=true;
+          if(st.n>=8){ S.crystals+=25; grantTicket(1); S.grace=(S.grace||0)+1; }
+          else if(st.n>=6){ S.crystals+=20; grantTicketShard(5); }
+          else { S.crystals+=15; grantTicketShard(3); }
+          chest=st.tier.name;
+        }
+      }catch(e){}
+      if(n>0||chest){
+        try{ toast('✨ Auto-claimed: '+(n>0?(n+' quest'+(n===1?'':'s')):'')+(n>0&&chest?' · ':'')+chest); }catch(e){}
+        try{ renderHUD(); }catch(e){}
+        try{ save(); }catch(e){}
+      }
+    }catch(e){}
+    lqClaimBusy=false;
+  };
+
+  /* ---------- boot ---------- */
+  var tries=0;
+  (function boot(){
+    if(typeof S==='undefined'||!S||typeof save!=='function'){ if(tries++<150) setTimeout(boot,250); return; }
+    lqOwn();
+    setTimeout(function(){ try{ lqAutoClaim(); }catch(e){} },4000);
+    setInterval(function(){ try{ lqAutoClaim(); }catch(e){} },12000);
+    setInterval(function(){ try{ lqTodayCard(); }catch(e){} },900);
+  })();
+})();
+
 </script>
 
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){try{navigator.serviceWorker.register('./sw.js').catch(function(){});}catch(e){}});}</script><script type="module" src="oathforge-cloud.js"></script>
