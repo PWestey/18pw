@@ -2831,7 +2831,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.207.1-crawler-gate';
+const APP_BUILD='v2.208.0-greathall-perf';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3285,6 +3285,16 @@ function legendHpMult(h){ try{ var li=legendOfHero(h); if(!li) return 1; return 
 function hpOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.hp*TUNE.heroScale(effLevel(h))+heroGearStats(h).hp)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()*legendHpMult(h)*forgeHpMult()*anvilMult()*blessMult(h)*ascMult(h)); }
 function atkOf(h){ if(!h) return 0; h.role=normalizeRole(h.role); const rb=roleBaseOf(h.role); return Math.round((rb.atk*TUNE.heroScale(effLevel(h))+heroGearStats(h).atk)*rankMult(h)*prestigeMult(h)*collectionMult()*bondMult(h)*accountMult()*legendAtkMult(h)*forgeAtkMult()*anvilMult()*blessMult(h)*ascMult(h)); }
 function powerOf(h){ if(!h) return 0; return Math.round(hpOf(h)/8+atkOf(h)*2); }
+/* v2.208.0 Great Hall perf: powerOf TTL memo (200ms). ~100 sort/panel sites hammer
+   powerOf (6.7k calls/roster render); each call chains 4 multiplier fns. Same
+   pattern as the winnability throttle. Stale window is one animation beat. */
+(function(){ var __rawPowerOf=powerOf, __pc=new Map(), __pt=0;
+  powerOf=function(h){ if(!h) return 0;
+    var now=Date.now(); if(now-__pt>200){ __pc.clear(); __pt=now; }
+    var k=h.id; if(k==null) return __rawPowerOf(h);
+    var v=__pc.get(k); if(v!==undefined) return v;
+    v=__rawPowerOf(h); __pc.set(k,v); return v; };
+})();
 const SQUADS=[['campaign','Campaign','⚔'],['tower','Tower','⛰'],['raid','Raid','☠']];
 function squad(mode){ if(!S.squads) S.squads={campaign:[],tower:[],raid:[]}; if(!Array.isArray(S.squads[mode])) S.squads[mode]=[]; return S.squads[mode]; }
 function optimizeSquad(mode){ mode=mode||'campaign'; if(!S.squads) S.squads={campaign:[],tower:[],raid:[]}; const size=TUNE.teamSize||8; const owned=(S.heroes||[]).filter(h=>h&&h.owned).sort((a,b)=>((typeof rankIdx==='function'?rankIdx(b):(b.rank||0))-(typeof rankIdx==='function'?rankIdx(a):(a.rank||0)))||(powerOf(b)-powerOf(a))); if(!owned.length){ toast('No owned heroes to optimize yet.'); return; } S.squads[mode]=owned.slice(0,size).map(h=>h.id); if(typeof save==='function') save(); if(typeof renderHUD==='function') renderHUD(); if(typeof render==='function') render(); toast(cap(mode)+' squad optimized — strongest in front.'); }
@@ -10733,7 +10743,8 @@ function v161RoleIcon(role){ return (typeof LQ_ROLE_ICON!=='undefined'&&LQ_ROLE_
 function v161ArchIcon(h){ const a=heroArchetype(h); return a?((typeof LQ_ARCH_ICON!=='undefined'&&LQ_ARCH_ICON[a.key])?LQ_ARCH_ICON[a.key]:'✦'):'✦'; }
 function v161Face(h){
   if(h.sprite) return '<canvas class="sprcanvas" width="128" height="128" data-spr="'+h.id+'"></canvas>';
-  if(h.img) return '<img src="'+h.img+'">';
+  /* v2.208.0: lazy decode — 441 simultaneous base64 decodes spike iOS memory (jetsam). */
+  if(h.img) return '<img src="'+h.img+'" loading="lazy" decoding="async">';
   return '<span class="v161Initials">'+initials(h.name)+'</span>';
 }
 function v161Card(h,i){
@@ -10783,9 +10794,23 @@ function v161RenderRoster(v){
     g.innerHTML=''; const list=rosterFiltered();
     const shown=document.getElementById('v161Shown'); if(shown) shown.textContent=list.length+' shown';
     if(!list.length){ g.innerHTML='<div class="empty" style="grid-column:1/-1">No heroes match.<br>Clear search, switch tab, or change filters.</div>'; return; }
-    list.forEach((h,i)=>g.appendChild(v161Card(h,i)));
-    if(rosState.tab!=='locked'&&rosState.quick!=='wishlist'){ const add=document.createElement('div'); add.className='v161AddHero'; add.id='addHero'; add.innerHTML='<div><span>＋</span>Custom hero</div>'; g.appendChild(add); }
-    list.forEach(h=>{ if(h.owned&&h.sprite){ const c=g.querySelector('canvas[data-spr="'+h.id+'"]'); if(c) loadSheet(h.id).then(im=>{ if(im) playSprite(c,im,h.sprite,'idle'); else c.replaceWith(Object.assign(document.createElement('span'),{textContent:initials(h.name),className:'v161Initials'})); }); } });
+    /* v2.208.0 Great Hall perf: chunked render. 441 synchronous card builds blocked the
+       main thread ~seconds on device; iOS treats that as a hung page. First chunk paints
+       immediately, the rest append in idle batches. Final DOM is identical. Token +
+       g.isConnected abort stale batches when filters change or the view re-renders. */
+    const tok=(fillGrid.__tok=(fillGrid.__tok||0)+1);
+    const CHUNK=60;
+    const wireSprites=sub=>{ sub.forEach(h=>{ if(h.owned&&h.sprite){ const c=g.querySelector('canvas[data-spr="'+h.id+'"]'); if(c) loadSheet(h.id).then(im=>{ if(im) playSprite(c,im,h.sprite,'idle'); else c.replaceWith(Object.assign(document.createElement('span'),{textContent:initials(h.name),className:'v161Initials'})); }); } }); };
+    let idx=0;
+    const step=()=>{
+      if(tok!==fillGrid.__tok||!g.isConnected) return;
+      const end=Math.min(list.length,idx+CHUNK), sub=list.slice(idx,end);
+      sub.forEach((h,k)=>g.appendChild(v161Card(h,idx+k)));
+      wireSprites(sub); idx=end;
+      if(idx<list.length){ if(window.requestIdleCallback) requestIdleCallback(step,{timeout:120}); else setTimeout(step,0); return; }
+      if(rosState.tab!=='locked'&&rosState.quick!=='wishlist'){ const add=document.createElement('div'); add.className='v161AddHero'; add.id='addHero'; add.innerHTML='<div><span>＋</span>Custom hero</div>'; g.appendChild(add); }
+    };
+    step();
   }
   fillGrid();
   document.getElementById('summonBtn').onclick=()=>{ const h=randomUnlock(); if(h) showReveal(h,{fromSummon:true}); };
