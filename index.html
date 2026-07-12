@@ -2831,7 +2831,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.205.0-day-phases';
+const APP_BUILD='v2.205.2-overflow-funnels';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -20895,8 +20895,8 @@ renderHome=function(v){ var r=oldHome.apply(this,arguments); try{ enhanceHome(v)
 
   function claimRosterDividend(){
     var c=cfg(), W=weekState();
-    if(!completeRoster()){ try{ toast('Complete the roster to claim this weekly Spark dividend.'); }catch(e){} return false; }
-    if(W.rosterClaimed){ try{ toast('Roster completion dividend already claimed this week.'); }catch(e){} return false; }
+    if(!completeRoster()){ return false; }
+    if(W.rosterClaimed){ return false; } /* v2.205.1: automated path — no toast spam */
     if(c.rosterCompleteWeeklySparks<=0){ try{ toast('Roster completion dividend is disabled in Developer Tools.'); }catch(e){} return false; }
     W.rosterClaimed=true;
     S.sparks=(S.sparks||0)+c.rosterCompleteWeeklySparks;
@@ -24227,6 +24227,16 @@ function raidSAInjectPanel(){ try{
         }
       }catch(e){}
       try{ if(typeof of2154ClaimRosterDividend==='function'&&lqCollectionDone&&lqCollectionDone()) of2154ClaimRosterDividend(); }catch(e){}
+      /* v2.205.2: overflow funnels — surplus premium currencies flow toward the scarce rank materials.
+         Crystals have near-zero sinks post-collection: excess above 300 refines 1:1 into Iso-8 (heroCores).
+         Sparks income >> spend: excess above a 400 working floor condenses 25:1 into Prime Iso-8 (bossCores). */
+      try{
+        var FL={crys:300, spark:400, sparkPer:25};
+        var cEx=Math.floor(Math.max(0,(S.crystals||0)-FL.crys));
+        if(cEx>0){ S.crystals-=cEx; S.heroCores=(S.heroCores||0)+cEx; try{ toast('\u25c8 '+cEx+' crystals refined into Iso-8'); }catch(e){} try{ renderHUD(); save(); }catch(e){} }
+        var spN=Math.floor(Math.max(0,(S.sparks||0)-FL.spark)/FL.sparkPer);
+        if(spN>0){ S.sparks-=spN*FL.sparkPer; S.bossCores=(S.bossCores||0)+spN; try{ toast('\u25c6 +'+spN+' Prime Iso-8 condensed from Sparks'); }catch(e){} try{ renderHUD(); save(); }catch(e){} }
+      }catch(e){}
       var chest='';
       try{
         var st=balanceChestStatus();
