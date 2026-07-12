@@ -2831,7 +2831,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.205.3-autopill-restore';
+const APP_BUILD='v2.207.1-crawler-gate';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -12261,7 +12261,11 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
   var legacyV141  = openHeroSheetLegacy_v141; // working editor w/ visible portrait controls
   window.__heroChamberV159 = chamberV159;
   openHeroSheet = function(id){
-    if(!id) return chamberV159(id);           // add-hero / no-id -> existing handler
+    /* v2.207.1 crawler-gate fix: the no-id (add-hero) path has been self-recursive
+       since v141 (openHeroSheetLegacy_v141 captured the hoisted v141 fn itself).
+       chamberV159 bottoms out in that same base -> infinite loop -> freeze.
+       Custom heroes ship via RELEASE_HEROES, so guard instead of crash. */
+    if(!id){ try{ toast('Add heroes via the release roster \u2014 this editor needs a hero.'); }catch(e){} return; }
     return legacyV141(id);                     // specific hero -> Legacy editor
   };
 })();
@@ -24315,7 +24319,16 @@ function raidSAInjectPanel(){ try{
     try{
       if(typeof view==='undefined'||view!=='home') return;
       var v=$id('view'); if(!v) return;
-      v.querySelectorAll('.ofHome,.of2153HomeActions').forEach(function(el){ el.style.display='none'; });
+      /* v2.206: one home — the ritual hub retires but its photo anchor stays (Peter's call).
+         Hide every hub child EXCEPT .ofHomeAnchor; the dash layer beneath is the canonical home. */
+      v.querySelectorAll('.of2153HomeActions').forEach(function(el){ el.style.display='none'; });
+      v.querySelectorAll('.ofHome').forEach(function(hub){
+        hub.style.display='';
+        hub.style.background='transparent'; hub.style.border='none'; hub.style.padding='0';
+        Array.prototype.forEach.call(hub.children,function(ch){
+          ch.style.display=ch.classList.contains('ofHomeAnchor')?'':'none';
+        });
+      });
     }catch(e){}
     /* v2.203.3: the Holo-Invite exchange card is obsolete — invites auto-flow into Sparks. */
     try{
@@ -24338,11 +24351,52 @@ function raidSAInjectPanel(){ try{
   (function boot(){
     if(typeof S==='undefined'||!S||typeof save!=='function'){ if(tries++<150) setTimeout(boot,250); return; }
     lqOwn();
+    /* v2.207: exclusive campaign/tower rosters. Any Optimize press solves BOTH teams disjointly —
+       campaign gets the top cohort, tower the next — so the constraint creates variety, never homework.
+       Raid/clash squads untouched. A sweep guard repairs manual overlaps (campaign wins the hero). */
+    try{
+      if(typeof optimizeSquad==='function'&&!optimizeSquad.__lqExclusive){
+        var __lqOrigOpt=optimizeSquad;
+        optimizeSquad=function(mode){
+          mode=mode||'campaign';
+          if(mode!=='campaign'&&mode!=='tower') return __lqOrigOpt(mode);
+          if(!S.squads) S.squads={campaign:[],tower:[],raid:[]};
+          var size=TUNE.teamSize||8;
+          var owned=(S.heroes||[]).filter(function(h){return h&&h.owned;}).sort(function(a,b){
+            return ((typeof rankIdx==='function'?rankIdx(b):(b.rank||0))-(typeof rankIdx==='function'?rankIdx(a):(a.rank||0)))||(powerOf(b)-powerOf(a));
+          });
+          if(!owned.length){ try{ toast('No owned heroes to optimize yet.'); }catch(e){} return; }
+          S.squads.campaign=owned.slice(0,size).map(function(h){return h.id;});
+          var cset={}; S.squads.campaign.forEach(function(id){cset[id]=1;});
+          S.squads.tower=owned.filter(function(h){return !cset[h.id];}).slice(0,size).map(function(h){return h.id;});
+          try{ save(); }catch(e){} try{ renderHUD(); }catch(e){} try{ render(); }catch(e){}
+          try{ toast('\u2694 Campaign + Tower optimized \u2014 two exclusive squads.'); }catch(e){}
+        };
+        optimizeSquad.__lqExclusive=true;
+      }
+      window.lqEnforceDisjoint=function(){
+        try{
+          if(!S.squads||!Array.isArray(S.squads.campaign)||!Array.isArray(S.squads.tower)) return;
+          var cset={}; S.squads.campaign.forEach(function(id){cset[id]=1;});
+          var dupes=S.squads.tower.filter(function(id){return cset[id];});
+          if(!dupes.length) return;
+          var size=TUNE.teamSize||8;
+          var taken={}; S.squads.campaign.forEach(function(id){taken[id]=1;}); S.squads.tower.forEach(function(id){taken[id]=1;});
+          var pool=(S.heroes||[]).filter(function(h){return h&&h.owned&&!taken[h.id];}).sort(function(a,b){
+            return ((typeof rankIdx==='function'?rankIdx(b):(b.rank||0))-(typeof rankIdx==='function'?rankIdx(a):(a.rank||0)))||(powerOf(b)-powerOf(a));
+          });
+          S.squads.tower=S.squads.tower.filter(function(id){return !cset[id];});
+          while(S.squads.tower.length<size&&pool.length) S.squads.tower.push(pool.shift().id);
+          try{ toast('\u2694 Rosters kept exclusive \u2014 '+dupes.length+' hero'+(dupes.length===1?'':'es')+' moved off Tower (Campaign wins).'); }catch(e){}
+          try{ save(); }catch(e){}
+        }catch(e){}
+      };
+    }catch(e){}
     /* v2.201: the v169 Wisdom layer reassigns strategySummaryHTML — final-word stub (system retired). */
     try{ strategySummaryHTML=function(){ return ''; }; }catch(e){}
     setTimeout(function(){ try{ lqAutoClaim(); }catch(e){} },4000);
     setInterval(function(){ try{ lqAutoClaim(); }catch(e){} },12000);
-    setInterval(function(){ try{ lqRaidDeclutter(); }catch(e){} try{ lqHomeStrip(); }catch(e){} try{ lqHomeTrim(); }catch(e){} try{ if(typeof ofInjectAutoPills==='function') ofInjectAutoPills(); }catch(e){} },900);
+    setInterval(function(){ try{ lqRaidDeclutter(); }catch(e){} try{ lqHomeStrip(); }catch(e){} try{ lqHomeTrim(); }catch(e){} try{ if(typeof ofInjectAutoPills==='function') ofInjectAutoPills(); }catch(e){} try{ if(typeof lqEnforceDisjoint==='function') lqEnforceDisjoint(); }catch(e){} },900);
   })();
 })();
 
