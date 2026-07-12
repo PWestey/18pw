@@ -2831,7 +2831,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.205.2-overflow-funnels';
+const APP_BUILD='v2.205.3-autopill-restore';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -24188,7 +24188,11 @@ function raidSAInjectPanel(){ try{
   function lqRaidDeclutter(){
     if(typeof campSub==='undefined'||!campSub) return;
     var v=$id('view'); if(!v) return;
-    v.querySelectorAll('.v156SceneCard,.formationLegend,.formtip').forEach(function(el){ el.style.display='none'; });
+    v.querySelectorAll('.v156SceneCard,.formationLegend,.formtip').forEach(function(el){
+      /* v2.205.3: never hide a container that carries interactive controls (auto pills, start buttons). */
+      if(el.querySelector('button,.ofAutoPill,input,select')){ el.style.display=''; return; }
+      el.style.display='none';
+    });
     if(campSub!=='raid') return;
     var bossName=''; try{ bossName=(currentBoss()||{}).name||''; }catch(e){}
     if(bossName){
@@ -24338,7 +24342,7 @@ function raidSAInjectPanel(){ try{
     try{ strategySummaryHTML=function(){ return ''; }; }catch(e){}
     setTimeout(function(){ try{ lqAutoClaim(); }catch(e){} },4000);
     setInterval(function(){ try{ lqAutoClaim(); }catch(e){} },12000);
-    setInterval(function(){ try{ lqRaidDeclutter(); }catch(e){} try{ lqHomeStrip(); }catch(e){} try{ lqHomeTrim(); }catch(e){} },900);
+    setInterval(function(){ try{ lqRaidDeclutter(); }catch(e){} try{ lqHomeStrip(); }catch(e){} try{ lqHomeTrim(); }catch(e){} try{ if(typeof ofInjectAutoPills==='function') ofInjectAutoPills(); }catch(e){} },900);
   })();
 })();
 
