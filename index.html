@@ -2791,7 +2791,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.217.0-pass-e';
+const APP_BUILD='v2.219.1-tier-cachebust';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -5162,7 +5162,7 @@ function onTaskClick(e){
       const blocked=majorRewardBlocked(lastTaskLoot,extraMsgs);
       recordLastAction(d,'daily',charged,bu,tu,extraMsgs);
       try{ flash(el); el.closest('.card')?.classList.add('pulseTask'); toast(msg); v172TaskJuice(el,d); v176GoldenRoll(el,d);
-      rewardSummary(d.title+' complete', baseRewardItems(d.diff,charged).concat(bondItems(bu,d.domain),titleItems(tu),[{txt:chargeCapText(),cls:charged>0?'':'warn'}, blocked?{txt:'Undo unavailable: major reward claimed',cls:'warn'}:null]));
+      /* v2.218.0: task-completion currency popup removed — rewards still granted silently; the strike celebration is the moment. Big-moment rewardSummary calls (prestige, dungeons, Hold the Line) untouched. */ 
       showTaskDopamine(d,'daily',charged,bu); showUndoBar(undoSnap,d.title,blocked); }catch(_fx){ try{console.error('completion FX (non-fatal)',_fx);}catch(_){} }
     } else {
       const awarded=d.chargeAwarded||0; d.done=false; d.streak=Math.max(0,d.streak-1); S.charge=Math.max(0,+(S.charge-awarded).toFixed(3)); const led=ensureChargeLedger(); led.earned=Math.max(0,+(led.earned-awarded).toFixed(3)); d.chargeAwarded=0;
@@ -5172,7 +5172,7 @@ function onTaskClick(e){
     const h=f(S.habits); if(!h)return; const undoSnap=taskSnapshot(); lastTaskLoot=null; lastDomainGain=null;
     h.count++; const pk=periodKey(h.freq);
     if(h.chgPk!==pk){ h.chgPk=pk; h.chg=0; }
-    if(h.chg<TUNE.habitChargeCap){ h.chg++; const hg=(h.diff==='hard'?40:(h.diff==='med'?20:8)), hd=(h.diff==='hard'?14:(h.diff==='med'?7:3)); S.gold=(S.gold||0)+hg; S.dust=(S.dust||0)+hd; var _lsH=grantLegendaryShards(h.diff,h.domain); trackLifeAction(h.domain,h.diff,'habit'); var _fxH=grantForgeXp(h.domain,h.diff); const bu=gainBond(h.domain,BONDXP[h.diff]||0); const tu=unlockTitles(h.domain,h.diff); flash(el); const txt='+'+hg+'⦿ +'+hd+'❖'+legendShardTag(_lsH)+forgeXpTag(h.domain,_fxH)+(h.chg>=TUNE.habitChargeCap?' · daily cap reached':'')+bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); toast(txt); recordLastAction(h,'habit',0,bu,tu,[]); rewardSummary(h.title+' logged', [{txt:'+'+hg+'⦿ gold',cls:'main'},{txt:'+'+hd+'❖ dust',cls:'bonus'}].concat(bondItems(bu,h.domain),titleItems(tu))); showTaskDopamine(h,'habit',0,bu); showUndoBar(undoSnap,h.title,false); }
+    if(h.chg<TUNE.habitChargeCap){ h.chg++; const hg=(h.diff==='hard'?40:(h.diff==='med'?20:8)), hd=(h.diff==='hard'?14:(h.diff==='med'?7:3)); S.gold=(S.gold||0)+hg; S.dust=(S.dust||0)+hd; var _lsH=grantLegendaryShards(h.diff,h.domain); trackLifeAction(h.domain,h.diff,'habit'); var _fxH=grantForgeXp(h.domain,h.diff); const bu=gainBond(h.domain,BONDXP[h.diff]||0); const tu=unlockTitles(h.domain,h.diff); flash(el); const txt='+'+hg+'⦿ +'+hd+'❖'+legendShardTag(_lsH)+forgeXpTag(h.domain,_fxH)+(h.chg>=TUNE.habitChargeCap?' · daily cap reached':'')+bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); toast(txt); recordLastAction(h,'habit',0,bu,tu,[]); /* v2.218.0: task-completion currency popup removed — rewards still granted silently; the strike celebration is the moment. Big-moment rewardSummary calls (prestige, dungeons, Hold the Line) untouched. */ showTaskDopamine(h,'habit',0,bu); showUndoBar(undoSnap,h.title,false); }
     else { flash(el); toast('Logged ✓ · charge maxed for today'); }
   }
   else if(act==='hminus'){ const h=f(S.habits); if(!h)return; h.count--; flash(el); toast('Logged a slip'); }
@@ -5184,7 +5184,7 @@ function onTaskClick(e){
       if(!t.looted){ msg+=taskLoot(t.diff,t.domain); msg+=legendShardTag(grantLegendaryShards(t.diff,t.domain)); trackLifeAction(t.domain,t.diff,'quest'); var _fxT=grantForgeXp(t.domain,t.diff); msg+=forgeXpTag(t.domain,_fxT); bu=gainBond(t.domain,BONDXP[t.diff]||0); tu=unlockTitles(t.domain,t.diff); t._titles=tu; msg+=bondToast(bu)+(tu.length?' · 🏷 '+tu[0]:''); t.looted=true; }
       const blocked=majorRewardBlocked(lastTaskLoot,extraMsgs);
       recordLastAction(t,'quest',charged,bu,tu,extraMsgs);
-      flash(el); toast(msg); rewardSummary(t.title+' complete', baseRewardItems(t.diff,charged).concat(bondItems(bu,t.domain),titleItems(t._titles||[]),[{txt:chargeCapText(),cls:''}, blocked?{txt:'Undo unavailable: major reward claimed',cls:'warn'}:null])); showTaskDopamine(t,'quest',charged,bu); showUndoBar(undoSnap,t.title,blocked);
+      flash(el); toast(msg); /* v2.218.0: task-completion currency popup removed — rewards still granted silently; the strike celebration is the moment. Big-moment rewardSummary calls (prestige, dungeons, Hold the Line) untouched. */ showTaskDopamine(t,'quest',charged,bu); showUndoBar(undoSnap,t.title,blocked);
     } else t.done=false;
   }
   else if(act==='edit'){ openTaskSheet(id); return; }
@@ -8675,16 +8675,16 @@ function gearNodeV141(h,slot){
 
 /* ===== Prestige tier icons (top-right of hero cards). tier=floor(prestige/5) capped 0..9; shown from prestige>=1 ===== */
 const LQ_PRESTIGE_TIER_ICON=[
-"art/locations/art_fc12b6cdd7.webp",
-"art/locations/art_934fa977f6.webp",
-"art/locations/art_42cafca00d.webp",
-"art/locations/art_fc5bf65652.webp",
-"art/locations/art_1c70c30f37.webp",
-"art/locations/art_b127834b09.webp",
-"art/locations/art_369fce5ba9.webp",
-"art/locations/art_7eaadf0198.webp",
-"art/locations/art_5e4cead18d.webp",
-"art/locations/art_4089eddfee.webp"
+"art/locations/art_fc12b6cdd7.webp?v=2",
+"art/locations/art_934fa977f6.webp?v=2",
+"art/locations/art_42cafca00d.webp?v=2",
+"art/locations/art_fc5bf65652.webp?v=2",
+"art/locations/art_1c70c30f37.webp?v=2",
+"art/locations/art_b127834b09.webp?v=2",
+"art/locations/art_369fce5ba9.webp?v=2",
+"art/locations/art_7eaadf0198.webp?v=2",
+"art/locations/art_5e4cead18d.webp?v=2",
+"art/locations/art_4089eddfee.webp?v=2"
 ];
 function pIcon(n){ var a=(typeof LQ_PRESTIGE_TIER_ICON!=='undefined'&&LQ_PRESTIGE_TIER_ICON[n])||''; return a?('<img src="'+a+'" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:6px" alt="">'):''; }
 function prestigeTierIcon(h){ var p=(h&&h.prestige)||0; var t=Math.floor(p/5); return t<0?0:(t>9?9:t); }
@@ -23957,6 +23957,25 @@ function raidSAInjectPanel(){ try{
     {id:'friends',  ic:'🫂', n:'Friendships & Extended Family',dom:'hobbies', p:['Parents / siblings — who needs a call?','Friend to reach out to?','Hospitality or service this season?']},
     {id:'learning', ic:'📚', n:'Learning',                   dom:'hobbies',   p:['Learning AND applying?','One idea to use this week?','Consuming or growing?']}
   ];
+  /* ===== v2.219.0: ownership Pokémon crests =====
+     Best-fit map from in-app area ids to art/ownership/own_<key>.webp?v=1.
+     Unmapped areas keep their emoji. Unused Pokémon (sleep, prayer, adventure,
+     reading, marriage-extras) await the Fair Play area restructure. */
+  var LQ_OWN_ICON={ meals:'nutrition', vehicle:'vehicle', tech:'digital_life', medical:'health',
+    seasonal:'planning', finn:'home', travel:'travel', money:'finances', us:'marriage',
+    celebrate:'giving', faith:'faith', body:'fitness', lead:'legacy', career:'career',
+    screens:'gaming', photo:'creativity', friends:'relationships', kidsheart:'mental_health',
+    parenting:'fatherhood', learning:'learning', maint:'lawn' };
+  function lqOwnCrest(a){
+    var k=LQ_OWN_ICON[a.id];
+    if(!k) return a.ic;
+    return '<img class="lqOwnCrest" src="art/ownership/own_'+k+'.webp?v=1" alt="" data-fb="'+(a.ic||'')+'" onerror="this.outerHTML=this.dataset.fb">';
+  }
+  (function(){ try{ if(document.getElementById('lqOwnCrestCSS')) return;
+    var st=document.createElement('style'); st.id='lqOwnCrestCSS';
+    st.textContent='.lqOwnCrest{width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:-6px;margin-right:2px;border:1.5px solid rgba(212,175,55,.55);box-shadow:0 0 6px rgba(212,175,55,.25), inset 0 0 4px rgba(0,0,0,.5);background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.08), rgba(0,0,0,.35))}';
+    document.head.appendChild(st); }catch(e){} })();
+
 
   function lqOwn(){
     if(!S.ownership||typeof S.ownership!=='object') S.ownership={st:{},rot:{day:'',ids:[]},ptr:0,gl:{day:'',ids:{}}};
@@ -23996,7 +24015,7 @@ function raidSAInjectPanel(){ try{
     var dl=(typeof DKEY!=='undefined'&&DKEY[a.dom])?DKEY[a.dom].label:a.dom;
     var btn=function(v,em){ return '<button data-own="'+a.id+'" data-st="'+v+'" style="border:1px solid '+(st===v?'#fff':'transparent')+';background:rgba(255,255,255,.06);border-radius:9px;padding:6px 10px;font-size:14px;cursor:pointer">'+em+'</button>'; };
     return '<div class="card" style="display:block;padding:11px 12px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="font-weight:900;font-size:13px">'+lqDot(st)+a.ic+' '+esc(a.n)+(glanced?' <span style="color:#7af0a8;font-size:10px;font-weight:900">✓ today</span>':'')+'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="font-weight:900;font-size:13px">'+lqDot(st)+lqOwnCrest(a)+' '+esc(a.n)+(glanced?' <span style="color:#7af0a8;font-size:10px;font-weight:900">✓ today</span>':'')+'</div>'
       +'<div style="display:flex;gap:5px">'+btn('g','🟢')+btn('y','🟡')+btn('r','🔴')+'</div></div>'
       +'<div style="color:var(--muted);font-size:11px;font-weight:750;margin-top:4px;line-height:1.35">'+esc(dl)+(open?(' · '+a.p.map(esc).join(' · ')):'')+'</div></div>';
   }
