@@ -1554,12 +1554,8 @@ function anvilTick(hours){
   var dp=(TUNE.ecoDrainPct!=null?TUNE.ecoDrainPct:0.05), ff=(TUNE.ecoFloatFrac!=null?TUNE.ecoFloatFrac:0.008), amp=ecoHabitAmp();
   var fG=ecoFloor('g'), fD=ecoFloor('d');
   var ovG=Math.max(0,(S.gold||0)-fG), ovD=Math.max(0,(S.dust||0)-fD);
-<<<<<<< Updated upstream
-  var budG=(S.anvilBudG||0)+ovG*dp*amp*(hours/24), budD=(S.anvilBudD||0)+ovD*dp*amp*(hours/24);
-=======
   var pm=(typeof pyreAnvilMult==='function')?pyreAnvilMult():1; /* v2.211.0 Oathpyre warmth */
   var budG=(S.anvilBudG||0)+ovG*dp*amp*pm*(hours/24), budD=(S.anvilBudD||0)+ovD*dp*amp*pm*(hours/24);
->>>>>>> Stashed changes
   var guard=0;
   while(guard++<600){
     var price=Math.max((TUNE.ecoSinkMinGold||25000), ff*Math.max(ovG,ovD,1));
@@ -2153,31 +2149,7 @@ function recapCenterHTML(){
 function showMonthlyReview(){ /* Pass B v2.213.0: legacy modal retired — same reroute as weekly. Month state (ensureMonthStats) untouched. */ try{ subtab='reviews'; navTo('tasks'); }catch(e){} }
 
 function weeklyReviewClaimed(){ const W=ensureLifeWeek(); if(W.reviewed) return true; try{ const t=(S.dailies||[]).find(d=>d&&d.review&&(d.freq||'')==='weekly'&&/life review/i.test(d.title||'')); return !!(t&&t.done); }catch(e){ return false; } }
-<<<<<<< Updated upstream
-function showWeeklyReview(){ const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain(); const strongMeta=DKEY[strong.k], lightMeta=DKEY[light.k]; const done=W.completed||0; const mostBond=S.heroes.filter(h=>h.owned).slice().sort((a,b)=>(b.bondXp||0)-(a.bondXp||0))[0]; const boss=ensureRaid(), bpct=Math.min(100,Math.round(boss.dmg/boss.max*100)); const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
-  box.innerHTML='<div class="ico">🧭</div><h2>Weekly Review</h2><p style="margin-bottom:10px">A short check-in to notice momentum and choose the next faithful step.</p>'+ 
-    '<div class="reviewline"><span>Actions logged</span><b>'+done+'</b></div>'+ 
-    '<div class="reviewline"><span>Strongest domain</span><b>'+(strongMeta?strongMeta.icon+' '+strongMeta.label:'—')+'</b></div>'+ 
-    '<div class="reviewline"><span>Lightest domain</span><b>'+(lightMeta?lightMeta.icon+' '+lightMeta.label:'—')+'</b></div>'+ 
-    '<div class="reviewline"><span>Most bonded hero</span><b>'+(mostBond?esc(mostBond.name)+' · Lv '+bondLevel(mostBond):'—')+'</b></div>'+ 
-    '<div class="reviewline"><span>Weekly boss</span><b>'+bpct+'%</b></div>'+ 
-    '<div class="reviewline"><span>Hold the Line days</span><b>'+((W.holdLine||0))+'</b></div>'+ 
-    '<div class="weeklyRecapGrid"><div class="recapMini"><b>'+touchedDomainsThisWeek().length+'/8</b><span>Domains touched</span></div><div class="recapMini"><b>'+totalPrestigeStars()+'</b><span>Prestige stars</span></div><div class="recapMini"><b>'+ownedCount()+'</b><span>Heroes owned</span></div><div class="recapMini"><b>'+((S.favorites||[]).length)+'</b><span>Favorites</span></div></div>'+ 
-    '<div style="margin-top:12px;text-align:left"><b>Quest + Raid Recap</b>'+questBoardHTML()+'</div>'+ 
-    '<div style="margin-top:12px;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px"><b>Reflection:</b><br><span style="color:var(--muted);font-weight:600">What is one small '+(lightMeta?lightMeta.label:'life')+' action you want to prioritize next?</span><br><span style="display:block;margin-top:7px;color:'+(lightMeta?lightMeta.color:'var(--accent2)')+';font-weight:800">'+esc(suggestedQuestForDomain(light.k))+'</span></div>'+ 
-    '<div style="margin-top:12px;text-align:left"><b>Domain levels</b><div class="domainGrid">'+domainTilesHTML(4)+'</div></div>'+nextFocusPlanHTML('weekly')+recapActionsHTML('weekly')+monthlySummaryHTML()+prestigeHallHTML()+sanctuarySummaryHTML()+dungeonSummaryHTML()+balanceChestHTML()+strategySummaryHTML()+
-    '<button class="primary" id="reviewDone" style="margin-top:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px 18px;font-family:Orbitron;font-weight:800;width:100%">Complete Review</button>'+ 
-    '<button id="reviewClose" style="margin-top:8px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px 18px;font-weight:800;width:100%">Close</button>';
-  modal.classList.add('show');
-  document.getElementById('reviewClose').onclick=()=>modal.classList.remove('show');
-  bindRecapButtons(box);
-  const cb=document.getElementById('claimBalance'); if(cb) cb.onclick=()=>{ grantBalanceChest(); modal.classList.remove('show'); };
-  const od=document.getElementById('openDomains'); if(od) od.onclick=showDomainLevels; const qb=document.getElementById('openQuestBoard'); if(qb) qb.onclick=showQuestBoard; var _qca=document.querySelector('[data-claimall]'); if(_qca) _qca.onclick=function(){ claimAllQuests(); }; const st=document.getElementById('openStrategy'); if(st) st.onclick=showStrategyModal; const os=document.getElementById('openSanctuary'); if(os) os.onclick=showSanctuary; const odg=document.getElementById('openTrials'); if(odg) odg.onclick=showDungeons;
-  document.getElementById('reviewDone').onclick=()=>{ if(!W.reviewed){ W.reviewed=true; S.grace=(S.grace||0)+1; const tm=grantTicket(1), rp=grantResearch(1); ensureTitles(); if(!S.titlesUnlocked['Reflective']) S.titlesUnlocked['Reflective']=true; addWin('Weekly Review Complete','You reflected and chose the next faithful step.', null); toast('Weekly review complete · +1🕊️ Grace Token · '+tm+' · '+rp); rewardSummary('Weekly review complete',[{txt:'+1🕊️ Grace Token',cls:'main'},{txt:tm,cls:'bonus'},{txt:rp,cls:'bonus'},{txt:'🏷 Reflective title unlocked',cls:'title'}]); } modal.classList.remove('show'); renderHUD(); render(); save(); };
-}
-=======
 function showWeeklyReview(){ /* Pass B v2.213.0: legacy modal retired — reviews are native daily tasks in the Cantina Reviews subtab; v2Review reroutes there. Week state (ensureLifeWeek) untouched. */ try{ subtab='reviews'; navTo('tasks'); }catch(e){} }
->>>>>>> Stashed changes
 function todayRecovery(){ if(!S.recoveryDays) S.recoveryDays={}; return S.recoveryDays[dateStamp()]||null; }
 function recoveryAnchors(){ return [
   {t:'Prayer / reflection',d:'faith',s:'quiet reset'}, {t:'Walk or stretch',d:'fitness',s:'move gently'},
@@ -2819,11 +2791,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-<<<<<<< Updated upstream
-const APP_BUILD='v2.208.0-greathall-perf';
-=======
 const APP_BUILD='v2.217.0-pass-e';
->>>>>>> Stashed changes
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4620,10 +4588,7 @@ function renderProgress(v){
     +((typeof lqDomainsPanel==='function')?lqDomainsPanel():((typeof domainGrowthPanelV2==='function')?domainGrowthPanelV2():'')+fellowshipPanelHTML()+forgePanelHTML())
     +domainReadinessHTML()
     +((typeof anvilArchivePanel==='function')?anvilArchivePanel():'')
-<<<<<<< Updated upstream
-=======
     +((typeof pyrePanelHTML==='function')?pyrePanelHTML():'')
->>>>>>> Stashed changes
     +((typeof growthFocusV2==='function')?growthFocusV2():'')
     +((typeof growthToolsV2==='function')?growthToolsV2():'')
     +gallery+links;
@@ -7616,10 +7581,7 @@ function startTicker(){
          An anvil could sit stalled for weeks with billions of gold/dust. Tick them live too. */
       try{ if(typeof rosterFloorTick==='function') rosterFloorTick(usedH); }catch(e){}
       try{ if(typeof anvilTick==='function') anvilTick(usedH); }catch(e){}
-<<<<<<< Updated upstream
-=======
       try{ if(typeof pyreTick==='function') pyreTick(usedH); }catch(e){}
->>>>>>> Stashed changes
       try{ if(typeof blessTick==='function') blessTick(usedH); }catch(e){}
       try{ if(typeof ascTick==='function') ascTick(); }catch(e){}
       renderHUD(); save();
@@ -9139,10 +9101,7 @@ function anvilArchivePanel(){
     +'<div style="flex:1;text-align:center;background:#ffffff08;border-radius:10px;padding:8px 4px"><div style="font-weight:900;color:#a7f3d0;font-size:16px">+'+cap+'</div><div style="font-size:10px;color:#9ab">gear level cap</div></div>'
     +'</div>'
     +line
-<<<<<<< Updated upstream
-=======
     +((typeof pyreHeatSectionHTML==='function')?pyreHeatSectionHTML():'')
->>>>>>> Stashed changes
     +'</div>';
 }
 function renderGrowth(v){ /* Pass D v2.216.0: growth chain retired — the merged Progress page is the one growth surface. */ try{ renderProgress(v); }catch(e){} }
@@ -10491,61 +10450,7 @@ function v159HeroStage(h,img,name,color){
   '</div>';
 }
 function v159MiniWallet(){ return '<div class="heroMiniResourceV159"><div class="r"><b>'+Math.floor(S.gold||0)+'</b><span>Gold</span></div><div class="r"><b>'+Math.floor(S.dust||0)+'</b><span>Dust</span></div><div class="r"><b>'+Math.floor(S.heroCores||0)+'</b><span>Cores</span></div><div class="r"><b>'+Math.floor(S.sparks||0)+'</b><span>Sparks</span></div></div>'; }
-<<<<<<< Updated upstream
-const openHeroSheet_v159_prev = openHeroSheet;
-openHeroSheet = function(id){
-  injectHeroChamberV159Styles();
-  if(!id){ openHeroSheet_v159_prev(id); return; }
-  const h=S.heroes.find(x=>x.id===id); if(!h){ toast('Hero not found'); return; }
-  if(!h.gear) h.gear={weapon:null,armor:null,boots:null,relic:null};
-  let name=h.name, role=h.role, color=h.color, img=h.img;
-  const s=document.getElementById('sheet');
-  const lcap=rankCap(h), atCap=h.level>=lcap, cost=TUNE.levelCost(h.level), xpPct=atCap?100:Math.min(100,(h.exp||0)/cost*100), plv=h.prestige||0, isFocus=S.focus===h.id;
-  const a=heroArchetype(h), p=passiveOf(h), onTeam=inAnySquad(h.id), hi=Math.max(1,...S.heroes.map(x=>x.level||1));
-  let html='<div class="heroChamberV159">'+v159HeroStage(h,img,name,color)+
-    currencyWallet() + '<div class="heroPrimaryActionsV159"><button class="go primaryBlue" id="h_levelone"'+((!atCap&&(h.exp||0)>=cost)?'':' disabled style="filter:grayscale(.55);opacity:.75"')+'>Level Up</button><button class="go" id="h_levelmax" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Level to Max</button>'+ 
-      (rankIdx(h)>=RANKUP.length?'<button class="go wide" disabled style="filter:grayscale(.55);opacity:.75">Eternal Rank · MAX</button>':'<button class="go wide primaryGold" id="h_rankup"'+(canRankUp(h)?'':' disabled style="filter:grayscale(.55);opacity:.75"')+'>Rank Up → '+RANKS[rankIdx(h)+1].name+' · '+rankReqText(RANKUP[rankIdx(h)])+'</button>')+
-      '<button class="go wide" id="h_prestige"'+(canPrestige(h)?' style="background:linear-gradient(135deg,#ffb01f,#ff5d9e);color:#1a1205"':' style="filter:grayscale(.55);opacity:.78;cursor:pointer"')+'>★ Begin New Cycle → ★'+(plv+1)+'</button></div>'+ 
-    '<div class="heroChamberPanelV159"><h4>Progress <span>'+(atCap?'Rank up to grow':'Next level')+'</span></h4><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:850;color:var(--muted);margin-bottom:6px"><span>'+(atCap?'Max level for '+RANKS[rankIdx(h)].name:'EXP to Lv '+(h.level+1))+'</span><span>'+(atCap?'banked '+Math.floor(h.exp||0):Math.floor(h.exp||0)+' / '+cost)+'</span></div><div class="xpbar"><i style="width:'+xpPct+'%"></i></div><p style="margin-top:8px">'+(onTeam?'On a squad — leveling at full rate.':'Benched — catching up at '+Math.round(catchUpPct(h.level,hi)*100)+'% rate.')+(isFocus?' · ★ Focused (+100%)':'')+'</p></div>'+ 
-    '<div class="heroChamberPanelV159"><h4>Upgrade Wallet <span>compact</span></h4>'+v159MiniWallet()+'</div>'+ 
-    '<div class="heroChamberTwoV159"><div class="heroChamberPanelV159"><h4>Gear Loadout <span>score '+gearScore(h)+'</span></h4><p>Gear surrounds the hero. Use Auto-equip for quick power or Unequip all to transfer gear.</p><div class="heroChamberToolsV159" style="margin-top:10px"><button class="go" id="h_gear_auto" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">Auto-equip best</button><button class="go" id="h_gear_empty" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Unequip all</button></div><button class="go" id="h_gear" style="margin-top:8px;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Open full gear manager</button></div>'+ 
-    '<div class="heroChamberPanelV159"><h4>Ability <span>'+esc(h.role)+' · '+esc(a?a.label:'Specialist')+'</span></h4><p>'+esc(a?a.desc:'Flexible combat identity.')+'</p>'+(p?'<div class="passivebox" style="margin-top:10px"><div class="pt">Passive · '+esc(p.name)+'</div><div class="pd">'+esc(p.desc)+'</div></div>':'')+'<div style="margin-top:10px">'+(metaChips(h)||'')+'</div></div></div>'+ 
-    '<div class="heroChamberPanelV159"><h4>Bond & Domains <span>Bond Lv '+bondLevel(h)+'</span></h4><div>'+affChips(h.aff)+'</div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:850;color:var(--muted);margin:9px 2px 4px"><span>+'+(bondLevel(h)*2)+'% power</span><span>'+((h.bondXp||0)-bondCum(bondLevel(h)))+' / '+(bondCum(bondLevel(h)+1)-bondCum(bondLevel(h)))+'</span></div><div class="xpbar"><i style="width:'+Math.min(100,((h.bondXp||0)-bondCum(bondLevel(h)))/(bondCum(bondLevel(h)+1)-bondCum(bondLevel(h)))*100)+'%;background:linear-gradient(90deg,#ff5d9e,#ffb01f)"></i></div><button class="go" id="h_bond" style="margin-top:10px;background:linear-gradient(135deg,#ff5d9e,#ffb01f);color:#1a0714">Open Bond Journal</button></div>'+ 
-    ''+ 
-    '<button class="go heroAdvancedToggleV159" id="h_adv_toggle">Show advanced edit tools</button><div class="heroAdvancedBlockV159" id="h_adv_block"><div class="heroChamberPanelV159"><h4>Edit Hero <span>portrait / metadata</span></h4><div class="heroEditGridV141"><button type="button" class="go" id="hUpload" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+(img?'Replace image':'Upload image')+'</button><button type="button" class="go" id="hAdjust" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);display:'+(img?'block':'none')+'">Adjust crop / zoom</button><button type="button" class="go" id="hRemoveImg" style="background:rgba(255,93,108,.12);color:#ff9ea8;border:1px solid rgba(255,93,108,.35);display:'+(img?'block':'none')+'">Remove image</button><label>Name</label><input type="text" id="h_name" maxlength="22" value="'+esc(name)+'"><label>Role</label><div class="segs" id="h_role">'+ROLES.map(r=>'<button data-r="'+r+'" class="'+(r===role?'on':'')+'">'+r+'</button>').join('')+'</div></div></div></div>'+ 
-    '<div class="heroChamberToolsV159"><button class="go" id="h_focus" style="background:'+(isFocus?'#36e0e6;color:#04222a':'var(--panel2);color:var(--ink);border:1px solid var(--line)')+'">'+(isFocus?'★ Featured':'☆ Set Featured')+'</button><button class="go" id="h_favorite" style="background:'+(isFavorite(h.id)?'#ff9bd7;color:#1a0714':'var(--panel2);color:var(--ink);border:1px solid var(--line)')+'">'+(isFavorite(h.id)?'♥ Favorite':'♡ Favorite')+'</button><button class="go" id="h_legacy" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">Legacy editor</button><button class="go" id="h_reset" style="background:rgba(255,93,108,.12);color:#ff9ea8;border:1px solid rgba(255,93,108,.35)">Reset hero</button></div>'+ 
-    '<button class="ghost" id="h_save" style="color:var(--ink)">Save changes</button><button class="ghost" id="h_del">Delete hero</button></div>';
-  s.innerHTML=html; showScrim('scrim');
-  const rerender=()=>openHeroSheet(h.id);
-  const syncPortrait=()=>{ const prev=document.getElementById('hPrev'); if(prev) prev.innerHTML=(img?'<img src="'+img+'">':(initials(name)||'?'))+'<div class="rankHalo">'+v159RankStars(h)+'</div>'; const adj=document.getElementById('hAdjust'), rem=document.getElementById('hRemoveImg'), up=document.getElementById('hUpload'); if(adj) adj.style.display=img?'block':'none'; if(rem) rem.style.display=img?'block':'none'; if(up) up.textContent=img?'Replace image':'Upload image'; };
-  const persistPortraitV159=()=>{ setHeroPortraitOverride(h.id,img); h.img=img||null; renderHUD(); render(); save(); };
-  document.getElementById('h_adv_toggle').onclick=()=>{ const b=document.getElementById('h_adv_block'); b.classList.toggle('open'); document.getElementById('h_adv_toggle').textContent=b.classList.contains('open')?'Hide advanced edit tools':'Show advanced edit tools'; };
-  document.querySelectorAll('[data-gearslot]').forEach(b=>b.onclick=()=>openGearSheet(h.id));
-  document.getElementById('h_save').onclick=()=>{ const inp=document.getElementById('h_name'); if(inp){ h.name=(inp.value.trim()||h.name); } h.role=role; h.color=color; h.img=img; setHeroPortraitOverride(h.id,img); hideScrim(); renderHUD(); render(); save(); toast(h.name+' saved'); };
-  const lu=document.getElementById('h_levelone'); if(lu) lu.onclick=()=>{ const c=TUNE.levelCost(h.level); if(h.level>=rankCap(h)){ toast('Rank up to raise the cap'); return; } if((h.exp||0)<c){ toast('Not enough banked EXP yet'); return; } h.exp-=c; h.level++; toast(h.name+' leveled up'); rerender(); renderHUD(); save(); };
-  document.getElementById('h_levelmax').onclick=()=>{ const before=h.level, used=levelHeroToMaxAvailable(h), gained=h.level-before; if(gained<=0){ toast(h.level>=rankCap(h)?'Already at current rank cap':'Not enough banked EXP yet'); return; } toast(h.name+' gained '+gained+' level'+(gained===1?'':'s')+' · spent '+Math.floor(used)+' EXP'); rerender(); renderHUD(); save(); };
-  const ru=document.getElementById('h_rankup'); if(ru) ru.onclick=()=>{ const i=rankIdx(h); if(i>=RANKUP.length){toast('Already max rank');return;} if(!canRankUp(h)){toast('Need '+missingReqText(RANKUP[i]));return;} const r=RANKUP[i]; if(!rankSpendSafe(r)){toast('Reforge came up short — need more dust for the boss-core mint.');rerender();renderHUD();save();return;} h.rank=i+1; applyLevels(h); toast(h.name+' is now '+RANKS[h.rank].name); rerender(); renderHUD(); save(); };
-  const pr=document.getElementById('h_prestige'); if(pr) pr.onclick=()=>{ if(!canPrestige(h)){showPrestigeBlockers(h);return;} const c=prestigeCost(h), np=(h.prestige||0)+1, target=rankCap(h); if(!confirm('Begin New Cycle for '+h.name+'?\n\nKeeps Eternal rank + all gear. Resets to Lv '+prestigeResetLevel(h)+'.\nPermanent: +10% power. Catch-up: '+(TUNE.prestigeCatchMult||3)+'x EXP until Lv '+target+'.\n\nCost: '+c.gold+' Gold  \u00b7  Cycle '+((prestigeWeekState().used||0)+1)+(isFinite(prestigeWeeklyCap())?('/'+prestigeWeeklyCap()):'')+' this week')) return; ensurePrestigeState(); prestigeWeekState().used=(prestigeWeekState().used||0)+1; S.gold-=c.gold; h.prestige=np; h.prestigeCatch=target; h.level=prestigeResetLevel(h); h.exp=0; S.prestigeHistory.unshift({id:h.id,name:h.name,prestige:np,catchTarget:target,at:Date.now()}); S.prestigeHistory=S.prestigeHistory.slice(0,30); addWin('New Cycle Started',h.name+' reached Prestige '+np+'.','discipline'); toast('★ '+h.name+' began a new cycle'); prestigeCelebration(h,np); rerender(); renderHUD(); save(); };
-  document.getElementById('h_gear').onclick=()=>openGearSheet(h.id);
-  document.getElementById('h_gear_auto').onclick=()=>{ const r=autoEquipBestGear(h); toast(r.changed?('Auto-equipped '+r.changed+' slot'+(r.changed===1?'':'s')+' · +'+Math.max(0,r.after-r.before)+' gear score'):'Best gear already equipped'); rerender(); renderHUD(); save(); };
-  document.getElementById('h_gear_empty').onclick=()=>{ const n=unequipAllGear(h); toast(n?('Unequipped '+n+' item'+(n===1?'':'s')+' to inventory'):'No gear equipped'); rerender(); renderHUD(); save(); }; (function(){ var _u=document.getElementById('h_gear_upgrade'); if(_u) _u.onclick=function(){ var r=gearUpgradeAllForHero(h); toast(r.n?('Upgraded '+r.n+' gear level'+(r.n===1?'':'s')+' on equipped pieces'):'Not enough gold/dust, or equipped gear already maxed'); rerender(); renderHUD(); save(); }; })();
-  document.getElementById('h_bond').onclick=()=>showBondJournal(h.id);
-  { const __hsq=document.getElementById('h_squads'); if(__hsq) __hsq.onclick=e=>{ const b=e.target.closest('button[data-sq]'); if(!b||b.disabled) return; toggleSquad(b.dataset.sq,h.id); rerender(); renderHUD(); save(); }; }
-  document.getElementById('h_focus').onclick=()=>{ S.focus=(S.focus===h.id?null:h.id); toast(S.focus===h.id?'★ '+h.name+' is now featured':'Featured cleared'); rerender(); save(); };
-  document.getElementById('h_favorite').onclick=()=>{ toggleFavorite(h.id); toast(isFavorite(h.id)?'♥ '+h.name+' added to favorites':h.name+' removed from favorites'); rerender(); save(); };
-  document.getElementById('h_legacy').onclick=()=>openHeroSheet_v159_prev(h.id);
-  document.getElementById('h_reset').onclick=()=>{ const refund=heroResetRefund(h), hasRefund=refund.cores||refund.gold||refund.boss||refund.sparks; if(!hasRefund&&h.level<=1&&rankIdx(h)===0&&!(h.prestige||0)){ toast('Nothing to reset yet'); return; } if(!confirm('Reset '+h.name+' to Recruit Lv 1?\n\nRefunds: '+refundText(refund)+'\nKeeps unlock, image, favorite, bonds, and equipped gear.')) return; resetHeroInvestment(h); toast(h.name+' reset · refunded '+refundText(refund)); rerender(); renderHUD(); save(); };
-  document.getElementById('h_del').onclick=()=>{ if(!confirm('Delete '+h.name+'? Equipped gear returns to your inventory.')) return; if(h.gear) SLOTS.forEach(sl=>{ if(h.gear[sl]){ S.inventory.push(h.gear[sl]); h.gear[sl]=null; } }); if(S.focus===id) S.focus=null; if(Array.isArray(S.favorites)) S.favorites=S.favorites.filter(x=>x!==id); S.heroes=S.heroes.filter(x=>x.id!==id); SQUADS.forEach(sd=>{ S.squads[sd[0]]=squad(sd[0]).filter(x=>x!==id); }); recalcCollection(); hideScrim(); renderHUD(); render(); save(); };
-  const nameInput=document.getElementById('h_name'); if(nameInput) nameInput.oninput=e=>{ name=e.target.value; if(!img) syncPortrait(); };
-  const roleSeg=document.getElementById('h_role'); if(roleSeg) segPick('h_role',r=>{ role=r; try{ h.role=r; h.roleCustom=true; h.clashRole=inferClashRole(h); save(); toast('Role set: '+r+' \u00b7 Clash: '+h.clashRole); }catch(_e){} },'r');
-  const col=document.getElementById('h_color'); if(col) col.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; color=b.dataset.c; col.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); const prev=document.getElementById('hPrev'); if(prev){ prev.style.background='linear-gradient(160deg,'+color+',#0008)'; prev.style.setProperty('--hero-color',color); } };
-  const up=document.getElementById('hUpload'); if(up) up.onclick=()=>pickImage(dataUrl=>{ img=dataUrl; syncPortrait(); persistPortraitV159(); toast('Portrait saved'); });
-  const adj=document.getElementById('hAdjust'); if(adj) adj.onclick=()=>{ if(img) pickImage(dataUrl=>{ img=dataUrl; syncPortrait(); persistPortraitV159(); toast('Portrait saved'); },img); };
-  const rem=document.getElementById('hRemoveImg'); if(rem) rem.onclick=()=>{ img=null; syncPortrait(); persistPortraitV159(); toast('Portrait removed'); };
-};
-=======
 /* Pass E v2.217.0: v159 chamber generation excised — unreachable since the dispatcher routed all ids to the v141 base. */
->>>>>>> Stashed changes
 
 
 /* ===== v1.60 Campaign Map Redesign ===== */
@@ -10730,15 +10635,10 @@ function v161RoleIcon(role){ return (typeof LQ_ROLE_ICON!=='undefined'&&LQ_ROLE_
 function v161ArchIcon(h){ const a=heroArchetype(h); return a?((typeof LQ_ARCH_ICON!=='undefined'&&LQ_ARCH_ICON[a.key])?LQ_ARCH_ICON[a.key]:'✦'):'✦'; }
 function v161Face(h){
   if(h.sprite) return '<canvas class="sprcanvas" width="128" height="128" data-spr="'+h.id+'"></canvas>';
-<<<<<<< Updated upstream
-  /* v2.208.0: lazy decode — 441 simultaneous base64 decodes spike iOS memory (jetsam). */
-  if(h.img) return '<img src="'+h.img+'" loading="lazy" decoding="async">';
-=======
   /* v2.208.0: lazy decode — 441 simultaneous base64 decodes spike iOS memory (jetsam).
      v2.208.1: src set by property in v161Card — ~16KB of base64 per portrait was flowing
      through the HTML parser (6.9MB per full grid); property assignment skips the tokenizer. */
   if(h.img) return '<img data-v161fill loading="lazy" decoding="async">';
->>>>>>> Stashed changes
   return '<span class="v161Initials">'+initials(h.name)+'</span>';
 }
 function v161Card(h,i){
@@ -11597,19 +11497,7 @@ function v166BindAutomationPanel(){
   const bc=document.getElementById('v166BestCampaign'); if(bc) bc.onclick=()=>v166ApplyBestLineup('campaign');
   const br=document.getElementById('v166BestRaid'); if(br) br.onclick=()=>v166ApplyBestLineup('raid');
 }
-<<<<<<< Updated upstream
-const __renderHome_v166=renderHome;
-renderHome=function(v){
-  v166InjectStyles(); v166AutoTomorrowFocus(); __renderHome_v166.apply(this,arguments);
-  try{
-    const target=document.getElementById('nextCard')||v.querySelector('.stagecard');
-    if(target&&!v.querySelector('.v166AutoPanel')&&!window.__v2195Consolidated){ target.insertAdjacentHTML('afterend',v166AutomationPanelHTML()); v166BindAutomationPanel(); } /* v2.195: home panel retired — cleanup lives in Squadron Management, autopilot runs itself */
-    const dn=document.getElementById('doNext'); if(dn) dn.textContent='Start next real action';
-  }catch(e){}
-};
-=======
 /* Pass C1 v2.214.0: v166 home wrapper excised (dead path). */
->>>>>>> Stashed changes
 const __renderTasks_v166=renderTasks;
 renderTasks=function(v){
   v166InjectStyles();
@@ -12188,21 +12076,7 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
    stays on the current handler because V141's own null branch is self-recursive. */
 (function Phase3HeroEditorDefault(){
   if(typeof openHeroSheet!=='function'||typeof openHeroSheetLegacy_v141!=='function') return;
-<<<<<<< Updated upstream
-  var chamberV159 = openHeroSheet;            // newest view, kept reachable, not orphaned
-  var legacyV141  = openHeroSheetLegacy_v141; // working editor w/ visible portrait controls
-  window.__heroChamberV159 = chamberV159;
-  openHeroSheet = function(id){
-    /* v2.207.1 crawler-gate fix: the no-id (add-hero) path has been self-recursive
-       since v141 (openHeroSheetLegacy_v141 captured the hoisted v141 fn itself).
-       chamberV159 bottoms out in that same base -> infinite loop -> freeze.
-       Custom heroes ship via RELEASE_HEROES, so guard instead of crash. */
-    if(!id){ try{ toast('Add heroes via the release roster \u2014 this editor needs a hero.'); }catch(e){} return; }
-    return legacyV141(id);                     // specific hero -> Legacy editor
-  };
-=======
   /* Pass E v2.217.0: v165 dispatcher excised — routing + the v2.207.1 null-guard live in the canonical openHeroSheet. */
->>>>>>> Stashed changes
 })();
 
 
@@ -24227,11 +24101,7 @@ function raidSAInjectPanel(){ try{
       try{
         var FL={crys:300, spark:400, sparkPer:25};
         var cEx=Math.floor(Math.max(0,(S.crystals||0)-FL.crys));
-<<<<<<< Updated upstream
-        if(cEx>0){ S.crystals-=cEx; S.heroCores=(S.heroCores||0)+cEx; try{ toast('\u25c8 '+cEx+' crystals refined into Iso-8'); }catch(e){} try{ renderHUD(); save(); }catch(e){} }
-=======
         if(cEx>0){ S.crystals-=cEx; if(typeof pyreAddFuel==='function'){ pyreAddFuel(cEx*((window.PYRE_TUNE&&PYRE_TUNE.fuelPerCrystal)||0.01),'crys'); } else { S.heroCores=(S.heroCores||0)+cEx; } /* v2.211.0: Iso-8 is oversupplied — crystal overflow feeds the flame */ try{ toast('\u25c8 '+cEx+' crystals refined into Iso-8'); }catch(e){} try{ renderHUD(); save(); }catch(e){} }
->>>>>>> Stashed changes
         var spN=Math.floor(Math.max(0,(S.sparks||0)-FL.spark)/FL.sparkPer);
         if(spN>0){ S.sparks-=spN*FL.sparkPer; S.bossCores=(S.bossCores||0)+spN; try{ toast('\u25c6 +'+spN+' Prime Iso-8 condensed from Sparks'); }catch(e){} try{ renderHUD(); save(); }catch(e){} }
       }catch(e){}
@@ -24386,10 +24256,7 @@ function raidSAInjectPanel(){ try{
     try{ strategySummaryHTML=function(){ return ''; }; }catch(e){}
     setTimeout(function(){ try{ lqAutoClaim(); }catch(e){} },4000);
     setInterval(function(){ try{ lqAutoClaim(); }catch(e){} },12000);
-<<<<<<< Updated upstream
-=======
     try{ window.lqHomeStrip=lqHomeStrip; window.lqHomeTrim=lqHomeTrim; }catch(e){} /* Pass C2: exported for the canonical renderHome */
->>>>>>> Stashed changes
     setInterval(function(){ try{ lqRaidDeclutter(); }catch(e){} try{ lqHomeStrip(); }catch(e){} try{ lqHomeTrim(); }catch(e){} try{ if(typeof ofInjectAutoPills==='function') ofInjectAutoPills(); }catch(e){} try{ if(typeof lqEnforceDisjoint==='function') lqEnforceDisjoint(); }catch(e){} },900);
   })();
 })();
