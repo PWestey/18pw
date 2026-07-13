@@ -993,6 +993,7 @@ const Store={
 };
 const KEY='lifequest_afk_v1';
 const PORTRAIT_KEY=KEY+'__portraits';
+const PORTRAIT_ART_BASE='art/portraits/'; /* v2.209.0: stock portraits live as files (locations pattern); vault holds only custom crops */
 const ROSTER=[{"id": "marvel__iron_man", "name": "Iron Man", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": true, "aff": ["work", "home", "marriage"]}, {"id": "marvel__captain_america_steve_rogers", "name": "Captain America / Steve Rogers", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "work", "home"]}, {"id": "marvel__captain_america_sam_wilson", "name": "Captain America / Sam Wilson", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "work", "home"]}, {"id": "marvel__thor", "name": "Thor", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__hulk", "name": "Hulk", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "marvel__black_widow", "name": "Black Widow", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__hawkeye", "name": "Hawkeye", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__war_machine", "name": "War Machine", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "marvel__falcon", "name": "Falcon", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__winter_soldier", "name": "Winter Soldier", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__scarlet_witch", "name": "Scarlet Witch", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["marriage", "fatherhood"]}, {"id": "marvel__vision", "name": "Vision", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["marriage", "work"]}, {"id": "marvel__doctor_strange", "name": "Doctor Strange", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "marvel__spider_man", "name": "Spider-Man", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fatherhood", "work", "marriage"]}, {"id": "marvel__miles_morales", "name": "Miles Morales", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fatherhood", "hobbies", "marriage"]}, {"id": "marvel__ghost_spider", "name": "Ghost-Spider", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__black_panther_tchalla", "name": "Black Panther / T'Challa", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__ant_man", "name": "Ant-Man", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__wasp", "name": "Wasp", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__captain_marvel", "name": "Captain Marvel", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__nick_fury", "name": "Nick Fury", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "marvel__loki", "name": "Loki", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__shang_chi", "name": "Shang-Chi", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__yelena_belova", "name": "Yelena Belova", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__kate_bishop", "name": "Kate Bishop", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__moon_knight", "name": "Moon Knight", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies", "marriage"]}, {"id": "marvel__she_hulk", "name": "She-Hulk", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "marvel__daredevil", "name": "Daredevil", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__punisher", "name": "Punisher", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__star_lord", "name": "Star-Lord", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__gamora", "name": "Gamora", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__drax", "name": "Drax", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "marvel__rocket_raccoon", "name": "Rocket Raccoon", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__groot", "name": "Groot", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "marvel__nebula", "name": "Nebula", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__mantis", "name": "Mantis", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "marvel__yondu", "name": "Yondu", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__adam_warlock", "name": "Adam Warlock", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__mister_fantastic", "name": "Mister Fantastic", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["marriage", "work", "home"]}, {"id": "marvel__invisible_woman", "name": "Invisible Woman", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["marriage", "fatherhood", "home"]}, {"id": "marvel__human_torch", "name": "Human Torch", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__the_thing", "name": "The Thing", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["home", "fatherhood"]}, {"id": "marvel__doctor_doom", "name": "Doctor Doom", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__wolverine", "name": "Wolverine", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__professor_x", "name": "Professor X", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "marvel__magneto", "name": "Magneto", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__cyclops", "name": "Cyclops", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__jean_grey", "name": "Jean Grey", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "marvel__storm", "name": "Storm", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__rogue", "name": "Rogue", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__gambit", "name": "Gambit", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__beast", "name": "Beast", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "marvel__nightcrawler", "name": "Nightcrawler", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["faith", "hobbies", "home"]}, {"id": "marvel__colossus", "name": "Colossus", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "marvel__mystique", "name": "Mystique", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__quicksilver", "name": "Quicksilver", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__iceman", "name": "Iceman", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__kitty_pryde_shadowcat", "name": "Kitty Pryde / Shadowcat", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__jubilee", "name": "Jubilee", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__psylocke", "name": "Psylocke", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__cable", "name": "Cable", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "marvel__domino", "name": "Domino", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__deadpool", "name": "Deadpool", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__emma_frost", "name": "Emma Frost", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "marvel__magik", "name": "Magik", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__elektra", "name": "Elektra", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__jessica_jones", "name": "Jessica Jones", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "marvel__luke_cage", "name": "Luke Cage", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["home", "fatherhood"]}, {"id": "marvel__iron_fist", "name": "Iron Fist", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "marvel__agatha_harkness", "name": "Agatha Harkness", "ip": "Marvel", "role": "Support", "color": "#e62429", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "marvel__namor", "name": "Namor", "ip": "Marvel", "role": "Tank", "color": "#e62429", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "marvel__the_hunter", "name": "The Hunter", "ip": "Marvel", "role": "DPS", "color": "#e62429", "owned": true, "aff": ["work", "discipline", "fitness"], "archetype": "Dark Striker", "identity": "Peter / The Hunter\u2014midnight warrior of discipline and purpose.", "tags": ["marvel", "midnight-suns", "user", "warrior", "discipline"]}, {"id": "star_wars__obi_wan_kenobi", "name": "Obi-Wan Kenobi", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": true, "aff": ["faith", "work", "home"]}, {"id": "star_wars__luke_skywalker", "name": "Luke Skywalker", "ip": "Star Wars", "role": "DPS", "color": "#3a7bd5", "owned": false, "aff": ["fitness", "faith"]}, {"id": "star_wars__anakin_skywalker", "name": "Anakin Skywalker", "ip": "Star Wars", "role": "DPS", "color": "#3a7bd5", "owned": false, "aff": ["fitness", "marriage"]}, {"id": "star_wars__yoda", "name": "Yoda", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "star_wars__ahsoka_tano", "name": "Ahsoka Tano", "ip": "Star Wars", "role": "DPS", "color": "#3a7bd5", "owned": false, "aff": ["fitness", "faith"]}, {"id": "star_wars__mace_windu", "name": "Mace Windu", "ip": "Star Wars", "role": "DPS", "color": "#3a7bd5", "owned": false, "aff": ["fitness", "faith"]}, {"id": "star_wars__qui_gon_jinn", "name": "Qui-Gon Jinn", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "star_wars__kanan_jarrus", "name": "Kanan Jarrus", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "star_wars__ezra_bridger", "name": "Ezra Bridger", "ip": "Star Wars", "role": "DPS", "color": "#3a7bd5", "owned": false, "aff": ["fitness", "faith"]}, {"id": "star_wars__leia_organa", "name": "Leia Organa", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": false, "aff": ["work", "marriage", "home"]}, {"id": "star_wars__han_solo", "name": "Han Solo", "ip": "Star Wars", "role": "DPS", "color": "#3a7bd5", "owned": false, "aff": ["marriage", "hobbies"]}, {"id": "star_wars__chewbacca", "name": "Chewbacca", "ip": "Star Wars", "role": "Tank", "color": "#3a7bd5", "owned": false, "aff": ["discipline", "faith", "home"]}, {"id": "star_wars__din_djarin", "name": "Din Djarin", "ip": "Star Wars", "role": "Tank", "color": "#3a7bd5", "owned": false, "aff": ["fatherhood", "home"]}, {"id": "star_wars__grogu", "name": "Grogu", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": false, "aff": ["faith", "fatherhood", "home"]}, {"id": "star_wars__rey", "name": "Rey", "ip": "Star Wars", "role": "DPS", "color": "#3a7bd5", "owned": false, "aff": ["fitness", "faith"]}, {"id": "star_wars__r2_d2", "name": "R2-D2", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "star_wars__c_3po", "name": "C-3PO", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "star_wars__padme_amidala", "name": "Padme Amidala", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": false, "aff": ["marriage", "work", "home"]}, {"id": "star_wars__lando_calrissian", "name": "Lando Calrissian", "ip": "Star Wars", "role": "DPS", "color": "#3a7bd5", "owned": false, "aff": ["fitness", "faith"]}, {"id": "star_wars__cassian_andor", "name": "Cassian Andor", "ip": "Star Wars", "role": "DPS", "color": "#3a7bd5", "owned": false, "aff": ["fitness", "faith"]}, {"id": "star_wars__sabine_wren", "name": "Sabine Wren", "ip": "Star Wars", "role": "DPS", "color": "#3a7bd5", "owned": false, "aff": ["fitness", "faith"]}, {"id": "star_wars__hera_syndulla", "name": "Hera Syndulla", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "star_wars__master_westman", "name": "Master Westman", "ip": "Star Wars", "role": "Support", "color": "#3a7bd5", "owned": true, "aff": ["faith", "discipline", "work"], "archetype": "Jedi Master", "identity": "Master Westman\u2014SWTOR Jedi of ancient wisdom and steady faith.", "tags": ["star-wars", "swtor", "jedi", "user", "faith"]}, {"id": "harry_potter__harry_potter", "name": "Harry Potter", "ip": "Harry Potter", "role": "DPS", "color": "#b8911f", "owned": true, "aff": ["hobbies", "fatherhood"]}, {"id": "harry_potter__hermione_granger", "name": "Hermione Granger", "ip": "Harry Potter", "role": "Support", "color": "#b8911f", "owned": false, "aff": ["hobbies", "work", "home"]}, {"id": "harry_potter__ron_weasley", "name": "Ron Weasley", "ip": "Harry Potter", "role": "DPS", "color": "#b8911f", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "harry_potter__albus_dumbledore", "name": "Albus Dumbledore", "ip": "Harry Potter", "role": "Support", "color": "#b8911f", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "harry_potter__severus_snape", "name": "Severus Snape", "ip": "Harry Potter", "role": "Support", "color": "#b8911f", "owned": false, "aff": ["faith", "hobbies", "home"]}, {"id": "harry_potter__sirius_black", "name": "Sirius Black", "ip": "Harry Potter", "role": "DPS", "color": "#b8911f", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "harry_potter__remus_lupin", "name": "Remus Lupin", "ip": "Harry Potter", "role": "Tank", "color": "#b8911f", "owned": false, "aff": ["discipline", "hobbies", "home"]}, {"id": "harry_potter__neville_longbottom", "name": "Neville Longbottom", "ip": "Harry Potter", "role": "Tank", "color": "#b8911f", "owned": false, "aff": ["discipline", "faith", "home"]}, {"id": "harry_potter__luna_lovegood", "name": "Luna Lovegood", "ip": "Harry Potter", "role": "Support", "color": "#b8911f", "owned": false, "aff": ["faith", "hobbies", "home"]}, {"id": "harry_potter__minerva_mcgonagall", "name": "Minerva McGonagall", "ip": "Harry Potter", "role": "Support", "color": "#b8911f", "owned": false, "aff": ["work", "faith", "home"]}, {"id": "harry_potter__rubeus_hagrid", "name": "Rubeus Hagrid", "ip": "Harry Potter", "role": "Tank", "color": "#b8911f", "owned": false, "aff": ["home", "fatherhood"]}, {"id": "harry_potter__dobby", "name": "Dobby", "ip": "Harry Potter", "role": "Support", "color": "#b8911f", "owned": false, "aff": ["faith", "hobbies", "home"]}, {"id": "harry_potter__draco_malfoy", "name": "Draco Malfoy", "ip": "Harry Potter", "role": "DPS", "color": "#b8911f", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "harry_potter__bellatrix_lestrange", "name": "Bellatrix Lestrange", "ip": "Harry Potter", "role": "DPS", "color": "#b8911f", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "harry_potter__voldemort", "name": "Voldemort", "ip": "Harry Potter", "role": "DPS", "color": "#b8911f", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "pokemon__pikachu", "name": "Pikachu", "ip": "Pokemon", "role": "DPS", "color": "#ffcb05", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "pokemon__charizard", "name": "Charizard", "ip": "Pokemon", "role": "DPS", "color": "#ffcb05", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "pokemon__blastoise", "name": "Blastoise", "ip": "Pokemon", "role": "Tank", "color": "#ffcb05", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "pokemon__venusaur", "name": "Venusaur", "ip": "Pokemon", "role": "Support", "color": "#ffcb05", "owned": false, "aff": ["faith", "home", "marriage"]}, {"id": "pokemon__mew", "name": "Mew", "ip": "Pokemon", "role": "Support", "color": "#ffcb05", "owned": false, "aff": ["faith", "home", "marriage"]}, {"id": "pokemon__lucario", "name": "Lucario", "ip": "Pokemon", "role": "DPS", "color": "#ffcb05", "owned": false, "aff": ["fitness", "marriage"]}, {"id": "pokemon__greninja", "name": "Greninja", "ip": "Pokemon", "role": "DPS", "color": "#ffcb05", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "pokemon__gengar", "name": "Gengar", "ip": "Pokemon", "role": "DPS", "color": "#ffcb05", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "pokemon__dragonite", "name": "Dragonite", "ip": "Pokemon", "role": "DPS", "color": "#ffcb05", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "pokemon__gyarados", "name": "Gyarados", "ip": "Pokemon", "role": "DPS", "color": "#ffcb05", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "pokemon__arcanine", "name": "Arcanine", "ip": "Pokemon", "role": "DPS", "color": "#ffcb05", "owned": true, "aff": ["fitness", "marriage"]}, {"id": "pokemon__snorlax", "name": "Snorlax", "ip": "Pokemon", "role": "Tank", "color": "#ffcb05", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "pokemon__eevee", "name": "Eevee", "ip": "Pokemon", "role": "Support", "color": "#ffcb05", "owned": false, "aff": ["fatherhood", "hobbies", "home"]}, {"id": "pokemon__umbreon", "name": "Umbreon", "ip": "Pokemon", "role": "Tank", "color": "#ffcb05", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "pokemon__rayquaza", "name": "Rayquaza", "ip": "Pokemon", "role": "DPS", "color": "#ffcb05", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "the_witcher__geralt_of_rivia", "name": "Geralt of Rivia", "ip": "The Witcher", "role": "DPS", "color": "#9aa0a6", "owned": true, "aff": ["discipline", "marriage"]}, {"id": "the_witcher__ciri", "name": "Ciri", "ip": "The Witcher", "role": "DPS", "color": "#9aa0a6", "owned": false, "aff": ["fitness", "marriage"]}, {"id": "the_witcher__yennefer", "name": "Yennefer", "ip": "The Witcher", "role": "DPS", "color": "#9aa0a6", "owned": false, "aff": ["marriage", "hobbies"]}, {"id": "the_witcher__triss_merigold", "name": "Triss Merigold", "ip": "The Witcher", "role": "Support", "color": "#9aa0a6", "owned": false, "aff": ["faith", "discipline", "home"]}, {"id": "the_witcher__vesemir", "name": "Vesemir", "ip": "The Witcher", "role": "Tank", "color": "#9aa0a6", "owned": false, "aff": ["fatherhood", "work", "home"]}, {"id": "the_witcher__jaskier", "name": "Jaskier", "ip": "The Witcher", "role": "Support", "color": "#9aa0a6", "owned": false, "aff": ["faith", "discipline", "home"]}, {"id": "the_witcher__lambert", "name": "Lambert", "ip": "The Witcher", "role": "DPS", "color": "#9aa0a6", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "the_witcher__eskel", "name": "Eskel", "ip": "The Witcher", "role": "Tank", "color": "#9aa0a6", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "the_witcher__regis", "name": "Regis", "ip": "The Witcher", "role": "Support", "color": "#9aa0a6", "owned": false, "aff": ["faith", "discipline", "home"]}, {"id": "the_witcher__zoltan_chivay", "name": "Zoltan Chivay", "ip": "The Witcher", "role": "Tank", "color": "#9aa0a6", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "the_witcher__eredin", "name": "Eredin", "ip": "The Witcher", "role": "DPS", "color": "#9aa0a6", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "the_witcher__gaunter_odimm", "name": "Gaunter O'Dimm", "ip": "The Witcher", "role": "DPS", "color": "#9aa0a6", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "world_of_warcraft__arthas_menethil", "name": "Arthas Menethil", "ip": "World of Warcraft", "role": "DPS", "color": "#2e8b57", "owned": false, "aff": ["fitness", "hobbies", "home"]}, {"id": "world_of_warcraft__the_lich_king", "name": "The Lich King", "ip": "World of Warcraft", "role": "Tank", "color": "#2e8b57", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "world_of_warcraft__illidan_stormrage", "name": "Illidan Stormrage", "ip": "World of Warcraft", "role": "DPS", "color": "#2e8b57", "owned": false, "aff": ["fitness", "hobbies", "home"]}, {"id": "world_of_warcraft__thrall", "name": "Thrall", "ip": "World of Warcraft", "role": "DPS", "color": "#2e8b57", "owned": false, "aff": ["work", "fatherhood", "home"]}, {"id": "world_of_warcraft__jaina_proudmoore", "name": "Jaina Proudmoore", "ip": "World of Warcraft", "role": "DPS", "color": "#2e8b57", "owned": true, "aff": ["work", "hobbies", "home"]}, {"id": "world_of_warcraft__varian_wrynn", "name": "Varian Wrynn", "ip": "World of Warcraft", "role": "Tank", "color": "#2e8b57", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "world_of_warcraft__anduin_wrynn", "name": "Anduin Wrynn", "ip": "World of Warcraft", "role": "Support", "color": "#2e8b57", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "world_of_warcraft__sylvanas_windrunner", "name": "Sylvanas Windrunner", "ip": "World of Warcraft", "role": "DPS", "color": "#2e8b57", "owned": false, "aff": ["fitness", "hobbies", "home"]}, {"id": "world_of_warcraft__uther_lightbringer", "name": "Uther Lightbringer", "ip": "World of Warcraft", "role": "Support", "color": "#2e8b57", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "world_of_warcraft__tirion_fordring", "name": "Tirion Fordring", "ip": "World of Warcraft", "role": "Tank", "color": "#2e8b57", "owned": false, "aff": ["faith", "discipline", "home"]}, {"id": "world_of_warcraft__malfurion_stormrage", "name": "Malfurion Stormrage", "ip": "World of Warcraft", "role": "Support", "color": "#2e8b57", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "world_of_warcraft__tyrande_whisperwind", "name": "Tyrande Whisperwind", "ip": "World of Warcraft", "role": "Support", "color": "#2e8b57", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "world_of_warcraft__khadgar", "name": "Khadgar", "ip": "World of Warcraft", "role": "DPS", "color": "#2e8b57", "owned": false, "aff": ["fitness", "hobbies", "home"]}, {"id": "world_of_warcraft__guldan", "name": "Gul'dan", "ip": "World of Warcraft", "role": "DPS", "color": "#2e8b57", "owned": false, "aff": ["fitness", "hobbies", "home"]}, {"id": "world_of_warcraft__velen", "name": "Velen", "ip": "World of Warcraft", "role": "Support", "color": "#2e8b57", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "world_of_warcraft__alleria_windrunner", "name": "Alleria Windrunner", "ip": "World of Warcraft", "role": "DPS", "color": "#2e8b57", "owned": false, "aff": ["fitness", "hobbies", "home"]}, {"id": "world_of_warcraft__genn_greymane", "name": "Genn Greymane", "ip": "World of Warcraft", "role": "DPS", "color": "#2e8b57", "owned": false, "aff": ["fitness", "hobbies", "home"]}, {"id": "world_of_warcraft__deathwing", "name": "Deathwing", "ip": "World of Warcraft", "role": "Tank", "color": "#2e8b57", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "red_rising__darrow", "name": "Darrow", "ip": "Red Rising", "role": "DPS", "color": "#d4373a", "owned": true, "aff": ["discipline", "marriage"]}, {"id": "red_rising__virginia_mustang_au_augustus", "name": "Virginia \"Mustang\" au Augustus", "ip": "Red Rising", "role": "Support", "color": "#d4373a", "owned": false, "aff": ["work", "faith", "home"]}, {"id": "red_rising__sevro_au_barca", "name": "Sevro au Barca", "ip": "Red Rising", "role": "DPS", "color": "#d4373a", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "red_rising__cassius_au_bellona", "name": "Cassius au Bellona", "ip": "Red Rising", "role": "DPS", "color": "#d4373a", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "red_rising__victra_au_julii", "name": "Victra au Julii", "ip": "Red Rising", "role": "DPS", "color": "#d4373a", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "red_rising__ragnar_volarus", "name": "Ragnar Volarus", "ip": "Red Rising", "role": "Tank", "color": "#d4373a", "owned": false, "aff": ["fitness", "discipline", "home"]}, {"id": "red_rising__lorn_au_arcos", "name": "Lorn au Arcos", "ip": "Red Rising", "role": "DPS", "color": "#d4373a", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "red_rising__pax_au_telemanus", "name": "Pax au Telemanus", "ip": "Red Rising", "role": "Tank", "color": "#d4373a", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "red_rising__kavax_au_telemanus", "name": "Kavax au Telemanus", "ip": "Red Rising", "role": "Tank", "color": "#d4373a", "owned": false, "aff": ["discipline", "home", "fatherhood"]}, {"id": "red_rising__sophocles", "name": "Sophocles", "ip": "Red Rising", "role": "Support", "color": "#d4373a", "owned": false, "aff": ["faith", "discipline", "home"]}, {"id": "red_rising__eo", "name": "Eo", "ip": "Red Rising", "role": "Support", "color": "#d4373a", "owned": false, "aff": ["marriage", "faith", "home"]}, {"id": "red_rising__roque_au_fabii", "name": "Roque au Fabii", "ip": "Red Rising", "role": "DPS", "color": "#d4373a", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "red_rising__holiday_ti_nakamura", "name": "Holiday ti Nakamura", "ip": "Red Rising", "role": "DPS", "color": "#d4373a", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "red_rising__alexander_au_arcos", "name": "Alexander au Arcos", "ip": "Red Rising", "role": "DPS", "color": "#d4373a", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "red_rising__diomedes_au_raa", "name": "Diomedes au Raa", "ip": "Red Rising", "role": "DPS", "color": "#d4373a", "owned": false, "aff": ["fitness", "discipline"]}, {"id": "stormlight_archive__kaladin", "name": "Kaladin", "ip": "Stormlight Archive", "role": "Tank", "color": "#4aa3df", "owned": true, "aff": ["fatherhood", "discipline", "home"]}, {"id": "stormlight_archive__syl", "name": "Syl", "ip": "Stormlight Archive", "role": "Support", "color": "#4aa3df", "owned": false, "aff": ["faith", "hobbies", "home"]}, {"id": "stormlight_archive__dalinar_kholin", "name": "Dalinar Kholin", "ip": "Stormlight Archive", "role": "Tank", "color": "#4aa3df", "owned": false, "aff": ["faith", "marriage", "home"]}, {"id": "stormlight_archive__adolin_kholin", "name": "Adolin Kholin", "ip": "Stormlight Archive", "role": "DPS", "color": "#4aa3df", "owned": false, "aff": ["fitness", "faith"]}, {"id": "stormlight_archive__shallan_davar", "name": "Shallan Davar", "ip": "Stormlight Archive", "role": "Support", "color": "#4aa3df", "owned": false, "aff": ["hobbies", "faith", "home"]}, {"id": "stormlight_archive__pattern", "name": "Pattern", "ip": "Stormlight Archive", "role": "Support", "color": "#4aa3df", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "stormlight_archive__jasnah_kholin", "name": "Jasnah Kholin", "ip": "Stormlight Archive", "role": "DPS", "color": "#4aa3df", "owned": false, "aff": ["fitness", "faith"]}, {"id": "stormlight_archive__navani_kholin", "name": "Navani Kholin", "ip": "Stormlight Archive", "role": "Support", "color": "#4aa3df", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "stormlight_archive__szeth", "name": "Szeth", "ip": "Stormlight Archive", "role": "DPS", "color": "#4aa3df", "owned": false, "aff": ["fitness", "faith"]}, {"id": "stormlight_archive__lift", "name": "Lift", "ip": "Stormlight Archive", "role": "Support", "color": "#4aa3df", "owned": false, "aff": ["faith", "work", "home"]}, {"id": "stormlight_archive__renarin_kholin", "name": "Renarin Kholin", "ip": "Stormlight Archive", "role": "Support", "color": "#4aa3df", "owned": false, "aff": ["faith", "work", "marriage"]}, {"id": "stormlight_archive__teft", "name": "Teft", "ip": "Stormlight Archive", "role": "Tank", "color": "#4aa3df", "owned": false, "aff": ["discipline", "faith", "fatherhood"]}, {"id": "stormlight_archive__rock", "name": "Rock", "ip": "Stormlight Archive", "role": "Support", "color": "#4aa3df", "owned": false, "aff": ["faith", "work", "marriage"]}, {"id": "stormlight_archive__lopen", "name": "Lopen", "ip": "Stormlight Archive", "role": "Support", "color": "#4aa3df", "owned": false, "aff": ["faith", "work", "marriage"]}, {"id": "stormlight_archive__wit", "name": "Wit", "ip": "Stormlight Archive", "role": "Support", "color": "#4aa3df", "owned": false, "aff": ["faith", "work", "marriage"]}, {"id": "lord_of_the_rings__legolas", "name": "Legolas", "ip": "Lord of the Rings", "role": "DPS", "color": "#2e7d4f", "owned": true, "aff": ["fitness", "discipline"]}, {"id": "lord_of_the_rings__aragorn", "name": "Aragorn", "ip": "Lord of the Rings", "role": "Tank", "color": "#2e7d4f", "owned": false, "aff": ["work", "marriage", "fatherhood"]}, {"id": "lord_of_the_rings__frodo_baggins", "name": "Frodo Baggins", "ip": "Lord of the Rings", "role": "Support", "color": "#2e7d4f", "owned": false, "aff": ["discipline", "faith", "marriage"]}, {"id": "lord_of_the_rings__samwise_gamgee", "name": "Samwise Gamgee", "ip": "Lord of the Rings", "role": "Support", "color": "#2e7d4f", "owned": false, "aff": ["fatherhood", "marriage", "home"]}, {"id": "lord_of_the_rings__gandalf", "name": "Gandalf", "ip": "Lord of the Rings", "role": "Support", "color": "#2e7d4f", "owned": false, "aff": ["faith", "work", "marriage"]}, {"id": "lord_of_the_rings__gimli", "name": "Gimli", "ip": "Lord of the Rings", "role": "Tank", "color": "#2e7d4f", "owned": false, "aff": ["discipline", "fatherhood"]}, {"id": "lord_of_the_rings__boromir", "name": "Boromir", "ip": "Lord of the Rings", "role": "Tank", "color": "#2e7d4f", "owned": false, "aff": ["discipline", "fatherhood"]}, {"id": "lord_of_the_rings__faramir", "name": "Faramir", "ip": "Lord of the Rings", "role": "DPS", "color": "#2e7d4f", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "lord_of_the_rings__eowyn", "name": "Eowyn", "ip": "Lord of the Rings", "role": "DPS", "color": "#2e7d4f", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "lord_of_the_rings__theoden", "name": "Theoden", "ip": "Lord of the Rings", "role": "Tank", "color": "#2e7d4f", "owned": false, "aff": ["discipline", "fatherhood"]}, {"id": "lord_of_the_rings__galadriel", "name": "Galadriel", "ip": "Lord of the Rings", "role": "Support", "color": "#2e7d4f", "owned": false, "aff": ["faith", "work", "marriage"]}, {"id": "lord_of_the_rings__sauron", "name": "Sauron", "ip": "Lord of the Rings", "role": "DPS", "color": "#2e7d4f", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "critical_role__grog_strongjaw", "name": "Grog Strongjaw", "ip": "Critical Role", "role": "Tank", "color": "#7a4fd0", "owned": true, "aff": ["fitness", "hobbies", "fatherhood"]}, {"id": "critical_role__pike_trickfoot", "name": "Pike Trickfoot", "ip": "Critical Role", "role": "Support", "color": "#7a4fd0", "owned": false, "aff": ["faith", "hobbies", "marriage"]}, {"id": "critical_role__vaxildan", "name": "Vax'ildan", "ip": "Critical Role", "role": "DPS", "color": "#7a4fd0", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "critical_role__vexahlia", "name": "Vex'ahlia", "ip": "Critical Role", "role": "DPS", "color": "#7a4fd0", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "critical_role__percy_de_rolo", "name": "Percy de Rolo", "ip": "Critical Role", "role": "DPS", "color": "#7a4fd0", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "critical_role__keyleth", "name": "Keyleth", "ip": "Critical Role", "role": "Support", "color": "#7a4fd0", "owned": false, "aff": ["faith", "hobbies", "marriage"]}, {"id": "critical_role__scanlan_shorthalt", "name": "Scanlan Shorthalt", "ip": "Critical Role", "role": "Support", "color": "#7a4fd0", "owned": false, "aff": ["faith", "work", "marriage"]}, {"id": "critical_role__caleb_widogast", "name": "Caleb Widogast", "ip": "Critical Role", "role": "DPS", "color": "#7a4fd0", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "critical_role__jester_lavorre", "name": "Jester Lavorre", "ip": "Critical Role", "role": "Support", "color": "#7a4fd0", "owned": false, "aff": ["faith", "work", "marriage"]}, {"id": "critical_role__fjord_stone", "name": "Fjord Stone", "ip": "Critical Role", "role": "Tank", "color": "#7a4fd0", "owned": false, "aff": ["discipline", "hobbies", "fatherhood"]}, {"id": "critical_role__beauregard_lionett", "name": "Beauregard Lionett", "ip": "Critical Role", "role": "DPS", "color": "#7a4fd0", "owned": false, "aff": ["fitness", "hobbies"]}, {"id": "critical_role__yasha_nydoorin", "name": "Yasha Nydoorin", "ip": "Critical Role", "role": "Tank", "color": "#7a4fd0", "owned": false, "aff": ["discipline", "hobbies", "fatherhood"]}, {"id": "game_of_thrones__jon_snow", "name": "Jon Snow", "ip": "Game of Thrones", "role": "Tank", "color": "#5a6b7a", "owned": true, "aff": ["work", "discipline", "fatherhood"]}, {"id": "game_of_thrones__arya_stark", "name": "Arya Stark", "ip": "Game of Thrones", "role": "DPS", "color": "#5a6b7a", "owned": false, "aff": ["fitness", "work"]}, {"id": "game_of_thrones__sansa_stark", "name": "Sansa Stark", "ip": "Game of Thrones", "role": "Support", "color": "#5a6b7a", "owned": false, "aff": ["faith", "work", "marriage"]}, {"id": "game_of_thrones__ned_stark", "name": "Ned Stark", "ip": "Game of Thrones", "role": "Tank", "color": "#5a6b7a", "owned": false, "aff": ["fatherhood", "work"]}, {"id": "game_of_thrones__tyrion_lannister", "name": "Tyrion Lannister", "ip": "Game of Thrones", "role": "Support", "color": "#5a6b7a", "owned": false, "aff": ["work", "hobbies", "marriage"]}, {"id": "game_of_thrones__jaime_lannister", "name": "Jaime Lannister", "ip": "Game of Thrones", "role": "DPS", "color": "#5a6b7a", "owned": false, "aff": ["fitness", "work"]}, {"id": "game_of_thrones__cersei_lannister", "name": "Cersei Lannister", "ip": "Game of Thrones", "role": "DPS", "color": "#5a6b7a", "owned": false, "aff": ["fitness", "work"]}, {"id": "game_of_thrones__daenerys_targaryen", "name": "Daenerys Targaryen", "ip": "Game of Thrones", "role": "DPS", "color": "#5a6b7a", "owned": false, "aff": ["fitness", "work"]}, {"id": "game_of_thrones__the_hound", "name": "The Hound", "ip": "Game of Thrones", "role": "Tank", "color": "#5a6b7a", "owned": false, "aff": ["discipline", "work", "fatherhood"]}, {"id": "game_of_thrones__the_night_king", "name": "The Night King", "ip": "Game of Thrones", "role": "DPS", "color": "#5a6b7a", "owned": false, "aff": ["fitness", "work"]}, {"id": "game_of_thrones__oberyn_martell", "name": "Oberyn Martell", "ip": "Game of Thrones", "role": "DPS", "color": "#5a6b7a", "owned": false, "aff": ["fitness", "work"]}, {"id": "disney_pixar__hiro_hamada", "name": "Hiro Hamada", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "disney_pixar__baymax", "name": "Baymax", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["home", "fatherhood", "marriage"]}, {"id": "disney_pixar__go_go_tomago", "name": "Go Go Tomago", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "disney_pixar__mr_incredible", "name": "Mr. Incredible", "ip": "Disney / Pixar", "role": "Tank", "color": "#22a9e0", "owned": false, "aff": ["fatherhood", "marriage"]}, {"id": "disney_pixar__elastigirl", "name": "Elastigirl", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fatherhood", "marriage"]}, {"id": "disney_pixar__violet_parr", "name": "Violet Parr", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "fatherhood"]}, {"id": "disney_pixar__dash_parr", "name": "Dash Parr", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "disney_pixar__frozone", "name": "Frozone", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "fatherhood"]}, {"id": "disney_pixar__sulley", "name": "Sulley", "ip": "Disney / Pixar", "role": "Tank", "color": "#22a9e0", "owned": false, "aff": ["fatherhood", "home"]}, {"id": "disney_pixar__mike_wazowski", "name": "Mike Wazowski", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["home", "hobbies", "marriage"]}, {"id": "disney_pixar__boo", "name": "Boo", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "fatherhood"]}, {"id": "disney_pixar__woody", "name": "Woody", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["fatherhood", "marriage"]}, {"id": "disney_pixar__buzz_lightyear", "name": "Buzz Lightyear", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "disney_pixar__jessie", "name": "Jessie", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "disney_pixar__ian_lightfoot", "name": "Ian Lightfoot", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "disney_pixar__barley_lightfoot", "name": "Barley Lightfoot", "ip": "Disney / Pixar", "role": "Tank", "color": "#22a9e0", "owned": false, "aff": ["discipline", "fatherhood"]}, {"id": "disney_pixar__dug", "name": "Dug", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "fatherhood"]}, {"id": "disney_pixar__joy", "name": "Joy", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "fatherhood"]}, {"id": "disney_pixar__dante", "name": "Dante", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "fatherhood"]}, {"id": "disney_pixar__moana", "name": "Moana", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["discipline", "faith"]}, {"id": "disney_pixar__maui", "name": "Maui", "ip": "Disney / Pixar", "role": "Tank", "color": "#22a9e0", "owned": false, "aff": ["discipline", "fatherhood"]}, {"id": "disney_pixar__hei_hei", "name": "Hei Hei", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "fatherhood"]}, {"id": "disney_pixar__pua", "name": "Pua", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "fatherhood"]}, {"id": "disney_pixar__elsa", "name": "Elsa", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "disney_pixar__anna", "name": "Anna", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "fatherhood"]}, {"id": "disney_pixar__kristoff", "name": "Kristoff", "ip": "Disney / Pixar", "role": "Tank", "color": "#22a9e0", "owned": false, "aff": ["discipline", "fatherhood"]}, {"id": "disney_pixar__olaf", "name": "Olaf", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "fatherhood"]}, {"id": "disney_pixar__sven", "name": "Sven", "ip": "Disney / Pixar", "role": "Tank", "color": "#22a9e0", "owned": false, "aff": ["discipline", "fatherhood"]}, {"id": "disney_pixar__wreck_it_ralph", "name": "Wreck-It Ralph", "ip": "Disney / Pixar", "role": "Tank", "color": "#22a9e0", "owned": true, "aff": ["home", "fatherhood"]}, {"id": "disney_pixar__vanellope_von_schweetz", "name": "Vanellope von Schweetz", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "disney_pixar__fix_it_felix", "name": "Fix-It Felix", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["home", "marriage", "fatherhood"]}, {"id": "disney_pixar__sergeant_calhoun", "name": "Sergeant Calhoun", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fitness", "fatherhood"]}, {"id": "fourth_wing__violet_sorrengail", "name": "Violet Sorrengail", "ip": "Fourth Wing", "role": "DPS", "color": "#6f63ff", "owned": false, "aff": ["discipline", "work"], "archetype": "Lightning Rider", "tags": ["resilience", "strategy", "dragons", "courage", "underdog"]}, {"id": "fourth_wing__xaden_riorson", "name": "Xaden Riorson", "ip": "Fourth Wing", "role": "DPS", "color": "#6f63ff", "owned": false, "aff": ["work", "marriage", "fatherhood"], "archetype": "Shadow Commander", "tags": ["leadership", "shadows", "rebellion", "protection", "strategy"]}, {"id": "fourth_wing__tairneanach", "name": "Tairneanach", "ip": "Fourth Wing", "role": "Tank", "color": "#6f63ff", "owned": false, "aff": ["discipline", "fatherhood", "marriage"], "archetype": "Elder Dragon Tank", "tags": ["dragon", "ancient", "protector", "bonded", "power"]}, {"id": "fourth_wing__andarnaurram", "name": "Andarnaurram", "ip": "Fourth Wing", "role": "Support", "color": "#6f63ff", "owned": false, "aff": ["faith", "fatherhood", "marriage"], "archetype": "Golden Dragon Support", "tags": ["dragon", "growth", "mystery", "hope", "time"]}, {"id": "fourth_wing__sgaeyl", "name": "Sgaeyl", "ip": "Fourth Wing", "role": "DPS", "color": "#6f63ff", "owned": false, "aff": ["discipline", "work", "marriage"], "archetype": "Blue Dragon Striker", "tags": ["dragon", "fierce", "bonded", "shadows", "warrior"]}, {"id": "fourth_wing__mira_sorrengail", "name": "Mira Sorrengail", "ip": "Fourth Wing", "role": "Tank", "color": "#6f63ff", "owned": false, "aff": ["fatherhood", "work"], "archetype": "Shielding Protector", "tags": ["sister", "protector", "discipline", "rider", "duty"]}, {"id": "fourth_wing__brennan_sorrengail", "name": "Brennan Sorrengail", "ip": "Fourth Wing", "role": "Support", "color": "#6f63ff", "owned": false, "aff": ["faith", "work", "fatherhood"], "archetype": "Mender Strategist", "tags": ["healer", "brother", "rebellion", "wisdom", "support"]}, {"id": "fourth_wing__dain_aetos", "name": "Dain Aetos", "ip": "Fourth Wing", "role": "Support", "color": "#6f63ff", "owned": false, "aff": ["work", "discipline", "marriage"], "archetype": "Memory Tactician", "tags": ["rules", "memory", "tactics", "conflict", "command"]}, {"id": "fourth_wing__rhiannon_matthias", "name": "Rhiannon Matthias", "ip": "Fourth Wing", "role": "DPS", "color": "#6f63ff", "owned": false, "aff": ["fatherhood", "discipline", "marriage"], "archetype": "Loyal Wingmate", "tags": ["friendship", "loyalty", "rider", "courage", "teamwork"]}, {"id": "fourth_wing__ridoc_gamlyn", "name": "Ridoc Gamlyn", "ip": "Fourth Wing", "role": "Support", "color": "#6f63ff", "owned": false, "aff": ["hobbies", "fatherhood", "marriage"], "archetype": "Morale Rogue", "tags": ["humor", "friendship", "ice", "morale", "teamwork"]}, {"id": "fourth_wing__sawyer_henrick", "name": "Sawyer Henrick", "ip": "Fourth Wing", "role": "Tank", "color": "#6f63ff", "owned": false, "aff": ["discipline", "home", "fatherhood"], "archetype": "Resilient Frontliner", "tags": ["endurance", "friendship", "rider", "steady", "grit"]}, {"id": "fourth_wing__liam_mairi", "name": "Liam Mairi", "ip": "Fourth Wing", "role": "Tank", "color": "#6f63ff", "owned": false, "aff": ["fatherhood", "faith", "marriage"], "archetype": "Guardian Companion", "tags": ["loyalty", "sacrifice", "protection", "friendship", "steadfast"]}, {"id": "fourth_wing__imogen_cardulo", "name": "Imogen Cardulo", "ip": "Fourth Wing", "role": "DPS", "color": "#6f63ff", "owned": false, "aff": ["fitness", "discipline"], "archetype": "Rebel Assassin", "tags": ["speed", "rebellion", "combat", "memory", "edge"]}, {"id": "fourth_wing__garrick_tavis", "name": "Garrick Tavis", "ip": "Fourth Wing", "role": "DPS", "color": "#6f63ff", "owned": false, "aff": ["work", "discipline", "marriage"], "archetype": "Shadow Vanguard", "tags": ["loyalty", "command", "rebellion", "combat", "strategy"]}, {"id": "fourth_wing__bodhi_durran", "name": "Bodhi Durran", "ip": "Fourth Wing", "role": "DPS", "color": "#6f63ff", "owned": false, "aff": ["work", "discipline", "marriage"], "archetype": "Rider Lieutenant", "tags": ["loyalty", "rider", "leadership", "combat", "rebellion"]}, {"id": "a_court_of_thorns_and_roses__feyre_archeron", "name": "Feyre Archeron", "ip": "A Court of Thorns and Roses", "role": "DPS", "color": "#d96aa7", "owned": false, "aff": ["marriage", "fatherhood"], "archetype": "High Fae Huntress", "tags": ["survival", "artist", "huntress", "growth", "night-court"]}, {"id": "a_court_of_thorns_and_roses__rhysand", "name": "Rhysand", "ip": "A Court of Thorns and Roses", "role": "DPS", "color": "#d96aa7", "owned": false, "aff": ["marriage", "work", "fatherhood"], "archetype": "Night Court High Lord", "tags": ["leadership", "shadow", "mind", "court", "protector"]}, {"id": "a_court_of_thorns_and_roses__nesta_archeron", "name": "Nesta Archeron", "ip": "A Court of Thorns and Roses", "role": "DPS", "color": "#d96aa7", "owned": false, "aff": ["discipline", "marriage", "fatherhood"], "archetype": "Valkyrie Flame", "tags": ["valkyrie", "fire", "healing", "discipline", "sisterhood"]}, {"id": "a_court_of_thorns_and_roses__cassian", "name": "Cassian", "ip": "A Court of Thorns and Roses", "role": "Tank", "color": "#d96aa7", "owned": false, "aff": ["fitness", "discipline", "marriage"], "archetype": "Illyrian Warlord", "tags": ["warrior", "training", "protector", "strength", "loyalty"]}, {"id": "a_court_of_thorns_and_roses__azriel", "name": "Azriel", "ip": "A Court of Thorns and Roses", "role": "DPS", "color": "#d96aa7", "owned": false, "aff": ["work", "discipline", "marriage"], "archetype": "Shadowsinger Assassin", "tags": ["shadows", "spy", "stealth", "wings", "precision"]}, {"id": "a_court_of_thorns_and_roses__morrigan", "name": "Morrigan", "ip": "A Court of Thorns and Roses", "role": "Support", "color": "#d96aa7", "owned": false, "aff": ["marriage", "fatherhood"], "archetype": "Truth-Bearing Emissary", "tags": ["truth", "court", "diplomacy", "light", "loyalty"]}, {"id": "a_court_of_thorns_and_roses__amren", "name": "Amren", "ip": "A Court of Thorns and Roses", "role": "DPS", "color": "#d96aa7", "owned": false, "aff": ["work", "discipline", "marriage"], "archetype": "Ancient Powerhouse", "tags": ["ancient", "knowledge", "power", "mystery", "edge"]}, {"id": "a_court_of_thorns_and_roses__elain_archeron", "name": "Elain Archeron", "ip": "A Court of Thorns and Roses", "role": "Support", "color": "#d96aa7", "owned": false, "aff": ["faith", "home", "fatherhood"], "archetype": "Seer of Quiet Strength", "tags": ["seer", "gentleness", "garden", "hope", "sisterhood"]}, {"id": "a_court_of_thorns_and_roses__lucien_vanserra", "name": "Lucien Vanserra", "ip": "A Court of Thorns and Roses", "role": "Support", "color": "#d96aa7", "owned": false, "aff": ["work", "marriage", "fatherhood"], "archetype": "Exiled Emissary", "tags": ["emissary", "fire", "loyalty", "court", "survivor"]}, {"id": "a_court_of_thorns_and_roses__tamlin", "name": "Tamlin", "ip": "A Court of Thorns and Roses", "role": "Tank", "color": "#d96aa7", "owned": false, "aff": ["discipline", "home", "marriage"], "archetype": "Spring Court Beast", "tags": ["spring", "beast", "power", "court", "protector"]}, {"id": "a_court_of_thorns_and_roses__gwyneth_berdara", "name": "Gwyneth Berdara", "ip": "A Court of Thorns and Roses", "role": "Support", "color": "#d96aa7", "owned": false, "aff": ["faith", "discipline", "marriage"], "archetype": "Valkyrie Singer", "tags": ["healing", "song", "sisterhood", "training", "courage"]}, {"id": "a_court_of_thorns_and_roses__emerie", "name": "Emerie", "ip": "A Court of Thorns and Roses", "role": "Tank", "color": "#d96aa7", "owned": false, "aff": ["discipline", "home", "marriage"], "archetype": "Valkyrie Shield", "tags": ["resilience", "training", "sisterhood", "wings", "endurance"]}, {"id": "a_court_of_thorns_and_roses__helion", "name": "Helion", "ip": "A Court of Thorns and Roses", "role": "Support", "color": "#d96aa7", "owned": false, "aff": ["work", "faith", "marriage"], "archetype": "Day Court Scholar", "tags": ["day", "knowledge", "light", "court", "wisdom"]}, {"id": "a_court_of_thorns_and_roses__eris_vanserra", "name": "Eris Vanserra", "ip": "A Court of Thorns and Roses", "role": "DPS", "color": "#d96aa7", "owned": false, "aff": ["work", "discipline", "marriage"], "archetype": "Autumn Court Schemer", "tags": ["autumn", "fire", "politics", "ambition", "court"]}, {"id": "a_court_of_thorns_and_roses__the_suriel", "name": "The Suriel", "ip": "A Court of Thorns and Roses", "role": "Support", "color": "#d96aa7", "owned": false, "aff": ["faith", "work", "marriage"], "archetype": "Truth Whisperer", "tags": ["truth", "oracle", "mystery", "wisdom", "ancient"]}, {"id": "world_of_warcraft__alexstrasza", "name": "Alexstrasza", "ip": "World of Warcraft", "role": "Support", "color": "#2e8b57", "owned": false, "aff": ["faith", "home", "marriage"], "tags": ["faith", "home", "fitness"]}, {"id": "disney_pixar__tuk_tuk", "name": "Tuk Tuk", "ip": "Disney / Pixar", "role": "Tank", "color": "#22a9e0", "owned": false, "aff": ["hobbies", "fatherhood"], "tags": ["hobbies", "family"]}, {"id": "disney_pixar__snow_white", "name": "Snow White", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "home", "fatherhood"], "tags": ["faith", "home", "family"]}, {"id": "disney_pixar__cinderella", "name": "Cinderella", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "home", "marriage"], "tags": ["faith", "discipline", "home"]}, {"id": "disney_pixar__aurora", "name": "Aurora", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "hobbies", "marriage"], "tags": ["faith", "hobbies"]}, {"id": "disney_pixar__ariel", "name": "Ariel", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["hobbies", "marriage", "fatherhood"], "tags": ["hobbies", "family"]}, {"id": "disney_pixar__belle", "name": "Belle", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "work", "marriage"], "tags": ["faith", "hobbies", "work"]}, {"id": "disney_pixar__jasmine", "name": "Jasmine", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["discipline", "fatherhood"], "tags": ["discipline", "family"]}, {"id": "disney_pixar__pocahontas", "name": "Pocahontas", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["faith", "fatherhood", "marriage"], "tags": ["faith", "fitness", "family"]}, {"id": "disney_pixar__mulan", "name": "Mulan", "ip": "Disney / Pixar", "role": "Tank", "color": "#22a9e0", "owned": false, "aff": ["discipline", "home", "fatherhood"], "tags": ["discipline", "fitness", "family"]}, {"id": "disney_pixar__tiana", "name": "Tiana", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["discipline", "work", "home"], "tags": ["discipline", "work", "home"]}, {"id": "disney_pixar__rapunzel", "name": "Rapunzel", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["hobbies", "marriage", "fatherhood"], "tags": ["hobbies", "family", "faith"]}, {"id": "disney_pixar__merida", "name": "Merida", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["fitness", "fatherhood"], "tags": ["fitness", "discipline", "family"]}, {"id": "disney_pixar__raya", "name": "Raya", "ip": "Disney / Pixar", "role": "DPS", "color": "#22a9e0", "owned": false, "aff": ["discipline", "home", "fatherhood"], "tags": ["discipline", "family"]}, {"id": "disney_pixar__mirabel_madrigal", "name": "Mirabel Madrigal", "ip": "Disney / Pixar", "role": "Support", "color": "#22a9e0", "owned": false, "aff": ["fatherhood", "home", "marriage"], "tags": ["family", "home", "faith"]}, {"id": "dc__superman", "name": "Superman", "ip": "DC", "role": "Tank", "color": "#1f6fe0", "owned": false, "aff": ["faith", "home", "fatherhood"], "tags": ["faith", "discipline", "family"]}, {"id": "dc__batman", "name": "Batman", "ip": "DC", "role": "DPS", "color": "#1f6fe0", "owned": false, "aff": ["discipline", "work", "home"], "tags": ["discipline", "work", "home"]}, {"id": "dc__wonder_woman", "name": "Wonder Woman", "ip": "DC", "role": "Tank", "color": "#1f6fe0", "owned": false, "aff": ["faith", "discipline", "fatherhood"], "tags": ["faith", "discipline", "fitness"]}, {"id": "dc__the_flash_barry_allen", "name": "The Flash / Barry Allen", "ip": "DC", "role": "DPS", "color": "#1f6fe0", "owned": false, "aff": ["fitness", "work"], "tags": ["fitness", "hobbies", "work"]}, {"id": "dc__green_lantern_hal_jordan", "name": "Green Lantern / Hal Jordan", "ip": "DC", "role": "DPS", "color": "#1f6fe0", "owned": false, "aff": ["discipline", "work"], "tags": ["discipline", "work", "faith"]}, {"id": "dc__aquaman", "name": "Aquaman", "ip": "DC", "role": "Tank", "color": "#1f6fe0", "owned": false, "aff": ["marriage", "work", "fatherhood"], "tags": ["family", "work", "fitness"]}, {"id": "dc__martian_manhunter", "name": "Martian Manhunter", "ip": "DC", "role": "Support", "color": "#1f6fe0", "owned": false, "aff": ["faith", "work", "marriage"], "tags": ["faith", "work", "family"]}, {"id": "dc__cyborg", "name": "Cyborg", "ip": "DC", "role": "Support", "color": "#1f6fe0", "owned": false, "aff": ["work", "hobbies", "marriage"], "tags": ["work", "discipline", "hobbies"]}, {"id": "dc__green_arrow", "name": "Green Arrow", "ip": "DC", "role": "DPS", "color": "#1f6fe0", "owned": false, "aff": ["discipline", "work", "marriage"], "tags": ["discipline", "work", "family"]}, {"id": "dc__black_canary", "name": "Black Canary", "ip": "DC", "role": "DPS", "color": "#1f6fe0", "owned": false, "aff": ["fitness", "marriage", "work"], "tags": ["fitness", "family", "work"]}, {"id": "dc__shazam", "name": "Shazam", "ip": "DC", "role": "DPS", "color": "#1f6fe0", "owned": false, "aff": ["home", "hobbies", "fatherhood"], "tags": ["family", "faith", "hobbies"]}, {"id": "dc__supergirl", "name": "Supergirl", "ip": "DC", "role": "DPS", "color": "#1f6fe0", "owned": false, "aff": ["faith", "fatherhood"], "tags": ["faith", "family", "fitness"]}, {"id": "dc__batgirl_barbara_gordon", "name": "Batgirl / Barbara Gordon", "ip": "DC", "role": "Support", "color": "#1f6fe0", "owned": false, "aff": ["work", "hobbies", "marriage"], "tags": ["work", "discipline", "hobbies"]}, {"id": "dc__nightwing", "name": "Nightwing", "ip": "DC", "role": "DPS", "color": "#1f6fe0", "owned": false, "aff": ["marriage", "discipline", "fatherhood"], "tags": ["family", "fitness", "discipline"]}, {"id": "dc__robin_damian_wayne", "name": "Robin / Damian Wayne", "ip": "DC", "role": "DPS", "color": "#1f6fe0", "owned": false, "aff": ["discipline", "home", "fatherhood"], "tags": ["discipline", "family", "fitness"]}, {"id": "mass_effect__commander_shepard", "name": "Commander Shepard", "ip": "Mass Effect", "role": "DPS", "color": "#d57f1f", "owned": false, "aff": ["discipline", "work"], "tags": ["discipline", "work", "faith"]}, {"id": "mass_effect__garrus_vakarian", "name": "Garrus Vakarian", "ip": "Mass Effect", "role": "DPS", "color": "#d57f1f", "owned": false, "aff": ["discipline", "work", "marriage"], "tags": ["discipline", "work", "family"]}, {"id": "mass_effect__liara_t_soni", "name": "Liara T'Soni", "ip": "Mass Effect", "role": "Support", "color": "#d57f1f", "owned": false, "aff": ["faith", "work", "hobbies"], "tags": ["faith", "work", "hobbies"]}, {"id": "mass_effect__tali_zorah", "name": "Tali'Zorah", "ip": "Mass Effect", "role": "Support", "color": "#d57f1f", "owned": false, "aff": ["work", "home", "marriage"], "tags": ["work", "discipline", "home"]}, {"id": "mass_effect__urdnot_wrex", "name": "Urdnot Wrex", "ip": "Mass Effect", "role": "Tank", "color": "#d57f1f", "owned": false, "aff": ["fitness", "marriage", "fatherhood"], "tags": ["fitness", "discipline", "family"]}, {"id": "mass_effect__mordin_solus", "name": "Mordin Solus", "ip": "Mass Effect", "role": "Support", "color": "#d57f1f", "owned": false, "aff": ["work", "faith", "marriage"], "tags": ["work", "faith", "discipline"]}, {"id": "mass_effect__miranda_lawson", "name": "Miranda Lawson", "ip": "Mass Effect", "role": "DPS", "color": "#d57f1f", "owned": false, "aff": ["work", "fatherhood"], "tags": ["work", "discipline", "family"]}, {"id": "mass_effect__jack", "name": "Jack", "ip": "Mass Effect", "role": "DPS", "color": "#d57f1f", "owned": false, "aff": ["discipline", "marriage", "fatherhood"], "tags": ["discipline", "fitness", "family"]}, {"id": "mass_effect__legion", "name": "Legion", "ip": "Mass Effect", "role": "Support", "color": "#d57f1f", "owned": false, "aff": ["work", "faith", "marriage"], "tags": ["work", "discipline", "faith"]}, {"id": "mass_effect__thane_krios", "name": "Thane Krios", "ip": "Mass Effect", "role": "DPS", "color": "#d57f1f", "owned": false, "aff": ["faith", "fatherhood"], "tags": ["faith", "discipline", "family"]}, {"id": "diablo__diablo", "name": "Diablo", "ip": "Diablo", "role": "DPS", "color": "#8b1a1a", "owned": false, "aff": ["discipline", "hobbies"], "tags": ["discipline", "hobbies"]}, {"id": "diablo__tyrael", "name": "Tyrael", "ip": "Diablo", "role": "Support", "color": "#8b1a1a", "owned": false, "aff": ["faith", "work", "marriage"], "tags": ["faith", "discipline", "work"]}, {"id": "diablo__deckard_cain", "name": "Deckard Cain", "ip": "Diablo", "role": "Support", "color": "#8b1a1a", "owned": false, "aff": ["faith", "work", "hobbies"], "tags": ["faith", "work", "hobbies"]}, {"id": "diablo__lilith", "name": "Lilith", "ip": "Diablo", "role": "DPS", "color": "#8b1a1a", "owned": false, "aff": ["marriage", "hobbies", "fatherhood"], "tags": ["family", "discipline", "hobbies"]}, {"id": "diablo__inarius", "name": "Inarius", "ip": "Diablo", "role": "DPS", "color": "#8b1a1a", "owned": false, "aff": ["faith", "discipline"], "tags": ["faith", "discipline"]}, {"id": "diablo__mephisto", "name": "Mephisto", "ip": "Diablo", "role": "DPS", "color": "#8b1a1a", "owned": false, "aff": ["discipline", "hobbies"], "tags": ["discipline", "hobbies"]}, {"id": "diablo__baal", "name": "Baal", "ip": "Diablo", "role": "DPS", "color": "#8b1a1a", "owned": false, "aff": ["discipline", "hobbies"], "tags": ["discipline", "hobbies"]}, {"id": "diablo__malthael", "name": "Malthael", "ip": "Diablo", "role": "DPS", "color": "#8b1a1a", "owned": false, "aff": ["faith", "discipline"], "tags": ["faith", "discipline"]}, {"id": "diablo__leah", "name": "Leah", "ip": "Diablo", "role": "Support", "color": "#8b1a1a", "owned": false, "aff": ["marriage", "hobbies", "fatherhood"], "tags": ["family", "faith", "hobbies"]}, {"id": "diablo__imperius", "name": "Imperius", "ip": "Diablo", "role": "Tank", "color": "#8b1a1a", "owned": false, "aff": ["discipline", "faith"], "tags": ["discipline", "fitness", "faith"]}, {"id": "league_of_legends__ahri", "name": "Ahri", "ip": "League of Legends", "role": "DPS", "color": "#13b3a3", "owned": false, "aff": ["hobbies", "marriage"], "tags": ["hobbies", "faith", "family"]}, {"id": "league_of_legends__jinx", "name": "Jinx", "ip": "League of Legends", "role": "DPS", "color": "#13b3a3", "owned": false, "aff": ["hobbies", "discipline"], "tags": ["hobbies", "discipline"]}, {"id": "league_of_legends__lux", "name": "Lux", "ip": "League of Legends", "role": "Support", "color": "#13b3a3", "owned": false, "aff": ["faith", "home", "hobbies"], "tags": ["faith", "family", "hobbies"]}, {"id": "league_of_legends__miss_fortune", "name": "Miss Fortune", "ip": "League of Legends", "role": "DPS", "color": "#13b3a3", "owned": false, "aff": ["discipline", "hobbies"], "tags": ["discipline", "hobbies"]}, {"id": "league_of_legends__caitlyn", "name": "Caitlyn", "ip": "League of Legends", "role": "DPS", "color": "#13b3a3", "owned": false, "aff": ["work", "marriage"], "tags": ["work", "discipline", "family"]}, {"id": "league_of_legends__vi", "name": "Vi", "ip": "League of Legends", "role": "Tank", "color": "#13b3a3", "owned": false, "aff": ["fitness", "fatherhood"], "tags": ["fitness", "family", "discipline"]}, {"id": "league_of_legends__kai_sa", "name": "Kai'Sa", "ip": "League of Legends", "role": "DPS", "color": "#13b3a3", "owned": false, "aff": ["discipline", "marriage"], "tags": ["discipline", "fitness", "family"]}, {"id": "league_of_legends__akali", "name": "Akali", "ip": "League of Legends", "role": "DPS", "color": "#13b3a3", "owned": false, "aff": ["discipline", "hobbies"], "tags": ["discipline", "fitness", "hobbies"]}, {"id": "league_of_legends__yasuo", "name": "Yasuo", "ip": "League of Legends", "role": "DPS", "color": "#13b3a3", "owned": false, "aff": ["discipline", "hobbies"], "tags": ["discipline", "hobbies"]}, {"id": "league_of_legends__ezreal", "name": "Ezreal", "ip": "League of Legends", "role": "DPS", "color": "#13b3a3", "owned": false, "aff": ["hobbies", "work"], "tags": ["hobbies", "work", "faith"]}, {"id": "game_of_thrones__margaery_tyrell", "name": "Margaery Tyrell", "ip": "Game of Thrones", "role": "Support", "color": "#5a6b7a", "owned": false, "aff": ["fatherhood", "work", "home"], "tags": ["family", "work", "home"]}, {"id": "baldur_s_gate_3__shadowheart", "name": "Shadowheart", "ip": "Baldur's Gate 3", "role": "Support", "color": "#8a4fd6", "owned": false, "aff": ["faith", "marriage"], "tags": ["faith", "discipline", "family"]}, {"id": "baldur_s_gate_3__astarion", "name": "Astarion", "ip": "Baldur's Gate 3", "role": "DPS", "color": "#8a4fd6", "owned": false, "aff": ["hobbies", "discipline"], "tags": ["hobbies", "discipline"]}, {"id": "baldur_s_gate_3__gale", "name": "Gale", "ip": "Baldur's Gate 3", "role": "Support", "color": "#8a4fd6", "owned": false, "aff": ["work", "faith", "hobbies"], "tags": ["work", "faith", "hobbies"]}, {"id": "baldur_s_gate_3__lae_zel", "name": "Lae'zel", "ip": "Baldur's Gate 3", "role": "DPS", "color": "#8a4fd6", "owned": false, "aff": ["discipline", "work"], "tags": ["discipline", "fitness", "work"]}, {"id": "baldur_s_gate_3__wyll", "name": "Wyll", "ip": "Baldur's Gate 3", "role": "DPS", "color": "#8a4fd6", "owned": false, "aff": ["faith", "home", "work"], "tags": ["faith", "family", "work"]}, {"id": "baldur_s_gate_3__karlach", "name": "Karlach", "ip": "Baldur's Gate 3", "role": "Tank", "color": "#8a4fd6", "owned": false, "aff": ["fitness", "home", "hobbies"], "tags": ["fitness", "family", "hobbies"]}, {"id": "baldur_s_gate_3__halsin", "name": "Halsin", "ip": "Baldur's Gate 3", "role": "Support", "color": "#8a4fd6", "owned": false, "aff": ["faith", "home", "marriage"], "tags": ["faith", "fitness", "home"]}, {"id": "baldur_s_gate_3__minthara", "name": "Minthara", "ip": "Baldur's Gate 3", "role": "DPS", "color": "#8a4fd6", "owned": false, "aff": ["discipline", "work"], "tags": ["discipline", "work"]}, {"id": "baldur_s_gate_3__jaheira", "name": "Jaheira", "ip": "Baldur's Gate 3", "role": "Support", "color": "#8a4fd6", "owned": false, "aff": ["fatherhood", "faith", "work"], "tags": ["family", "faith", "work"]}, {"id": "baldur_s_gate_3__minsc", "name": "Minsc", "ip": "Baldur's Gate 3", "role": "Tank", "color": "#8a4fd6", "owned": false, "aff": ["fitness", "fatherhood", "hobbies"], "tags": ["fitness", "family", "hobbies"]}, {"id": "baldur_s_gate_3__the_dark_urge", "name": "The Dark Urge", "ip": "Baldur's Gate 3", "role": "DPS", "color": "#8a4fd6", "owned": false, "aff": ["discipline", "hobbies"], "tags": ["discipline", "hobbies"]}, {"id": "baldur_s_gate_3__the_emperor", "name": "The Emperor", "ip": "Baldur's Gate 3", "role": "Support", "color": "#8a4fd6", "owned": false, "aff": ["work", "discipline", "marriage"], "tags": ["work", "discipline"]}, {"id": "baldur_s_gate_3__ketheric_thorm", "name": "Ketheric Thorm", "ip": "Baldur's Gate 3", "role": "Tank", "color": "#8a4fd6", "owned": false, "aff": ["fatherhood", "discipline"], "tags": ["family", "discipline"]}, {"id": "baldur_s_gate_3__enver_gortash", "name": "Enver Gortash", "ip": "Baldur's Gate 3", "role": "Support", "color": "#8a4fd6", "owned": false, "aff": ["work", "discipline", "marriage"], "tags": ["work", "discipline"]}, {"id": "baldur_s_gate_3__orin_the_red", "name": "Orin the Red", "ip": "Baldur's Gate 3", "role": "DPS", "color": "#8a4fd6", "owned": false, "aff": ["discipline", "hobbies"], "tags": ["discipline", "hobbies"]}, {"id": "baldur_s_gate_3__raphael", "name": "Raphael", "ip": "Baldur's Gate 3", "role": "DPS", "color": "#8a4fd6", "owned": false, "aff": ["work", "hobbies"], "tags": ["work", "hobbies", "discipline"]}, {"id": "baldur_s_gate_3__withers", "name": "Withers", "ip": "Baldur's Gate 3", "role": "Support", "color": "#8a4fd6", "owned": false, "aff": ["faith", "discipline", "marriage"], "tags": ["faith", "discipline"]}, {"id": "baldur_s_gate_3__dame_aylin", "name": "Dame Aylin", "ip": "Baldur's Gate 3", "role": "Tank", "color": "#8a4fd6", "owned": false, "aff": ["faith", "marriage"], "tags": ["faith", "fitness", "family"]}, {"id": "baldur_s_gate_3__isobel", "name": "Isobel", "ip": "Baldur's Gate 3", "role": "Support", "color": "#8a4fd6", "owned": false, "aff": ["faith", "marriage"], "tags": ["faith", "family"]}, {"id": "baldur_s_gate_3__mizora", "name": "Mizora", "ip": "Baldur's Gate 3", "role": "DPS", "color": "#8a4fd6", "owned": false, "aff": ["work", "hobbies"], "tags": ["work", "hobbies", "discipline"]}, {"id": "world_of_warcraft__peter_paladin", "name": "Peter Paladin", "ip": "World of Warcraft", "role": "Tank", "color": "#f5d76e", "owned": false, "aff": ["faith", "home", "discipline"], "archetype": "Guardian", "identity": "Human Paladin oath-anchor and frontline protector.", "desc": "Human Paladin oath-anchor and frontline protector.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Guardian"]}, {"id": "world_of_warcraft__peter_shaman", "name": "Peter Shaman", "ip": "World of Warcraft", "role": "Support", "color": "#3fbf7f", "owned": false, "aff": ["faith", "home", "discipline"], "archetype": "Healer", "identity": "Haranir Shaman support identity rooted in ancient growth.", "desc": "Haranir Shaman support identity rooted in ancient growth.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Healer"]}, {"id": "world_of_warcraft__peter_druid", "name": "Peter Druid", "ip": "World of Warcraft", "role": "Tank", "color": "#7fbf3f", "owned": false, "aff": ["fatherhood", "fitness", "home"], "archetype": "Protector", "identity": "Worgen Druid protector balancing feral strength and restoration.", "desc": "Worgen Druid protector balancing feral strength and restoration.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Protector"]}, {"id": "world_of_warcraft__peter_hunter", "name": "Peter Hunter", "ip": "World of Warcraft", "role": "DPS", "color": "#7d63ff", "owned": false, "aff": ["discipline", "fitness", "hobbies"], "archetype": "Hunter", "identity": "Night Elf Hunter precision from the shadowed treeline.", "desc": "Night Elf Hunter precision from the shadowed treeline.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Hunter"]}, {"id": "world_of_warcraft__peter_warrior", "name": "Peter Warrior", "ip": "World of Warcraft", "role": "Tank", "color": "#b14435", "owned": false, "aff": ["fitness", "discipline", "work"], "archetype": "Bruiser", "identity": "Orc Warrior bruiser who converts pressure into momentum.", "desc": "Orc Warrior bruiser who converts pressure into momentum.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Bruiser"]}, {"id": "world_of_warcraft__peter_monk", "name": "Peter Monk", "ip": "World of Warcraft", "role": "Support", "color": "#b68a45", "owned": false, "aff": ["fitness", "faith", "home"], "archetype": "Protector", "identity": "Tauren Monk balancing resilience, breath, and steady support.", "desc": "Tauren Monk balancing resilience, breath, and steady support.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Protector"]}, {"id": "world_of_warcraft__peter_rogue", "name": "Peter Rogue", "ip": "World of Warcraft", "role": "DPS", "color": "#8f5cff", "owned": false, "aff": ["discipline", "work", "hobbies"], "archetype": "Assassin", "identity": "Void Elf Rogue who punishes vulnerable targets.", "desc": "Void Elf Rogue who punishes vulnerable targets.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Assassin"]}, {"id": "world_of_warcraft__peter_evoker", "name": "Peter Evoker", "ip": "World of Warcraft", "role": "DPS", "color": "#4cc3ff", "owned": false, "aff": ["work", "faith", "discipline"], "archetype": "Caster", "identity": "Dracthyr Evoker channeling elemental dragonflight power.", "desc": "Dracthyr Evoker channeling elemental dragonflight power.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Caster"]}, {"id": "world_of_warcraft__peter_death_knight", "name": "Peter Death Knight", "ip": "World of Warcraft", "role": "Tank", "color": "#6fb7ff", "owned": false, "aff": ["discipline", "faith", "fitness"], "archetype": "Dark Knight", "identity": "Draenei Death Knight redemption through frost and endurance.", "desc": "Draenei Death Knight redemption through frost and endurance.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Dark Knight"]}, {"id": "world_of_warcraft__peter_demon_hunter", "name": "Peter Demon Hunter", "ip": "World of Warcraft", "role": "DPS", "color": "#8cff3f", "owned": false, "aff": ["discipline", "fitness", "hobbies"], "archetype": "Assassin", "identity": "Blood Elf Demon Hunter driven by sacrifice and pursuit.", "desc": "Blood Elf Demon Hunter driven by sacrifice and pursuit.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Assassin"]}, {"id": "world_of_warcraft__peter_priest", "name": "Peter Priest", "ip": "World of Warcraft", "role": "Support", "color": "#fff2b8", "owned": false, "aff": ["faith", "home", "discipline"], "archetype": "Sage", "identity": "Pandaren Priest of wisdom, patience, and spiritual steadiness.", "desc": "Pandaren Priest of wisdom, patience, and spiritual steadiness.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Sage"]}, {"id": "world_of_warcraft__peter_mage", "name": "Peter Mage", "ip": "World of Warcraft", "role": "DPS", "color": "#9f7dff", "owned": false, "aff": ["work", "hobbies", "discipline"], "archetype": "Caster", "identity": "Nightborne Mage applying ancient arcane mastery.", "desc": "Nightborne Mage applying ancient arcane mastery.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Caster"]}, {"id": "world_of_warcraft__peter_warlock", "name": "Peter Warlock", "ip": "World of Warcraft", "role": "DPS", "color": "#8b4fd6", "owned": false, "aff": ["discipline", "hobbies", "work"], "archetype": "Summoner", "identity": "Zandalari Warlock wielding dangerous power at a cost.", "desc": "Zandalari Warlock wielding dangerous power at a cost.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Summoner"]}, {"id": "world_of_warcraft__megan_priest", "name": "Megan Priest", "ip": "World of Warcraft", "role": "Support", "color": "#fff2b8", "owned": false, "aff": ["marriage", "faith", "home"], "archetype": "Healer", "identity": "Human Priest and Soulbound Partner sustaining the fellowship.", "desc": "Human Priest and Soulbound Partner sustaining the fellowship.", "tags": ["wow", "World of Warcraft", "fellowship-of-peter", "Healer"]}, {"id": "harry_potter__peter_hufflepuff", "name": "Peter Hufflepuff", "ip": "Harry Potter", "role": "Tank", "color": "#ecb939", "owned": true, "aff": ["work", "home", "discipline"], "archetype": "Loyal Guardian", "identity": "Peter Hufflepuff\u2014steadfast, hard-working, and loyal in every house.", "desc": "Peter Hufflepuff\u2014steadfast, hard-working, and loyal in every house.", "tags": ["harry-potter", "hufflepuff", "user", "loyal", "discipline"]}, {"id": "pokemon__peter_trainer", "name": "Peter Trainer", "ip": "Pokemon", "role": "Support", "color": "#ffcb05", "owned": true, "aff": ["hobbies", "fatherhood", "discipline"], "archetype": "Commanding Trainer", "identity": "Peter Trainer\u2014catches the moment and leads his team with heart.", "desc": "Peter Trainer\u2014catches the moment and leads his team with heart.", "tags": ["pokemon", "trainer", "user", "mentor", "hobbies"]}];
 const ALBUMS=[{"id":"starter_legacy","name":"Starter Legacy","blurb":"The twelve you began with.","color":"#ffd95a","cp":60,"crystals":0,"members":["marvel__iron_man","star_wars__obi_wan_kenobi","harry_potter__harry_potter","pokemon__arcanine","the_witcher__geralt_of_rivia","world_of_warcraft__jaina_proudmoore","red_rising__darrow","stormlight_archive__kaladin","lord_of_the_rings__legolas","critical_role__grog_strongjaw","disney_pixar__wreck_it_ralph","game_of_thrones__jon_snow"]},{"id":"men_of_character","name":"Men of Character","blurb":"Duty, humility, and showing up.","color":"#b8911f","cp":120,"crystals":100,"members":["marvel__captain_america_steve_rogers","star_wars__obi_wan_kenobi","lord_of_the_rings__aragorn","stormlight_archive__kaladin","lord_of_the_rings__samwise_gamgee","game_of_thrones__jon_snow"]},{"id":"wisdom_council","name":"Wisdom Council","blurb":"Minds that see further.","color":"#b88af0","cp":120,"crystals":100,"members":["star_wars__obi_wan_kenobi","lord_of_the_rings__gandalf","marvel__professor_x","harry_potter__hermione_granger","game_of_thrones__tyrion_lannister"]},{"id":"protectors","name":"Protectors","blurb":"Those who stand in front.","color":"#4aa3df","cp":110,"crystals":90,"members":["stormlight_archive__kaladin","disney_pixar__baymax","marvel__colossus","star_wars__obi_wan_kenobi","lord_of_the_rings__aragorn","disney_pixar__sulley"]},{"id":"family_joy","name":"Family & Joy","blurb":"Warmth, loyalty, and heart.","color":"#22a9e0","cp":100,"crystals":80,"members":["disney_pixar__wreck_it_ralph","disney_pixar__sulley","disney_pixar__baymax","disney_pixar__woody","disney_pixar__olaf","disney_pixar__mike_wazowski"]},{"id":"dark_power","name":"Dark Power","blurb":"The shadows you must master.","color":"#5a6b7a","cp":130,"crystals":110,"members":["lord_of_the_rings__sauron","harry_potter__voldemort","world_of_warcraft__the_lich_king"]},{"id":"avengers_assemble","name":"Avengers Assemble","blurb":"Earth’s mightiest.","color":"#e62429","cp":80,"crystals":60,"members":["marvel__iron_man","marvel__captain_america_steve_rogers","marvel__thor","marvel__hulk","marvel__black_widow","marvel__hawkeye"]},{"id":"spider_verse","name":"Spider-Verse","blurb":"Anyone can wear the mask.","color":"#e62429","cp":50,"crystals":40,"members":["marvel__spider_man","marvel__miles_morales","marvel__ghost_spider"]},{"id":"x_men","name":"X-Men","blurb":"Gifted and feared.","color":"#e62429","cp":90,"crystals":70,"members":["marvel__wolverine","marvel__cyclops","marvel__storm","marvel__jean_grey","marvel__professor_x","marvel__magneto"]},{"id":"guardians_of_the_galaxy","name":"Guardians of the Galaxy","blurb":"A family of misfits.","color":"#e62429","cp":80,"crystals":60,"members":["marvel__star_lord","marvel__gamora","marvel__drax","marvel__rocket_raccoon","marvel__groot","marvel__nebula"]},{"id":"jedi_path","name":"Jedi Path","blurb":"Keepers of the Light.","color":"#3a7bd5","cp":90,"crystals":70,"members":["star_wars__luke_skywalker","star_wars__obi_wan_kenobi","star_wars__yoda","star_wars__ahsoka_tano","star_wars__qui_gon_jinn","star_wars__kanan_jarrus"]},{"id":"sith_shadows","name":"Sith & Shadows","blurb":"Power through passion.","color":"#3a7bd5","cp":80,"crystals":60,"members":[]},{"id":"the_fellowship","name":"The Fellowship","blurb":"One does not walk alone.","color":"#2e7d4f","cp":110,"crystals":90,"members":["lord_of_the_rings__frodo_baggins","lord_of_the_rings__samwise_gamgee","lord_of_the_rings__aragorn","lord_of_the_rings__gandalf","lord_of_the_rings__legolas","lord_of_the_rings__gimli","lord_of_the_rings__boromir"]},{"id":"the_golden_trio","name":"The Golden Trio","blurb":"Friendship forged at Hogwarts.","color":"#b8911f","cp":60,"crystals":50,"members":["harry_potter__harry_potter","harry_potter__hermione_granger","harry_potter__ron_weasley","harry_potter__albus_dumbledore"]},{"id":"kanto_classics","name":"Kanto Classics","blurb":"Where it all began.","color":"#ffcb05","cp":60,"crystals":50,"members":["pokemon__charizard","pokemon__blastoise","pokemon__venusaur","pokemon__pikachu"]},{"id":"legendary_birds","name":"Legendary Birds","blurb":"Thunder, ice, and flame.","color":"#ffcb05","cp":50,"crystals":40,"members":[]},{"id":"knights_radiant","name":"Knights Radiant","blurb":"Life before death.","color":"#4aa3df","cp":100,"crystals":80,"members":["stormlight_archive__kaladin","stormlight_archive__dalinar_kholin","stormlight_archive__shallan_davar","stormlight_archive__jasnah_kholin","stormlight_archive__renarin_kholin","stormlight_archive__adolin_kholin"]},{"id":"the_howlers","name":"The Howlers","blurb":"Break the chains.","color":"#d4373a","cp":90,"crystals":70,"members":["red_rising__darrow","red_rising__sevro_au_barca","red_rising__victra_au_julii","red_rising__ragnar_volarus","red_rising__virginia_mustang_au_augustus"]},{"id":"vox_machina","name":"Vox Machina","blurb":"Is it Thursday yet?","color":"#7a4fd0","cp":100,"crystals":80,"members":["critical_role__grog_strongjaw","critical_role__pike_trickfoot","critical_role__vaxildan","critical_role__vexahlia","critical_role__percy_de_rolo","critical_role__keyleth","critical_role__scanlan_shorthalt"]},{"id":"house_stark","name":"House Stark","blurb":"The pack survives.","color":"#5a6b7a","cp":60,"crystals":50,"members":["game_of_thrones__jon_snow","game_of_thrones__arya_stark","game_of_thrones__sansa_stark","game_of_thrones__ned_stark"]},{"id":"big_hero_6","name":"Big Hero 6","blurb":"Heroes of San Fransokyo.","color":"#22a9e0","cp":80,"crystals":60,"members":["disney_pixar__hiro_hamada","disney_pixar__baymax","disney_pixar__go_go_tomago"]},{"id":"the_incredibles","name":"The Incredibles","blurb":"A super family.","color":"#22a9e0","cp":80,"crystals":60,"members":["disney_pixar__mr_incredible","disney_pixar__elastigirl","disney_pixar__violet_parr","disney_pixar__dash_parr","disney_pixar__frozone"]},{"id":"riders_quadrant","name":"Riders Quadrant","blurb":"Dragons, riders, and chosen bonds.","color":"#6f63ff","cp":100,"crystals":80,"members":["fourth_wing__violet_sorrengail","fourth_wing__xaden_riorson","fourth_wing__tairneanach","fourth_wing__andarnaurram","fourth_wing__sgaeyl","fourth_wing__rhiannon_matthias"]},{"id":"velaris_inner_circle","name":"Velaris Inner Circle","blurb":"Night, loyalty, healing, and power.","color":"#d96aa7","cp":110,"crystals":90,"members":["a_court_of_thorns_and_roses__feyre_archeron","a_court_of_thorns_and_roses__rhysand","a_court_of_thorns_and_roses__cassian","a_court_of_thorns_and_roses__azriel","a_court_of_thorns_and_roses__morrigan","a_court_of_thorns_and_roses__amren"]},{"id":"valkyrie_sisters","name":"Valkyrie Sisters","blurb":"Healing through training and chosen sisterhood.","color":"#d96aa7","cp":70,"crystals":50,"members":["a_court_of_thorns_and_roses__nesta_archeron","a_court_of_thorns_and_roses__gwyneth_berdara","a_court_of_thorns_and_roses__emerie"]}];
 
@@ -1082,7 +1083,7 @@ function prestigeWeeklyCap(){ if(TUNE.prestigeUncapped) return Infinity;
   var breadth=0, reps=0;
   try{ if(typeof ensureLifeWeek==='function'){ var W=ensureLifeWeek(); reps=W.completed||0; breadth=Object.keys(W.domains||{}).filter(function(k){ return (typeof DKEY==='undefined')||DKEY[k]; }).length; } }catch(e){}
   if(!breadth){ try{ breadth=(typeof domainsHitThisWeek==='function')?domainsHitThisWeek():0; }catch(e){} }
-  return (TUNE.prestigeCapBase||0)+(TUNE.prestigeCapPerDomain||0)*breadth+(TUNE.prestigeCapPerRep||0)*reps; }
+  return (TUNE.prestigeCapBase||0)+(TUNE.prestigeCapPerDomain||0)*breadth+(TUNE.prestigeCapPerRep||0)*reps+((typeof pyrePrestigeBonus==='function')?pyrePrestigeBonus():0); /* v2.211.0 Oathpyre */ }
 function prestigeWeekAvail(){ return Math.max(0, prestigeWeeklyCap()-(prestigeWeekState().used||0)); }
 function convWeekState(){ var wk=(typeof periodKey==='function')?periodKey('weekly'):'W0'; if(!S.coreConv||S.coreConv.week!==wk){ S.coreConv={week:wk,used:0,bossUsed:0}; } if(typeof S.coreConv.used!=='number')S.coreConv.used=0; if(typeof S.coreConv.bossUsed!=='number')S.coreConv.bossUsed=0; return S.coreConv; }
 function convWeeklyBonus(){ return Math.max(0, TUNE.convWeeklyBonus||0); }
@@ -1453,7 +1454,11 @@ function gainExp(amount){ if(S&&S.expBank>0){ amount=(amount||0)+S.expBank; S.ex
   owned.forEach(h=>{ let share = active.has(h.id) ? amount : amount*catchUpPct(h.level,hi);
     if(S.focus===h.id) share += amount;
     share *= prestigeExpMult(h)*prestigeCatchMult(h);
-    if(share>0){ h.exp=(h.exp||0)+share; applyLevels(h); } });
+    if(share>0){
+      if(h.level>=rankCap(h)){ /* v2.211.0: at-cap EXP no longer evaporates — it burns in the Oathpyre */
+        try{ if(typeof pyreAddFuel==='function') pyreAddFuel(share*((window.PYRE_TUNE&&PYRE_TUNE.fuelPerExp)||0.000001),'exp'); }catch(e){}
+      } else { h.exp=(h.exp||0)+share; applyLevels(h); }
+    } });
   recalcCollection(); }
 /* ===== collection power / level ===== */
 let gCP=0, gCL=0;
@@ -1549,7 +1554,12 @@ function anvilTick(hours){
   var dp=(TUNE.ecoDrainPct!=null?TUNE.ecoDrainPct:0.05), ff=(TUNE.ecoFloatFrac!=null?TUNE.ecoFloatFrac:0.008), amp=ecoHabitAmp();
   var fG=ecoFloor('g'), fD=ecoFloor('d');
   var ovG=Math.max(0,(S.gold||0)-fG), ovD=Math.max(0,(S.dust||0)-fD);
+<<<<<<< Updated upstream
   var budG=(S.anvilBudG||0)+ovG*dp*amp*(hours/24), budD=(S.anvilBudD||0)+ovD*dp*amp*(hours/24);
+=======
+  var pm=(typeof pyreAnvilMult==='function')?pyreAnvilMult():1; /* v2.211.0 Oathpyre warmth */
+  var budG=(S.anvilBudG||0)+ovG*dp*amp*pm*(hours/24), budD=(S.anvilBudD||0)+ovD*dp*amp*pm*(hours/24);
+>>>>>>> Stashed changes
   var guard=0;
   while(guard++<600){
     var price=Math.max((TUNE.ecoSinkMinGold||25000), ff*Math.max(ovG,ovD,1));
@@ -1686,11 +1696,7 @@ function heroQuestRowHTML(h,compact){
   const s=heroQuestStatus(h), r=heroQuestReward(h), face=h.img?'<img src="'+h.img+'">':initials(h.name), a=heroArchetype(h), locked=!s.eligible;
   return '<div class="heroQuestRow '+(locked?'locked':s.claimed?'claimed':s.ready?'ready':'')+'"><div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="hn">'+esc(h.name)+' · '+esc(heroQuestName(h))+'</div><div class="hm">'+esc(a?a.label:h.role)+' · Bond Lv '+bondLevel(h)+' · '+(locked?'Unlocks at Bond Lv 7':Math.min(s.prog,s.req)+'/'+s.req+' weekly affinity actions')+'<br>'+esc(heroQuestDesc(h))+'</div><div class="xpbar" style="height:7px;margin-top:5px"><i style="width:'+s.pct+'%;background:'+(s.ready?'#ffb01f':'#ff5d9e')+'"></i></div></div><div class="hs">'+(locked?'LOCK':s.claimed?'DONE':s.ready?'READY':'+'+(s.req-s.prog))+'</div>'+(compact?'':'<button data-heroquest="'+h.id+'" class="'+(s.claimed?'donebtn':s.ready?'claim':'')+'" '+((!s.ready||s.claimed)?'disabled':'')+'>'+(s.claimed?'Claimed':s.ready?'Claim':'Open')+'</button>')+'</div>';
 }
-function heroQuestSummaryHTML(){
-  const c=heroQuestCounts(), preview=promisingHeroQuestHeroes(3);
-  const rows=preview.length?preview.map(h=>heroQuestRowHTML(h,true)).join(''):'<div class="empty" style="padding:10px;margin-top:8px">Reach Bond Lv 7 with a hero to unlock personal Hero Quests.</div>';
-  return '<div class="heroQuestBox"><div class="hqHead"><b>🧾 Hero Quests</b><span>'+c.ready.length+' ready · '+c.claimed.length+'/'+c.all.length+' claimed</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">Bond Lv 7 heroes unlock weekly personal quests tied to their life-domain affinities.</p><div class="heroQuestMini"><div class="mini"><b>'+c.ready.length+'</b><span>Ready</span></div><div class="mini"><b>'+c.all.length+'</b><span>Unlocked</span></div><div class="mini"><b>'+c.locked.length+'</b><span>Close</span></div></div>'+rows+'<div class="lifeactions"><button class="primary" id="openHeroQuests">Open Hero Quests</button></div></div>';
-}
+function heroQuestSummaryHTML(){ /* Pass A v2.210.0: zero callers; of2154 wrapper is typeof-guarded. */ return ''; }
 function claimHeroQuest(id){
   const h=S.heroes.find(x=>x.id===id); if(!h) return;
   const s=heroQuestStatus(h); if(!s.eligible){ toast('Hero Quest unlocks at Bond Lv 7.'); return; }
@@ -1709,17 +1715,7 @@ function claimHeroQuest(id){
   toast('Hero Quest complete: '+h.name);
   renderHUD(); render(); save();
 }
-function showHeroQuests(){
-  const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
-  const c=heroQuestCounts(), list=promisingHeroQuestHeroes(30);
-  const rows=list.length?list.map(h=>heroQuestRowHTML(h,false)).join(''):'<div class="empty" style="padding:12px">No Hero Quests yet. Build a hero to Bond Lv 7 first.</div>';
-  box.innerHTML='<div class="ico">🧾</div><h2>Hero Quests</h2><p>Personal weekly quests for your bonded heroes. These are unlocked at Bond Lv 7 and use real actions you already complete.</p>'+
-    '<div class="heroQuestBox"><div class="hqHead"><b>Weekly Hero Quests</b><span>'+c.ready.length+' ready · '+c.claimed.length+'/'+c.all.length+' claimed</span></div>'+rows+'</div>'+
-    '<button id="heroQuestClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px 18px;font-family:Orbitron;font-weight:900;width:100%">Done</button>';
-  modal.classList.add('show');
-  document.getElementById('heroQuestClose').onclick=()=>modal.classList.remove('show');
-  box.querySelectorAll('[data-heroquest]').forEach(btn=>btn.onclick=()=>{ claimHeroQuest(btn.dataset.heroquest); showHeroQuests(); });
-}
+function showHeroQuests(){ /* Pass A v2.210.0: modal retired — hero quests auto-claim (of2154 sweep); body deleted, zero live call sites. */ }
 
 function bondRowsHTML(){
   const heroes=topBondedHeroes(3);
@@ -1831,17 +1827,7 @@ function balanceChestHTML(){
     '<div style="font-size:12px;font-weight:850;color:'+(s.ready?'var(--good)':'var(--muted)')+'">'+(s.claimed?'Claimed this week':s.tier?(s.tier.name+' ready · '+s.tier.reward):('Touch '+s.missing+' more domain'+(s.missing===1?'':'s')+' for a chest'))+'</div>'+
     '<div class="lifeactions"><button class="primary" id="claimBalance" '+(!s.ready?'disabled style="opacity:.45"':'')+'>'+(s.claimed?'Claimed':s.ready?'Claim Balance Chest':'Not ready')+'</button><button id="openDomains">View domains</button></div></div>';
 }
-function showDomainLevels(){
-  const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
-  const s=balanceChestStatus();
-  box.innerHTML='<div class="ico">🌱</div><h2>Life Domain Levels</h2><p style="margin-bottom:10px">These levels grow from completed real-life actions. They are identity feedback, not pressure.</p>'+
-    '<div class="domainLevelModal">'+domainTilesHTML()+'</div>'+balanceChestHTML()+
-    '<button id="domainClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px 18px;font-family:Orbitron;font-weight:800;width:100%">Done</button>';
-  modal.classList.add('show');
-  document.getElementById('domainClose').onclick=()=>modal.classList.remove('show');
-  const cb=document.getElementById('claimBalance'); if(cb) cb.onclick=()=>{ grantBalanceChest(); modal.classList.remove('show'); };
-  const od=document.getElementById('openDomains'); if(od) od.onclick=()=>{};
-}
+function showDomainLevels(){ /* Pass A v2.210.0: modal retired — domain tiles live on the Growth page; body deleted, zero live call sites (bindings targeted ids that never render). */ }
 
 
 const SANCTUARY_ROOMS={
@@ -2007,16 +1993,7 @@ function dungeonSummaryHTML(){
   const c=dungeonCounts();
   return '<div class="dungeonBox"><div class="dh"><b>🛕 Room Trials</b><span>'+c.ready+' ready · '+c.claimed+'/8 cleared</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">Room Trials unlock from weekly domain actions. Clear them for room-themed rewards.</p><div class="sanctuaryMini"><div class="mini"><b>'+c.ready+'</b><span>Ready</span></div><div class="mini"><b>'+c.claimed+'</b><span>Cleared</span></div><div class="mini"><b>'+DOMAINS.filter(d=>roomLevel(d[0])>=3).length+'</b><span>Strong rooms</span></div></div><div class="lifeactions"><button class="primary" id="openTrials">Open Room Trials</button></div></div>';
 }
-function showDungeons(){
-  const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
-  const c=dungeonCounts();
-  box.innerHTML='<div class="ico">🛕</div><h2>Room Trials</h2><p>Weekly Room Trials. They reward doing real actions in each life area — no extra grind.</p>'+
-    '<div class="dungeonBox"><div class="dh"><b>Weekly Trials</b><span>'+c.ready+' ready · '+c.claimed+'/8 cleared</span></div><div class="dungeonGrid">'+DOMAINS.map(d=>dungeonCardHTML(d[0])).join('')+'</div></div>'+
-    '<button id="dungeonClose" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px 18px;font-family:Orbitron;font-weight:900;width:100%">Done</button>';
-  modal.classList.add('show');
-  document.getElementById('dungeonClose').onclick=()=>modal.classList.remove('show');
-  box.querySelectorAll('[data-dungeon]').forEach(btn=>btn.onclick=()=>{ claimDungeon(btn.dataset.dungeon); showDungeons(); });
-}
+function showDungeons(){ /* Pass B v2.213.0: v1 dungeons body deleted — shadow-superseded by showDungeons=showDungeonsRoR (v2.180 engine, live via War Table + SHIELD cards). */ }
 
 if(!window.__dungeonsDocWired){ window.__dungeonsDocWired=1; document.addEventListener('click',function(e){ try{ var t=e.target&&e.target.closest&&e.target.closest('#openTrials'); if(t&&typeof showDungeons==='function'){ e.preventDefault(); showDungeons(); } }catch(_e){} }); }
 function showSanctuary(){
@@ -2173,35 +2150,10 @@ function recapCenterHTML(){
   return '<div class="recapBox"><div class="rh"><b>📤 Recap Center</b><span>copy/export</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">Export weekly or monthly summaries with wins, domain trends, and next focus.</p><div class="recapActions"><button class="primary" id="openWeeklyRecap">Weekly</button><button id="openMonthlyRecap">Monthly</button></div></div>';
 }
 
-function showMonthlyReview(){
-  const M=ensureMonthStats(), strong=strongestMonthDomain(), light=lightestMonthDomain(), sm=DKEY[strong.k], lm=DKEY[light.k], touched=touchedDomainsThisMonth();
-  const mostBond=S.heroes.filter(h=>h.owned).slice().sort((a,b)=>(b.bondXp||0)-(a.bondXp||0))[0];
-  const topRoom=DOMAINS.map(d=>({k:d[0],lv:roomLevel(d[0]),xp:domainMeta(d[0]).xp})).sort((a,b)=>b.lv-a.lv||b.xp-a.xp)[0];
-  const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
-  box.innerHTML='<div class="ico">🧭</div><h2>Monthly Review</h2><p>This is the bigger identity check-in. What kind of man did this month form?</p>'+
-    '<div class="reviewline"><span>Actions completed</span><b>'+M.completed+'</b></div>'+
-    '<div class="reviewline"><span>Domains touched</span><b>'+touched.length+'/8</b></div>'+
-    '<div class="reviewline"><span>Strongest domain</span><b>'+(sm?sm.icon+' '+sm.label:'—')+'</b></div>'+
-    '<div class="reviewline"><span>Quietest domain</span><b>'+(lm?lm.icon+' '+lm.label:'—')+'</b></div>'+
-    '<div class="reviewline"><span>Most bonded hero</span><b>'+(mostBond?esc(mostBond.name)+' · Lv '+bondLevel(mostBond):'—')+'</b></div>'+
-    '<div class="reviewline"><span>Strongest room</span><b>'+(topRoom?(DKEY[topRoom.k].icon+' '+SANCTUARY_ROOMS[topRoom.k].name+' · Lv '+topRoom.lv):'—')+'</b></div>'+
-    nextFocusPlanHTML('monthly')+
-    '<div style="margin-top:12px;text-align:left"><b>Wins Log</b>'+winFilterChipsHTML('all')+'<div id="winsList">'+monthWinHTML(12,'all')+'</div></div>'+
-    recapActionsHTML('monthly')+
-    '<div style="margin-top:12px;text-align:left"><b>Snapshot</b>'+sanctuarySummaryHTML()+dungeonSummaryHTML()+strategySummaryHTML()+'</div>'+
-    '<button id="monthDone" '+(M.reviewed?'disabled style="opacity:.55"':'')+' style="margin-top:12px;background:linear-gradient(135deg,#ff5d9e,#37c46e);color:#06170d;border:none;border-radius:12px;padding:13px 18px;font-family:Orbitron;font-weight:900;width:100%">'+(M.reviewed?'Monthly Review Complete':'Complete Monthly Review')+'</button>'+
-    '<button id="monthClose" style="margin-top:8px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px 18px;font-weight:800;width:100%">Close</button>';
-  modal.classList.add('show');
-  document.getElementById('monthClose').onclick=()=>modal.classList.remove('show');
-  bindRecapButtons(box);
-  box.querySelectorAll('[data-winfilter]').forEach(btn=>btn.onclick=()=>{ const wl=document.getElementById('winsList'); if(wl){ box.querySelectorAll('[data-winfilter]').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); wl.innerHTML=monthWinHTML(12,btn.dataset.winfilter); } });
-  const done=document.getElementById('monthDone'); if(done) done.onclick=()=>{ if(!M.reviewed){ M.reviewed=true; S.grace=(S.grace||0)+1; const rp=grantResearch(2); addWin('Monthly Review Complete','You paused to reflect on the man you are becoming.',null); rewardSummary('Monthly review complete',[{txt:'+1🕊️ Grace Token',cls:'main'},{txt:rp,cls:'bonus'},{txt:'Identity recap complete',cls:'title'}]); toast('Monthly review complete · '+rp); } modal.classList.remove('show'); renderHUD(); render(); save(); };
-  const os=document.getElementById('openSanctuary'); if(os) os.onclick=showSanctuary;
-  const odg=document.getElementById('openTrials'); if(odg) odg.onclick=showDungeons;
-  const st=document.getElementById('openStrategy'); if(st) st.onclick=showStrategyModal;
-}
+function showMonthlyReview(){ /* Pass B v2.213.0: legacy modal retired — same reroute as weekly. Month state (ensureMonthStats) untouched. */ try{ subtab='reviews'; navTo('tasks'); }catch(e){} }
 
 function weeklyReviewClaimed(){ const W=ensureLifeWeek(); if(W.reviewed) return true; try{ const t=(S.dailies||[]).find(d=>d&&d.review&&(d.freq||'')==='weekly'&&/life review/i.test(d.title||'')); return !!(t&&t.done); }catch(e){ return false; } }
+<<<<<<< Updated upstream
 function showWeeklyReview(){ const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain(); const strongMeta=DKEY[strong.k], lightMeta=DKEY[light.k]; const done=W.completed||0; const mostBond=S.heroes.filter(h=>h.owned).slice().sort((a,b)=>(b.bondXp||0)-(a.bondXp||0))[0]; const boss=ensureRaid(), bpct=Math.min(100,Math.round(boss.dmg/boss.max*100)); const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
   box.innerHTML='<div class="ico">🧭</div><h2>Weekly Review</h2><p style="margin-bottom:10px">A short check-in to notice momentum and choose the next faithful step.</p>'+ 
     '<div class="reviewline"><span>Actions logged</span><b>'+done+'</b></div>'+ 
@@ -2223,6 +2175,9 @@ function showWeeklyReview(){ const W=ensureLifeWeek(), strong=strongestDomain(),
   const od=document.getElementById('openDomains'); if(od) od.onclick=showDomainLevels; const qb=document.getElementById('openQuestBoard'); if(qb) qb.onclick=showQuestBoard; var _qca=document.querySelector('[data-claimall]'); if(_qca) _qca.onclick=function(){ claimAllQuests(); }; const st=document.getElementById('openStrategy'); if(st) st.onclick=showStrategyModal; const os=document.getElementById('openSanctuary'); if(os) os.onclick=showSanctuary; const odg=document.getElementById('openTrials'); if(odg) odg.onclick=showDungeons;
   document.getElementById('reviewDone').onclick=()=>{ if(!W.reviewed){ W.reviewed=true; S.grace=(S.grace||0)+1; const tm=grantTicket(1), rp=grantResearch(1); ensureTitles(); if(!S.titlesUnlocked['Reflective']) S.titlesUnlocked['Reflective']=true; addWin('Weekly Review Complete','You reflected and chose the next faithful step.', null); toast('Weekly review complete · +1🕊️ Grace Token · '+tm+' · '+rp); rewardSummary('Weekly review complete',[{txt:'+1🕊️ Grace Token',cls:'main'},{txt:tm,cls:'bonus'},{txt:rp,cls:'bonus'},{txt:'🏷 Reflective title unlocked',cls:'title'}]); } modal.classList.remove('show'); renderHUD(); render(); save(); };
 }
+=======
+function showWeeklyReview(){ /* Pass B v2.213.0: legacy modal retired — reviews are native daily tasks in the Cantina Reviews subtab; v2Review reroutes there. Week state (ensureLifeWeek) untouched. */ try{ subtab='reviews'; navTo('tasks'); }catch(e){} }
+>>>>>>> Stashed changes
 function todayRecovery(){ if(!S.recoveryDays) S.recoveryDays={}; return S.recoveryDays[dateStamp()]||null; }
 function recoveryAnchors(){ return [
   {t:'Prayer / reflection',d:'faith',s:'quiet reset'}, {t:'Walk or stretch',d:'fitness',s:'move gently'},
@@ -2460,18 +2415,51 @@ function sanitizeHeroes(){
 function ensureHeroPortraitVault(){
   if(!S||typeof S!=='object') return;
   if(!S.heroPortraits||typeof S.heroPortraits!=='object') S.heroPortraits={};
-  (S.heroes||[]).forEach(h=>{ if(h&&h.id&&h.img&&String(h.img).startsWith('data:image/')) S.heroPortraits[h.id]=h.img; });
+  if(!Array.isArray(S.portraitCustom)) S.portraitCustom=[];
+  (S.heroes||[]).forEach(h=>{ if(h&&h.id&&h.img&&String(h.img).startsWith('data:image/')){ S.heroPortraits[h.id]=h.img; if(S.portraitCustom.indexOf(h.id)<0) S.portraitCustom.push(h.id); } });
 }
 function applyHeroPortraitVault(){
-  if(!S||!S.heroPortraits||typeof S.heroPortraits!=='object'||!Array.isArray(S.heroes)) return;
-  S.heroes.forEach(h=>{ if(h&&h.id&&Object.prototype.hasOwnProperty.call(S.heroPortraits,h.id)){ h.img=S.heroPortraits[h.id]||null; } });
+  /* v2.209.0: stock portraits come from art/portraits/<id>.webp. The vault
+     (S.heroPortraits) is authoritative ONLY for ids in S.portraitCustom —
+     user crops made with the portrait tool. Everything else gets the file path. */
+  if(!S||!Array.isArray(S.heroes)) return;
+  const custom=new Set(S.portraitCustom||[]);
+  S.heroes.forEach(h=>{
+    if(!h||!h.id) return;
+    if(custom.has(h.id)&&S.heroPortraits&&S.heroPortraits[h.id]){ h.img=S.heroPortraits[h.id]; return; }
+    h.img=PORTRAIT_ART_BASE+h.id+'.webp';
+  });
 }
+/* v2.209.0 one-time vault purge — ONLY after a probe confirms art/portraits/ is
+   actually deployed. If the folder is missing, nothing is touched and portraits
+   fall back to initials in the grid; redeploying the folder heals everything. */
+function v2209PortraitPurge(){
+  try{
+    if(!S||S.v2209PortraitsExternalized) return;
+    var h=(S.heroes||[]).find(function(x){return x&&x.owned;})||((S.heroes||[])[0]); if(!h) return;
+    var probe=new Image();
+    probe.onload=function(){
+      try{
+        var custom=new Set(S.portraitCustom||[]);
+        var kept={}; Object.keys(S.heroPortraits||{}).forEach(function(k){ if(custom.has(k)) kept[k]=S.heroPortraits[k]; });
+        S.heroPortraits=kept;
+        S.v2209PortraitsExternalized=true;
+        if(typeof savePortraits==='function') savePortraits();
+        if(typeof save==='function') save();
+        try{ toast('Portraits externalized \u2014 save slimmed'); }catch(e){}
+      }catch(e){}
+    };
+    probe.src=PORTRAIT_ART_BASE+h.id+'.webp';
+  }catch(e){}
+}
+try{ setTimeout(v2209PortraitPurge, 4000); }catch(e){}
 function setHeroPortraitOverride(heroId,img){
   if(!S||!heroId) return;
   if(!S.heroPortraits||typeof S.heroPortraits!=='object') S.heroPortraits={};
+  if(!Array.isArray(S.portraitCustom)) S.portraitCustom=[];
   const h=(S.heroes||[]).find(x=>x&&x.id===heroId);
-  if(img){ S.heroPortraits[heroId]=img; if(h) h.img=img; savePortraits(); }
-  else { delete S.heroPortraits[heroId]; if(h) h.img=null; }
+  if(img){ S.heroPortraits[heroId]=img; if(S.portraitCustom.indexOf(heroId)<0) S.portraitCustom.push(heroId); if(h) h.img=img; savePortraits(); }
+  else { delete S.heroPortraits[heroId]; S.portraitCustom=S.portraitCustom.filter(x=>x!==heroId); if(h) h.img=PORTRAIT_ART_BASE+heroId+'.webp'; savePortraits(); }
 }
 const REMOVED_HERO_IDS_V1=new Set(["marvel__wong","marvel__shuri_black_panther","marvel__maria_hill","marvel__valkyrie","marvel__silver_surfer","marvel__kang_the_conqueror","marvel__galactus","marvel__sersi","marvel__ikaris","marvel__thena","marvel__kingo","marvel__makkari","marvel__druig","marvel__phastos","marvel__gilgamesh","marvel__blade","marvel__werewolf_by_night","marvel__man_thing","marvel__h_e_r_b_i_e","marvel__bishop","marvel__x_23_laura_kinney","marvel__negasonic_teenage_warhead","marvel__juggernaut","marvel__sabretooth","marvel__toad","marvel__lady_deathstrike","marvel__apocalypse","marvel__cassandra_nova","marvel__pyro","marvel__angel_archangel","marvel__havok","marvel__banshee","marvel__darwin","marvel__cannonball","marvel__wolfsbane","marvel__sunspot","marvel__carnage","marvel__kingpin","marvel__bullseye","marvel__killmonger","marvel__red_skull","marvel__ultron","marvel__green_goblin","marvel__doctor_octopus","marvel__mysterio","marvel__vulture","marvel__hela","marvel__abomination","marvel__taskmaster","marvel__baron_zemo","marvel__gorr_the_god_butcher","marvel__high_evolutionary","star_wars__cal_kestis","star_wars__kylo_ren","star_wars__darth_revan","star_wars__darth_sidious","star_wars__count_dooku","star_wars__boba_fett","star_wars__jango_fett","star_wars__captain_rex","star_wars__commander_cody","star_wars__grand_admiral_thrawn","star_wars__baylan_skoll","star_wars__shin_hati","star_wars__asajj_ventress","star_wars__general_grievous","harry_potter__fred_weasley","harry_potter__george_weasley","harry_potter__cedric_diggory","harry_potter__mad_eye_moody","pokemon__mewtwo","pokemon__espeon","pokemon__sylveon","pokemon__tyranitar","pokemon__metagross","pokemon__salamence","pokemon__lugia","pokemon__ho_oh","pokemon__suicune","pokemon__entei","pokemon__raikou","pokemon__zapdos","pokemon__articuno","pokemon__moltres","pokemon__machamp","world_of_warcraft__bolvar_fordragon","world_of_warcraft__medivh","world_of_warcraft__garrosh_hellscream","world_of_warcraft__voljin","world_of_warcraft__cairne_bloodhoof","world_of_warcraft__baine_bloodhoof","world_of_warcraft__rexxar","world_of_warcraft__turalyon","world_of_warcraft__kaelthas_sunstrider","world_of_warcraft__lorthemar_theron","world_of_warcraft__maiev_shadowsong","world_of_warcraft__sargeras","red_rising__ephraim_ti_horn","red_rising__lyria","red_rising__aja_au_grimmus","red_rising__nero_au_augustus","red_rising__octavia_au_lune","red_rising__lysander_au_lune","red_rising__apollonius_au_valii_rath","red_rising__atlas_au_raa","stormlight_archive__wyndle","stormlight_archive__rlain","stormlight_archive__nightblood","stormlight_archive__eshonai","stormlight_archive__venli","stormlight_archive__moash","stormlight_archive__taravangian","game_of_thrones__brienne_of_tarth","disney_pixar__wasabi","disney_pixar__honey_lemon","disney_pixar__fred","disney_pixar__tadashi_hamada","disney_pixar__yokai","disney_pixar__jack_jack","disney_pixar__edna_mode","disney_pixar__syndrome","disney_pixar__randall_boggs","disney_pixar__roz","disney_pixar__mr_waternoose","disney_pixar__bullseye","disney_pixar__rex","disney_pixar__hamm","disney_pixar__slinky_dog","disney_pixar__laurel_lightfoot","disney_pixar__wilden_lightfoot","disney_pixar__the_manticore_corey","disney_pixar__officer_colt_bronco","disney_pixar__blazey","disney_pixar__carl_fredricksen","disney_pixar__russell","disney_pixar__kevin","disney_pixar__anger","disney_pixar__fear","disney_pixar__anxiety","disney_pixar__miguel","disney_pixar__hector","disney_pixar__mama_imelda","disney_pixar__ernesto_de_la_cruz","disney_pixar__te_ka","disney_pixar__king_candy","fourth_wing__aaric_graycastle","fourth_wing__jack_barlowe","fourth_wing__lilith_sorrengail","fourth_wing__general_melgren","a_court_of_thorns_and_roses__varian","a_court_of_thorns_and_roses__tarquin","a_court_of_thorns_and_roses__kallias","a_court_of_thorns_and_roses__viviane","a_court_of_thorns_and_roses__jurian","a_court_of_thorns_and_roses__vassa","a_court_of_thorns_and_roses__amarantha","a_court_of_thorns_and_roses__king_of_hybern","a_court_of_thorns_and_roses__bryaxis"]);
 function trimRemovedHeroesV1(){ if(!Array.isArray(S.heroes)) return; const ownedRemoved=S.heroes.filter(h=>h&&REMOVED_HERO_IDS_V1.has(h.id)&&h.owned).length; S.heroes=S.heroes.filter(h=>h&&!REMOVED_HERO_IDS_V1.has(h.id)); if(Array.isArray(S.wishlist)) S.wishlist=S.wishlist.filter(x=>!REMOVED_HERO_IDS_V1.has(x)); if(!S._rosterTrimV1){ if(ownedRemoved>0){ S.summonTickets=(S.summonTickets||0)+ownedRemoved; S._removedTicketGrant=ownedRemoved; } S._rosterTrimV1=true; } }
@@ -2831,7 +2819,11 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
+<<<<<<< Updated upstream
 const APP_BUILD='v2.208.0-greathall-perf';
+=======
+const APP_BUILD='v2.217.0-pass-e';
+>>>>>>> Stashed changes
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3198,6 +3190,7 @@ function afkLoot(hours, mom, apply){
     if(cores>0) S.heroCores=(S.heroCores||0)+cores;
     try{ if(typeof rosterFloorTick==='function') rosterFloorTick(hours); }catch(e){}
     try{ if(typeof anvilTick==='function') anvilTick(hours); }catch(e){}
+    try{ if(typeof pyreTick==='function') pyreTick(hours); }catch(e){}
     try{ if(typeof blessTick==='function') blessTick(hours); }catch(e){}
     try{ if(typeof ascTick==='function') ascTick(); }catch(e){}
     gearObjs.forEach(g=>grantGear(g));
@@ -4627,6 +4620,10 @@ function renderProgress(v){
     +((typeof lqDomainsPanel==='function')?lqDomainsPanel():((typeof domainGrowthPanelV2==='function')?domainGrowthPanelV2():'')+fellowshipPanelHTML()+forgePanelHTML())
     +domainReadinessHTML()
     +((typeof anvilArchivePanel==='function')?anvilArchivePanel():'')
+<<<<<<< Updated upstream
+=======
+    +((typeof pyrePanelHTML==='function')?pyrePanelHTML():'')
+>>>>>>> Stashed changes
     +((typeof growthFocusV2==='function')?growthFocusV2():'')
     +((typeof growthToolsV2==='function')?growthToolsV2():'')
     +gallery+links;
@@ -7619,6 +7616,10 @@ function startTicker(){
          An anvil could sit stalled for weeks with billions of gold/dust. Tick them live too. */
       try{ if(typeof rosterFloorTick==='function') rosterFloorTick(usedH); }catch(e){}
       try{ if(typeof anvilTick==='function') anvilTick(usedH); }catch(e){}
+<<<<<<< Updated upstream
+=======
+      try{ if(typeof pyreTick==='function') pyreTick(usedH); }catch(e){}
+>>>>>>> Stashed changes
       try{ if(typeof blessTick==='function') blessTick(usedH); }catch(e){}
       try{ if(typeof ascTick==='function') ascTick(); }catch(e){}
       renderHUD(); save();
@@ -8541,12 +8542,7 @@ function growthModesHTML(){
   const order=['domains','base','strategy','weekly','monthly','recovery'];
   return '<div class="growthModeGrid">'+order.map(k=>{ const x=data[k]; return '<button id="'+x.id+'" class="growthModeCard '+(x.ready?'ready':'')+'" style="--gcolor:'+x.color+'"><div class="gtop"><div><div class="gtitle">'+x.title+'</div><div class="gmeta">'+x.meta+'</div></div><div class="gicon">'+x.icon+'</div></div><div class="gstat">'+x.stat+'</div><div class="gsub">'+x.sub+'</div><div class="progressTiny"><i style="width:'+Math.max(4,Math.min(100,x.pct||0))+'%"></i></div><div class="gpill">'+x.pill+'</div></button>'; }).join('')+'</div>';
 }
-function lifeBaseMapHTML(){
-  ensureAssignments();
-  const rooms=DOMAINS.map(d=>{ const k=d[0], meta=DKEY[k], room=SANCTUARY_ROOMS[k]||{name:meta.label,icon:meta.icon}, dm=domainMeta(k), ass=assignedHero(k); return {k,meta,room,dm,ass}; });
-  const tiles=rooms.map(x=>'<button class="roomTile" data-roomtile="'+x.k+'" style="--roomColor:'+x.meta.color+'"><div class="rtop"><div class="rn">'+x.meta.icon+' '+esc(x.room.name)+'</div><div class="rlv">Lv '+roomLevel(x.k)+'</div></div><div class="rbar"><i style="width:'+x.dm.pct+'%"></i></div><div class="rsub">'+(x.ass?'Guarded by '+esc(x.ass.name):'Tap to assign a hero')+'</div></button>').join('');
-  return '<div class="lifeBaseMap"><div class="mapHead"><b>🏡 Life Base Map</b><span>'+sanctuaryPower()+' power</span></div><div class="roomGrid">'+tiles+'</div><div class="lifeactions"><button class="primary" id="openSanctuary">Open full Life Base</button></div></div>';
-}
+function lifeBaseMapHTML(){ /* Pass B v2.213.0: zero call sites (Life Base view retired; viewAlias routes lifeBase→growth). */ return ''; }
 function growthQuickActionsHTML(){
   return '<div class="growthActionStrip"><button id="openReview"><b>Weekly Review</b><span>Claim research and set focus.</span></button><button id="openStrategy"><b>🃏 Strategy</b><span>Cards and permanent research.</span></button><button id="openRecovery"><b>Recovery Anchor</b><span>Small day, still faithful.</span></button></div>';
 }
@@ -9143,14 +9139,13 @@ function anvilArchivePanel(){
     +'<div style="flex:1;text-align:center;background:#ffffff08;border-radius:10px;padding:8px 4px"><div style="font-weight:900;color:#a7f3d0;font-size:16px">+'+cap+'</div><div style="font-size:10px;color:#9ab">gear level cap</div></div>'
     +'</div>'
     +line
+<<<<<<< Updated upstream
+=======
+    +((typeof pyreHeatSectionHTML==='function')?pyreHeatSectionHTML():'')
+>>>>>>> Stashed changes
     +'</div>';
 }
-function renderGrowth(v){
-  injectGrowthHubStyles(); injectLifeBaseVisualStylesV148(); injectDomainGrowthStylesV2();
-  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I’m becoming</span></div>'+growthHeaderV2()+domainGrowthPanelV2()+growthHubPointerHTML()+anvilArchivePanel()+growthFocusV2()+growthToolsV2();
-  const bind=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
-  bind('v2Review',showWeeklyReview); bind('v2Recovery',showRecoveryModal); bind('v2Monthly',showMonthlyReview); bind('v2Sanctuary',showSanctuary);
-}
+function renderGrowth(v){ /* Pass D v2.216.0: growth chain retired — the merged Progress page is the one growth surface. */ try{ renderProgress(v); }catch(e){} }
 
 
 
@@ -9486,8 +9481,7 @@ function injectFieldTestStyles(){
 }
 (function(){
   injectFieldTestStyles();
-  const oldRenderHome=renderHome;
-  renderHome=function(v){ oldRenderHome(v); try{ ensureFieldTest(); v.insertAdjacentHTML('beforeend',ftPanelHTML()); bindFieldTestPanel(); }catch(e){ console.warn('Field test panel failed',e); } };
+  /* Pass C1 v2.214.0: fieldtest home-panel wrapper excised (dead path). */
   const oldRender=render;
   render=function(){ try{ ftLogVisit(view||'home'); }catch(e){} return oldRender(); };
   window.addEventListener('error',e=>ftRecordError('error',e.message||e.error||'Unknown runtime error'));
@@ -9557,8 +9551,7 @@ function v151InjectStyles(){
 }
 (function(){
   v151InjectStyles();
-  const _v151RenderHome=renderHome;
-  renderHome=function(v){ _v151RenderHome(v); try{ ensureFieldTest&&ensureFieldTest(); v.insertAdjacentHTML('beforeend',v151RewardClarityHTML()); v151BindDailyReview(); }catch(e){ console.warn('Daily review panel failed',e); } };
+  /* Pass C1 v2.214.0: v151 home wrapper excised (dead path). */
 })();
 
 
@@ -9913,17 +9906,7 @@ renderRoster = function(v){
   document.querySelectorAll('.hero.lqHeroCard').forEach(card=>{ if(card.dataset.lq54) return; card.dataset.lq54='1'; const h=S.heroes.find(x=>x.id===card.dataset.id); if(h){ const row=lq54DomainRow(h); const hn=card.querySelector('.hn'); if(row&&hn) hn.insertAdjacentHTML('afterend',row); }});
   return r;
 };
-const __openHeroSheet_v154 = openHeroSheet;
-openHeroSheet = function(id){
-  lq54InjectStyles();
-  const r=__openHeroSheet_v154.apply(this,arguments);
-  const sheet=document.getElementById('sheet');
-  if(sheet && !sheet.querySelector('#lqPortraitGuideBox')){
-    const av=sheet.querySelector('.avapick');
-    if(av) av.insertAdjacentHTML('afterend',lq54GuideBoxHTML());
-  }
-  return r;
-};
+/* Pass E v2.217.0: v154 hero-sheet wrapper excised — decorated the dead chamber chain. */
 function lq54Init(){ lq54InjectStyles(); lq54AttachCropObserver(); }
 lq54Init();
 
@@ -10508,6 +10491,7 @@ function v159HeroStage(h,img,name,color){
   '</div>';
 }
 function v159MiniWallet(){ return '<div class="heroMiniResourceV159"><div class="r"><b>'+Math.floor(S.gold||0)+'</b><span>Gold</span></div><div class="r"><b>'+Math.floor(S.dust||0)+'</b><span>Dust</span></div><div class="r"><b>'+Math.floor(S.heroCores||0)+'</b><span>Cores</span></div><div class="r"><b>'+Math.floor(S.sparks||0)+'</b><span>Sparks</span></div></div>'; }
+<<<<<<< Updated upstream
 const openHeroSheet_v159_prev = openHeroSheet;
 openHeroSheet = function(id){
   injectHeroChamberV159Styles();
@@ -10559,6 +10543,9 @@ openHeroSheet = function(id){
   const adj=document.getElementById('hAdjust'); if(adj) adj.onclick=()=>{ if(img) pickImage(dataUrl=>{ img=dataUrl; syncPortrait(); persistPortraitV159(); toast('Portrait saved'); },img); };
   const rem=document.getElementById('hRemoveImg'); if(rem) rem.onclick=()=>{ img=null; syncPortrait(); persistPortraitV159(); toast('Portrait removed'); };
 };
+=======
+/* Pass E v2.217.0: v159 chamber generation excised — unreachable since the dispatcher routed all ids to the v141 base. */
+>>>>>>> Stashed changes
 
 
 /* ===== v1.60 Campaign Map Redesign ===== */
@@ -10743,8 +10730,15 @@ function v161RoleIcon(role){ return (typeof LQ_ROLE_ICON!=='undefined'&&LQ_ROLE_
 function v161ArchIcon(h){ const a=heroArchetype(h); return a?((typeof LQ_ARCH_ICON!=='undefined'&&LQ_ARCH_ICON[a.key])?LQ_ARCH_ICON[a.key]:'✦'):'✦'; }
 function v161Face(h){
   if(h.sprite) return '<canvas class="sprcanvas" width="128" height="128" data-spr="'+h.id+'"></canvas>';
+<<<<<<< Updated upstream
   /* v2.208.0: lazy decode — 441 simultaneous base64 decodes spike iOS memory (jetsam). */
   if(h.img) return '<img src="'+h.img+'" loading="lazy" decoding="async">';
+=======
+  /* v2.208.0: lazy decode — 441 simultaneous base64 decodes spike iOS memory (jetsam).
+     v2.208.1: src set by property in v161Card — ~16KB of base64 per portrait was flowing
+     through the HTML parser (6.9MB per full grid); property assignment skips the tokenizer. */
+  if(h.img) return '<img data-v161fill loading="lazy" decoding="async">';
+>>>>>>> Stashed changes
   return '<span class="v161Initials">'+initials(h.name)+'</span>';
 }
 function v161Card(h,i){
@@ -10766,6 +10760,7 @@ function v161Card(h,i){
     '<div class="v161Name">'+esc(h.name)+'</div>'+    
     '<div class="v161Meta"><span>'+esc(ipLabel(h.ip))+'</span><span>'+v161RoleIcon(h.role)+' '+esc(roleLabel(h.role))+'</span><span>'+v161ArchIcon(h)+' '+esc(a?a.label:'Hero')+'</span>'+(dm?'<span>'+dm.icon+' '+esc(dm.label.split(' ')[0])+'</span>':'')+'</div>'+    
     '<div class="v161Stats"><div><b>'+powerOf(h)+'</b><span>Power</span></div><div><b>⚙ '+gearScore(h)+'</b><span>Gear</span></div><div><b>'+RANKS[rankIdx(h)].name+'</b><span>Rank</span></div><div><b>✦ '+heroCP(h)+'</b><span>CP</span></div></div>';
+  const __im=d.querySelector('img[data-v161fill]'); if(__im){ __im.onerror=function(){ try{ this.replaceWith(Object.assign(document.createElement('span'),{textContent:initials(h.name),className:'v161Initials'})); }catch(e){} }; __im.src=h.img; }
   return d;
 }
 function v161CollectionHeader(total,owned,readyN,lineupN,wishN,bonus,clPct,nextCP){
@@ -11172,10 +11167,7 @@ if(__v163_showQuestBoard){
   };
 }
 // Softer naming for abstract Growth system. Keeps functionality, removes one more gamey wrapper from the surface.
-const __v163_showStrategyModal = (typeof showStrategyModal==='function') ? showStrategyModal : null;
-if(__v163_showStrategyModal){
-  showStrategyModal = function(){ const r=__v163_showStrategyModal.apply(this,arguments); try{ const box=document.getElementById('revealBox'); if(box){ box.innerHTML=box.innerHTML.replace(/Strategy \+ Research/g,'Wisdom & Practice').replace(/Strategy/g,'Wisdom').replace(/Research/g,'Practice'); } }catch(e){} return r; };
-}
+/* Pass B v2.213.0: v163 strategy-modal wrapper excised — it revived a modal the base layer had retired to a toast. */
 
 
 /* ===== v1.64 Technical Consolidation + Regression QA ===== */
@@ -11605,6 +11597,7 @@ function v166BindAutomationPanel(){
   const bc=document.getElementById('v166BestCampaign'); if(bc) bc.onclick=()=>v166ApplyBestLineup('campaign');
   const br=document.getElementById('v166BestRaid'); if(br) br.onclick=()=>v166ApplyBestLineup('raid');
 }
+<<<<<<< Updated upstream
 const __renderHome_v166=renderHome;
 renderHome=function(v){
   v166InjectStyles(); v166AutoTomorrowFocus(); __renderHome_v166.apply(this,arguments);
@@ -11614,6 +11607,9 @@ renderHome=function(v){
     const dn=document.getElementById('doNext'); if(dn) dn.textContent='Start next real action';
   }catch(e){}
 };
+=======
+/* Pass C1 v2.214.0: v166 home wrapper excised (dead path). */
+>>>>>>> Stashed changes
 const __renderTasks_v166=renderTasks;
 renderTasks=function(v){
   v166InjectStyles();
@@ -11925,39 +11921,9 @@ strategySummaryHTML = function(){
     (domainChips?'<div class="wisdomPractice">'+domainChips+'</div>':'')+
     '<div class="lifeactions"><button class="primary" id="openWisdom">View wisdom</button></div></div>';
 };
-showStrategyModal = function(){ showWisdomModal(); };
-function showWisdomModal(){
-  const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
-  const d=v169WisdomSummaryData();
-  const practices=d.cards.map(c=>'<div class="researchNode done"><div><div class="rn">✓ '+esc(c.name)+'</div><div class="rd">'+esc(c.desc)+'<br><b>Now automatic — no loadout slot needed.</b></div></div></div>').join('') || '<div class="empty">No wisdom practices unlocked yet.</div>';
-  const research=RESEARCH_NODES.map(n=>{ const done=researchOn(n.id); return '<div class="researchNode '+(done?'done':'')+'"><div><div class="rn">'+(done?'✓ ':'○ ')+esc(n.name)+'</div><div class="rd">'+esc(n.desc)+(done?'<br><b>Unlocked automatically.</b>':'<br>Will unlock from future Wisdom Points.')+'</div></div></div>'; }).join('');
-  box.innerHTML='<div class="ico">✦</div><h2>Wisdom & Practice</h2><p>One less thing to manage. Oathforge now applies these bonuses automatically so the focus stays on real action.</p>'+ 
-    '<div class="wisdomBox" style="text-align:left"><div class="wh"><b>Passive Practices</b><span>'+d.cards.length+'</span></div>'+practices+'</div>'+ 
-    '<div class="wisdomBox" style="text-align:left"><div class="wh"><b>Automatic Research</b><span>'+((S.research&&S.research.points)||0)+' pts waiting</span></div>'+research+'</div>'+ 
-    '<button id="wisdomClose" style="margin-top:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px 18px;font-weight:800;width:100%">Close</button>';
-  modal.classList.add('show');
-  document.getElementById('wisdomClose').onclick=()=>modal.classList.remove('show');
-}
-const __v169_renderGrowth = renderGrowth;
-renderGrowth = function(v){
-  v169InjectStyles();
-  const W=ensureLifeWeek(), strong=strongestDomain(), light=lightestDomain();
-  const sm=DKEY[strong.k], lm=DKEY[light.k];
-  v.innerHTML=
-    '<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">who I am becoming</span></div>'+ 
-    monthlySummaryHTML()+
-    '<div class="identityFocus"><b style="color:var(--ink)">Focus:</b> Meaning first. The app handles strategy quietly so you can act.</div>'+ 
-    '<div class="lifesys-grid">'+
-      growthCardHTML('🌱','Domain Levels','Identity XP','Your real actions level the areas of life you care about most.','<div class="domainGrid">'+domainTilesHTML(4)+'</div>'+balanceChestHTML(),'openDomainsHome','View all domains')+
-      growthCardHTML('🏡','Life Base','Sanctuary','Watch your real-life domains become rooms you are building over time.',sanctuarySummaryHTML(),'openSanctuary','Open Life Base')+
-      growthCardHTML('✦','Wisdom & Practice','Automatic','Former Strategy Cards are now passive bonuses. Research unlocks automatically from reflection, with no loadout chores.',strategySummaryHTML(),'openWisdom','View wisdom')+
-      growthCardHTML('🧭','Weekly Review',(W.reviewed?'Done':'Open'),'Notice momentum, name the lightest area, and choose the next faithful step.','<div class="reviewline"><span>Strongest</span><b>'+(sm?sm.icon+' '+sm.label:'—')+'</b></div><div class="reviewline"><span>Lightest</span><b>'+(lm?lm.icon+' '+lm.label:'—')+'</b></div>','openReview','Open weekly review')+
-      growthCardHTML('📅','Monthly Review','Identity','Review the bigger pattern: wins, drift, domains, and the man you are becoming.',recapCenterHTML(),'openMonthly','Open monthly review')+
-      growthCardHTML('🕊️','Grace & Recovery',(S.grace||0)+' tokens','Recovery Day and Grace Tokens protect momentum without pretending hard days were full-output days.','<div class="lifeactions" style="margin-top:0"><button class="primary" id="openRecovery">Start recovery anchor</button><button id="openGrace">How grace works</button></div>','openWeeklyRecap','Preview weekly recap')+
-    '</div>';
-  bindLifeCards();
-  document.querySelectorAll('#openWisdom').forEach(el=>el.onclick=showWisdomModal);
-};
+/* Pass B v2.213.0: wisdom redirect excised — retirement toast is final. */
+function showWisdomModal(){ /* Pass B v2.213.0: Wisdom & Practice retired (v2.201 intent made final). */ try{ toast('Wisdom & Practice retired — research folded into reflection.'); }catch(e){} }
+/* Pass D v2.216.0: v169 growth wrapper excised — renderGrowth chain unreachable (growth aliases to progress). */
 const __v169_bindLifeCards = bindLifeCards;
 bindLifeCards = function(){ __v169_bindLifeCards(); document.querySelectorAll('#openWisdom').forEach(el=>el.onclick=showWisdomModal); };
 (function(){ v169InjectStyles(); v169EnsureWisdom(); })();
@@ -12009,36 +11975,7 @@ function v170GoToTask(it){
   navTo('quests');
   setTimeout(()=>{ try{ const el=document.querySelector('[data-id="'+(it&&it.id?it.id:'')+'"]'); if(el){ const card=el.closest('.card')||el; card.scrollIntoView({behavior:'smooth',block:'center'}); card.classList.add('lqShimmer'); setTimeout(()=>card.classList.remove('lqShimmer'),1200); } }catch(e){} },80);
 }
-function v170RenderHome(v){ if(typeof S==='undefined'||!S) return;
-  v170InjectStyles();
-  recalcCollection();
-  const dailies=(S.dailies||[]).filter(d=>d.freq==='daily');
-  const doneN=dailies.filter(d=>d.done).length, totN=dailies.length, pct=totN?Math.round(doneN/totN*100):0;
-  const next=suggestNext();
-  const light=(typeof lightestDomain==='function'?lightestDomain():null);
-  const k=(next&&domainOf(next)) || (light&&light.k) || 'discipline';
-  const d=DKEY[k]||DKEY.discipline||{label:'Daily Quest',icon:'✦',color:'#8bd0ff'};
-  const h=(typeof taskHeroFor==='function'?taskHeroFor(k):featuredHero());
-  const win=v170ClosestWin();
-  const title=next?next.title:'All core quests clear';
-  const why=next?whyForTask(next):'You built momentum today. Review the day, protect the win, or rest without guilt.';
-  const setup=!S.onboarded?'<div class="setupcard" id="setupCard"><h3>Finish setup</h3><p>Quick check: make the quests yours, confirm your starter squad, then download a backup before future updates.</p><div class="setuprow"><button id="setupTasks">Customize quests</button><button id="setupSquad">Review squad</button><button id="setupBackup">Open backup</button><button id="setupDone">Done</button></div></div>':'';
-  v.className='v170GameShell v170Home';
-  v.innerHTML=setup+
-    '<section class="v170Stage" style="--sceneColor:'+d.color+';--sceneArt:url('+v170SceneArt(k)+')"><div class="v170StagePad"><span class="v170Kicker">'+d.icon+' Today\'s Quest · '+esc(d.label)+'</span><div class="v170QuestTitle">Scene-first daily hub</div><div class="v170QuestTask">'+esc(title)+'</div><p class="v170QuestWhy">'+esc(why)+'</p><div class="v170RewardLine">'+(win.icon||'◆')+' '+esc(win.title||'Closest win')+' · '+esc(win.tag||'READY')+'</div></div><div class="v170HeroAnchor">'+v170HeroHTML(h)+'</div><div class="v170ActionDock"><button id="v170StartQuest" class="v170PrimaryAction">Start Quest</button><button id="v170Quests" class="v170SecondaryAction">Quests</button><button id="v170Review" class="v170SecondaryAction">Review</button></div></section>'+v170TodayPathHTML(doneN,totN)+
-    '<details class="v170Manage"><summary>Manage rewards / deeper systems</summary><div class="v170ManageGrid"><button id="v170GoHeroes">Heroes</button><button id="v170GoBattles">Battles</button><button id="v170GoGrowth">Growth</button><button id="v170Settings">Settings</button></div></details>'+v170LastActionSimple()+v170DailyReviewEntry(pct);
-  const start=document.getElementById('v170StartQuest'); if(start) start.onclick=()=> next?v170GoToTask(next):navTo('quests');
-  const q=document.getElementById('v170Quests'); if(q) q.onclick=()=>navTo('quests');
-  const r=document.getElementById('v170Review'); if(r) r.onclick=()=>{ if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); };
-  const gh=document.getElementById('v170GoHeroes'); if(gh) gh.onclick=()=>navTo('heroes');
-  const gb=document.getElementById('v170GoBattles'); if(gb) gb.onclick=()=>navTo('battles');
-  const gg=document.getElementById('v170GoGrowth'); if(gg) gg.onclick=()=>navTo('growth');
-  const st=document.getElementById('v170Settings'); if(st) st.onclick=()=>document.getElementById('openSettings').click();
-  const setupTasks=document.getElementById('setupTasks'); if(setupTasks) setupTasks.onclick=()=>navTo('quests');
-  const setupSquad=document.getElementById('setupSquad'); if(setupSquad) setupSquad.onclick=()=>{ campSub='campaign'; navTo('battles'); };
-  const setupBackup=document.getElementById('setupBackup'); if(setupBackup) setupBackup.onclick=()=>document.getElementById('openSettings').click();
-  const setupDone=document.getElementById('setupDone'); if(setupDone) setupDone.onclick=()=>{ S.onboarded=true; render(); save(); };
-}
+function v170RenderHome(v){ /* Pass C1 v2.214.0: v170 home generation deleted — orphaned by wrapper excision; ofHome hub is the live home. */ }
 function v170LastActionSimple(){
   const la=S.lastActionResult; if(!la) return '';
   return '<div class="v170SceneBanner" style="--sceneColor:#37d67a;--sceneArt:url('+v170SceneArt(la.domain||'discipline')+')"><span class="v170Kicker">Last Action · '+esc(la.at?timeAgo(la.at):'recently')+'</span><h2>'+esc(la.title||'Action complete')+'</h2><p>'+esc((la.domainIcon||'✓')+' '+(la.domainLabel||'Life')+' moved forward. '+((la.progress||[])[0]||'You acted like the person you are becoming.'))+'</p></div>';
@@ -12047,8 +11984,7 @@ function v170DailyReviewEntry(pct){
   const show=(pct>=60)||(new Date().getHours()>=18);
   return '<div class="v170SceneBanner" style="--sceneColor:#ffd95a;--sceneArt:url('+v170SceneArt('faith')+')"><span class="v170Kicker">'+(show?'Review ready':'Later today')+'</span><h2>Close the loop</h2><p>'+(show?'A short review turns effort into identity.':'Do one more real action first; review when the day has shape.')+'</p><div class="v170BannerActions"><button id="v170Review2">Review Day</button><button id="v170Growth2">Growth</button></div></div>';
 }
-const __v170_renderHome = renderHome;
-renderHome = function(v){ try{ v170RenderHome(v); setTimeout(()=>{ const a=document.getElementById('v170Review2'); if(a) a.onclick=()=>{ if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); }; const g=document.getElementById('v170Growth2'); if(g) g.onclick=()=>navTo('growth'); },0); }catch(e){ console.error('v1.70 home failed',e); __v170_renderHome(v); } };
+/* Pass C1 v2.214.0: v170 home replacement excised — dead path below the ofHome hub. */
 const __v170_renderQuests = renderQuests;
 renderQuests = function(v){
   try{ __v170_renderQuests(v); v170InjectStyles(); v.classList.add('v170GameShell','v170Quests'); const next=suggestNext(), k=(next&&domainOf(next))||'discipline', d=DKEY[k]||DKEY.discipline; /* Quests Mission Board removed */ const s=document.getElementById('v170MissionStart'); if(s) s.onclick=()=>next?v170GoToTask(next):toast('No highlighted quest right now.'); const add=document.getElementById('v170MissionAdd'); if(add) add.onclick=()=>openTaskSheet(null); }catch(e){ console.error('v1.70 quests shell failed',e); }
@@ -12068,18 +12004,8 @@ const __v170_renderHeroes = renderHeroes;
 renderHeroes = function(v){ __v170_renderHeroes(v); try{ v170InjectStyles(); v.classList.add('v170GameShell','v170Heroes'); /* heroes intro band removed (redundant) */ }catch(e){} };
 const __v170_renderBattles = renderBattles;
 renderBattles = function(v){ __v170_renderBattles(v); try{ v170InjectStyles(); v.classList.add('v170GameShell','v170Battles'); /* battles intro band removed (redundant) */ }catch(e){} };
-const __v170_renderGrowth = renderGrowth;
-renderGrowth = function(v){ __v170_renderGrowth(v); try{ v170InjectStyles(); v.classList.add('v170GameShell','v170Growth'); /* growth intro band removed (duplicate of growthHero band) */ }catch(e){} };
-/* v2.40 — domain-first Growth (final override; supersedes v148/v169/v170 layout) */
-renderGrowth = function(v){
-  try{ injectGrowthHubStyles(); }catch(e){}
-  try{ injectLifeBaseVisualStylesV148(); }catch(e){}
-  try{ injectDomainGrowthStylesV2(); }catch(e){}
-  v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I\u2019m becoming</span></div>'+growthHeaderV2()+domainGrowthPanelV2()+growthHubPointerHTML()+anvilArchivePanel()+growthFocusV2()+growthToolsV2();
-  const bind=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
-  bind('v2Review',showWeeklyReview); bind('v2Recovery',showRecoveryModal); bind('v2Monthly',showMonthlyReview); bind('v2Sanctuary',showSanctuary);
-  try{ v170InjectStyles(); v.classList.add('v170GameShell','v170Growth'); }catch(e){}
-};
+/* Pass D v2.216.0: v170 growth wrapper excised. */
+/* Pass D v2.216.0: v2.40 domain-first growth override excised — dead chain. */
 (function(){ v170InjectStyles(); })();
 
 
@@ -12189,28 +12115,8 @@ function v171HomeHeroes(){
   const fh=featuredHero(); if(fh&&!seen.has(fh.id)) hs.unshift(fh);
   return hs.slice(0,3);
 }
-function v171RenderHome(v){
-  if(typeof S==='undefined'||!S) return;
-  v171InjectStyles(); v171EnsureSettings(); recalcCollection();
-  const dailies=(S.dailies||[]).filter(d=>d.freq==='daily'), doneN=dailies.filter(d=>d.done).length, totN=dailies.length, pct=totN?Math.round(doneN/totN*100):0;
-  const next=suggestNext(), k=(next&&domainOf(next))||'discipline', d=DKEY[k]||DKEY.discipline, win=(typeof v170ClosestWin==='function'?v170ClosestWin():{icon:'◆',title:'Closest Win',tag:'Ready'});
-  const title=next?next.title:'Daily quests complete'; const why=next?whyForTask(next):'The world is quiet because you did the work. Review the day or choose a bonus quest.';
-  const hs=v171HomeHeroes();
-  const exp=typeof expRate==='function'?expRate():0, charge=typeof chargeDisplay==='function'?chargeDisplay():String(Math.round(S.charge||0));
-  v.className='v170GameShell v171GameShell v171Home';
-  v.innerHTML='<section class="v171LivingStage" style="--sceneColor:'+d.color+';--sceneArt:url('+v170SceneArt(k)+')">'+v200StageStrip()+'<div class="v171StagePad"><span class="v171Kicker">'+d.icon+' Living World · '+esc(d.label)+'</span><div class="v171QuestName">Today\'s Quest</div><div class="v171QuestTask">'+esc(title)+'</div><p class="v171QuestLine">'+esc(why)+'</p><div class="v170RewardLine" style="margin-top:12px">'+(win.icon||'◆')+' '+esc(win.title||'Closest win')+' · '+esc(win.tag||'READY')+'</div></div><div class="v171SquadStage"><div class="v171Ground"></div>'+hs.map(v171HeroTokenHTML).join('')+'</div><div class="v171IdleHUD"><span class="v171IdleChip">⚡ Charge <b>'+esc(charge)+'</b></span><span class="v171IdleChip">✦ EXP Flow <b>+'+esc(String(exp))+'/hr</b></span><span class="v171IdleChip">'+doneN+'/'+totN+' Quests</span></div><div class="v171ActionDock"><button id="v171StartQuest" class="v171PrimaryAction">Start Quest</button><button id="v171Quests" class="v171SecondaryAction">Quests</button><button id="v171Review" class="v171SecondaryAction">Review</button></div></section>'+v170TodayPathHTML(doneN,totN)+'<details class="v170Manage"><summary>Manage rewards / deeper systems</summary><div class="v170ManageGrid"><button id="v171GoHeroes">Heroes</button><button id="v171GoBattles">Battles</button><button id="v171GoGrowth">Growth</button><button id="v171Settings">Settings</button></div></details>'+v170LastActionSimple()+v170DailyReviewEntry(pct);
-  const start=document.getElementById('v171StartQuest'); if(start) start.onclick=()=>{ v171Feedback('tap'); next?v170GoToTask(next):navTo('quests'); };
-  const q=document.getElementById('v171Quests'); if(q) q.onclick=()=>{ v171Feedback('tap'); navTo('quests'); };
-  const r=document.getElementById('v171Review'); if(r) r.onclick=()=>{ v171Feedback('tap'); if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); };
-  const gh=document.getElementById('v171GoHeroes'); if(gh) gh.onclick=()=>navTo('heroes');
-  const gb=document.getElementById('v171GoBattles'); if(gb) gb.onclick=()=>navTo('battles');
-  const gg=document.getElementById('v171GoGrowth'); if(gg) gg.onclick=()=>navTo('growth');
-  const st=document.getElementById('v171Settings'); if(st) st.onclick=()=>document.getElementById('openSettings').click();
-  const rr=document.getElementById('v170Review2'); if(rr) rr.onclick=()=>{ if(typeof openDailyReview==='function') openDailyReview(); else navTo('growth'); };
-  const rg=document.getElementById('v170Growth2'); if(rg) rg.onclick=()=>navTo('growth');
-}
-const __v171_renderHome = renderHome;
-renderHome = function(v){ try{ v171RenderHome(v); }catch(e){ console.error('v1.71 home failed',e); __v171_renderHome(v); } };
+function v171RenderHome(v){ /* Pass C1 v2.214.0: v171 home generation deleted — orphaned. */ }
+/* Pass C1 v2.214.0: v171 home replacement excised. */
 const __v171_rewardSummary = rewardSummary;
 rewardSummary = function(title,items){ __v171_rewardSummary(title,items); try{ v171WorldReward(title,items,/level|rank|hero/i.test(String(title))?'level':'task'); }catch(e){} };
 const __v171_toast = toast;
@@ -12282,6 +12188,7 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
    stays on the current handler because V141's own null branch is self-recursive. */
 (function Phase3HeroEditorDefault(){
   if(typeof openHeroSheet!=='function'||typeof openHeroSheetLegacy_v141!=='function') return;
+<<<<<<< Updated upstream
   var chamberV159 = openHeroSheet;            // newest view, kept reachable, not orphaned
   var legacyV141  = openHeroSheetLegacy_v141; // working editor w/ visible portrait controls
   window.__heroChamberV159 = chamberV159;
@@ -12293,6 +12200,9 @@ document.addEventListener('pointerdown',()=>{ v171UnlockAudio(); },{once:true,ca
     if(!id){ try{ toast('Add heroes via the release roster \u2014 this editor needs a hero.'); }catch(e){} return; }
     return legacyV141(id);                     // specific hero -> Legacy editor
   };
+=======
+  /* Pass E v2.217.0: v165 dispatcher excised — routing + the v2.207.1 null-guard live in the canonical openHeroSheet. */
+>>>>>>> Stashed changes
 })();
 
 
@@ -16368,6 +16278,83 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
 
 
 
+
+/* ===== v2.211.0 The Oathpyre =====
+   One hearth for every finished flow. Burns: gold/dust overflow (its own drain,
+   additive to the Anvil's), Iso-8 excess (2%/day estate burn above roster-floor
+   reserve), Prime Iso-8 above a keepsake reserve, crystal overflow (rerouted from
+   the retired Iso-8 mint), and at-cap EXP (captured in gainExp). Habit-amplified
+   via ecoHabitAmp. Grants: Anvil budget warmth (1+0.06·ln(1+flame)) and weekly
+   prestige allowance (+⌊2·ln(1+flame)⌋). No combat power. All dials in PYRE_TUNE. */
+(function(){
+  if(window.__ofPyre) return; window.__ofPyre=true;
+  window.PYRE_TUNE={
+    drainPct:0,           /* v2.211.1: gold/dust burn OFF per design — the hoard is not fuel. Anvil warmth is the gold/dust power path. Set >0 to re-enable. */
+    fuelPerGold:1e-6, fuelPerDust:1e-6,
+    fuelPerExp:0.000001,
+    fuelPerCore:0.001, corePctPerDay:0.03, coreReserveExtra:50000, /* v2.212.0: burn bumped 2%→3%/day */
+    fuelPerBossCore:1, bossCoreReserve:10,
+    fuelPerCrystal:0.01,
+    anvilLnCoef:0.06, prestigeLnCoef:2, lvlLnCoef:8, lvlFuelBase:1000
+  };
+  function P(){ if(!S||typeof S!=='object') return null;
+    if(!S.pyre||typeof S.pyre!=='object') S.pyre={fuel:0,burnedGold:0,burnedDust:0,burnedCores:0,burnedBoss:0,burnedExp:0,burnedCrys:0,lit:Date.now()};
+    return S.pyre; }
+  window.pyreFlameLv=function(){ try{ var p=P(); if(!p) return 0; return Math.floor(PYRE_TUNE.lvlLnCoef*Math.log(1+(p.fuel||0)/PYRE_TUNE.lvlFuelBase)); }catch(e){ return 0; } };
+  window.pyreAnvilMult=function(){ try{ return 1+PYRE_TUNE.anvilLnCoef*Math.log(1+pyreFlameLv()); }catch(e){ return 1; } };
+  window.pyrePrestigeBonus=function(){ try{ return Math.floor(PYRE_TUNE.prestigeLnCoef*Math.log(1+pyreFlameLv())); }catch(e){ return 0; } };
+  window.pyreAddFuel=function(n,kind){ try{ var p=P(); if(!p||!(n>0)) return; p.fuel=(p.fuel||0)+n;
+    if(kind==='exp') p.burnedExp=(p.burnedExp||0)+n/(PYRE_TUNE.fuelPerExp||1);
+    if(kind==='crys') p.burnedCrys=(p.burnedCrys||0)+n/(PYRE_TUNE.fuelPerCrystal||1);
+  }catch(e){} };
+  window.pyreTick=function(hours){
+    try{
+      if(!(hours>0)) return; var p=P(); if(!p) return;
+      var amp=(typeof ecoHabitAmp==='function')?ecoHabitAmp():1;
+      var fG=(typeof ecoFloor==='function')?ecoFloor('g'):0, fD=(typeof ecoFloor==='function')?ecoFloor('d'):0;
+      var ovG=Math.max(0,(S.gold||0)-fG), ovD=Math.max(0,(S.dust||0)-fD);
+      var gB=ovG*PYRE_TUNE.drainPct*amp*(hours/24), dB=ovD*PYRE_TUNE.drainPct*amp*(hours/24);
+      if(gB>0){ S.gold-=gB; p.burnedGold=(p.burnedGold||0)+gB; p.fuel=(p.fuel||0)+gB*PYRE_TUNE.fuelPerGold; }
+      if(dB>0){ S.dust-=dB; p.burnedDust=(p.burnedDust||0)+dB; p.fuel=(p.fuel||0)+dB*PYRE_TUNE.fuelPerDust; }
+      var reserve=((typeof TUNE==='object'&&TUNE.floorCoreReserve)||500)+PYRE_TUNE.coreReserveExtra;
+      var exc=Math.max(0,(S.heroCores||0)-reserve);
+      var take=Math.floor(exc*PYRE_TUNE.corePctPerDay*amp*(hours/24));
+      if(take>0){ S.heroCores-=take; p.burnedCores=(p.burnedCores||0)+take; p.fuel=(p.fuel||0)+take*PYRE_TUNE.fuelPerCore; }
+      var bx=Math.floor(Math.max(0,(S.bossCores||0)-PYRE_TUNE.bossCoreReserve));
+      if(bx>0){ S.bossCores-=bx; p.burnedBoss=(p.burnedBoss||0)+bx; p.fuel=(p.fuel||0)+bx*PYRE_TUNE.fuelPerBossCore; }
+    }catch(e){}
+  };
+  window.pyrePanelHTML=function(){ return ''; }; /* v2.212.0: standalone card retired — Heat lives inside the Anvil */
+  window.pyreHeatSectionHTML=function(){
+    try{
+      var p=S&&S.pyre; if(!p) return '';
+      if(!document.getElementById('ofHeatCSS')){
+        var st=document.createElement('style'); st.id='ofHeatCSS';
+        st.textContent='@keyframes ofHeatPulse{0%,100%{box-shadow:0 0 10px 0 rgba(255,120,30,.25) inset}50%{box-shadow:0 0 22px 2px rgba(255,150,40,.45) inset}}'
+          +'.ofHeatBox{margin-top:12px;padding:11px 12px;border-radius:12px;border:1px solid rgba(255,140,40,.35);background:linear-gradient(160deg,rgba(255,110,20,.10),rgba(30,16,8,.35));animation:ofHeatPulse 3.2s ease-in-out infinite}'
+          +'.ofHeatBar{height:8px;border-radius:6px;background:#00000055;overflow:hidden;margin:7px 0 5px}'
+          +'.ofHeatBar i{display:block;height:100%;background:linear-gradient(90deg,#ff6a00,#ffb01f,#ffe08a);border-radius:6px}';
+        document.head.appendChild(st);
+      }
+      var lv=pyreFlameLv(), warm=Math.round((pyreAnvilMult()-1)*100), pb=pyrePrestigeBonus();
+      var K=PYRE_TUNE.lvlLnCoef, B=PYRE_TUNE.lvlFuelBase;
+      var cur=B*(Math.exp(lv/K)-1), nxt=B*(Math.exp((lv+1)/K)-1);
+      var pct=Math.max(0,Math.min(100,Math.round(((p.fuel||0)-cur)/Math.max(1,nxt-cur)*100)));
+      var fmt=function(n){ n=Math.floor(n||0); if(n>=1e9) return (Math.round(n/1e8)/10)+'B'; if(n>=1e6) return (Math.round(n/1e5)/10)+'M'; if(n>=1e3) return (Math.round(n/100)/10)+'k'; return ''+n; };
+      var fed=[['Iso-8',p.burnedCores],['Prime',p.burnedBoss],['EXP',p.burnedExp],['crystals',p.burnedCrys]].filter(function(x){return x[1]>0;}).map(function(x){return fmt(x[1])+' '+x[0];}).join(' \u00b7 ');
+      return '<div class="ofHeatBox">'
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline">'
+        +'<span style="font-weight:900;color:#ffb46b;letter-spacing:.4px">\uD83D\uDD25 FORGE HEAT</span>'
+        +'<span style="font-weight:900;font-size:17px;color:#ffd9a0">Heat '+lv+'</span></div>'
+        +'<div class="ofHeatBar"><i style="width:'+pct+'%"></i></div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:11px;color:#d9b48a;font-weight:700">'
+        +'<span>Anvil speed <b style="color:#ffcf6b">+'+warm+'%</b> \u00b7 prestige +'+pb+'/wk</span><span>'+pct+'% to Heat '+(lv+1)+'</span></div>'
+        +'<div style="font-size:11px;color:#b09070;margin-top:6px">Fed by your finished flows \u2014 surplus Iso-8, Prime, crystal overflow, and at-cap EXP burn here automatically. Live your day well and it burns hotter.</div>'
+        +(fed?'<div style="font-size:10px;color:#8d7458;margin-top:4px">Offered so far: '+fed+'</div>':'')
+        +'</div>';
+    }catch(e){ return ''; }
+  };
+})();
 </script>
 
 
@@ -17223,11 +17210,11 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       '<div class="ofHomeTiles">'+tiles+'</div>'+'<details class="ofHomeMore"><summary>More · deeper systems</summary><div class="ofHomeMoreGrid"><button data-ofnav="progress">🏛 Progress</button><button data-ofnav="forge">'+ficon('feat_crucible',18)+' Crucible</button><button data-ofnav="bonds">🔗 Bonds</button></div></details>'+'</div>';
   }
   function ofBindHome(v){ try{ (v||document).querySelectorAll('[data-ofnav]').forEach(function(b){ b.onclick=function(){ try{ navTo(b.getAttribute('data-ofnav')); }catch(e){} }; }); }catch(e){} }
+  /* Pass C2 v2.215.0: hub render moved to the canonical renderHome (final script);
+     exports are unconditional so the canonical can compose them. */
+  try{ window.ofHomeHTML=ofHomeHTML; window.ofBindHome=ofBindHome; }catch(e){}
   function install(){
-    if(typeof renderHome!=='function' || renderHome.__ofHome){ return; }
-    var _prev=renderHome;
-    renderHome=function(v){ try{ if(v){ v.innerHTML=ofHomeHTML(); ofBindHome(v); } }catch(e){ try{ _prev(v); }catch(_e){} } };
-    renderHome.__ofHome=true;
+    return;
     try{ if(typeof S!=='undefined' && S && typeof view!=='undefined' && view==='home'){ var v=document.getElementById('view'); if(v) renderHome(v); } }catch(e){}
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install); else install();
@@ -17480,11 +17467,8 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
 
   function install(){
     if(window.__ofCodexInstalled) return;
-    if(typeof renderHome!=='function' || !renderHome.__ofHome) return; // wait until ofHome wrapper exists so we stay outermost
-    var _prev=renderHome;
-    var wrapped=function(v){ try{ _prev(v); }catch(e){} try{ afterHome(v); }catch(e){ console.warn('Codex home card failed',e); } };
-    wrapped.__ofHome=true; wrapped.__ofCodex=true;
-    renderHome=wrapped;
+    /* Pass C2 v2.215.0: codex wrapper excised — afterHome exported and composed by the canonical renderHome. */
+    try{ window.ofCodexAfterHome=afterHome; }catch(e){}
     window.__ofCodexInstalled=true;
     try{ if(typeof S!=='undefined' && S && typeof view!=='undefined' && view==='home'){ var v=document.getElementById('view'); if(v) renderHome(v); } }catch(e){}
   }
@@ -17633,10 +17617,9 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   (function go(){
     if(typeof renderHome!=='function'){ if(tries++<80) setTimeout(go,150); return; }
     if(!window.__ofCodexInstalled && tries++<80){ setTimeout(go,150); return; }
-    var _prev=renderHome;
-    var wrapped=function(v){ try{_prev(v);}catch(e){} try{ rosterMgmtAppendCard(v); }catch(e){ console.warn('roster mgmt card',e); } };
-    wrapped.__ofHome=_prev.__ofHome; wrapped.__ofCodex=_prev.__ofCodex; wrapped.__rosterMgmt=true;
-    renderHome=wrapped; window.__rosterMgmtInstalled=true;
+    /* Pass C2 v2.215.0: rosterMgmt home wrapper excised — in the pre-C2 chain its card was
+       deleted by of2150's cleanup every render (net no-op); the canonical keeps that outcome. */
+    window.__rosterMgmtInstalled=true;
     try{ if(typeof view!=='undefined' && view==='home'){ var vv=document.getElementById('view'); if(vv) renderHome(vv); } }catch(e){}
   })();
 })();
@@ -19221,11 +19204,8 @@ function rerender(){
   }catch(e){}
   function of2146InstallHomeWrap(){
     try{
-      if(typeof renderHome==='function'&&!renderHome.__of2146MissedHome){
-        var old=renderHome;
-        renderHome=function(v){ var ret=old.apply(this,arguments); of2146DecorateHome(v); try{ if(typeof window!=='undefined'&&window.lqWeeklyDash) window.lqWeeklyDash(v); }catch(e){} return ret; };
-        renderHome.__of2146MissedHome=true;
-      }
+      /* Pass C2 v2.215.0: wrapper excised — decorator now called by the canonical renderHome. */
+      try{ window.of2146DecorateHome=of2146DecorateHome; }catch(e){}
     }catch(e){}
   }
   of2146InstallHomeWrap();
@@ -19722,17 +19702,7 @@ function rerender(){
     renderHeroes=function(v){ var ret=__of2149RenderHeroes.apply(this,arguments); try{ var h=v&&v.querySelector('.head h2,h2'); if(h&&/heroes/i.test(h.textContent||'')) h.textContent='Fellowship'; }catch(e){} return ret; };
   }catch(e){}
   try{
-    var __of2149RenderHome=renderHome;
-    renderHome=function(v){
-      var ret=__of2149RenderHome.apply(this,arguments);
-      try{
-        var title=v&&v.querySelector('.homeModesCard .hmTitle');
-        var sub=v&&v.querySelector('.homeModesCard .hmSub');
-        if(title) title.textContent='War Table';
-        if(sub) sub.textContent='Campaign, roster modes, arena, rift.';
-      }catch(e){}
-      return ret;
-    };
+    /* Pass C2 v2.215.0: of2149 home relabel inlined into the canonical renderHome. */
   }catch(e){}
   document.addEventListener('click',function(e){
     try{ if(e.target&&e.target.closest&&e.target.closest('.nav button[data-view="battles"]')) window.__of2149WarSub=null; }catch(_e){}
@@ -19875,12 +19845,11 @@ function rerender(){
   }
 
   try{
-    var __of2150RenderHome=renderHome;
-    renderHome=function(v){ var ret=__of2150RenderHome.apply(this,arguments); try{ of2150InjectHome(v); }catch(e){ try{ console.warn('v2.150 home cards failed',e); }catch(_e){} } return ret; };
+    /* Pass C2 v2.215.0: wrapper excised — injector exported for the canonical renderHome. */
+    try{ window.of2150InjectHome=of2150InjectHome; }catch(e){}
   }catch(e){}
   try{
-    var __of2150OpenHeroSheet=openHeroSheet;
-    openHeroSheet=function(id){ var ret=__of2150OpenHeroSheet.apply(this,arguments); try{ of2150DecorateHero(id); }catch(e){} return ret; };
+    /* Pass E v2.217.0: wrapper excised. */ try{ window.of2150DecorateHero=of2150DecorateHero; }catch(e){}
   }catch(e){}
 
   of2150InjectStyles();
@@ -20504,7 +20473,6 @@ function rerender(){
 
   try{
     if(typeof renderHome==='function'){
-      var oldHome=renderHome;
       
 
 
@@ -20591,8 +20559,7 @@ try{ if(typeof window!=='undefined'){ window.lqPowerPanel=lqPowerPanel; } }catch
 setTimeout(function(){
   try{
     if(typeof openHeroSheet==='function' && !openHeroSheet.__lqPow){
-      var _prevOHS=openHeroSheet;
-      openHeroSheet=function(id){ var r=_prevOHS.apply(this,arguments); try{ setTimeout(function(){ lqPowerPanel(id); },30); }catch(e){} return r; };
+      /* Pass E v2.217.0: wrapper excised. */ try{ window.lqPowerPanel=lqPowerPanel; }catch(e){}
       openHeroSheet.__lqPow=true;
     }
   }catch(e){}
@@ -20738,19 +20705,18 @@ function lqWeeklyDash(v){
 }
 try{ if(typeof window!=='undefined'){ window.lqWeeklyDash=lqWeeklyDash; } }catch(e){}
 
-renderHome=function(v){ var r=oldHome.apply(this,arguments); try{ enhanceHome(v); }catch(e){} return r; };
+/* Pass C2 v2.215.0: wrapper excised — enhanceHome exported for the canonical renderHome. */
+try{ window.enhanceHome=enhanceHome; }catch(e){}
     }
   }catch(e){}
   try{
     if(typeof renderGrowth==='function'){
-      var oldGrowth=renderGrowth;
-      renderGrowth=function(v){ var r=oldGrowth.apply(this,arguments); try{ cleanGrowth(v); applyVisibleLabels(v); }catch(e){} return r; };
+      /* Pass D v2.216.0: cleanGrowth wrapper excised. */
     }
   }catch(e){}
   try{
     if(typeof openHeroSheet==='function'){
-      var oldHeroSheet=openHeroSheet;
-      openHeroSheet=function(id){ var r=oldHeroSheet.apply(this,arguments); setTimeout(function(){ wireLegendButtons(by('sheet')||document); applyVisibleLabels(by('sheet')||document); },0); return r; };
+      /* Pass E v2.217.0: wrapper excised. */ try{ window.wireLegendButtons=wireLegendButtons; window.applyVisibleLabels=applyVisibleLabels; }catch(e){}
     }
   }catch(e){}
   try{
@@ -22089,12 +22055,7 @@ function showAbilityMoment(u,skill,color){
     if(!eAlive||!pAlive){ endBattleSeq(eAlive,pAlive); return; }
   };
 
-  const previousOpenHeroSheet=openHeroSheet;
-  openHeroSheet=function(id){
-    const ret=previousOpenHeroSheet.apply(this,arguments);
-    setTimeout(()=>enhanceHeroSheet(id),0);
-    return ret;
-  };
+  /* Pass E v2.217.0: wrapper excised. */ try{ window.__exportEnhanceHeroSheet=function(){ try{ window.enhanceHeroSheet=enhanceHeroSheet; }catch(e){} }; window.__exportEnhanceHeroSheet(); }catch(e){}
   function enhanceHeroSheet(id){
     try{
       const h=(S&&S.heroes||[]).find(x=>x.id===id);
@@ -24266,7 +24227,11 @@ function raidSAInjectPanel(){ try{
       try{
         var FL={crys:300, spark:400, sparkPer:25};
         var cEx=Math.floor(Math.max(0,(S.crystals||0)-FL.crys));
+<<<<<<< Updated upstream
         if(cEx>0){ S.crystals-=cEx; S.heroCores=(S.heroCores||0)+cEx; try{ toast('\u25c8 '+cEx+' crystals refined into Iso-8'); }catch(e){} try{ renderHUD(); save(); }catch(e){} }
+=======
+        if(cEx>0){ S.crystals-=cEx; if(typeof pyreAddFuel==='function'){ pyreAddFuel(cEx*((window.PYRE_TUNE&&PYRE_TUNE.fuelPerCrystal)||0.01),'crys'); } else { S.heroCores=(S.heroCores||0)+cEx; } /* v2.211.0: Iso-8 is oversupplied — crystal overflow feeds the flame */ try{ toast('\u25c8 '+cEx+' crystals refined into Iso-8'); }catch(e){} try{ renderHUD(); save(); }catch(e){} }
+>>>>>>> Stashed changes
         var spN=Math.floor(Math.max(0,(S.sparks||0)-FL.spark)/FL.sparkPer);
         if(spN>0){ S.sparks-=spN*FL.sparkPer; S.bossCores=(S.bossCores||0)+spN; try{ toast('\u25c6 +'+spN+' Prime Iso-8 condensed from Sparks'); }catch(e){} try{ renderHUD(); save(); }catch(e){} }
       }catch(e){}
@@ -24421,6 +24386,10 @@ function raidSAInjectPanel(){ try{
     try{ strategySummaryHTML=function(){ return ''; }; }catch(e){}
     setTimeout(function(){ try{ lqAutoClaim(); }catch(e){} },4000);
     setInterval(function(){ try{ lqAutoClaim(); }catch(e){} },12000);
+<<<<<<< Updated upstream
+=======
+    try{ window.lqHomeStrip=lqHomeStrip; window.lqHomeTrim=lqHomeTrim; }catch(e){} /* Pass C2: exported for the canonical renderHome */
+>>>>>>> Stashed changes
     setInterval(function(){ try{ lqRaidDeclutter(); }catch(e){} try{ lqHomeStrip(); }catch(e){} try{ lqHomeTrim(); }catch(e){} try{ if(typeof ofInjectAutoPills==='function') ofInjectAutoPills(); }catch(e){} try{ if(typeof lqEnforceDisjoint==='function') lqEnforceDisjoint(); }catch(e){} },900);
   })();
 })();
@@ -24428,5 +24397,55 @@ function raidSAInjectPanel(){ try{
 </script>
 
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){try{navigator.serviceWorker.register('./sw.js').catch(function(){});}catch(e){}});}</script><script type="module" src="oathforge-cloud.js"></script>
+<script id="ofHomeCanonicalC2">
+/* ===== Pass C2 v2.215.0: THE canonical home render =====
+   One function, explicit order, no wrapper archaeology. Composition proven by
+   runtime instrumentation + zero-DOM-diff gate: ofHome hub markup, then the
+   of2146 missed-daily decorator + weekly dash, the of2149 War Table relabel
+   (inlined), the of2150 home cards, and the lq enhance layer. The hoisted v162
+   renderHome declaration remains as the only fallback if the hub throws. */
+(function(){
+  var base=(typeof renderHome==='function')?renderHome:null;
+  window.renderHome=function(v){
+    try{ if(v&&typeof window.ofHomeHTML==='function'){ v.innerHTML=window.ofHomeHTML(); window.ofBindHome&&window.ofBindHome(v); } else if(base){ base(v); } }
+    catch(e){ try{ if(base) base(v); }catch(_e){} }
+    try{ window.ofCodexAfterHome&&window.ofCodexAfterHome(v); }catch(e){}
+    try{ window.of2146DecorateHome&&window.of2146DecorateHome(v); }catch(e){}
+    try{ window.lqWeeklyDash&&window.lqWeeklyDash(v); }catch(e){}
+    try{ var t=v&&v.querySelector('.homeModesCard .hmTitle'); if(t) t.textContent='War Table';
+         var sb=v&&v.querySelector('.homeModesCard .hmSub'); if(sb) sb.textContent='Campaign, roster modes, arena, rift.'; }catch(e){}
+    /* of2150 home deck deliberately NOT composed — superseded by the v2.206 curated home
+       (anchor + Room card + strip + Crucible). But its first-act CLEANUP was load-bearing:
+       it removed the rmHomeCard an earlier layer appends. Do that cleanup explicitly. */
+    try{ v&&v.querySelectorAll('.rmHomeCard,.of2150HomeDeck').forEach(function(n){ n.remove(); }); }catch(e){}
+    try{ window.enhanceHome&&window.enhanceHome(v); }catch(e){}
+    /* explicit curation — formerly a 900ms interval racing the render */
+    try{ window.lqHomeStrip&&window.lqHomeStrip(); }catch(e){}
+    try{ window.lqHomeTrim&&window.lqHomeTrim(); }catch(e){}
+  };
+  window.renderHome.__ofHome=true; window.renderHome.__of2146MissedHome=true;
+})();
+/* ===== Pass E v2.217.0: THE canonical hero sheet =====
+   One function replacing an 8-layer wrapper stack (incl. the v141 self-recursion
+   the crawler caught). Order preserved from the proven runtime chain:
+   v141 base render → of2150 decorate (sync) → power panel (t+30)
+   → legend buttons + labels (t+0) → enhance panels (t+0). */
+(function(){
+  var base=(typeof openHeroSheet==='function')?openHeroSheet:null;   // hoisted v141 declaration
+  window.openHeroSheet=function(id){
+    if(!id){ try{ toast('Add heroes via the release roster — this editor needs a hero.'); }catch(e){} return; }
+    var r; try{ r=base&&base(id); }catch(e){}
+    try{ window.of2150DecorateHero&&window.of2150DecorateHero(id); }catch(e){}
+    setTimeout(function(){ try{ window.lqPowerPanel&&window.lqPowerPanel(id); }catch(e){} },30);
+    setTimeout(function(){ try{ var sh=document.getElementById('sheet')||document; window.wireLegendButtons&&window.wireLegendButtons(sh); window.applyVisibleLabels&&window.applyVisibleLabels(sh); }catch(e){} },0);
+    setTimeout(function(){ try{ window.enhanceHeroSheet&&window.enhanceHeroSheet(id); }catch(e){} },0);
+    return r;
+  };
+  window.openHeroSheet.__lqPow=true;
+})();
+(function(){
+  try{ if(typeof view!=='undefined'&&view==='home'){ var vv=document.getElementById('view'); if(vv) window.renderHome(vv); } }catch(e){}
+})();
+</script>
 </body>
 </html>
