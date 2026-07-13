@@ -1,0 +1,127 @@
+[
+ {
+  "area": "faith",
+  "pokemon": "Ho-Oh",
+  "file": "own_faith.webp"
+ },
+ {
+  "area": "marriage",
+  "pokemon": "Tandemaus",
+  "file": "own_marriage.webp"
+ },
+ {
+  "area": "fatherhood",
+  "pokemon": "Kangaskhan",
+  "file": "own_fatherhood.webp"
+ },
+ {
+  "area": "fitness",
+  "pokemon": "Machamp",
+  "file": "own_fitness.webp"
+ },
+ {
+  "area": "nutrition",
+  "pokemon": "Appletun",
+  "file": "own_nutrition.webp"
+ },
+ {
+  "area": "sleep",
+  "pokemon": "Snorlax",
+  "file": "own_sleep.webp"
+ },
+ {
+  "area": "mental_health",
+  "pokemon": "Audino",
+  "file": "own_mental_health.webp"
+ },
+ {
+  "area": "finances",
+  "pokemon": "Gimmighoul",
+  "file": "own_finances.webp"
+ },
+ {
+  "area": "career",
+  "pokemon": "Arcanine",
+  "file": "own_career.webp"
+ },
+ {
+  "area": "learning",
+  "pokemon": "Alakazam",
+  "file": "own_learning.webp"
+ },
+ {
+  "area": "reading",
+  "pokemon": "Noctowl",
+  "file": "own_reading.webp"
+ },
+ {
+  "area": "prayer",
+  "pokemon": "Gardevoir",
+  "file": "own_prayer.webp"
+ },
+ {
+  "area": "relationships",
+  "pokemon": "Sylveon",
+  "file": "own_relationships.webp"
+ },
+ {
+  "area": "home",
+  "pokemon": "Yamper",
+  "file": "own_home.webp"
+ },
+ {
+  "area": "lawn",
+  "pokemon": "Leafeon",
+  "file": "own_lawn.webp"
+ },
+ {
+  "area": "vehicle",
+  "pokemon": "Cyclizar",
+  "file": "own_vehicle.webp"
+ },
+ {
+  "area": "planning",
+  "pokemon": "Oranguru",
+  "file": "own_planning.webp"
+ },
+ {
+  "area": "digital_life",
+  "pokemon": "Porygon",
+  "file": "own_digital_life.webp"
+ },
+ {
+  "area": "gaming",
+  "pokemon": "Pikachu",
+  "file": "own_gaming.webp"
+ },
+ {
+  "area": "health",
+  "pokemon": "Chansey",
+  "file": "own_health.webp"
+ },
+ {
+  "area": "adventure",
+  "pokemon": "Lapras",
+  "file": "own_adventure.webp"
+ },
+ {
+  "area": "travel",
+  "pokemon": "Pidgeot",
+  "file": "own_travel.webp"
+ },
+ {
+  "area": "giving",
+  "pokemon": "Delibird",
+  "file": "own_giving.webp"
+ },
+ {
+  "area": "creativity",
+  "pokemon": "Smeargle",
+  "file": "own_creativity.webp"
+ },
+ {
+  "area": "legacy",
+  "pokemon": "Dragonite",
+  "file": "own_legacy.webp"
+ }
+]
