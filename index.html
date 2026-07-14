@@ -2753,7 +2753,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.231.1-final-sweep';
+const APP_BUILD='v2.235.0-hall-tidy';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3017,6 +3017,7 @@ function seed(){
 
 // Show current currency balance
 const CURRENCY_ICON={"expeditions":"art/locations/cur_expeditions_cb554ac7.webp","gauntlet":"art/locations/cur_gauntlet_a9e421e7.webp","arena":"art/locations/cur_arena_ce6ba377.webp","bonds":"art/locations/cur_bonds_66282fc0.webp","conquest":"art/locations/cur_conquest_7d415314.webp","slot_weapon":"art/locations/cur_slot_weapon_feebb68a.webp","slot_armor":"art/locations/cur_slot_armor_9e7f0d63.webp","slot_boots":"art/locations/cur_slot_boots_a622822a.webp","slot_relic":"art/locations/cur_slot_relic_8e57084f.webp","grove":"art/locations/cur_grove_8405cbac.webp","roleDPS":"art/locations/cur_roledps_cc9162ac.webp","storm":"art/locations/cur_storm_f9ece32d.webp","resolve":"art/locations/cur_resolve_13fc1ab1.webp","stone":"art/locations/cur_stone_ff5c5124.webp","grace":"art/locations/cur_grace_acd541ff.webp","tide":"art/locations/cur_tide_c3ba5237.webp","roleSupport":"art/locations/cur_rolesupport_961de011.webp","roleTank":"art/locations/cur_roletank_cc38c6a3.webp","flame":"art/locations/cur_flame_401e0f7b.webp","logo":"art/locations/cur_logo_39f48ec6.webp","exp":"art/locations/cur_exp_7ad65c4a.webp","momentum":"art/locations/cur_momentum_035d545c.webp","raidboss":"art/locations/cur_raidboss_058b38ba.webp","chest":"art/locations/cur_chest_b9b2a17d.webp","summon":"art/locations/cur_summon_901dcec9.webp","albums":"art/locations/cur_albums_baa3ee5d.webp","campaign":"art/locations/cur_campaign_9aa3092d.webp","tower":"art/locations/cur_tower_9800cb01.webp","questboard":"art/locations/cur_questboard_ff5f7501.webp","clash":"art/locations/cur_clash_4ee12441.webp","jBegin":"art/locations/cur_jbegin_23342e0f.webp","jMomentum":"art/locations/cur_jmomentum_5750e61d.webp","jReward":"art/locations/cur_jreward_870f3e81.webp","jReview":"art/locations/cur_jreview_c64b9e0a.webp","jAction":"art/locations/cur_jaction_a34dddff.webp","sparks":"art/locations/cur_sparks_1f18d546.webp","gold":"art/locations/cur_gold_b67f48d5.webp","dust":"art/locations/cur_dust_122786bc.webp","crystals":"art/locations/cur_crystals_221667fd.webp","tickets":"art/locations/cur_tickets_9d58409e.webp","cores":"art/locations/cur_cores_265952a0.webp","bossCores":"art/locations/cur_bosscores_93ee2413.webp"};
+try{ CURRENCY_ICON.rooms='art/badges/badge_ror.webp?v=1'; }catch(e){} /* v2.235: RoR war-card medallion */
 try{if(typeof CURRENCY_ICON==='object'){var _O=window.OFA;CURRENCY_ICON.gold=CURRENCY_ICON.credits=_O.credits;CURRENCY_ICON.crystals=CURRENCY_ICON.kyber=_O.kyber;CURRENCY_ICON.sparks=_O.sparks;CURRENCY_ICON.dust=CURRENCY_ICON.uru=_O.uru;CURRENCY_ICON.oath_icon="art/locations/art_6fa22810da.webp";CURRENCY_ICON.mission_board="art/locations/art_dcf1dc11de.webp";CURRENCY_ICON.ss_anne="art/locations/art_89b2e9532a.webp";CURRENCY_ICON.elune="art/locations/art_fd32c3ca0e.webp";CURRENCY_ICON.frame_slytherin="art/locations/art_154404e8b8.webp";CURRENCY_ICON.frame_ravenclaw="art/locations/art_a70773e08b.webp";CURRENCY_ICON.frame_gryffindor="art/locations/art_ec01b2d945.webp";CURRENCY_ICON.frame_hufflepuff="art/locations/art_655ae18806.webp";CURRENCY_ICON.frame_hogwarts="art/locations/art_18ff2c7061.webp";CURRENCY_ICON.prestige_p05="art/locations/prestige_p05.webp?v=2";CURRENCY_ICON.prestige_p10="art/locations/prestige_p10.webp?v=2";CURRENCY_ICON.prestige_p15="art/locations/prestige_p15.webp?v=2";CURRENCY_ICON.prestige_p20="art/locations/prestige_p20.webp?v=2";CURRENCY_ICON.prestige_p25="art/locations/prestige_p25.webp?v=2";CURRENCY_ICON.prestige_p30="art/locations/prestige_p30.webp?v=2";CURRENCY_ICON.prestige_p35="art/locations/prestige_p35.webp?v=2";CURRENCY_ICON.prestige_p40="art/locations/prestige_p40.webp?v=2";CURRENCY_ICON.prestige_p45="art/locations/prestige_p45.webp?v=2";CURRENCY_ICON.prestige_p50="art/locations/prestige_p50.webp?v=2";CURRENCY_ICON.rar_common="art/locations/art_7afb4cadbb.webp";CURRENCY_ICON.rar_rare="art/locations/art_8584a51406.webp";CURRENCY_ICON.rar_epic="art/locations/art_7f34d92d9e.webp";CURRENCY_ICON.rar_legendary="art/locations/art_3e6c1d529a.webp";CURRENCY_ICON.rar_mythic="art/locations/art_7daf7ecd6b.webp";CURRENCY_ICON.rar_eternal="art/locations/art_c94ec4b5f4.webp";CURRENCY_ICON.force=_O.force;CURRENCY_ICON.settings_gear="art/locations/art_d9bbe9a7f8.webp";CURRENCY_ICON.campaign=_O.mode_campaign;CURRENCY_ICON.tower=_O.mode_tower;CURRENCY_ICON.clash=_O.mode_clash;CURRENCY_ICON.raid=_O.mode_raid;CURRENCY_ICON.conquest=_O.mode_conquest;CURRENCY_ICON.gauntlet=_O.mode_gauntlet;CURRENCY_ICON.rift=_O.mode_rift;CURRENCY_ICON.arena=_O.mode_arena;CURRENCY_ICON.siege=_O.mode_siege;CURRENCY_ICON.expedition=_O.mode_expedition;CURRENCY_ICON.expeditions=_O.mode_expedition;CURRENCY_ICON.tab_missions=_O.tab_missions;CURRENCY_ICON.tab_hq=_O.tab_hq;CURRENCY_ICON.tab_greathall=_O.tab_greathall;CURRENCY_ICON.tab_holotable=_O.tab_holotable;CURRENCY_ICON.tab_archives=_O.tab_archives;CURRENCY_ICON.feat_forge=_O.feat_forge;CURRENCY_ICON.feat_crucible=_O.feat_crucible;;CURRENCY_ICON.stones=_O.stones;CURRENCY_ICON.cores=CURRENCY_ICON.heroCores=_O.iso8;CURRENCY_ICON.bossCores=_O.isoprime;CURRENCY_ICON.bossFrags=_O.isosliver;CURRENCY_ICON.tickets=CURRENCY_ICON.summonTickets=_O.holo;CURRENCY_ICON.momentum=_O.force;}}catch(e){}
 function cicon(k,sz){ sz=sz||15; return (typeof CURRENCY_ICON==="object"&&CURRENCY_ICON[k])?'<img class="cIcon" style="width:'+sz+'px;height:'+sz+'px" src="'+CURRENCY_ICON[k]+'" alt="">':''; } function ficon(k,sz){ sz=sz||22; return (typeof CURRENCY_ICON==="object"&&CURRENCY_ICON[k])?'<img class="fIcon" style="width:'+sz+'px;height:'+sz+'px" src="'+CURRENCY_ICON[k]+'" alt="">':''; } function prestigeBadgeArt(p){ p=Math.max(0,Math.floor(p||0)); if(p<5) return null; var t=Math.min(50,Math.floor(p/5)*5); return "prestige_p"+(t<10?"0":"")+t; } function prestigeArtFrame(p){ p=Math.max(0,Math.floor(p||0)); if(p>=10)return "frame_hogwarts"; if(p>=7)return "frame_hufflepuff"; if(p>=5)return "frame_gryffindor"; if(p>=3)return "frame_ravenclaw"; if(p>=1)return "frame_slytherin"; return null; } function ofHomeTileIcon(nm){ var m={"Fellowship":"tab_greathall","War Table":"tab_holotable","Forge":"feat_forge","Expeditions":"expeditions"}; var k=m[nm]; return k?('<span class="ofHomeTileIcon">'+ficon(k,40)+'</span>'):''; }
 function currencyWallet(){
@@ -4528,7 +4529,7 @@ function renderProgress(v){
   var summary='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">'+stat('COLLECTION',pct+'%')+stat('PRESTIGE \u2605',stars)+stat('DEVOTED',devoted.length)+stat('FORGE \u03a3',forgeSum)+stat('FELLOWSHIP \u03a3',fellowSum)+'</div>';
   var gallery = devoted.length ? ('<div class="stagecard"><h3>'+pIcon(9)+'Devoted Heroes</h3>'+devoted.sort(function(a,b){return (b.prestige||0)-(a.prestige||0);}).slice(0,24).map(function(h){ var dv=heroDevotion(h); return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px solid var(--line)"><span style="font-weight:800">'+esc(h.name)+'</span><span style="color:'+dv.color+';font-weight:800;font-size:12px">'+(dv.art?('<img src="'+dv.art+'" alt="" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.18em">'):dv.emoji)+' '+esc(dv.word)+' \u00b7 \u2605'+dv.p+'</span></div>'; }).join('')+'</div>') : '<div class="stagecard"><h3>'+pIcon(9)+'Devoted Heroes</h3><p style="color:var(--muted)">No devoted heroes yet \u2014 reach Prestige 5+ in a hero\u2019s lived domain to earn a devotion mark.</p></div>';
   function lnk(id,label){ return '<button class="go" id="'+id+'" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);text-align:left">'+label+'</button>'; }
-  var links='<div class="stagecard"><h3>\u{1F9ED} Account Surfaces</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+lnk('pg_prestige',pIcon(7)+'Prestige Hall')+lnk('pg_bonds',pIcon(6)+'Bond Journal')+lnk('pg_collection',pIcon(5)+'Collection')+lnk('pg_reviews',pIcon(1)+'Reviews')+'</div></div>';
+  var links='<div class="stagecard"><h3>\u{1F9ED} Account Surfaces</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+lnk('pg_prestige',pIcon(7)+'Prestige Hall')+'</div></div>'; /* v2.234: surfaces trimmed */
   try{ injectGrowthHubStyles(); injectLifeBaseVisualStylesV148(); injectDomainGrowthStylesV2(); }catch(e){}
   v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I\u2019m becoming</span></div>'
     +((typeof growthHeaderV2==='function')?growthHeaderV2():'')
@@ -4752,7 +4753,7 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
       ['dailies','weeklies','monthlies','todos'].map(t=>'<button data-s="'+t+'" class="'+(t===subtab?'on':'')+'">'+(t==='todos'?'Quests':t[0].toUpperCase()+t.slice(1))+'</button>').join('')+
     '</div>'+
     '<div class="tabs" id="subtabs2" style="margin-top:6px">'+
-      [['ownership','\u{1F6E1} Ownership'],['reviews','\u{1F4CB} Reviews']].map(t=>'<button data-s="'+t[0]+'" class="'+(t[0]===subtab?'on':'')+'">'+t[1]+'</button>').join('')+
+      [['ownership','Ownership'],['reviews','Reviews']].map(t=>'<button data-s="'+t[0]+'" class="'+(t[0]===subtab?'on':'')+'">'+t[1]+'</button>').join('')+
     '</div>'+
     '<div class="head"><h2>'+(subtab==='todos'?'Quests':subtab[0].toUpperCase()+subtab.slice(1))+'</h2><button class="add" id="addTask">+ Add</button></div>'+
     '<div class="list" id="list"></div>';
@@ -4785,11 +4786,11 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
   const lqSeq=d=>(d&&typeof d.gateOrd==='number')?d.gateOrd:(10+lqBk(d));
   if(subtab==='dailies'&&items.some(d=>d&&d.gate)){ items.sort((a,b)=>(lqGk(a)-lqGk(b))||(lqSeq(a)-lqSeq(b))); }
   let lqLastGk=-1;
-  const LQ_GH={0:['🎮 PRE-GAME · CORE','#ff8a8a'],1:['🎮 PRE-GAME · FULL','#ffd95a'],2:['🧹 WORK & CHORES','#5bd0e6'],3:['👨‍👧 FAMILY TIME','#ffb01f'],4:['🌙 SHUTDOWN','#c9b2ff']};
+  const LQ_GH={0:['🎮 PRE-GAMING','#ff8a8a'],1:['🎮 PRE-GAMING','#ff8a8a'],2:['🧹 WORK & CHORES','#5bd0e6'],3:['👨‍👧 FAMILY TIME','#ffb01f'],4:['🌙 SHUTDOWN','#c9b2ff']};
   items.forEach((it,i)=>{
     if(subtab==='dailies'&&items.some(d=>d&&d.gate)){
       const g=lqGk(it);
-      if(g!==lqLastGk){ lqLastGk=g; const hd=document.createElement('div'); hd.style.cssText='font-family:Orbitron;font-weight:900;font-size:14px;letter-spacing:1.2px;color:'+LQ_GH[g][1]+';margin:16px 0 6px;text-align:center'; hd.textContent=LQ_GH[g][0]; L.appendChild(hd); }
+      if(g!==lqLastGk){ var _sameLbl=(lqLastGk>=0&&LQ_GH[g]&&LQ_GH[lqLastGk]&&LQ_GH[g][0]===LQ_GH[lqLastGk][0]); lqLastGk=g; if(!_sameLbl){ const hd=document.createElement('div'); hd.style.cssText='font-family:Orbitron;font-weight:900;font-size:14px;letter-spacing:1.2px;color:'+LQ_GH[g][1]+';margin:16px 0 6px;text-align:center'; hd.textContent=LQ_GH[g][0]; L.appendChild(hd); } }
     }
     const c=document.createElement('div');
     c.className='card'+(it.done?' done':'')+((taskIsRecurring(subtab)&&!taskActiveToday(it))?' resting':''); c.style.animationDelay=(i*0.03)+'s';
@@ -8777,9 +8778,9 @@ function growthHeaderV2(){ injectLifeBaseVisualStylesV148(); const W=ensureLifeW
   const growingN=DOMAINS.filter(d=>domainTrend(d[0])==='up').length;
   return '<div class="growthSanctuaryV148"><div class="gsvTop"><div><div class="k">Growth</div><h2>The Man I’m Becoming</h2><p>Your real days, made visible. Meaning louder than loot.</p></div><div class="focusOrb" style="--focusColor:'+((lm&&lm.color)||'var(--accent2)')+'"><b>'+((lm&&lm.icon)||'✦')+'</b><span>Focus<br>'+((lm&&lm.label)||'Balance')+'</span></div></div>'+
     '<div class="growthStats"><div class="gs"><b>'+(W.completed||0)+'</b><span>This week</span></div><div class="gs"><b>'+touched+'/8</b><span>Areas active</span></div><div class="gs"><b>'+growingN+'</b><span>Growing</span></div><div class="gs"><b>'+((sm&&sm.icon)||'✦')+'</b><span>Strongest</span></div></div></div>'; }
-function growthFocusV2(){ const light=lightestDomain(), lm=DKEY[light.k]; let q=''; try{ q=suggestedQuestForDomain(light.k); }catch(e){}
+function growthFocusV2(){ return ''; /* v2.234: Gentle nudge retired */ const light=lightestDomain(), lm=DKEY[light.k]; let q=''; try{ q=suggestedQuestForDomain(light.k); }catch(e){}
   return '<div class="domainFocusV148"><div class="focusCard" style="border-color:'+((lm&&lm.color)||'var(--line)')+'55"><b>Gentle nudge</b><p>Your quietest area lately is '+(lm?lm.icon+' '+lm.label:'balance')+'. No guilt — just an invitation back.</p>'+(q?'<div class="ask">Try: '+esc(q)+'</div>':'')+'</div></div>'; }
-function growthToolsV2(){ return '<div class="growthQuickV148"><button id="v2Review"><b>Weekly Review</b><span>Name the win and next step</span></button><button id="v2Recovery"><b>Recovery</b><span>Grace, rest, hard days</span></button><button id="v2Monthly"><b>Monthly Review</b><span>Zoom out on the season</span></button></div>'+
+function growthToolsV2(){ return ''+ /* v2.234: Weekly/Recovery/Monthly retired — reviews live in Cantina */
   '<div style="text-align:center;margin-top:8px"><button id="v2Sanctuary" style="background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer">Life Base Sanctuary →</button></div>'; }
 /* ===== end Growth tab v2 ===== */
 
@@ -8796,26 +8797,25 @@ function blessPanelHTML(){
     var price=Math.max((TUNE.ecoSinkMinCry||25), Math.round(ff*Math.max(ovC,1)));
     var perDay=ovC*dp*amp, lvDay=price>0?(perDay/price):0;
     var bud=(S.blessBud||0), pct=Math.max(0,Math.min(100,Math.round(bud/price*100)));
-    var lowest=null, lv=1e9;
-    lived.forEach(function(k){ var l=(B[k]|0)||0; if(l<lv){ lv=l; lowest=k; } });
-    var per=(TUNE.blessPowerPerLevel||0);
+    var lowest=null, lvv=1e9, total=0;
+    lived.forEach(function(k){ var l=(B[k]|0)||0; if(l<lvv){ lvv=l; lowest=k; } });
     var rows=DOMAINS.map(function(d){
       var k=d[0], name=d[1], col=d[2], ic=d[3]||'';
-      var l=(typeof blessLevel==='function')?blessLevel(k):((B[k]|0)||0), isLived=lived.indexOf(k)>=0, isNext=(k===lowest);
-      var stw=(k==='home'&&S.steward&&S.steward.home&&(S.steward.home.level|0)>0)?' <span style="color:#e8b34b;font-size:10px">\u00b7 steward +'+(S.steward.home.level|0)+'</span>':'';
-      var right= isNext ? ('<span style="color:#ffd88a;font-weight:800">L'+l+' → '+(l+1)+'</span>')
-                        : ('<span style="font-weight:800">L'+l+'</span>');
-      var tag= isLived ? '' : ' <span style="color:var(--muted);font-size:10px">live it this week to open the tap</span>';
-      var bar= isNext ? ('<div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:3px"><div style="height:5px;border-radius:3px;width:'+pct+'%;background:linear-gradient(90deg,'+col+',#ffd88a)"></div></div>') : '';
-      return '<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px">'
-        +'<span style="color:'+col+';font-weight:800">'+ic+' '+name+stw+tag+'</span>'+right+'</div>'+bar+'</div>';
+      var l=(typeof blessLevel==='function')?blessLevel(k):((B[k]|0)||0); total+=l;
+      var isLived=lived.indexOf(k)>=0, isNext=(k===lowest);
+      var stw=(k==='home'&&S.steward&&S.steward.home&&(S.steward.home.level|0)>0)?(' <span style="color:#e8b34b;font-size:9.5px">+'+(S.steward.home.level|0)+' steward</span>'):'';
+      var right=isNext
+        ? '<span style="display:inline-block;width:56px;height:5px;border-radius:3px;background:rgba(255,255,255,.1);vertical-align:middle;margin-right:6px;overflow:hidden"><span style="display:block;height:100%;width:'+pct+'%;background:linear-gradient(90deg,'+col+',#ffd88a)"></span></span><b style="color:#ffd88a">L'+l+'</b>'
+        : (isLived?'<b>L'+l+'</b>':'<span style="color:var(--muted);font-size:9.5px;margin-right:6px">dormant</span><b style="color:var(--muted)">L'+l+'</b>');
+      return '<div style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px">'
+        +'<span style="color:'+col+';font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0">'+ic+' '+name+stw+'</span>'
+        +'<span style="flex:0 0 auto;white-space:nowrap">'+right+'</span></div>';
     }).join('');
-    return '<div class="card" style="margin-top:10px">'
-      +'<div style="font-weight:900;font-size:14px;margin-bottom:2px">🕯️ Domain Blessings</div>'
-      +'<div style="color:var(--muted);font-size:11px;margin-bottom:8px">Crystal overflow flows into the domains you lived this week — lowest first, an equalizer. Each level: +'+(per*100).toFixed(1)+'% power for heroes of that domain.</div>'
-      +rows
-      +'<div style="color:var(--muted);font-size:11px;margin-top:8px">Overflow '+(typeof fmt==='function'?fmt(ovC):ovC)+' crystals · drain '+(typeof fmt==='function'?fmt(Math.round(perDay)):Math.round(perDay))+'/day · next level '+(typeof fmt==='function'?fmt(price):price)+' · ≈'+lvDay.toFixed(1)+' levels/day</div>'
+    return '<div class="stagecard" style="display:block;width:100%;column-span:all;-webkit-column-span:all;grid-column:1/-1;margin-top:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0">\uD83D\uDD6F\uFE0F Domain Blessings</h3><span style="font-size:11px;color:var(--muted);font-weight:800">'+total+' levels</span></div>'
+      +'<p style="display:block;margin:3px 0 6px;color:var(--muted);font-size:11px;font-weight:750;line-height:1.35">Crystal overflow fills the domains you lived this week \u2014 lowest first. +'+(((TUNE.blessPowerPerLevel||0))*100).toFixed(1)+'% power per level.</p>'
+      +'<div style="display:block;width:100%">'+rows+'</div>'
+      +'<div style="display:block;margin-top:7px;color:var(--muted);font-size:10.5px;font-weight:750">Overflow '+(typeof fmt==='function'?fmt(ovC):ovC)+' \u00b7 drain '+(typeof fmt==='function'?fmt(Math.round(perDay)):Math.round(perDay))+'/day \u00b7 next level '+(typeof fmt==='function'?fmt(price):price)+' \u00b7 \u2248'+lvDay.toFixed(1)+' lv/day</div>'
       +'</div>';
   }catch(e){ return ''; }
 }
@@ -10296,7 +10296,7 @@ function v161Card(h,i){
       '<div class="v161Stats"><div><b>◆ '+UNLOCK_TARGET+'</b><span>Cost</span></div><div><b>'+((h.aff||[]).length||1)+'</b><span>Domains</span></div></div>';
     return d;
   }
-  d.innerHTML=(rankIdx(h)>=6?'<div class="v161RaritySheen"></div>':'')+'<div class="v161TopRight" style="display:flex;gap:3px;align-items:center">'+(((h.ascension|0)>0)?('<span style="font-size:10px;color:#e8b34b;font-weight:900;background:rgba(232,179,75,.15);border:1px solid rgba(232,179,75,.4);border-radius:8px;padding:1px 4px">\u2b06'+(h.ascension|0)+'</span>'):'')+(((h.prestige||0)>0&&typeof LQ_PRESTIGE_TIER_ICON!=='undefined')?('<img class="lqPTier" src="'+LQ_PRESTIGE_TIER_ICON[prestigeTierIcon(h)]+'" alt="">'):'')+v161EmblemBadge(h)+'</div>'+    
+  d.innerHTML=(rankIdx(h)>=6?'<div class="v161RaritySheen"></div>':'')+'<div class="v161TopRight" style="display:flex;gap:3px;align-items:center">'+(((h.ascension|0)>0)?('<span style="font-size:10px;color:#e8b34b;font-weight:900;background:rgba(232,179,75,.15);border:1px solid rgba(232,179,75,.4);border-radius:8px;padding:1px 4px">\u2b06'+(h.ascension|0)+'</span>'):'')+((((h.prestige||0)>0)&&typeof LQ_PRESTIGE_TIER_ICON!=='undefined')?('<img class="lqPTier" src="'+LQ_PRESTIGE_TIER_ICON[prestigeTierIcon(h)]+'" alt="">'):v161EmblemBadge(h))+'</div>' /* v2.232: prestige icon replaces rank emblem when prestiged */+    
     '<div class="v161Lv">Lv '+effLevel(h)+(effLevel(h)>(h.level||1)?' <span style="color:#37d67a">↑</span>':'')+'</div>'+''+    
     '<div class="v161Portrait">'+v161Face(h)+((ready==='Rank'||ready==='Prestige')?'<div class="v161Ready">\u2b06 '+esc(ready)+'</div>':'')+'</div>'+((h.prestige||0)>0?'<div class="v161Prestige">★'+h.prestige+'</div>':'')+    
     '<div class="v161Name">'+esc(h.name)+'</div>'+    
@@ -10313,14 +10313,14 @@ function v161CollectionHeader(total,owned,readyN,lineupN,wishN,bonus,clPct,nextC
 }
 function v161RenderRoster(v){
   v161InjectStyles(); recalcCollection();
-  if(!rosState.view) rosState.view='grid';
+  if(!rosState.view||rosState.view==='cards') rosState.view='grid'; /* v2.235: cards == grid */
   const total=S.heroes.length, owned=ownedCount(), favN=(S.favorites||[]).filter(id=>S.heroes.some(h=>h.id===id&&h.owned)).length, readyN=S.heroes.filter(heroReadyState).length, lineupN=activeIds().size, wishN=(S.wishlist||[]).length, bonus=Math.round((collectionMult()-1)*100);
   const nextCP=cpForLevel(gCL+1), curBase=cpForLevel(gCL), clPct=Math.min(100,Math.max(0,(gCP-curBase)/(nextCP-curBase)*100));
   const ipOpts=['all'].concat(rosterIPs()), domainOpts=['all'].concat(DOMAINS.map(d=>d[0])), archOpts=['all'].concat(archetypeOptions());
   const opts=(arr,val,labeler)=>arr.map(x=>'<option value="'+esc(x)+'"'+(val===x?' selected':'')+'>'+(labeler?labeler(x):esc(x))+'</option>').join('');
   v.innerHTML=v161CollectionHeader(total,owned,readyN,lineupN,wishN,bonus,clPct,nextCP)+
-    '' + currencyWallet() + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px"><button class="go" id="summonBtn" style="background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a">🎲 Summon · '+randomCostText()+'</button><button class="go" id="albumsBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+ficon('albums',20)+' Albums · '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+'</button></div>'+    
-    '<div class="v161FilterDock'+(rosState.filtersOpen?' open':'')+'"><div class="v161Toolbar"><input type="text" id="rosSearch" placeholder="Search heroes, worlds, roles, domains…" value="'+esc(rosState.q)+'"><div class="v161ViewTog" id="v161ViewTog"><button data-v="grid" class="'+(rosState.view==='grid'?'on':'')+'">Grid</button><button data-v="cards" class="'+(rosState.view==='cards'?'on':'')+'">Cards</button><button data-v="list" class="'+(rosState.view==='list'?'on':'')+'">List</button></div></div><button class="v161FilterToggle" id="rosFilterToggle">⚙ Filters'+(__rosActiveCount()?' · '+__rosActiveCount():'')+'<span class="chev">▾</span></button><div class="v161FilterBody">'+    
+    '' + currencyWallet() + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px">'+((typeof ownedCount==='function'&&ownedCount()>=S.heroes.length)?'':'<button class="go" id="summonBtn" style="background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a">🎲 Summon · '+randomCostText()+'</button>')+'<button class="go" id="albumsBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+ficon('albums',20)+' Albums · '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+'</button></div>'+    
+    '<div class="v161FilterDock'+(rosState.filtersOpen?' open':'')+'"><div class="v161Toolbar"><input type="text" id="rosSearch" placeholder="Search heroes, worlds, roles, domains…" value="'+esc(rosState.q)+'"><div class="v161ViewTog" id="v161ViewTog"><button data-v="grid" class="'+(rosState.view==='grid'?'on':'')+'">Grid</button><button data-v="list" class="'+(rosState.view==='list'?'on':'')+'">List</button></div></div><button class="v161FilterToggle" id="rosFilterToggle">⚙ Filters'+(__rosActiveCount()?' · '+__rosActiveCount():'')+'<span class="chev">▾</span></button><div class="v161FilterBody">'+    
     '<div class="segs" id="rosTabs" style="margin-bottom:8px"><button data-t="owned" class="'+(rosState.tab==='owned'?'on':'')+'">Owned</button><button data-t="favorites" class="'+(rosState.tab==='favorites'?'on':'')+'">Favorites</button><button data-t="locked" class="'+(rosState.tab==='locked'?'on':'')+'">Locked</button><button data-t="all" class="'+(rosState.tab==='all'?'on':'')+'">All</button></div>'+    
     '<div class="v161Chips" id="rosQuick">'+[['all','All'],['favorites','♥ Faves'],['ready','⬆ Ready'],['lineup','⚔ Lineups'],['wishlist','★ Wishlist'],['recent','Recent'],['prestige','★ Prestige']].map(q=>'<button data-qk="'+q[0]+'" class="'+(rosState.quick===q[0]?'on':'')+'">'+q[1]+'</button>').join('')+'</div>'+    
     '<div class="v161Selects"><select id="rosRole">'+opts(['all','Tank','DPS','Support'],rosState.role,x=>x==='all'?'All roles':x)+'</select><select id="rosDomain">'+opts(domainOpts,rosState.domain,x=>x==='all'?'All domains':(DKEY[x]?DKEY[x].icon+' '+DKEY[x].label:x))+'</select><select id="rosArch">'+opts(archOpts,rosState.archetype,x=>x==='all'?'All archetypes':ARCHETYPE_DEFS[x].label)+'</select><select id="rosIP">'+opts(ipOpts,rosState.ip,x=>x==='all'?'All worlds':x)+'</select><select id="rosSort">'+[['power','Power'],['favorites','Favorites'],['ready','Ready'],['level','Level'],['rank','Rank'],['bond','Bond'],['cp','Collection'],['recent','Recent'],['role','Role'],['archetype','Archetype'],['name','A–Z']].map(o=>'<option value="'+o[0]+'"'+(rosState.sort===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>'+    
@@ -10350,11 +10350,11 @@ function v161RenderRoster(v){
     step();
   }
   fillGrid();
-  document.getElementById('summonBtn').onclick=()=>{ const h=randomUnlock(); if(h) showReveal(h,{fromSummon:true}); };
+  (function(){ var sb=document.getElementById('summonBtn'); if(sb) sb.onclick=()=>{ const h=randomUnlock(); if(h) showReveal(h,{fromSummon:true}); }; })();
   document.getElementById('albumsBtn').onclick=openAlbumsSheet;
   document.getElementById('v161ViewTog').onclick=e=>{ const b=e.target.closest('button[data-v]'); if(!b)return; rosState.view=b.dataset.v; v161RenderRoster(v); };
   { const ftog=document.getElementById('rosFilterToggle'); if(ftog) ftog.onclick=()=>{ rosState.filtersOpen=!rosState.filtersOpen; const dk=v.querySelector('.v161FilterDock'); if(dk) dk.classList.toggle('open',rosState.filtersOpen); }; }
-  const sb=document.getElementById('rosSearch'); sb.oninput=()=>{ rosState.q=sb.value; fillGrid(); };
+  const sb=document.getElementById('rosSearch'); var __qT=null; sb.oninput=()=>{ rosState.q=sb.value; clearTimeout(__qT); __qT=setTimeout(fillGrid,220); }; /* v2.235: debounced */
   document.getElementById('rosTabs').onclick=e=>{ const b=e.target.closest('button[data-t]'); if(!b)return; rosState.tab=b.dataset.t; v161RenderRoster(v); };
   document.getElementById('rosQuick').onclick=e=>{ const b=e.target.closest('button[data-qk]'); if(!b)return; rosState.quick=b.dataset.qk; v161RenderRoster(v); };
   document.getElementById('rosRole').onchange=e=>{ rosState.role=e.target.value; fillGrid(); };
@@ -19825,6 +19825,9 @@ function lqNavMode(k){
     else if(k==='gauntlet'){ navTo('gauntlet'); }
     else if(k==='arena'){ navTo('arena'); }
     else if(k==='conquest'){ navTo('conquest'); }
+    else if(k==='rooms'){ try{ showDungeons(); }catch(e){} }
+    else if(k==='strikes'){ try{ if(typeof of2149OpenWarTarget==='function') of2149OpenWarTarget('raid'); else navTo('battles'); }catch(e){} }
+    else if(k==='crucible'){ navTo('forge'); }
   }catch(e){}
 }
 
@@ -20024,6 +20027,10 @@ function lqModeSummary(){
   try{ if(typeof ensureGauntlet==='function')ensureGauntlet(); var Ga=(typeof S!=='undefined'&&S.gauntlet)||{}; out.push({key:'gauntlet',label:'Gauntlet',cad:'Climb',done:(Ga.best||0)>0,stat:'Best floor '+(Ga.best||0)}); }catch(e){}
   try{ if(typeof ensureArena==='function')ensureArena(); var Ar=(typeof S!=='undefined'&&S.arena)||{}; var _aw=null; try{ _aw=lqWinnability().arena; }catch(e){} out.push({key:'arena',label:'Arena',cad:'Climb',win:_aw,done:(Ar.wins||0)>0,stat:'Rank '+(Ar.rank||0)+' \u00b7 '+(Ar.wins||0)+' wins'}); }catch(e){}
   try{ if(typeof ensureConquest==='function')ensureConquest(); var Co=(typeof S!=='undefined'&&S.conquest)||{}; var _cw=null; try{ _cw=lqWinnability().conquest; }catch(e){} out.push({key:'conquest',label:'Conquest',cad:'Climb',done:(Co.tier||0)>0,stat:'Tier '+(Co.tier||0),win:_cw}); }catch(e){}
+  try{ var _open=0; DOMAINS.forEach(function(d){ if(roomBestTier(d[0])<roomTierCap(d[0])) _open++; }); out.push({key:'rooms',label:'Room of Requirement',cad:'Weekly',done:_open===0,stat:_open?(_open+' tiers winnable'):'All caps cleared'}); }catch(e){}
+  try{ var _l=raidAttemptsLeft(); out.push({key:'strikes',label:'Boss Strikes',cad:'Daily',done:_l===0,stat:_l+'/'+((typeof RAID_SA!=='undefined'&&RAID_SA.attemptsPerDay)||3)+' today'}); }catch(e){}
+  try{ var _sh=(S.legendShards|0)||0, _c=(typeof LEGENDARY_TUNE!=='undefined'&&LEGENDARY_TUNE.forgeCost)||1e9, _r=_sh>=_c; out.push({key:'crucible',label:'Crucible',cad:'Forge',done:_r,stat:_r?'READY — forge a legendary':(_sh+' / '+_c+' shards')}); }catch(e){} /* v2.233 */
+  try{ out=out.filter(function(m,i){ return out.findIndex(function(x){return x.key===m.key;})===i; }); }catch(e){} /* v2.233: dedupe (pre-existing double rift) */
   return out;
 }
 function lqDashStyles(){
@@ -20243,6 +20250,7 @@ try{ window.enhanceHome=enhanceHome; }catch(e){}
   window.of2154ClaimRosterDividend=claimRosterDividend;
 
   function invitePanelHTML(){
+    return ''; /* v2.235: Roster Complete panel retired — dividend auto-claims; invites are history at 441/441 */
     if(!completeRoster()) return '';
     var c=cfg(), W=weekState(), left=Math.max(0,c.inviteSparkWeeklyCap-(W.inviteSparks||0)), possible=Math.min(left,Math.floor((S.summonTickets||0)/c.inviteSparkCost));
     return '<div class="of2154InvitePanel"><div class="of2154Head"><b>Roster Complete</b><span>'+fmt(S.summonTickets||0)+' Holo-Invites · '+fmt(S.sparks||0)+' Force Sparks</span></div><p>Holo-Invites now fuel the wide prestige cohorts required by higher tiers.</p><div class="of2154InviteStats"><span>'+c.inviteSparkCost+' Invites = 1 Spark</span><span>'+W.inviteSparks+'/'+c.inviteSparkWeeklyCap+' weekly exchange</span><span>'+((W.rosterClaimed||!c.rosterCompleteWeeklySparks)?'Dividend claimed':'Dividend ready')+'</span></div><div class="of2154InviteActions"><button type="button" id="of2154ConvertOne" '+(!possible?'disabled':'')+'>Convert 1</button><button type="button" id="of2154ConvertMax" '+(!possible?'disabled':'')+'>Convert '+Math.max(0,possible)+'</button><button type="button" id="of2154ClaimRoster" '+((W.rosterClaimed||!c.rosterCompleteWeeklySparks)?'disabled':'')+'>Claim +'+c.rosterCompleteWeeklySparks+'</button></div></div>';
@@ -23193,6 +23201,7 @@ function raidSAInjectPanel(){ try{
      Shows the top winnable rooms (next tier vs weekly best) with one-tap entry; hides itself
      when every room is cleared to its cap. */
   function lqRoomCard(){
+    return; /* v2.233: RoR lives as a Battle Modes row now */
     try{
       if(typeof view==='undefined'||view!=='home') return;
       if(document.getElementById('lqRoomCard')) return;
@@ -23511,6 +23520,7 @@ function raidSAInjectPanel(){ try{
     return {core:c,full:f,coreDone:cd,fullDone:fd,tagged:c.length+f.length>0,earned:c.length>0&&cd===c.length};
   };
   window.lqGateChipHTML=function(){
+    return ''; /* v2.232: chip retired — gate/shutdown mechanics live on in oath wounds; Focus moved to SHIELD */
     try{
       var g=lqGateStatus(); if(!g.tagged) return '';
       var post=lqByGate('post'), pd=post.filter(function(d){return d.done;}).length;
@@ -23617,6 +23627,7 @@ function raidSAInjectPanel(){ try{
 
   /* ---------- home strip: keep the rotation surfaced without a full card ---------- */
   function lqHomeStrip(){
+    return; /* v2.233: glance lives in Cantina; gate retired; strikes live as a Battle Modes row */
     try{
       if(typeof view==='undefined'||view!=='home') return;
       var v=$id('view'); if(!v) return;
@@ -23655,7 +23666,7 @@ function raidSAInjectPanel(){ try{
         return '<div style="padding:10px 2px;border-bottom:1px solid var(--line)">'
           +'<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:900;font-size:13.5px;color:'+dk.color+'">'+dk.icon+' '+esc(dk.label)+'</span><span style="font-weight:900;font-size:12px">Lv '+lv+' <span style="color:'+t[1]+'">'+t[2]+'</span></span></div>'
           +'<div style="display:flex;justify-content:space-between;color:var(--muted);font-size:11px;font-weight:750;margin-top:3px"><span>'+(wk>0?wk+' XP this week \u00b7 '+t[0]:'quiet this week')+'</span></div>'
-          +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-top:5px"><span>\u2692 Forge '+f.lv+' \u00b7 '+fb+'</span><span style="color:var(--muted)">'+Math.round(f.xp)+'/'+Math.round(need)+'</span></div>'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-top:5px"><span>Forge '+f.lv+' \u00b7 '+fb+'</span><span style="color:var(--muted)">'+Math.round(f.xp)+'/'+Math.round(need)+'</span></div>'
           +'<div class="xpbar" style="height:6px;margin-top:3px"><i style="width:'+fpct+'%;background:'+dk.color+'"></i></div>'
           +'<div style="font-size:11px;font-weight:800;margin-top:5px;color:var(--muted)">\u{1F3DB} Hall '+hl+' \u00b7 +'+sh+'% shards \u00b7 +'+bo+'% bond</div>'
           +'</div>';
@@ -23686,11 +23697,7 @@ function raidSAInjectPanel(){ try{
       if(!$id('lqCrucibleCard')){
         var target=$id('lqHomeStrip')||$id('lqRoomCard')||$id('nextCard')||v.querySelector('.stagecard')||v.firstElementChild;
         if(target){
-          var el=document.createElement('button'); el.id='lqCrucibleCard'; el.type='button';
-          el.style.cssText='display:block;width:100%;text-align:left;border:1px solid #a06bff44;background:linear-gradient(135deg,rgba(160,107,255,.10),rgba(107,70,224,.05));border-radius:12px;padding:11px 12px;margin:8px 0;cursor:pointer;font-family:inherit';
-          el.innerHTML='<b style="font-family:Orbitron;font-size:13px;color:#c9b2ff">'+((typeof ficon==='function')?ficon('feat_crucible',18)+' ':'')+'Crucible</b><div style="color:var(--muted);font-size:11px;font-weight:750;margin-top:3px">Forge legendaries — signature weapons and relics.</div>';
-          el.onclick=function(){ try{ if(typeof navTo==='function') navTo('forge'); else { view='forge'; renderHUD(); render(); } }catch(e){} };
-          target.insertAdjacentElement('afterend',el);
+          /* v2.233: standalone Crucible card retired — it is a Battle Modes row now */
         }
       }
     }catch(e){}
@@ -23781,6 +23788,16 @@ function raidSAInjectPanel(){ try{
     try{ window.lqHomeTrim&&window.lqHomeTrim(); }catch(e){}
   };
   window.renderHome.__ofHome=true; window.renderHome.__of2146MissedHome=true;
+  (function(){ var base=window.renderHome;
+    window.renderHome=function(v){ var r=base.apply(this,arguments);
+      try{ var vv=v||document.getElementById('view');
+        try{ var hub=vv&&vv.querySelector('.ofHome'); if(hub&&vv.firstElementChild!==hub) vv.insertBefore(hub, vv.firstChild); }catch(e){} /* v2.233: Great Hall Anchor to the top */
+        if(vv&&!vv.querySelector('#lqFocusDock')){
+          vv.insertAdjacentHTML('beforeend','<div id="lqFocusDock" style="text-align:center;margin:14px 0 6px"><span id="fsChip" onclick="window.toggleFocusSound&&window.toggleFocusSound()" style="cursor:pointer;color:#8fd0ff;font-weight:800;font-size:12px;border:1px solid rgba(143,208,255,.35);border-radius:999px;padding:7px 14px;background:rgba(143,208,255,.08)">'+((window.focusSoundOn&&window.focusSoundOn())?'\ud83c\udfa7 Focus \u25cf':'\ud83c\udfa7 Focus')+'</span></div>');
+        } }catch(e){}
+      return r; };
+    window.renderHome.__of2146MissedHome=true; window.renderHome.__lqFocusDock=true;
+  })(); /* v2.232: Focus docks on SHIELD */
 })();
 /* ===== Pass E v2.217.0: THE canonical hero sheet =====
    One function replacing an 8-layer wrapper stack (incl. the v141 self-recursion
