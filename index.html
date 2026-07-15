@@ -1083,7 +1083,7 @@ function prestigeWeeklyCap(){ if(TUNE.prestigeUncapped) return Infinity;
   var breadth=0, reps=0;
   try{ if(typeof ensureLifeWeek==='function'){ var W=ensureLifeWeek(); reps=W.completed||0; breadth=Object.keys(W.domains||{}).filter(function(k){ return (typeof DKEY==='undefined')||DKEY[k]; }).length; } }catch(e){}
   if(!breadth){ try{ breadth=(typeof domainsHitThisWeek==='function')?domainsHitThisWeek():0; }catch(e){} }
-  return (TUNE.prestigeCapBase||0)+(TUNE.prestigeCapPerDomain||0)*breadth+(TUNE.prestigeCapPerRep||0)*reps+((typeof pyrePrestigeBonus==='function')?pyrePrestigeBonus():0); /* v2.211.0 Oathpyre */ }
+  return (TUNE.prestigeCapBase||0)+(TUNE.prestigeCapPerDomain||0)*breadth+(TUNE.prestigeCapPerRep||0)*reps+((typeof pyrePrestigeBonus==='function')?pyrePrestigeBonus():0)+((typeof prestigeMilestoneAllow==='function')?prestigeMilestoneAllow():0); /* v2.211 Oathpyre + v2.246 Hall */ }
 function prestigeWeekAvail(){ return Math.max(0, prestigeWeeklyCap()-(prestigeWeekState().used||0)); }
 function convWeekState(){ var wk=(typeof periodKey==='function')?periodKey('weekly'):'W0'; if(!S.coreConv||S.coreConv.week!==wk){ S.coreConv={week:wk,used:0,bossUsed:0}; } if(typeof S.coreConv.used!=='number')S.coreConv.used=0; if(typeof S.coreConv.bossUsed!=='number')S.coreConv.bossUsed=0; return S.coreConv; }
 function convWeeklyBonus(){ return Math.max(0, TUNE.convWeeklyBonus||0); }
@@ -1166,6 +1166,8 @@ function prestigeMilestoneBonusText(){
 }
 function prestigeAccountXpMult(){ const t=totalPrestigeStars(); return 1+(t>=100?.10:t>=50?.07:t>=25?.05:t>=10?.03:t>=5?.02:t>=1?.01:0); }
 
+function prestigeMilestoneAllow(){ try{ ensurePrestigeMilestones(); return prestigeMilestoneDefs().reduce(function(n,m){ return n+((S.prestigeMilestonesClaimed[m.stars]&&m.perm&&m.perm.allow)||0); },0); }catch(e){ return 0; } }
+function prestigeMilestonePow(){ try{ ensurePrestigeMilestones(); return prestigeMilestoneDefs().reduce(function(n,m){ return n+((S.prestigeMilestonesClaimed[m.stars]&&m.perm&&m.perm.pow)||0); },0); }catch(e){ return 0; } }
 function ensurePrestigeMilestones(){ if(!S.prestigeMilestonesClaimed||typeof S.prestigeMilestonesClaimed!=='object') S.prestigeMilestonesClaimed={}; }
 function prestigeFrameTier(h){
   const p=h&&h.prestige?h.prestige:0;
@@ -1180,12 +1182,15 @@ function heroDevotion(h){ var p=(h&&h.prestige)||0; if(p<5) return null; var wor
 function heroDevotionBanner(h){ var dv=heroDevotion(h); if(!dv) return ''; var sub=dv.p>=10?('A decade-deep devotion \u2014 the rarest mark in Oathforge.'):(dv.p>=8?('Forged through years of lived '+(dv.domLabel||'devotion')+'.'):('Earned by living '+(dv.domLabel||'this domain')+' deeply.')); return '<div style="margin:0 0 12px;padding:11px 13px;border-radius:13px;background:linear-gradient(135deg,'+dv.color+'22,'+dv.color+'08);border:1px solid '+dv.color+'55;display:flex;align-items:center;gap:11px"><div style="font-size:26px;line-height:1">'+(dv.art?('<img src="'+dv.art+'" alt="" style="width:26px;height:26px;object-fit:contain;display:block">'):dv.emoji)+'</div><div><div style="font-size:14px;font-weight:900;color:'+dv.color+'">'+esc(dv.word)+(dv.domLabel?(' in '+esc(dv.domLabel)):'')+' \u00b7 \u2605'+dv.p+'</div><div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px">'+esc(sub)+'</div></div></div>'; }
 function prestigeMilestoneDefs(){
   return [
-    {stars:1,name:'Hall Unlocked',reward:{cry:25,cores:5,gold:100},title:'First New Cycle'},
-    {stars:5,name:'Growing Hall',reward:{cry:50,cores:10,shards:5,gold:200},title:'Cycle Keeper'},
-    {stars:10,name:'Elite Hall',reward:{cry:75,cores:15,ticket:1,gold:300},title:'Prestige Adept'},
-    {stars:25,name:'Veteran Hall',reward:{cry:150,cores:25,ticket:1,sparks:1,gold:500},title:'Prestige Veteran'},
-    {stars:50,name:'Mythic Hall',reward:{cry:250,cores:40,ticket:2,sparks:2,gold:800},title:'Mythic Cycle'},
-    {stars:100,name:'Legend Hall',reward:{cry:500,cores:75,ticket:3,sparks:3,gold:1500},title:'Legend of the Hall'}
+    {stars:1,name:'Hall Unlocked',reward:{cry:25,cores:5,gold:100},perm:{allow:1},title:'First New Cycle'},
+    {stars:5,name:'Growing Hall',reward:{cry:50,cores:10,shards:5,gold:200},perm:{pow:0.02},title:'Cycle Keeper'},
+    {stars:10,name:'Elite Hall',reward:{cry:75,cores:15,ticket:1,gold:300},perm:{allow:1},title:'Prestige Adept'},
+    {stars:25,name:'Veteran Hall',reward:{cry:150,cores:25,ticket:1,sparks:1,gold:500},perm:{pow:0.04},title:'Prestige Veteran'},
+    {stars:50,name:'Mythic Hall',reward:{cry:250,cores:40,ticket:2,sparks:2,gold:800},perm:{allow:2},title:'Mythic Cycle'},
+    {stars:100,name:'Legend Hall',reward:{cry:500,cores:75,ticket:3,sparks:3,gold:1500},perm:{pow:0.06},title:'Legend of the Hall'},
+    {stars:150,name:'Exalted Hall',reward:{prime:3},perm:{allow:2},title:'Exalted Cyclist'},
+    {stars:250,name:'Eternal Hall',reward:{prime:5},perm:{pow:0.08},title:'Eternal Keeper'},
+    {stars:400,name:'Hall of Legend-Makers',reward:{prime:10},perm:{allow:3,pow:0.10},title:'Legend-Maker'}
   ];
 }
 function prestigeMilestoneClaimed(stars){ ensurePrestigeMilestones(); return !!S.prestigeMilestonesClaimed[stars]; }
@@ -1198,6 +1203,7 @@ function grantPrestigeMilestoneReward(m){
   if(r.ticket){ grantTicket(r.ticket); items.push({txt:'+'+r.ticket+'🎟 Hero Ticket',cls:'bonus'}); }
   if(r.sparks){ S.sparks+=r.sparks; items.push({txt:'+'+r.sparks+'✦✦ Sparks',cls:'bonus'}); }
   if(r.gold){ S.gold+=r.gold; items.push({txt:'+'+r.gold+'⦿ Gold',cls:'bonus'}); }
+  if(r.prime){ S.bossCores=(S.bossCores||0)+r.prime; items.push({txt:'+'+r.prime+' Prime Iso-8',cls:'bonus'}); }
   ensureTitles(); S.titlesUnlocked[m.title]=true; items.push({txt:'🏷 '+m.title+' title unlocked',cls:'title'});
   return items;
 }
@@ -1213,14 +1219,14 @@ function claimPrestigeMilestone(stars){
   renderHUD(); render(); save();
 }
 function prestigeMilestoneRewardText(r){
-  const out=[]; if(r.cry) out.push('+'+r.cry+'◆'); if(r.cores) out.push('+'+r.cores+'◈'); if(r.shards) out.push('+'+r.shards+' shards'); if(r.ticket) out.push('+'+r.ticket+'🎟'); if(r.sparks) out.push('+'+r.sparks+'✦✦'); if(r.gold) out.push('+'+r.gold+'⦿'); return out.join(' · ');
+  const out=[]; if(r.cry) out.push('+'+r.cry+'◆'); if(r.cores) out.push('+'+r.cores+'◈'); if(r.shards) out.push('+'+r.shards+' shards'); if(r.ticket) out.push('+'+r.ticket+'🎟'); if(r.sparks) out.push('+'+r.sparks+'✦✦'); if(r.gold) out.push('+'+r.gold+'⦿'); if(r.prime) out.push('+'+r.prime+' Prime Iso-8'); return out.join(' · ');
 }
 function prestigeMilestonesHTML(){
   ensurePrestigeMilestones();
   const total=totalPrestigeStars();
   return '<div style="text-align:left;margin-top:10px"><b>Prestige Milestones</b>'+prestigeMilestoneDefs().map(m=>{
     const claimed=prestigeMilestoneClaimed(m.stars), ready=prestigeMilestoneReady(m), miss=Math.max(0,m.stars-total);
-    return '<div class="prestigeMilestone '+(claimed?'done':ready?'ready':'locked')+'"><div class="ms">'+m.stars+'★</div><div><div class="mt">'+esc(m.name)+'</div><div class="mm">'+(claimed?'Claimed':ready?'Ready to claim':'Need '+miss+' more ★')+' · '+prestigeMilestoneRewardText(m.reward)+' · 🏷 '+esc(m.title)+'</div></div><button data-pms="'+m.stars+'" class="'+(claimed?'donebtn':ready?'claim':'')+'" '+((!ready||claimed)?'disabled':'')+'>'+(claimed?'Done':ready?'Claim':'Locked')+'</button></div>';
+    return '<div class="prestigeMilestone '+(claimed?'done':ready?'ready':'locked')+'"><div class="ms">'+m.stars+'★</div><div><div class="mt">'+esc(m.name)+'</div><div class="mm">'+(claimed?'Claimed':ready?'Ready to claim':'Need '+miss+' more ★')+' · '+prestigeMilestoneRewardText(m.reward)+(m.perm?(' · <b style="color:#ffd95a">'+((m.perm.allow?('+'+m.perm.allow+' New Cycle'+(m.perm.allow>1?'s':'')+'/wk'):'')+(m.perm.allow&&m.perm.pow?' & ':'')+(m.perm.pow?('+'+(m.perm.pow*100).toFixed(0)+'% account power'):'')+' — permanent</b>')):'')+' · 🏷 '+esc(m.title)+'</div></div><button data-pms="'+m.stars+'" class="'+(claimed?'donebtn':ready?'claim':'')+'" '+((!ready||claimed)?'disabled':'')+'>'+(claimed?'Done':ready?'Claim':'Locked')+'</button></div>';
   }).join('')+'</div>';
 }
 function prestigePolishSummaryHTML(){
@@ -1589,7 +1595,7 @@ function rosterFloorTick(hours){
 function effLevel(h){ if(!h) return 1; const base=h.level||1; if(prestigeCatchActive(h)) return base; var fl=Math.max(gResonanceFloor||0,(S&&S.rosterFloor)||0); return fl>base?fl:base; }
 function recalcCollection(){ gCP=collectionPowerTotal(); gCL=clFromCP(gCP); computeResonanceFloor(); }
 function collectionMult(){ return 1+0.01*gCL; }
-function accountMult(){ const per=(TUNE&&TUNE.accountPowerPer!=null)?TUNE.accountPowerPer:0.003; return 1+per*(S&&S.maxCleared?S.maxCleared:0); }
+function accountMult(){ const per=(TUNE&&TUNE.accountPowerPer!=null)?TUNE.accountPowerPer:0.003; return (1+per*(S&&S.maxCleared?S.maxCleared:0))*(1+((typeof prestigeMilestonePow==='function')?prestigeMilestonePow():0)); /* v2.246 */ }
 function ownedCount(){ sanitizeHeroes(); return S.heroes.reduce((n,h)=>n+((h&&h.owned)?1:0),0); }
 /* G:collGoldMult */
 function collXpMult(){ return (1+0.01*Math.floor(gCL/10))*prestigeAccountXpMult(); }
@@ -2711,7 +2717,7 @@ function domainReadinessHTML(){
       +'<label style="font-size:11px;font-weight:700">Forge XP \u00b7 hard <input type="number" min="0" max="500" value="'+fxh+'" onchange="devSetForgeXp(\'hard\',this.value)" style="width:52px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label>'
       +'</div></div>';
   } }catch(e){}
-  return '<div class="stagecard"><h3>\u2696 Domain Readiness</h3><p style="margin-bottom:12px">Your Forge level per domain, the next prestige tier it unlocks at your current pace, and whether your roster is deep enough to climb.</p>'+rows+forgeCapCtl+dev+'</div>';
+  return '<div class="stagecard"><h3>Domain Readiness</h3><p style="margin-bottom:12px">Your Forge level per domain, the next prestige tier it unlocks at your current pace, and whether your roster is deep enough to climb.</p>'+rows+forgeCapCtl+dev+'</div>';
 }
 function grantForgeXp(domain,diff){
   try{
@@ -2761,7 +2767,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.245.1-frame-scope';
+const APP_BUILD='v2.247.0-weekly-autorun';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -9301,7 +9307,7 @@ function blessPanelHTML(){
         +'<span style="flex:0 0 auto;white-space:nowrap">'+right+'</span></div>';
     }).join('');
     return '<div class="stagecard" style="display:block;width:100%;column-span:all;-webkit-column-span:all;grid-column:1/-1;margin-top:10px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0">\uD83D\uDD6F\uFE0F Domain Blessings</h3><span style="font-size:11px;color:var(--muted);font-weight:800">'+total+' levels</span></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0">Domain Blessings</h3><span style="font-size:11px;color:var(--muted);font-weight:800">'+total+' levels</span></div>'
       +'<p style="display:block;margin:3px 0 6px;color:var(--muted);font-size:11px;font-weight:750;line-height:1.35">Crystal overflow fills the domains you lived this week \u2014 lowest first. +'+(((TUNE.blessPowerPerLevel||0))*100).toFixed(1)+'% power per level.</p>'
       +'<div style="display:block;width:100%">'+rows+'</div>'
       +'<div style="display:block;margin-top:7px;color:var(--muted);font-size:10.5px;font-weight:750">Overflow '+(typeof fmt==='function'?fmt(ovC):ovC)+' \u00b7 drain '+(typeof fmt==='function'?fmt(Math.round(perDay)):Math.round(perDay))+'/day \u00b7 next level '+(typeof fmt==='function'?fmt(price):price)+' \u00b7 \u2248'+lvDay.toFixed(1)+' lv/day</div>'
@@ -9328,7 +9334,7 @@ function anvilArchivePanel(){
   }catch(e){ line=''; }
   return '<div style="margin:14px 0;padding:14px 16px;border:1px solid #ffffff1a;border-radius:14px;background:linear-gradient(135deg,#1b1512,#241a12)">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-    +'<div style="font-weight:900;color:#ffcf8a;letter-spacing:.3px">\u2692 The Forge Anvil</div>'
+    +'<div style="font-weight:900;color:#ffcf8a;letter-spacing:.3px">'+((typeof ficon==='function'&&ficon('feat_forge',20))||'\u2692')+' The Forge Anvil</div>'
     +'<div style="font-weight:900;font-size:20px;color:#ffe8c8">Lv '+lv+'</div></div>'
     +'<div style="font-size:12px;color:#c9b79a;line-height:1.5">Account-wide power, forged passively as you live the habits.</div>'
     +'<div style="display:flex;gap:10px;margin-top:10px">'
@@ -17435,8 +17441,11 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
 
   function rmAfter(){ try{renderHUD();}catch(e){} try{save();}catch(e){} try{ if(typeof view!=='undefined' && view==='home'){ var v=document.getElementById('view'); if(v) renderHome(v); } }catch(e){} openRosterMgmt(); }
 
-  window.openRosterMgmt=function(){
-    var s=document.getElementById('sheet'); if(!s) return;
+  function lqRmStyles(){ try{ if(document.getElementById('lqRmCss')) return; var st=document.createElement('style'); st.id='lqRmCss';
+  st.textContent='.rmSheet{padding:4px 2px} .rmSheet h3{font-family:Orbitron;font-weight:900;font-size:16px;letter-spacing:.5px;margin:2px 0 10px;color:#e8b34b} .rmHead{display:flex;gap:14px;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:10px} .rmHead b{color:var(--ink)} .rmAct{display:block;width:100%;box-sizing:border-box;text-align:left;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin:7px 0;color:var(--ink)} .rmAct:active{border-color:#e8b34b} .rmActTitle{font-family:Orbitron;font-weight:900;font-size:13px;color:#e8b34b} .rmActSub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45} .rmScope{font-size:10px;color:#8fd0ff;font-weight:800} .rmMsg{font-size:12px;font-weight:800;color:#7af0a8;margin:6px 0} .rmClose{width:100%;margin-top:10px;background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:12px;font-weight:900;font-family:Orbitron}';
+  document.head.appendChild(st); }catch(e){} } /* v2.247: rmInjectStyles was a sweep casualty — restored */
+window.openRosterMgmt=function(){
+    var s=document.getElementById('sheet'); if(!s) return; lqRmStyles();
     s.innerHTML=rosterMgmtHTML(); showScrim('scrim');
     var R=document.getElementById('rmRank'); if(R) R.onclick=function(){ var r=rosterRankUpAll(); _rmMsg= r.ranked?('Ranked up '+r.ranked+(r.ranked===1?' hero':' heroes')+'.'+(r.eternals?(' '+r.eternals+' reached Eternal ('+r.spent.sparks+' Spark'+(r.spent.sparks===1?'':'s')+' spent).'):'')+(r.sparkShort?(' '+r.sparkShort+' more Eternal rank'+(r.sparkShort===1?'':'s')+' waiting on Sparks.'):'')):(r.sparkShort?('Out of Sparks — '+r.sparkShort+(r.sparkShort===1?' hero':' heroes')+' waiting on the Eternal rank.'):'No heroes were ready and affordable to rank.'); rmAfter(); };
     var U=document.getElementById('rmUpgrade'); if(U) U.onclick=function(){ var r=rosterUpgradeGearAll(); _rmMsg= (r.n||r.promos)?('Upgraded gear on '+r.heroes+' hero'+(r.heroes===1?'':'es')+' — '+r.n+' level'+(r.n===1?'':'s')+(r.promos?(' · '+r.promos+' promotion'+(r.promos===1?'':'s')):'')+'.'):'No affordable gear upgrades left.'; rmAfter(); };
@@ -24553,7 +24562,57 @@ function raidSAInjectPanel(){ try{
     }
     draw(); showScrim('scrim');
   };
-  /* v2.245.1: global header framing removed — frames belong to the dailies section headers only */
+  /* ===== v2.247.0: Weekly Auto-Runner =====
+   Arena, Conquest, Gauntlet, Siege start themselves — one action per tick,
+   Resolve semantics, always the next/highest rank or tier (that IS the modifier
+   ladder). A lost auto-fight benches that mode for the week. Toggle:
+   Automation → autoWeeklyEvents (default ON). */
+(function(){
+  function auto(){ try{ return (typeof v166EnsureAutomation==='function')?v166EnsureAutomation():{}; }catch(e){ return {}; } }
+  function st(){ if(!S.lqWeeklyAuto||typeof S.lqWeeklyAuto!=='object') S.lqWeeklyAuto={}; return S.lqWeeklyAuto; }
+  function wk(){ try{ return periodKey('weekly'); }catch(e){ return 'w'; } }
+  function benched(k){ return st()[k+'Lost']===wk(); }
+  function bench(k){ st()[k+'Lost']=wk(); try{ save(); }catch(e){} }
+  function withResolve(run){
+    var pA=(typeof autoAdvance!=='undefined')?autoAdvance:true, pR=(typeof autoResolve!=='undefined')?autoResolve:false;
+    try{ autoAdvance=true; autoResolve=true; }catch(e){}
+    var ok=false; try{ var r=run(); ok=!!(r&&r.ok!==false); }catch(e){}
+    var restored=false; function restore(){ if(restored) return; restored=true; try{ autoAdvance=pA; autoResolve=pR; }catch(e){} }
+    if(!ok){ restore(); return false; }
+    setTimeout(restore, 25000);
+    return true;
+  }
+  var idx=0;
+  function tick(){
+    try{
+      if(auto().autoWeeklyEvents===false) return;
+      if(typeof battleState!=='undefined'&&battleState&&!battleState.over) return;
+      function dayk(){ try{ return periodKey('daily'); }catch(e){ return 'd'; } }
+      function triedToday(k){ return st()[k+'Day']===dayk(); }
+      function markTried(k){ st()[k+'Day']=dayk(); try{ save(); }catch(e){} }
+      var acts=[
+        function(){ if(triedToday('arena')||typeof startArenaBattle!=='function') return false;
+          var A=ensureArena(); markTried('arena'); return withResolve(function(){ return startArenaBattle((A.rank|0)+1); }); },
+        function(){ if(triedToday('conquest')||typeof startConquestBattle!=='function') return false;
+          var C=ensureConquest(); markTried('conquest'); return withResolve(function(){ return startConquestBattle((C.tier|0)+1); }); },
+        function(){ if(typeof gauntletStartRun!=='function'||typeof gauntletDefaultSquad!=='function') return false;
+          var sq=gauntletDefaultSquad(); if(!sq||sq.length<2) return false;
+          return withResolve(function(){ return gauntletStartRun(sq); }); },
+        function(){ if(typeof siegeDeployNext!=='function'||typeof ensureSiege!=='function') return false;
+          var sg=ensureSiege(), any=false;
+          Object.keys(sg.fronts||{}).forEach(function(k){ try{ var r=siegeDeployNext(k); if(r&&r.ok) any=true; }catch(e){} });
+          if(any){ try{ save(); }catch(e){} }
+          return any; }
+      ];
+      for(var n=0;n<acts.length;n++){ var j=(idx+n)%acts.length; if(acts[j]()){ idx=(j+1)%acts.length; return; } }
+      idx=(idx+1)%acts.length;
+    }catch(e){}
+  }
+  try{ window.addEventListener('arenaEnded', function(ev){ try{ if(ev&&ev.detail&&ev.detail.win===false) bench('arena'); }catch(e){} }); }catch(e){}
+  setTimeout(function(){ tick(); setInterval(tick, 75000); }, 15000);
+  window.lqWeeklyAutoTick=tick;
+})();
+/* v2.245.1: global header framing removed — frames belong to the dailies section headers only */
   /* ===== v2.242.0: Daily Reorder =====
      A sheet of compact rows grouped by section; drag (touch or mouse) within a
      group; Done commits d.gateOrd (10,20,...) per group — the tiebreak the
