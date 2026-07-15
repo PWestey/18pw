@@ -2645,7 +2645,7 @@ function fellowshipPanelHTML(){
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:800;margin-bottom:3px"><span>'+((typeof DOMAIN_ART==='object'&&DOMAIN_ART[k])?('<img src="'+DOMAIN_ART[k]+'" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:4px" alt="">'):emoji)+' '+esc(lab)+'</span><span style="color:'+color+'">Fellowship '+lv+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px"><span style="color:'+color+'">+'+sh+'% habit shards \u00b7 +'+bo+'% bond XP</span><span>'+sc+' pts</span></div>'
       +'<div class="xpbar"><i style="width:'+pct+'%;background:'+color+'"></i></div></div>'; }).join('');
-  return '<div class="stagecard"><h3>Domain Fellowship</h3><p style="margin-bottom:12px">The more heroes you develop in a domain, the faster that whole domain grows \u2014 more habit shards and bond XP. Breadth strengthens the fellowship; it never blocks a hero.</p>'+rows+'</div>';
+  return '<div class="stagecard"><h3>\u2725 Domain Fellowship</h3><p style="margin-bottom:12px">The more heroes you develop in a domain, the faster that whole domain grows \u2014 more habit shards and bond XP. Breadth strengthens the fellowship; it never blocks a hero.</p>'+rows+'</div>';
 }
 function forgePanelHTML(){
   try{ ensureForgeState(); }catch(e){ return ''; }
@@ -2711,7 +2711,7 @@ function domainReadinessHTML(){
       +'<label style="font-size:11px;font-weight:700">Forge XP \u00b7 hard <input type="number" min="0" max="500" value="'+fxh+'" onchange="devSetForgeXp(\'hard\',this.value)" style="width:52px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label>'
       +'</div></div>';
   } }catch(e){}
-  return '<div class="stagecard"><h3>Domain Readiness</h3><p style="margin-bottom:12px">Your Forge level per domain, the next prestige tier it unlocks at your current pace, and whether your roster is deep enough to climb.</p>'+rows+forgeCapCtl+dev+'</div>';
+  return '<div class="stagecard"><h3>\u2696 Domain Readiness</h3><p style="margin-bottom:12px">Your Forge level per domain, the next prestige tier it unlocks at your current pace, and whether your roster is deep enough to climb.</p>'+rows+forgeCapCtl+dev+'</div>';
 }
 function grantForgeXp(domain,diff){
   try{
@@ -2761,7 +2761,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.245.0-golden-icons';
+const APP_BUILD='v2.245.1-frame-scope';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4541,7 +4541,7 @@ function renderProgress(v){
   var summary='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">'+stat('COLLECTION',pct+'%')+stat('PRESTIGE \u2605',stars)+stat('DEVOTED',devoted.length)+stat('FORGE \u03a3',forgeSum)+stat('FELLOWSHIP \u03a3',fellowSum)+'</div>';
   var gallery = devoted.length ? ('<div class="stagecard"><h3>'+pIcon(9)+'Devoted Heroes</h3>'+devoted.sort(function(a,b){return (b.prestige||0)-(a.prestige||0);}).slice(0,24).map(function(h){ var dv=heroDevotion(h); return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px solid var(--line)"><span style="font-weight:800">'+esc(h.name)+'</span><span style="color:'+dv.color+';font-weight:800;font-size:12px">'+(dv.art?('<img src="'+dv.art+'" alt="" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.18em">'):dv.emoji)+' '+esc(dv.word)+' \u00b7 \u2605'+dv.p+'</span></div>'; }).join('')+'</div>') : '<div class="stagecard"><h3>'+pIcon(9)+'Devoted Heroes</h3><p style="color:var(--muted)">No devoted heroes yet \u2014 reach Prestige 5+ in a hero\u2019s lived domain to earn a devotion mark.</p></div>';
   function lnk(id,label){ return '<button class="go" id="'+id+'" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);text-align:left">'+label+'</button>'; }
-  var links='<div class="stagecard"><h3>\u{1F9ED} Account Surfaces</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+lnk('pg_prestige',pIcon(7)+'Prestige Hall')+'</div></div>'; /* v2.234: surfaces trimmed */
+  var links='<div class="stagecard" style="padding:12px">'+lnk('pg_prestige',pIcon(7)+'Prestige Hall')+'</div>'; /* v2.245.1: Account Surfaces retired — Prestige Hall stands alone */ /* v2.234: surfaces trimmed */
   try{ injectGrowthHubStyles(); injectLifeBaseVisualStylesV148(); injectDomainGrowthStylesV2(); }catch(e){}
   v.innerHTML='<div class="head"><h2>Growth</h2><span style="color:var(--muted);font-weight:700;font-size:13px">the man I\u2019m becoming</span></div>'
     +((typeof growthHeaderV2==='function')?growthHeaderV2():'')
@@ -4802,7 +4802,7 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
   items.forEach((it,i)=>{
     if(subtab==='dailies'&&items.some(d=>d&&d.gate)){
       const g=lqGk(it);
-      if(g!==lqLastGk){ var _sameLbl=(lqLastGk>=0&&LQ_GH[g]&&LQ_GH[lqLastGk]&&LQ_GH[g][0]===LQ_GH[lqLastGk][0]); lqLastGk=g; if(!_sameLbl){ const hd=document.createElement('div'); hd.style.cssText='font-family:Orbitron;font-weight:900;font-size:14px;letter-spacing:1.2px;color:'+LQ_GH[g][1]+';margin:16px 0 6px;text-align:center'; hd.textContent=LQ_GH[g][0]; L.appendChild(hd); } }
+      if(g!==lqLastGk){ var _sameLbl=(lqLastGk>=0&&LQ_GH[g]&&LQ_GH[lqLastGk]&&LQ_GH[g][0]===LQ_GH[lqLastGk][0]); lqLastGk=g; if(!_sameLbl){ const hd=document.createElement('div'); hd.style.cssText='font-family:Orbitron;font-weight:900;font-size:14px;letter-spacing:1.2px;color:'+LQ_GH[g][1]+';margin:16px 0 6px;text-align:center'; var _ji='<img src="art/badges/icon_jedi.webp?v=1" style="width:14px;height:14px;vertical-align:-2px" alt="">'; hd.innerHTML=_ji+' '+esc(LQ_GH[g][0])+' '+_ji; L.appendChild(hd); } }
     }
     const c=document.createElement('div');
     c.className='card'+(it.done?' done':'')+((taskIsRecurring(subtab)&&!taskActiveToday(it))?' resting':''); c.style.animationDelay=(i*0.03)+'s';
@@ -9301,7 +9301,7 @@ function blessPanelHTML(){
         +'<span style="flex:0 0 auto;white-space:nowrap">'+right+'</span></div>';
     }).join('');
     return '<div class="stagecard" style="display:block;width:100%;column-span:all;-webkit-column-span:all;grid-column:1/-1;margin-top:10px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0">'+((typeof cicon==='function'&&cicon('crystals',16))||'')+' Domain BlessingsDomain Blessings</h3><span style="font-size:11px;color:var(--muted);font-weight:800">'+total+' levels</span></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0">\uD83D\uDD6F\uFE0F Domain Blessings</h3><span style="font-size:11px;color:var(--muted);font-weight:800">'+total+' levels</span></div>'
       +'<p style="display:block;margin:3px 0 6px;color:var(--muted);font-size:11px;font-weight:750;line-height:1.35">Crystal overflow fills the domains you lived this week \u2014 lowest first. +'+(((TUNE.blessPowerPerLevel||0))*100).toFixed(1)+'% power per level.</p>'
       +'<div style="display:block;width:100%">'+rows+'</div>'
       +'<div style="display:block;margin-top:7px;color:var(--muted);font-size:10.5px;font-weight:750">Overflow '+(typeof fmt==='function'?fmt(ovC):ovC)+' \u00b7 drain '+(typeof fmt==='function'?fmt(Math.round(perDay)):Math.round(perDay))+'/day \u00b7 next level '+(typeof fmt==='function'?fmt(price):price)+' \u00b7 \u2248'+lvDay.toFixed(1)+' lv/day</div>'
@@ -24553,10 +24553,7 @@ function raidSAInjectPanel(){ try{
     }
     draw(); showScrim('scrim');
   };
-  /* ===== v2.245.0: golden header frames ===== */
-  try{ if(!document.getElementById('lqHdrCss')){ var _hc=document.createElement('style'); _hc.id='lqHdrCss';
-    _hc.textContent='.stagecard h3::before,.stagecard h3::after,.head h2::before,.head h2::after{content:"";display:inline-block;width:14px;height:14px;background:url(art/badges/icon_jedi.webp?v=1) center/contain no-repeat;margin:0 7px;vertical-align:-2px}';
-    document.head.appendChild(_hc); } }catch(e){}
+  /* v2.245.1: global header framing removed — frames belong to the dailies section headers only */
   /* ===== v2.242.0: Daily Reorder =====
      A sheet of compact rows grouped by section; drag (touch or mouse) within a
      group; Done commits d.gateOrd (10,20,...) per group — the tiebreak the
