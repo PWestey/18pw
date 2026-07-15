@@ -2767,7 +2767,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.247.0-weekly-autorun';
+const APP_BUILD='v2.248.1-valor-quartermaster';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4804,7 +4804,7 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
   const lqSeq=d=>(d&&typeof d.gateOrd==='number')?d.gateOrd:(10+lqBk(d)); try{ window.lqGkF=lqGk; window.lqSeqF=lqSeq; }catch(e){} /* v2.242 exports */
   if(subtab==='dailies'&&items.some(d=>d&&d.gate)){ items.sort((a,b)=>(lqGk(a)-lqGk(b))||(lqSeq(a)-lqSeq(b))); }
   let lqLastGk=-1;
-  const LQ_GH={0:['🎮 PRE-GAMING','#ff8a8a'],1:['🎮 PRE-GAMING','#ff8a8a'],2:['🧹 WORK & CHORES','#5bd0e6'],3:['👨‍👧 FAMILY TIME','#ffb01f'],4:['🌙 SHUTDOWN','#c9b2ff']};
+  const LQ_GH={0:['PRE-GAMING','#ff8a8a'],1:['PRE-GAMING','#ff8a8a'],2:['WORK & CHORES','#5bd0e6'],3:['FAMILY TIME','#ffb01f'],4:['SHUTDOWN','#c9b2ff']}; /* v2.248: emblem-only headers */
   items.forEach((it,i)=>{
     if(subtab==='dailies'&&items.some(d=>d&&d.gate)){
       const g=lqGk(it);
@@ -24582,6 +24582,34 @@ function raidSAInjectPanel(){ try{
     setTimeout(restore, 25000);
     return true;
   }
+  var gChain=null;
+  window.lqChainGauntlet=function(){ if(gChain) return; var TIER={epic:4,rare:3,uncommon:2,common:1}; var steps=0;
+    gChain=setInterval(function(){ try{
+      steps++; var G=ensureGauntlet(), R=G.run;
+      if(!R||!R.alive||steps>700){ clearInterval(gChain); gChain=null; try{ save(); }catch(e){} return; }
+      if(R.pendingBoons&&R.pendingBoons.length){
+        var best=R.pendingBoons.slice().sort(function(a,b){ return (TIER[(b.tier||'common')]||1)-(TIER[(a.tier||'common')]||1); })[0];
+        gauntletApplyBoon(best.key||best); return;
+      }
+      if(R.atCrossroads){
+        try{ /* v2.248.1: spend Valor — it evaporates at run's end anyway */
+          var items={}; gauntletCacheItems(R).forEach(function(i){ items[i.key]=i; });
+          var guard=0;
+          while(guard++<12){
+            var deadIds=R.squad.filter(function(id){ return R.dead[id]; });
+            if(deadIds.length && (R.coins|0)>=items.revival.cost){ gauntletBuyCache('revival'); continue; }
+            var fatigued=R.squad.some(function(id){ return (R.mult[id]||1)<1; });
+            if(fatigued && (R.floor|0)<=4 && !R.__lqCleansed && (R.coins|0)>=items.cleanse.cost+items.repair.cost){ gauntletBuyCache('cleanse'); R.__lqCleansed=1; continue; }
+            var bossNext=((R.floor|0)%((typeof GAUNTLET_TUNE!=='undefined'&&GAUNTLET_TUNE.bossEvery)||5))===0;
+            if(bossNext && !R.__lqBossHeal && (R.coins|0)>=items.repair.cost+items.revival.cost){ gauntletBuyCache('repair'); R.__lqBossHeal=R.floor; continue; }
+            if(R.__lqBossHeal && R.__lqBossHeal!==R.floor) R.__lqBossHeal=0;
+            if((R.coins|0)>=items.whetstone.cost+items.repair.cost){ gauntletBuyCache('whetstone'); continue; }
+            break;
+          }
+        }catch(e){}
+        gauntletChoosePath('elite'); return; }
+    }catch(e){} }, 900);
+  }; /* v2.248: boons by tier, Elite path, resumable */
   var idx=0;
   function tick(){
     try{
@@ -24595,9 +24623,20 @@ function raidSAInjectPanel(){ try{
           var A=ensureArena(); markTried('arena'); return withResolve(function(){ return startArenaBattle((A.rank|0)+1); }); },
         function(){ if(triedToday('conquest')||typeof startConquestBattle!=='function') return false;
           var C=ensureConquest(); markTried('conquest'); return withResolve(function(){ return startConquestBattle((C.tier|0)+1); }); },
-        function(){ if(typeof gauntletStartRun!=='function'||typeof gauntletDefaultSquad!=='function') return false;
-          var sq=gauntletDefaultSquad(); if(!sq||sq.length<2) return false;
-          return withResolve(function(){ return gauntletStartRun(sq); }); },
+        function(){ if(typeof gauntletStartRun!=='function') return false;
+          try{ var Gx=ensureGauntlet(); if(Gx.run&&Gx.run.alive){ lqChainGauntlet(); return true; } }catch(e){}
+          if(triedToday('gauntlet')) return false;
+          var sq=[]; try{ var size=(typeof GAUNTLET_TUNE!=='undefined'&&GAUNTLET_TUNE.squadSize)||6;
+            var pool=(typeof gauntletEligible==='function')?gauntletEligible().slice():[];
+            pool.sort(function(a,b){ return powerOf(b)-powerOf(a); });
+            sq=pool.slice(0,size).map(function(h){return h.id;});
+          }catch(e){}
+          if(sq.length<2 && typeof gauntletDefaultSquad==='function') sq=gauntletDefaultSquad();
+          if(!sq||sq.length<2) return false;
+          markTried('gauntlet');
+          var started=withResolve(function(){ return gauntletStartRun(sq); });
+          if(started) lqChainGauntlet();
+          return started; }, /* v2.248: autopilot fields the strongest — progress over depth-thrift */
         function(){ if(typeof siegeDeployNext!=='function'||typeof ensureSiege!=='function') return false;
           var sg=ensureSiege(), any=false;
           Object.keys(sg.fronts||{}).forEach(function(k){ try{ var r=siegeDeployNext(k); if(r&&r.ok) any=true; }catch(e){} });
@@ -24625,7 +24664,7 @@ function raidSAInjectPanel(){ try{
     var groups={};
     items.forEach(function(d){ var g=gk(d); (groups[g]=groups[g]||[]).push(d); });
     Object.keys(groups).forEach(function(g){ groups[g].sort(function(a,b){ return sq(a)-sq(b); }); });
-    var GH={0:'\ud83c\udfae PRE-GAMING',1:'\ud83c\udfae PRE-GAMING',2:'\ud83e\uddf9 WORK & CHORES',3:'\ud83d\udc68\u200d\ud83d\udc67 FAMILY TIME',4:'\ud83c\udf19 SHUTDOWN'};
+    var GH={0:'PRE-GAMING',1:'PRE-GAMING',2:'WORK & CHORES',3:'FAMILY TIME',4:'SHUTDOWN'};
     var html='<div class="rmSheet"><h3>\u2195 Reorder Dailies</h3><div style="font-size:11px;color:var(--muted);margin:2px 0 8px">Drag rows within a section. Done saves the order.</div>';
     Object.keys(groups).sort(function(a,b){return a-b;}).forEach(function(g){
       html+='<div style="font-family:Orbitron;font-weight:900;font-size:11px;letter-spacing:.8px;color:#8fb8ff;margin:10px 0 4px">'+(GH[g]||('SECTION '+g))+'</div>';
