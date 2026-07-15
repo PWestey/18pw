@@ -2590,24 +2590,32 @@ function ensureForgeState(){
       S.dailies=S.dailies.filter(function(x){return x!==core;});
       /* the two new tasks are part of the pre-gaming ritual: inherit its block */
       var pgBlk=full.block||'midday';
-      S.dailies.forEach(function(x){ if(/protein shake|peptalk/i.test(x.title||'')) x.block=pgBlk; });
+      S.dailies.forEach(function(x){ if(/protein shake|peptalk/i.test(x.title||'')){ x.block='morning'; if(x.gate!=='preCore') x.gate='preFull'; } });
       try{ toast('Dailies updated: 2 added · Pre-Gaming merged'); }catch(e){}
     } else { try{ toast('Dailies: 2 added'+(pre.length?' · pregaming pair not auto-merged ('+pre.length+' match)':'')); }catch(e){} }
     if(typeof save==='function') save();
   } }catch(e){} /* v2.224.0: Peter's daily edits — defensive title-match merge; add-only if pair not found */
   try{ if(S && Array.isArray(S.dailies) && S.v2224DailyEdits && !S.v22241Fix){ S.v22241Fix=1;
     var pep=S.dailies.find(function(x){return /peptalk/i.test(x.title||'');});
-    if(pep){ pep.domain='growth'; if(!/app/i.test(pep.title)) pep.title='Peptalk (app)'; }
+    if(pep){ pep.domain=pep.domain||'growth'; /* v2.245: no forced rename — Peter titles his own tasks */ }
     var pg=S.dailies.find(function(x){return x.title==='Pre-Gaming';});
     var blk=(pg&&pg.block)||'midday';
-    S.dailies.forEach(function(x){ if(/protein shake|peptalk/i.test(x.title||'')) x.block=blk; });
+    S.dailies.forEach(function(x){ if(/protein shake|peptalk/i.test(x.title||'')){ x.block='morning'; if(x.gate!=='preCore') x.gate='preFull'; } }); /* v2.245: morning, always */
     if(typeof save==='function') save();
   } }catch(e){} /* v2.224.1: peptalk is Peter's self-coaching app (growth); both new tasks ride the pre-gaming block */
   try{ if(S && Array.isArray(S.dailies) && !S.v2227GateFix){ S.v2227GateFix=1;
     var pg=S.dailies.find(function(x){return x.title==='Pre-Gaming';});
     var hasCore=S.dailies.some(function(x){return x.gate==='preCore';});
     if(pg && !hasCore){ pg.gate='preCore'; if(typeof save==='function') save(); }
-  } }catch(e){} /* v2.227.0: the v2.224 merge deleted the only preCore-tagged daily — the window could never be earned; the merged Pre-Gaming now carries the gate */
+  } }catch(e){}
+  try{ if(S && Array.isArray(S.dailies)){
+    S.dailies.forEach(function(t){ if(!t||!t.title) return;
+      if(/peptalk/i.test(t.title)||/protein\s*shake/i.test(t.title)){
+        if(t.block!=='morning') t.block='morning';
+        if(t.gate!=='preCore'&&t.gate!=='preFull') t.gate='preFull';
+      } });
+  } }catch(e){} /* v2.245: Peptalk + protein shake ride PRE-GAMING mornings, by title, forever */
+  try{ if(false){ } }catch(e){} /* v2.227.0: the v2.224 merge deleted the only preCore-tagged daily — the window could never be earned; the merged Pre-Gaming now carries the gate */
   if(!S.forge||typeof S.forge!=='object') S.forge={};
   if(!S.forge.domains||typeof S.forge.domains!=='object') S.forge.domains={};
   var dk=(typeof periodKey==='function'?periodKey('daily'):'');
@@ -2637,7 +2645,7 @@ function fellowshipPanelHTML(){
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:800;margin-bottom:3px"><span>'+((typeof DOMAIN_ART==='object'&&DOMAIN_ART[k])?('<img src="'+DOMAIN_ART[k]+'" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:4px" alt="">'):emoji)+' '+esc(lab)+'</span><span style="color:'+color+'">Fellowship '+lv+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px"><span style="color:'+color+'">+'+sh+'% habit shards \u00b7 +'+bo+'% bond XP</span><span>'+sc+' pts</span></div>'
       +'<div class="xpbar"><i style="width:'+pct+'%;background:'+color+'"></i></div></div>'; }).join('');
-  return '<div class="stagecard"><h3>\u2725 Domain Fellowship</h3><p style="margin-bottom:12px">The more heroes you develop in a domain, the faster that whole domain grows \u2014 more habit shards and bond XP. Breadth strengthens the fellowship; it never blocks a hero.</p>'+rows+'</div>';
+  return '<div class="stagecard"><h3>Domain Fellowship</h3><p style="margin-bottom:12px">The more heroes you develop in a domain, the faster that whole domain grows \u2014 more habit shards and bond XP. Breadth strengthens the fellowship; it never blocks a hero.</p>'+rows+'</div>';
 }
 function forgePanelHTML(){
   try{ ensureForgeState(); }catch(e){ return ''; }
@@ -2703,7 +2711,7 @@ function domainReadinessHTML(){
       +'<label style="font-size:11px;font-weight:700">Forge XP \u00b7 hard <input type="number" min="0" max="500" value="'+fxh+'" onchange="devSetForgeXp(\'hard\',this.value)" style="width:52px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800"></label>'
       +'</div></div>';
   } }catch(e){}
-  return '<div class="stagecard"><h3>\u2696 Domain Readiness</h3><p style="margin-bottom:12px">Your Forge level per domain, the next prestige tier it unlocks at your current pace, and whether your roster is deep enough to climb.</p>'+rows+forgeCapCtl+dev+'</div>';
+  return '<div class="stagecard"><h3>Domain Readiness</h3><p style="margin-bottom:12px">Your Forge level per domain, the next prestige tier it unlocks at your current pace, and whether your roster is deep enough to climb.</p>'+rows+forgeCapCtl+dev+'</div>';
 }
 function grantForgeXp(domain,diff){
   try{
@@ -2753,7 +2761,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.240.0-sinister-polish';
+const APP_BUILD='v2.245.0-golden-icons';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3018,9 +3026,12 @@ function seed(){
 // Show current currency balance
 const CURRENCY_ICON={"expeditions":"art/locations/cur_expeditions_cb554ac7.webp","gauntlet":"art/locations/cur_gauntlet_a9e421e7.webp","arena":"art/locations/cur_arena_ce6ba377.webp","bonds":"art/locations/cur_bonds_66282fc0.webp","conquest":"art/locations/cur_conquest_7d415314.webp","slot_weapon":"art/locations/cur_slot_weapon_feebb68a.webp","slot_armor":"art/locations/cur_slot_armor_9e7f0d63.webp","slot_boots":"art/locations/cur_slot_boots_a622822a.webp","slot_relic":"art/locations/cur_slot_relic_8e57084f.webp","grove":"art/locations/cur_grove_8405cbac.webp","roleDPS":"art/locations/cur_roledps_cc9162ac.webp","storm":"art/locations/cur_storm_f9ece32d.webp","resolve":"art/locations/cur_resolve_13fc1ab1.webp","stone":"art/locations/cur_stone_ff5c5124.webp","grace":"art/locations/cur_grace_acd541ff.webp","tide":"art/locations/cur_tide_c3ba5237.webp","roleSupport":"art/locations/cur_rolesupport_961de011.webp","roleTank":"art/locations/cur_roletank_cc38c6a3.webp","flame":"art/locations/cur_flame_401e0f7b.webp","logo":"art/locations/cur_logo_39f48ec6.webp","exp":"art/locations/cur_exp_7ad65c4a.webp","momentum":"art/locations/cur_momentum_035d545c.webp","raidboss":"art/locations/cur_raidboss_058b38ba.webp","chest":"art/locations/cur_chest_b9b2a17d.webp","summon":"art/locations/cur_summon_901dcec9.webp","albums":"art/locations/cur_albums_baa3ee5d.webp","campaign":"art/locations/cur_campaign_9aa3092d.webp","tower":"art/locations/cur_tower_9800cb01.webp","questboard":"art/locations/cur_questboard_ff5f7501.webp","clash":"art/locations/cur_clash_4ee12441.webp","jBegin":"art/locations/cur_jbegin_23342e0f.webp","jMomentum":"art/locations/cur_jmomentum_5750e61d.webp","jReward":"art/locations/cur_jreward_870f3e81.webp","jReview":"art/locations/cur_jreview_c64b9e0a.webp","jAction":"art/locations/cur_jaction_a34dddff.webp","sparks":"art/locations/cur_sparks_1f18d546.webp","gold":"art/locations/cur_gold_b67f48d5.webp","dust":"art/locations/cur_dust_122786bc.webp","crystals":"art/locations/cur_crystals_221667fd.webp","tickets":"art/locations/cur_tickets_9d58409e.webp","cores":"art/locations/cur_cores_265952a0.webp","bossCores":"art/locations/cur_bosscores_93ee2413.webp"};
 try{ CURRENCY_ICON.rooms='art/badges/badge_ror.webp?v=1'; }catch(e){}
-try{ CURRENCY_ICON.sinister='art/badges/badge_sinister.webp?v=1'; }catch(e){} /* v2.240 */ /* v2.235: RoR war-card medallion */
+try{ CURRENCY_ICON.sinister='art/badges/badge_sinister.webp?v=1'; }catch(e){} /* v2.240 */
+try{ CURRENCY_ICON.icon_jedi='art/badges/icon_jedi.webp?v=1'; CURRENCY_ICON.icon_focus='art/badges/icon_focus.webp?v=1'; CURRENCY_ICON.icon_sound='art/badges/icon_sound.webp?v=1'; CURRENCY_ICON.icon_star='art/badges/icon_star.webp?v=1'; CURRENCY_ICON.icon_hall='art/badges/icon_hall.webp?v=1'; }catch(e){} /* v2.245: golden icon set */ /* v2.235: RoR war-card medallion */
 try{if(typeof CURRENCY_ICON==='object'){var _O=window.OFA;CURRENCY_ICON.gold=CURRENCY_ICON.credits=_O.credits;CURRENCY_ICON.crystals=CURRENCY_ICON.kyber=_O.kyber;CURRENCY_ICON.sparks=_O.sparks;CURRENCY_ICON.dust=CURRENCY_ICON.uru=_O.uru;CURRENCY_ICON.oath_icon="art/locations/art_6fa22810da.webp";CURRENCY_ICON.mission_board="art/locations/art_dcf1dc11de.webp";CURRENCY_ICON.ss_anne="art/locations/art_89b2e9532a.webp";CURRENCY_ICON.elune="art/locations/art_fd32c3ca0e.webp";CURRENCY_ICON.frame_slytherin="art/locations/art_154404e8b8.webp";CURRENCY_ICON.frame_ravenclaw="art/locations/art_a70773e08b.webp";CURRENCY_ICON.frame_gryffindor="art/locations/art_ec01b2d945.webp";CURRENCY_ICON.frame_hufflepuff="art/locations/art_655ae18806.webp";CURRENCY_ICON.frame_hogwarts="art/locations/art_18ff2c7061.webp";CURRENCY_ICON.prestige_p05="art/locations/prestige_p05.webp?v=2";CURRENCY_ICON.prestige_p10="art/locations/prestige_p10.webp?v=2";CURRENCY_ICON.prestige_p15="art/locations/prestige_p15.webp?v=2";CURRENCY_ICON.prestige_p20="art/locations/prestige_p20.webp?v=2";CURRENCY_ICON.prestige_p25="art/locations/prestige_p25.webp?v=2";CURRENCY_ICON.prestige_p30="art/locations/prestige_p30.webp?v=2";CURRENCY_ICON.prestige_p35="art/locations/prestige_p35.webp?v=2";CURRENCY_ICON.prestige_p40="art/locations/prestige_p40.webp?v=2";CURRENCY_ICON.prestige_p45="art/locations/prestige_p45.webp?v=2";CURRENCY_ICON.prestige_p50="art/locations/prestige_p50.webp?v=2";CURRENCY_ICON.rar_common="art/locations/art_7afb4cadbb.webp";CURRENCY_ICON.rar_rare="art/locations/art_8584a51406.webp";CURRENCY_ICON.rar_epic="art/locations/art_7f34d92d9e.webp";CURRENCY_ICON.rar_legendary="art/locations/art_3e6c1d529a.webp";CURRENCY_ICON.rar_mythic="art/locations/art_7daf7ecd6b.webp";CURRENCY_ICON.rar_eternal="art/locations/art_c94ec4b5f4.webp";CURRENCY_ICON.force=_O.force;CURRENCY_ICON.settings_gear="art/locations/art_d9bbe9a7f8.webp";CURRENCY_ICON.campaign=_O.mode_campaign;CURRENCY_ICON.tower=_O.mode_tower;CURRENCY_ICON.clash=_O.mode_clash;CURRENCY_ICON.raid=_O.mode_raid;CURRENCY_ICON.conquest=_O.mode_conquest;CURRENCY_ICON.gauntlet=_O.mode_gauntlet;CURRENCY_ICON.rift=_O.mode_rift;CURRENCY_ICON.arena=_O.mode_arena;CURRENCY_ICON.siege=_O.mode_siege;CURRENCY_ICON.expedition=_O.mode_expedition;CURRENCY_ICON.expeditions=_O.mode_expedition;CURRENCY_ICON.tab_missions=_O.tab_missions;CURRENCY_ICON.tab_hq=_O.tab_hq;CURRENCY_ICON.tab_greathall=_O.tab_greathall;CURRENCY_ICON.tab_holotable=_O.tab_holotable;CURRENCY_ICON.tab_archives=_O.tab_archives;CURRENCY_ICON.feat_forge=_O.feat_forge;CURRENCY_ICON.feat_crucible=_O.feat_crucible;;CURRENCY_ICON.stones=_O.stones;CURRENCY_ICON.cores=CURRENCY_ICON.heroCores=_O.iso8;CURRENCY_ICON.bossCores=_O.isoprime;CURRENCY_ICON.bossFrags=_O.isosliver;CURRENCY_ICON.tickets=CURRENCY_ICON.summonTickets=_O.holo;CURRENCY_ICON.momentum=_O.force;}}catch(e){}
-function cicon(k,sz){ sz=sz||15; return (typeof CURRENCY_ICON==="object"&&CURRENCY_ICON[k])?'<img class="cIcon" style="width:'+sz+'px;height:'+sz+'px" src="'+CURRENCY_ICON[k]+'" alt="">':''; } function ficon(k,sz){ sz=sz||22; return (typeof CURRENCY_ICON==="object"&&CURRENCY_ICON[k])?'<img class="fIcon" style="width:'+sz+'px;height:'+sz+'px" src="'+CURRENCY_ICON[k]+'" alt="">':''; } function prestigeBadgeArt(p){ p=Math.max(0,Math.floor(p||0)); if(p<5) return null; var t=Math.min(50,Math.floor(p/5)*5); return "prestige_p"+(t<10?"0":"")+t; } function prestigeArtFrame(p){ p=Math.max(0,Math.floor(p||0)); if(p>=10)return "frame_hogwarts"; if(p>=7)return "frame_hufflepuff"; if(p>=5)return "frame_gryffindor"; if(p>=3)return "frame_ravenclaw"; if(p>=1)return "frame_slytherin"; return null; } function ofHomeTileIcon(nm){ var m={"Fellowship":"tab_greathall","War Table":"tab_holotable","Forge":"feat_forge","Expeditions":"expeditions"}; var k=m[nm]; return k?('<span class="ofHomeTileIcon">'+ficon(k,40)+'</span>'):''; }
+function _icoSrc(k){ if(typeof CURRENCY_ICON==="object"&&CURRENCY_ICON[k]) return CURRENCY_ICON[k]; if(typeof window!=="undefined"&&window.OFA&&window.OFA[k]) return window.OFA[k]; return ''; }
+function cicon(k,sz){ sz=sz||15; var u=_icoSrc(k); return u?'<img class="cIcon" style="width:'+sz+'px;height:'+sz+'px" src="'+u+'" alt="">':''; }
+function ficon(k,sz){ sz=sz||22; var u=_icoSrc(k); return u?'<img class="fIcon" style="width:'+sz+'px;height:'+sz+'px" src="'+u+'" alt="">':''; } /* v2.244: OFA fallback — mode_/dom_/feat_ art reachable everywhere */ function prestigeBadgeArt(p){ p=Math.max(0,Math.floor(p||0)); if(p<5) return null; var t=Math.min(50,Math.floor(p/5)*5); return "prestige_p"+(t<10?"0":"")+t; } function prestigeArtFrame(p){ p=Math.max(0,Math.floor(p||0)); if(p>=10)return "frame_hogwarts"; if(p>=7)return "frame_hufflepuff"; if(p>=5)return "frame_gryffindor"; if(p>=3)return "frame_ravenclaw"; if(p>=1)return "frame_slytherin"; return null; } function ofHomeTileIcon(nm){ var m={"Fellowship":"tab_greathall","War Table":"tab_holotable","Forge":"feat_forge","Expeditions":"expeditions"}; var k=m[nm]; return k?('<span class="ofHomeTileIcon">'+ficon(k,40)+'</span>'):''; }
 function currencyWallet(){
   return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:13px;background:var(--panel);padding:8px;border-radius:6px;color:var(--muted)">'+
     '<div>'+cicon('gold')+' Gold: <b style="color:var(--gold)">'+S.gold+'</b></div>'+
@@ -4756,10 +4767,10 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
     '<div class="tabs" id="subtabs2" style="margin-top:6px">'+
       [['ownership','Ownership'],['reviews','Reviews']].map(t=>'<button data-s="'+t[0]+'" class="'+(t[0]===subtab?'on':'')+'">'+t[1]+'</button>').join('')+
     '</div>'+
-    '<div class="head"><h2>'+(subtab==='todos'?'Quests':subtab[0].toUpperCase()+subtab.slice(1))+'</h2><button class="add" id="addTask">+ Add</button></div>'+
+    '<div class="head"><h2>'+(subtab==='todos'?'Quests':subtab[0].toUpperCase()+subtab.slice(1))+'</h2><button class="add" id="addTask">+ Add</button>'+(subtab==='dailies'?'<button class="add" id="reorderBtn" style="margin-left:6px;background:rgba(143,208,255,.12);border-color:rgba(143,208,255,.4);color:#8fd0ff">\u2195 Reorder</button>':'')+'</div>'+
     '<div class="list" id="list"></div>';
   document.querySelectorAll('#subtabs,#subtabs2').forEach(el=>{ el.onclick=e=>{const b=e.target.closest('button');if(!b)return;subtab=b.dataset.s;render();}; });
-  document.getElementById('addTask').onclick=()=>openTaskSheet(null);
+  document.getElementById('addTask').onclick=()=>openTaskSheet(null); (function(){ var rb=document.getElementById('reorderBtn'); if(rb) rb.onclick=function(){ try{ window.openDailyReorder(); }catch(e){} }; })();
   const L=document.getElementById('list');
   /* v2.199: Ownership + Reviews are first-class sections, not modals. */
   if(subtab==='ownership'){
@@ -4784,7 +4795,7 @@ function renderTasks(v){ try{of2172BlockBackfill();}catch(e){}
     if(b==='night') return 4;
     return 2; };
   const lqBk=d=>({morning:0,midday:1,afternoon:2,evening:3,night:4}[(d&&d.block)||'']??2);
-  const lqSeq=d=>(d&&typeof d.gateOrd==='number')?d.gateOrd:(10+lqBk(d));
+  const lqSeq=d=>(d&&typeof d.gateOrd==='number')?d.gateOrd:(10+lqBk(d)); try{ window.lqGkF=lqGk; window.lqSeqF=lqSeq; }catch(e){} /* v2.242 exports */
   if(subtab==='dailies'&&items.some(d=>d&&d.gate)){ items.sort((a,b)=>(lqGk(a)-lqGk(b))||(lqSeq(a)-lqSeq(b))); }
   let lqLastGk=-1;
   const LQ_GH={0:['🎮 PRE-GAMING','#ff8a8a'],1:['🎮 PRE-GAMING','#ff8a8a'],2:['🧹 WORK & CHORES','#5bd0e6'],3:['👨‍👧 FAMILY TIME','#ffb01f'],4:['🌙 SHUTDOWN','#c9b2ff']};
@@ -6079,7 +6090,7 @@ function questBoardHTML(){
     try{ var W=ensureWeek(), t=(typeof CHESTS!=='undefined')?CHESTS.filter(function(c){return W.claimed&&W.claimed[c.p];}).length:0; if(t) parts.push(t+' chest tier'+(t>1?'s':'')); }catch(e){}
     try{ var LW=ensureLifeWeek(); if(LW.balanceClaimed) parts.push('Balance Chest'); }catch(e){}
     if(!parts.length) return '';
-    return '<div style="font-size:11px;font-weight:800;color:#7af0a8;margin-top:4px">\u2728 Earned: '+parts.join(' \u00b7 ')+'</div>';
+    return '<div style="font-size:11px;font-weight:800;color:#7af0a8;margin-top:4px">'+cicon('icon_star',13)+' Earned: '+parts.join(' \u00b7 ')+'</div>';
   }catch(e){ return ''; } })()+'</div>';
 }
 function showQuestBoard(){ toast('Quests and chests auto-claim now — rewards land the moment they are earned.'); }
@@ -9277,7 +9288,8 @@ function blessPanelHTML(){
     var lowest=null, lvv=1e9, total=0;
     lived.forEach(function(k){ var l=(B[k]|0)||0; if(l<lvv){ lvv=l; lowest=k; } });
     var rows=DOMAINS.map(function(d){
-      var k=d[0], name=d[1], col=d[2], ic=d[3]||'';
+      var k=d[0], name=d[1], col=d[2];
+      var ic=(typeof cicon==='function'&&cicon('dom_'+k,14))||d[3]||'';
       var l=(typeof blessLevel==='function')?blessLevel(k):((B[k]|0)||0); total+=l;
       var isLived=lived.indexOf(k)>=0, isNext=(k===lowest);
       var stw=(k==='home'&&S.steward&&S.steward.home&&(S.steward.home.level|0)>0)?(' <span style="color:#e8b34b;font-size:9.5px">+'+(S.steward.home.level|0)+' steward</span>'):'';
@@ -9289,7 +9301,7 @@ function blessPanelHTML(){
         +'<span style="flex:0 0 auto;white-space:nowrap">'+right+'</span></div>';
     }).join('');
     return '<div class="stagecard" style="display:block;width:100%;column-span:all;-webkit-column-span:all;grid-column:1/-1;margin-top:10px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0">\uD83D\uDD6F\uFE0F Domain Blessings</h3><span style="font-size:11px;color:var(--muted);font-weight:800">'+total+' levels</span></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0">'+((typeof cicon==='function'&&cicon('crystals',16))||'')+' Domain BlessingsDomain Blessings</h3><span style="font-size:11px;color:var(--muted);font-weight:800">'+total+' levels</span></div>'
       +'<p style="display:block;margin:3px 0 6px;color:var(--muted);font-size:11px;font-weight:750;line-height:1.35">Crystal overflow fills the domains you lived this week \u2014 lowest first. +'+(((TUNE.blessPowerPerLevel||0))*100).toFixed(1)+'% power per level.</p>'
       +'<div style="display:block;width:100%">'+rows+'</div>'
       +'<div style="display:block;margin-top:7px;color:var(--muted);font-size:10.5px;font-weight:750">Overflow '+(typeof fmt==='function'?fmt(ovC):ovC)+' \u00b7 drain '+(typeof fmt==='function'?fmt(Math.round(perDay)):Math.round(perDay))+'/day \u00b7 next level '+(typeof fmt==='function'?fmt(price):price)+' \u00b7 \u2248'+lvDay.toFixed(1)+' lv/day</div>'
@@ -10796,7 +10808,7 @@ function v161RenderRoster(v){
   const ipOpts=['all'].concat(rosterIPs()), domainOpts=['all'].concat(DOMAINS.map(d=>d[0])), archOpts=['all'].concat(archetypeOptions());
   const opts=(arr,val,labeler)=>arr.map(x=>'<option value="'+esc(x)+'"'+(val===x?' selected':'')+'>'+(labeler?labeler(x):esc(x))+'</option>').join('');
   v.innerHTML=v161CollectionHeader(total,owned,readyN,lineupN,wishN,bonus,clPct,nextCP)+
-    '' + currencyWallet() + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px">'+((typeof ownedCount==='function'&&ownedCount()>=S.heroes.length)?'':'<button class="go" id="summonBtn" style="background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a">🎲 Summon · '+randomCostText()+'</button>')+'<button class="go" id="albumsBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+ficon('albums',20)+' Albums · '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+'</button></div>'+    
+    '' + currencyWallet() + '<button class="go" id="ghSquadron" style="width:100%;margin-bottom:8px;background:linear-gradient(135deg,rgba(184,138,240,.25),rgba(120,80,200,.18));border:1px solid rgba(184,138,240,.5);color:#d9c2ff;font-weight:900">\u2694 Squadron Management \u00b7 rank \u00b7 gear \u00b7 prestige</button><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px">'+((typeof ownedCount==='function'&&ownedCount()>=S.heroes.length)?'':'<button class="go" id="summonBtn" style="background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a">🎲 Summon · '+randomCostText()+'</button>')+'<button class="go" id="albumsBtn" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">'+ficon('albums',20)+' Albums · '+ALBUMS.filter(albumComplete).length+'/'+ALBUMS.length+'</button></div>'+    
     '<div class="v161FilterDock'+(rosState.filtersOpen?' open':'')+'"><div class="v161Toolbar"><input type="text" id="rosSearch" placeholder="Search heroes, worlds, roles, domains…" value="'+esc(rosState.q)+'"><div class="v161ViewTog" id="v161ViewTog"><button data-v="grid" class="'+(rosState.view==='grid'?'on':'')+'">Grid</button><button data-v="list" class="'+(rosState.view==='list'?'on':'')+'">List</button></div></div><button class="v161FilterToggle" id="rosFilterToggle">⚙ Filters'+(__rosActiveCount()?' · '+__rosActiveCount():'')+'<span class="chev">▾</span></button><div class="v161FilterBody">'+    
     '<div class="segs" id="rosTabs" style="margin-bottom:8px"><button data-t="owned" class="'+(rosState.tab==='owned'?'on':'')+'">Owned</button><button data-t="favorites" class="'+(rosState.tab==='favorites'?'on':'')+'">Favorites</button><button data-t="locked" class="'+(rosState.tab==='locked'?'on':'')+'">Locked</button><button data-t="all" class="'+(rosState.tab==='all'?'on':'')+'">All</button></div>'+    
     '<div class="v161Chips" id="rosQuick">'+[['all','All'],['favorites','♥ Faves'],['ready','⬆ Ready'],['lineup','⚔ Lineups'],['wishlist','★ Wishlist'],['recent','Recent'],['prestige','★ Prestige']].map(q=>'<button data-qk="'+q[0]+'" class="'+(rosState.quick===q[0]?'on':'')+'">'+q[1]+'</button>').join('')+'</div>'+    
@@ -10829,6 +10841,7 @@ function v161RenderRoster(v){
   fillGrid();
   (function(){ var sb=document.getElementById('summonBtn'); if(sb) sb.onclick=()=>{ const h=randomUnlock(); if(h) showReveal(h,{fromSummon:true}); }; })();
   document.getElementById('albumsBtn').onclick=openAlbumsSheet;
+  (function(){ var gs=document.getElementById('ghSquadron'); if(gs) gs.onclick=function(){ try{ openRosterMgmt(); }catch(e){} }; })();
   document.getElementById('v161ViewTog').onclick=e=>{ const b=e.target.closest('button[data-v]'); if(!b)return; rosState.view=b.dataset.v; v161RenderRoster(v); };
   { const ftog=document.getElementById('rosFilterToggle'); if(ftog) ftog.onclick=()=>{ rosState.filtersOpen=!rosState.filtersOpen; const dk=v.querySelector('.v161FilterDock'); if(dk) dk.classList.toggle('open',rosState.filtersOpen); }; }
   const sb=document.getElementById('rosSearch'); var __qT=null; sb.oninput=()=>{ rosState.q=sb.value; clearTimeout(__qT); __qT=setTimeout(fillGrid,220); }; /* v2.235: debounced */
@@ -17079,7 +17092,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
         '<div class="ofHomeChips">'+chips+'</div></div>'+
       '<div class="ofHomePath"><div class="ofHomePathHead"><b>Today\u2019s Path</b><span>Arrive \u2192 Oath \u2192 Reward \u2192 Battle \u2192 Seal</span></div><div class="ofHomeSteps">'+steps+'</div></div>'+
       '<button class="ofHomeCTA" data-ofnav="quests"><span class="ofHomeCTAico"><img class="ofCTAimg" src="art/locations/art_6fa22810da.webp"></span><span><b>Complete Next Oath</b><br><small>'+ctaSub+'</small></span></button>'+
-      '<div class="ofHomeTiles">'+tiles+'</div>'+'<details class="ofHomeMore"><summary>More · deeper systems</summary><div class="ofHomeMoreGrid"><button data-ofnav="progress">🏛 Progress</button><button data-ofnav="forge">'+ficon('feat_crucible',18)+' Crucible</button><button data-ofnav="bonds">🔗 Bonds</button></div></details>'+'</div>';
+      '<div class="ofHomeTiles">'+tiles+'</div>'+'<details class="ofHomeMore"><summary>More · deeper systems</summary><div class="ofHomeMoreGrid"><button data-ofnav="progress">'+ficon('icon_hall',18)+' Progress</button><button data-ofnav="forge">'+ficon('feat_crucible',18)+' Crucible</button><button data-ofnav="bonds">🔗 Bonds</button></div></details>'+'</div>';
   }
   function ofBindHome(v){ try{ (v||document).querySelectorAll('[data-ofnav]').forEach(function(b){ b.onclick=function(){ try{ navTo(b.getAttribute('data-ofnav')); }catch(e){} }; }); }catch(e){} }
   /* Pass C2 v2.215.0: hub render moved to the canonical renderHome (final script);
@@ -17364,7 +17377,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     var _pw={}; /* v2.195 perf: powerOf is expensive — compute once per candidate, not per sort comparison */
     var cands=owned.filter(function(h){ var i=rankIdx(h); return i<RANKUP.length && (h.level||1)>=rankCap(h); });
     cands.forEach(function(h){ _pw[h.id]=powerOf(h); });
-    cands.sort(function(a,b){ return rankIdx(a)-rankIdx(b) || _pw[b.id]-_pw[a.id]; });
+    cands.sort(function(a,b){ var p=(window.lqPrio?window.lqPrio(a.id)-window.lqPrio(b.id):0); if(p) return p; return rankIdx(a)-rankIdx(b) || _pw[b.id]-_pw[a.id]; });
     cands.forEach(function(h){ var i=rankIdx(h), r=RANKUP[i];
       if(r.sparks&&(S.sparks||0)<r.sparks){ sparkShort++; return; }
       if(heroCoreHeadroom()>=(r.cores||0) && (S.gold||0)>=(r.gold||0) && bossCoreHeadroom()>=(r.boss||0)){
@@ -17411,6 +17424,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
         btn('rmEquip','Equip best gear → all','Assigns each hero the best available pieces from your inventory.','')+
         btn('rmSpread','Spread gear → raise floor','Fills empty slots across the roster — best for Siege & lockout modes that need depth.','')+
         btn('rmSalvage','Salvage junk gear → dust','Dusts unequipped gear matching your auto-salvage settings. Epic+, Ascendant, locked, and starred pieces are always protected.','')+
+        btn('rmPrio','★ Priority Board','Rank heroes: the board drains first in gearing, cores, sparks, and Prestige All. '+((S.heroPriority&&S.heroPriority.length)||0)+' ranked.','')+
         btn('rmCleanup','Smart cleanup — all of the above','One tap: equip best across roster, hand down spares, salvage the junk. Autopilot also runs this after battles.','')+
         btn('rmPrestige','★ Prestige all ready','Begins a New Cycle for every hero meeting ALL requirements (Eternal at cap, forge tier, cohort, weekly allowance). Lossless at your settings — lowest stars first.', (function(){ try{ var n=(S.heroes||[]).filter(function(h){return h&&h.owned&&typeof canPrestige==='function'&&canPrestige(h);}).length; return n?(n+' ready'):''; }catch(e){ return ''; } })())+
       '</div>'+
@@ -17433,10 +17447,11 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     /* v2.195.3: bulk New Cycles — one per hero per tap, lowest stars first, all real gates respected
        (prestigeEligible + weekly allowance + gold via canPrestige). Mirrors the single-hero handler
        exactly (target computed BEFORE the star increments), minus the confirm/celebration. */
+    var PB=document.getElementById('rmPrio'); if(PB) PB.onclick=function(){ try{ openPriorityBoard(); }catch(e){} };
     var PR=document.getElementById('rmPrestige'); if(PR) PR.onclick=function(){
       if(typeof canPrestige!=='function'){ _rmMsg='Prestige system not ready.'; rmAfter(); return; }
       try{ ensurePrestigeState(); }catch(e){}
-      var owned=(S.heroes||[]).filter(function(h){return h&&h.owned;}).sort(function(a,b){ return (a.prestige||0)-(b.prestige||0); });
+      var owned=(S.heroes||[]).filter(function(h){return h&&h.owned;}).sort(function(a,b){ var p=(window.lqPrio?window.lqPrio(a.id)-window.lqPrio(b.id):0); if(p) return p; return (a.prestige||0)-(b.prestige||0); });
       var done=0, goldSpent=0, topStar=0;
       for(var i=0;i<owned.length;i++){ var h=owned[i];
         if(!canPrestige(h)) continue;
@@ -20305,6 +20320,7 @@ function lqNavMode(k){
     else if(k==='rooms'){ try{ showDungeons(); }catch(e){} }
     else if(k==='strikes'){ try{ if(typeof of2149OpenWarTarget==='function') of2149OpenWarTarget('raid'); else navTo('battles'); }catch(e){} }
     else if(k==='crucible'){ navTo('forge'); }
+    else if(k==='squadron'){ try{ openRosterMgmt(); }catch(e){} }
   }catch(e){}
 }
 
@@ -20507,6 +20523,7 @@ function lqModeSummary(){
   try{ var _open=0; DOMAINS.forEach(function(d){ if(roomBestTier(d[0])<roomTierCap(d[0])) _open++; }); out.push({key:'rooms',label:'Room of Requirement',cad:'Weekly',done:_open===0,stat:_open?(_open+' tiers winnable'):'All caps cleared'}); }catch(e){}
   try{ var _l=raidAttemptsLeft(); out.push({key:'strikes',label:'Boss Strikes',cad:'Daily',done:_l===0,stat:_l+'/'+((typeof RAID_SA!=='undefined'&&RAID_SA.attemptsPerDay)||3)+' today'}); }catch(e){}
   try{ var _sh=(S.legendShards|0)||0, _c=(typeof LEGENDARY_TUNE!=='undefined'&&LEGENDARY_TUNE.forgeCost)||1e9, _r=_sh>=_c; out.push({key:'crucible',label:'Crucible',cad:'Forge',done:_r,stat:_r?'READY — forge a legendary':(_sh+' / '+_c+' shards')}); }catch(e){} /* v2.233 */
+  try{ out.push({key:'squadron',label:'Squadron Management',cad:'Ops',done:true,stat:'rank · gear · prestige'}); }catch(e){} /* v2.241: doorway restored (sweep casualty) */
   try{ out=out.filter(function(m,i){ return out.findIndex(function(x){return x.key===m.key;})===i; }); }catch(e){} /* v2.233: dedupe (pre-existing double rift) */
   return out;
 }
@@ -20521,7 +20538,9 @@ function lqWeeklyDash(v){
     if(!v||v.querySelector('.lqModeDash')) return;
     lqDashStyles();
     var rows=lqModeSummary().map(function(m){
-      var _wb=m.win?('<span class="lqmWin '+m.win.status+'">'+({clear:'Winnable',close:'Close',under:'Under'}[m.win.status]||'')+'</span>'):''; return '<div class="lqmRow lqmTap" data-lqmode="'+esc(m.key)+'"><span class="lqmDot '+(m.done?'on':'')+'"></span><span class="lqmName">'+esc(m.label)+'</span><span class="lqmCad">'+esc(m.cad)+'</span>'+_wb+'<span class="lqmStat">'+esc(m.stat)+'</span><span class="lqmChev">›</span></div>';
+      var _wb=m.win?('<span class="lqmWin '+m.win.status+'">'+({clear:'Winnable',close:'Close',under:'Under'}[m.win.status]||'')+'</span>'):''; var _mi={rift:'mode_rift',siege:'mode_siege',gauntlet:'mode_gauntlet',arena:'mode_arena',conquest:'mode_conquest',rooms:'rooms',strikes:'raidboss',crucible:'feat_crucible',squadron:'roleTank'}[m.key];
+      var _mic=(_mi&&typeof cicon==='function')?cicon(_mi,15):'';
+      return '<div class="lqmRow lqmTap" data-lqmode="'+esc(m.key)+'"><span class="lqmDot '+(m.done?'on':'')+'"></span><span class="lqmName">'+_mic+(_mic?' ':'')+esc(m.label)+'</span><span class="lqmCad">'+esc(m.cad)+'</span>'+_wb+'<span class="lqmStat">'+esc(m.stat)+'</span><span class="lqmChev">›</span></div>';
     }).join('');
     var sec=document.createElement('section'); sec.className='lqModeDash';
     var ht=lqHabitThrottle();var thr='<div class="lqmThr"><div class="lqmThrRow"><span class="lqmThrLbl">Habit Throttle</span><span class="lqmThrVal">'+ht.hit+' / '+ht.tot+' domains this week</span></div><div class="lqmThrBar"><div class="lqmThrFill" style="width:'+ht.pct+'%"></div></div><div class="lqmThrNote">'+(isFinite(prestigeWeeklyCap())?'Living your habits → higher weekly prestige cap':'Prestige cap off — new cycles unlimited')+'</div>'+(function(){ try{ var B=blessState(); var bl=0,bd=0; for(var k in B){ bl+=(B[k]|0); bd++; } var g=(S.grace||0); return '<div class="lqmThrNote" style="margin-top:3px">Blessings Lv '+bl+' · '+bd+' domains · kyber flows in as you live them'+(g>0?(' · \ud83d\udd4a '+g+' grace guarding streaks'):'')+'</div>'; }catch(e){ return ''; } })()+'</div>';var rec=lqRecommend();var recHTML=rec?('<div class="lqmRec lqmTap" data-lqmode="'+esc(rec.key)+'"><span class="lqmRecTag">Do Next</span><span class="lqmRecLbl">'+esc(rec.label)+'</span><span class="lqmRecWhy">'+esc(rec.reason)+'</span><span class="lqmChev">›</span></div>'):'';sec.innerHTML=thr+recHTML+'<div class="lqmHead">Battle Modes</div>'+rows+'<div class="lqmRow lqmTap" id="lqVaultRow"><span class="lqmDot on"></span><span class="lqmName">Vault &amp; Systems</span><span class="lqmCad">Ledger</span><span class="lqmStat">Every currency · every power source</span><span class="lqmChev">›</span></div>';
@@ -23490,6 +23509,7 @@ function raidSAInjectPanel(){ try{
       if(auto.autoEquipClearUpgrades===false) return;
       if(typeof autoEquipBestGear!=='function') return;
       var hs=targets(); if(!hs.length) return;
+      try{ if(window.lqPrio) hs.sort(function(a,b){ return window.lqPrio(a.id)-window.lqPrio(b.id); }); }catch(e){}
       var changed=0, improved=0;
       hs.forEach(function(h){ var r=autoEquipBestGear(h); if(r&&r.changed){ changed+=r.changed; improved++; } });
       /* v2.195 Autopilot: quiet bulk rank-up rides the same idle sweep — cores auto-mint from
@@ -24004,7 +24024,7 @@ function raidSAInjectPanel(){ try{
       var txt=g.earned
         ?'<span style="color:#7af0a8">🎮 Window earned — core clear ('+g.fullDone+'/'+g.full.length+' full)</span>'
         :'<span style="color:#ffd95a">🎮 Gate: '+g.coreDone+'/'+g.core.length+' core before the window</span>';
-      var sd=post.length?(' · <span style="color:var(--muted)">🌙 shutdown '+pd+'/'+post.length+'</span>'):''; sd+=' <span id="fsChip" onclick="window.toggleFocusSound&&window.toggleFocusSound()" style="cursor:pointer;color:#8fd0ff;font-weight:800">'+((window.focusSoundOn&&window.focusSoundOn())?'\ud83c\udfa7 Focus \u25cf':'\ud83c\udfa7 Focus')+'</span>';
+      var sd=post.length?(' · <span style="color:var(--muted)">🌙 shutdown '+pd+'/'+post.length+'</span>'):''; sd+=' <span id="fsChip" onclick="window.toggleFocusSound&&window.toggleFocusSound()" style="cursor:pointer;color:#8fd0ff;font-weight:800">'+((window.focusSoundOn&&window.focusSoundOn())?'<img src="art/badges/icon_focus.webp?v=1" style="width:14px;height:14px;vertical-align:-2px" alt=""> Focus \u25cf':'<img src="art/badges/icon_focus.webp?v=1" style="width:14px;height:14px;vertical-align:-2px" alt=""> Focus')+'</span>';
       return '<div style="border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:11px;padding:8px 11px;margin:0 0 9px;font-size:11.5px;font-weight:900">'+txt+sd+'</div>';
     }catch(e){ return ''; }
   };
@@ -24145,10 +24165,10 @@ function raidSAInjectPanel(){ try{
           +'<div style="display:flex;justify-content:space-between;color:var(--muted);font-size:11px;font-weight:750;margin-top:3px"><span>'+(wk>0?wk+' XP this week \u00b7 '+t[0]:'quiet this week')+'</span></div>'
           +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-top:5px"><span>Forge '+f.lv+' \u00b7 '+fb+'</span><span style="color:var(--muted)">'+Math.round(f.xp)+'/'+Math.round(need)+'</span></div>'
           +'<div class="xpbar" style="height:6px;margin-top:3px"><i style="width:'+fpct+'%;background:'+dk.color+'"></i></div>'
-          +'<div style="font-size:11px;font-weight:800;margin-top:5px;color:var(--muted)">\u{1F3DB} Hall '+hl+' \u00b7 +'+sh+'% shards \u00b7 +'+bo+'% bond</div>'
+          +'<div style="font-size:11px;font-weight:800;margin-top:5px;color:var(--muted)">'+cicon('icon_hall',13)+' Hall '+hl+' \u00b7 +'+sh+'% shards \u00b7 +'+bo+'% bond</div>'
           +'</div>';
       }).join('');
-      return '<div class="stagecard"><h3>\u2726 Domains</h3><p style="margin:0 0 4px;color:var(--muted);font-size:11.5px;font-weight:750;line-height:1.35">Life level and trend \u00b7 forge power \u00b7 hall bonuses \u2014 one row per domain.</p>'+rows+'</div>';
+      return '<div class="stagecard"><h3>Domains</h3><p style="margin:0 0 4px;color:var(--muted);font-size:11.5px;font-weight:750;line-height:1.35">Life level and trend \u00b7 forge power \u00b7 hall bonuses \u2014 one row per domain.</p>'+rows+'</div>';
     }catch(e){ return ''; }
   };
 
@@ -24270,7 +24290,7 @@ function raidSAInjectPanel(){ try{
       try{ var vv=v||document.getElementById('view');
         try{ var hub=vv&&vv.querySelector('.ofHome'); if(hub&&vv.firstElementChild!==hub) vv.insertBefore(hub, vv.firstChild); }catch(e){} /* v2.233: Great Hall Anchor to the top */
         if(vv&&!vv.querySelector('#lqFocusDock')){
-          vv.insertAdjacentHTML('beforeend','<div id="lqFocusDock" style="text-align:center;margin:14px 0 6px"><span id="fsChip" onclick="window.toggleFocusSound&&window.toggleFocusSound()" style="cursor:pointer;color:#8fd0ff;font-weight:800;font-size:12px;border:1px solid rgba(143,208,255,.35);border-radius:999px;padding:7px 14px;background:rgba(143,208,255,.08)">'+((window.focusSoundOn&&window.focusSoundOn())?'\ud83c\udfa7 Focus \u25cf':'\ud83c\udfa7 Focus')+'</span></div>');
+          vv.insertAdjacentHTML('beforeend','<div id="lqFocusDock" style="text-align:center;margin:14px 0 6px"><span id="fsChip" onclick="window.toggleFocusSound&&window.toggleFocusSound()" style="cursor:pointer;color:#8fd0ff;font-weight:800;font-size:12px;border:1px solid rgba(143,208,255,.35);border-radius:999px;padding:7px 14px;background:rgba(143,208,255,.08)">'+((window.focusSoundOn&&window.focusSoundOn())?'<img src="art/badges/icon_focus.webp?v=1" style="width:14px;height:14px;vertical-align:-2px" alt=""> Focus \u25cf':'<img src="art/badges/icon_focus.webp?v=1" style="width:14px;height:14px;vertical-align:-2px" alt=""> Focus')+'</span></div>');
         } }catch(e){}
       return r; };
     window.renderHome.__of2146MissedHome=true; window.renderHome.__lqFocusDock=true;
@@ -24425,9 +24445,10 @@ function raidSAInjectPanel(){ try{
   window.lqStewardCardHTML=function(){ try{
     var st=ensureSteward(); var lv=st.level|0, tw=st.tw|0, need=(lv+1)*(lv+2)/2;
     var done=(st.weekPk===stwWeek());
+    var med=(typeof LQ_PRESTIGE_TIER_ICON!=='undefined'&&LQ_PRESTIGE_TIER_ICON.length)?('<img src="'+LQ_PRESTIGE_TIER_ICON[Math.min(lv,LQ_PRESTIGE_TIER_ICON.length-1)]+'" style="width:22px;height:22px;vertical-align:-5px;margin-right:4px" alt="">'):'';
     return '<div style="border:1px solid rgba(232,179,75,.4);background:linear-gradient(160deg,rgba(232,179,75,.10),rgba(255,255,255,.02));border-radius:12px;padding:10px;margin:0 0 10px">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
-      +'<div><div style="font-family:Orbitron;font-weight:900;font-size:13px;color:#e8b34b">\uD83C\uDFF0 '+stwTitle(lv)+'</div>'
+      +'<div><div style="font-family:Orbitron;font-weight:900;font-size:13px;color:#e8b34b">'+med+''+stwTitle(lv)+'</div>'
       +'<div style="font-size:10.5px;color:var(--muted)">Steward of the Home \u00b7 Lv '+lv+' \u00b7 '+tw+' trust week'+(tw===1?'':'s')+' \u00b7 next at '+need+'</div></div>'
       +'<button onclick="window.showStewardReview&&window.showStewardReview(0)" style="background:rgba(232,179,75,'+(done?'.08':'.16')+');border:1px solid rgba(232,179,75,.5);color:#e8b34b;border-radius:10px;padding:8px 10px;font-weight:900;font-size:11px;flex:0 0 auto">'+(done?'\u2713 Reviewed':'Weekly Review')+'</button></div>'
       +'<div style="font-size:10px;color:var(--muted);margin-top:4px">A steward isn\u2019t the man with no problems \u2014 he\u2019s the man whose problems have plans.</div></div>';
@@ -24486,6 +24507,121 @@ function raidSAInjectPanel(){ try{
     var bk=box.querySelector('#stwBack'); if(bk) bk.onclick=function(){ savePlan(); window.showStewardReview(stwIdx-1); };
   };
 
+  /* ===== v2.243.0: Priority Board =====
+     A ranked list of heroes (S.heroPriority, ids). Priority governs INVESTMENT
+     — gear sweeps, core/spark spend order, Prestige All — never team selection.
+     Everyone off the board falls back to the existing heuristics.
+     Comparator: priority index first, then whatever the hook already used. */
+  window.lqPrio=function(id){ try{ var i=(S.heroPriority||[]).indexOf(id); return i<0?999999:i; }catch(e){ return 999999; } };
+  window.openPriorityBoard=function(){
+    var sh=document.getElementById('sheet'); if(!sh) return;
+    if(!Array.isArray(S.heroPriority)) S.heroPriority=[];
+    function heroById(id){ return (S.heroes||[]).find(function(h){return h&&h.id===id;}); }
+    function rowHTML(h,rank){ return '<div class="lqReRow" data-hid="'+h.id+'" style="display:flex;align-items:center;gap:8px;padding:9px 8px;margin:3px 0;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;font-size:12.5px;font-weight:700;touch-action:none;user-select:none"><span class="lqReHandle" style="color:var(--muted);letter-spacing:2px">\u22ee\u22ee</span><span style="color:#e8b34b;font-weight:900;flex:0 0 22px">'+rank+'</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+((typeof esc==='function')?esc(h.name):h.name)+' <span style="color:var(--muted);font-size:10px">'+((typeof esc==='function')?esc(h.ip||''):(h.ip||''))+'</span></span><button class="lqPrioX" data-x="'+h.id+'" style="background:none;border:none;color:var(--muted);font-size:16px;font-weight:900;padding:2px 6px">\u00d7</button></div>'; }
+    function draw(){
+      var ranked=(S.heroPriority||[]).map(heroById).filter(Boolean);
+      var html='<div class="rmSheet"><h3>\u2605 Priority Board</h3><div style="font-size:11px;color:var(--muted);margin:2px 0 8px">Ranked heroes get gear, cores, sparks, and New Cycles first. Battles still field the strongest \u2014 priority is investment, not lineups.</div>';
+      html+='<div class="lqReGrp" id="lqPrioList">'+(ranked.length?ranked.map(function(h,i){return rowHTML(h,i+1);}).join(''):'<div style="color:var(--muted);font-size:11.5px;padding:8px 4px">No one ranked yet \u2014 search below and tap to add.</div>')+'</div>';
+      html+='<input type="text" id="lqPrioQ" placeholder="Search heroes to add\u2026" style="width:100%;box-sizing:border-box;margin-top:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;color:#fff;font-size:13px;padding:10px">';
+      html+='<div id="lqPrioResults" style="max-height:26vh;overflow:auto;margin-top:6px"></div>';
+      html+='<button id="lqPrioDone" style="width:100%;margin-top:12px;background:rgba(232,179,75,.16);border:1px solid rgba(232,179,75,.5);color:#e8b34b;border-radius:10px;padding:12px;font-weight:900;font-family:Orbitron">Done \u2014 save board</button></div>';
+      sh.innerHTML=html; wire();
+    }
+    function commitFromDOM(){ var ids=[].slice.call(sh.querySelectorAll('#lqPrioList .lqReRow')).map(function(r){return r.getAttribute('data-hid');}); S.heroPriority=ids; }
+    function wire(){
+      var q=document.getElementById('lqPrioQ'), res=document.getElementById('lqPrioResults');
+      var qt=null;
+      if(q) q.oninput=function(){ clearTimeout(qt); qt=setTimeout(function(){
+        var v=(q.value||'').toLowerCase().trim(); if(!v){ res.innerHTML=''; return; }
+        var hits=(S.heroes||[]).filter(function(h){ return h&&h.owned&&(S.heroPriority||[]).indexOf(h.id)<0&&((h.name||'').toLowerCase().indexOf(v)>=0||(h.ip||'').toLowerCase().indexOf(v)>=0); }).slice(0,12);
+        res.innerHTML=hits.map(function(h){ return '<div class="lqPrioAdd" data-add="'+h.id+'" style="padding:8px;border-bottom:1px solid rgba(255,255,255,.05);font-size:12.5px;font-weight:700">+ '+((typeof esc==='function')?esc(h.name):h.name)+' <span style="color:var(--muted);font-size:10px">'+((typeof esc==='function')?esc(h.ip||''):(h.ip||''))+'</span></div>'; }).join('')||'<div style="color:var(--muted);font-size:11px;padding:8px">No matches</div>';
+        [].slice.call(res.querySelectorAll('[data-add]')).forEach(function(el){ el.onclick=function(){ S.heroPriority.push(el.getAttribute('data-add')); draw(); var q2=document.getElementById('lqPrioQ'); if(q2){ q2.value=''; } }; });
+      },180); };
+      [].slice.call(sh.querySelectorAll('.lqPrioX')).forEach(function(x){ x.onclick=function(ev){ ev.stopPropagation(); S.heroPriority=S.heroPriority.filter(function(id){return id!==x.getAttribute('data-x');}); draw(); }; });
+      var drag=null;
+      function pointOf(e){ return (e.touches&&e.touches[0])||e; }
+      function onDown(e){ if(e.target.closest('.lqPrioX')) return; var row=e.target.closest('#lqPrioList .lqReRow'); if(!row) return; drag={row:row,grp:row.parentElement}; row.style.opacity='.85'; row.style.borderColor='#e8b34b'; e.preventDefault(); }
+      function onMove(e){ if(!drag) return; var y=pointOf(e).clientY; var rows=[].slice.call(drag.grp.querySelectorAll('.lqReRow')); var placed=false;
+        for(var j=0;j<rows.length;j++){ var rr=rows[j]; if(rr===drag.row) continue; var bb=rr.getBoundingClientRect(); if(y<bb.top+bb.height/2){ if(rr.previousElementSibling!==drag.row) drag.grp.insertBefore(drag.row,rr); placed=true; break; } }
+        if(!placed && drag.grp.lastElementChild!==drag.row) drag.grp.appendChild(drag.row); e.preventDefault(); }
+      function onUp(){ if(!drag) return; drag.row.style.opacity=''; drag.row.style.borderColor=''; commitFromDOM(); drag=null;
+        [].slice.call(sh.querySelectorAll('#lqPrioList .lqReRow')).forEach(function(r,i){ var n=r.children[1]; if(n) n.textContent=(i+1); }); }
+      sh.ontouchstart=onDown; sh.ontouchmove=onMove; sh.ontouchend=onUp;
+      sh.onmousedown=onDown; sh.onmousemove=function(e){ if(drag&&e.buttons) onMove(e); else if(drag&&!e.buttons) onUp(); }; sh.onmouseup=onUp;
+      var dn=document.getElementById('lqPrioDone');
+      if(dn) dn.onclick=function(){ commitFromDOM(); try{ save(); }catch(e){} try{ toast('Priority board saved \u00b7 '+(S.heroPriority||[]).length+' ranked'); }catch(e){} try{ openRosterMgmt(); }catch(e){ hideScrim(); } };
+    }
+    draw(); showScrim('scrim');
+  };
+  /* ===== v2.245.0: golden header frames ===== */
+  try{ if(!document.getElementById('lqHdrCss')){ var _hc=document.createElement('style'); _hc.id='lqHdrCss';
+    _hc.textContent='.stagecard h3::before,.stagecard h3::after,.head h2::before,.head h2::after{content:"";display:inline-block;width:14px;height:14px;background:url(art/badges/icon_jedi.webp?v=1) center/contain no-repeat;margin:0 7px;vertical-align:-2px}';
+    document.head.appendChild(_hc); } }catch(e){}
+  /* ===== v2.242.0: Daily Reorder =====
+     A sheet of compact rows grouped by section; drag (touch or mouse) within a
+     group; Done commits d.gateOrd (10,20,...) per group — the tiebreak the
+     dailies sort already honors. Cross-section moves stay the editor's job. */
+  window.openDailyReorder=function(){
+    var sh=document.getElementById('sheet'); if(!sh) return;
+    var items=(S.dailies||[]).filter(function(d){return d;});
+    var gk=window.lqGkF, sq=window.lqSeqF;
+    if(!gk||!sq){ try{ toast('Open the Dailies list once first'); }catch(e){} return; }
+    var groups={};
+    items.forEach(function(d){ var g=gk(d); (groups[g]=groups[g]||[]).push(d); });
+    Object.keys(groups).forEach(function(g){ groups[g].sort(function(a,b){ return sq(a)-sq(b); }); });
+    var GH={0:'\ud83c\udfae PRE-GAMING',1:'\ud83c\udfae PRE-GAMING',2:'\ud83e\uddf9 WORK & CHORES',3:'\ud83d\udc68\u200d\ud83d\udc67 FAMILY TIME',4:'\ud83c\udf19 SHUTDOWN'};
+    var html='<div class="rmSheet"><h3>\u2195 Reorder Dailies</h3><div style="font-size:11px;color:var(--muted);margin:2px 0 8px">Drag rows within a section. Done saves the order.</div>';
+    Object.keys(groups).sort(function(a,b){return a-b;}).forEach(function(g){
+      html+='<div style="font-family:Orbitron;font-weight:900;font-size:11px;letter-spacing:.8px;color:#8fb8ff;margin:10px 0 4px">'+(GH[g]||('SECTION '+g))+'</div>';
+      html+='<div class="lqReGrp" data-grp="'+g+'">';
+      groups[g].forEach(function(d){
+        html+='<div class="lqReRow" data-tid="'+d.id+'" style="display:flex;align-items:center;gap:8px;padding:9px 8px;margin:3px 0;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;font-size:12.5px;font-weight:700;touch-action:none;user-select:none"><span class="lqReHandle" style="color:var(--muted);font-size:15px;letter-spacing:2px;flex:0 0 auto">\u22ee\u22ee</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+((typeof esc==='function')?esc(d.title):d.title)+'</span></div>';
+      });
+      html+='</div>';
+    });
+    html+='<button id="lqReDone" style="width:100%;margin-top:12px;background:rgba(143,208,255,.16);border:1px solid rgba(143,208,255,.5);color:#8fd0ff;border-radius:10px;padding:12px;font-weight:900;font-family:Orbitron">Done \u2014 save order</button></div>';
+    sh.innerHTML=html; showScrim('scrim');
+    var drag=null;
+    function rowsOf(grp){ return [].slice.call(grp.querySelectorAll('.lqReRow')); }
+    function pointOf(e){ return (e.touches&&e.touches[0])||e; }
+    function onDown(e){ var row=e.target.closest('.lqReRow'); if(!row) return;
+      drag={row:row,grp:row.parentElement,startY:pointOf(e).clientY};
+      row.style.opacity='.85'; row.style.transform='scale(1.02)'; row.style.borderColor='#8fd0ff';
+      e.preventDefault(); }
+    function onMove(e){ if(!drag) return; var y=pointOf(e).clientY;
+      var rows=rowsOf(drag.grp);
+      for(var i=0;i<rows.length;i++){ var r=rows[i]; if(r===drag.row) continue;
+        var b=r.getBoundingClientRect(), mid=b.top+b.height/2;
+        var db=drag.row.getBoundingClientRect();
+        if(db.top<mid && mid<db.bottom) continue;
+        if(y<mid && r.compareDocumentPosition(drag.row)&Node.DOCUMENT_POSITION_FOLLOWING===0){}
+      }
+      // simple robust swap: place drag.row before the first row whose midpoint is below y
+      var placed=false;
+      for(var j=0;j<rows.length;j++){ var rr=rows[j]; if(rr===drag.row) continue;
+        var bb=rr.getBoundingClientRect();
+        if(y < bb.top + bb.height/2){ if(rr.previousElementSibling!==drag.row) drag.grp.insertBefore(drag.row, rr); placed=true; break; } }
+      if(!placed && drag.grp.lastElementChild!==drag.row) drag.grp.appendChild(drag.row);
+      e.preventDefault(); }
+    function onUp(){ if(!drag) return; drag.row.style.opacity=''; drag.row.style.transform=''; drag.row.style.borderColor=''; drag=null; }
+    sh.addEventListener('touchstart',onDown,{passive:false});
+    sh.addEventListener('touchmove',onMove,{passive:false});
+    sh.addEventListener('touchend',onUp);
+    sh.addEventListener('mousedown',onDown);
+    sh.addEventListener('mousemove',function(e){ if(drag&&e.buttons) onMove(e); else if(drag&&!e.buttons) onUp(); });
+    sh.addEventListener('mouseup',onUp);
+    var dn=document.getElementById('lqReDone');
+    if(dn) dn.onclick=function(){
+      try{
+        sh.querySelectorAll('.lqReGrp').forEach(function(grp){
+          var n=10;
+          rowsOf(grp).forEach(function(r){ var t=(S.dailies||[]).find(function(d){return d&&d.id===r.getAttribute('data-tid');}); if(t){ t.gateOrd=n; n+=10; } });
+        });
+        save(); hideScrim(); try{ render(); }catch(e){}
+        try{ toast('Order saved'); }catch(e){}
+      }catch(e){}
+    };
+  };
   /* ===== v2.228.0: Battle SFX =====
      Event-driven one-shots only. No loops, no rAF, 2-deep pools per sound,
      per-sound throttles + 2.5s sting throttle, silent when tab hidden,
@@ -24520,7 +24656,7 @@ function raidSAInjectPanel(){ try{
       try{ document.addEventListener('visibilitychange',function(){ try{ if(document.hidden&&focusEl&&!focusEl.paused) focusEl.pause(); }catch(e){} }); }catch(e){} }
     if(focusEl.paused){ var p=focusEl.play(); if(p&&p.catch) p.catch(function(){}); }
     else focusEl.pause();
-    try{ var c=document.getElementById('fsChip'); if(c) c.textContent=(focusEl.paused?'\ud83c\udfa7 Focus':'\ud83c\udfa7 Focus \u25cf'); }catch(e){}
+    try{ var c=document.getElementById('fsChip'); if(c) c.textContent=(focusEl.paused?'<img src="art/badges/icon_focus.webp?v=1" style="width:14px;height:14px;vertical-align:-2px" alt=""> Focus':'<img src="art/badges/icon_focus.webp?v=1" style="width:14px;height:14px;vertical-align:-2px" alt=""> Focus \u25cf'); }catch(e){}
   }catch(e){} };
   window.showSinisterTen=function(){
     var box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal) return;
@@ -24552,7 +24688,7 @@ function raidSAInjectPanel(){ try{
         '<p style="margin-top:8px;font-size:11px;color:var(--muted)">It cannot strike back. It only endures.</p>';
     }
     html+='<button class="stnFace" id="stnHall" style="width:100%;margin-top:8px">The Hall of the Fallen</button>';
-    html+='<button class="stnFace" id="stnSfx" style="width:100%;margin-top:6px;opacity:.8">'+((S.sfxOn===false)?'\ud83d\udd07 Battle SFX: muted':'\ud83d\udd0a Battle SFX: on')+'</button>';
+    html+='<button class="stnFace" id="stnSfx" style="width:100%;margin-top:6px;opacity:.8">'+((S.sfxOn===false)?'<img src="art/badges/icon_sound.webp?v=1" style="width:15px;height:15px;vertical-align:-3px;filter:grayscale(1);opacity:.45" alt=""> Battle SFX: muted':'<img src="art/badges/icon_sound.webp?v=1" style="width:15px;height:15px;vertical-align:-3px" alt=""> Battle SFX: on')+'</button>';
     box.innerHTML=html;
     modal.classList.add('show');
     var hb=box.querySelector('#stnHall'); if(hb) hb.onclick=function(){ window.showSinisterHall(); };
