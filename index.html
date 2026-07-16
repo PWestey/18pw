@@ -2776,7 +2776,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.250.1-steward-callout';
+const APP_BUILD='v2.250.2-chain-brand';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3049,6 +3049,7 @@ function fmtBig(n){ n=Math.round(n||0); var neg=n<0; if(neg) n=-n;
   else { var U=[[1e18,'Qi'],[1e15,'Qa'],[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']];
     out=String(n); for(var i=0;i<U.length;i++){ if(n>=U[i][0]){ var v=n/U[i][0]; out=(v>=100?Math.round(v):v>=10?v.toFixed(1):v.toFixed(2)).toString().replace(/\.0+$/,'')+U[i][1]; break; } } }
   return (neg?'-':'')+out; } /* v2.249.1: one number language everywhere */
+window.__lqChain=function(fn){ if(window.__lqLastAutoBattle){ window.__lqAutoRun=(window.__lqAutoRun|0)+1; try{ fn(); }catch(e){} window.__lqAutoRun=Math.max(0,(window.__lqAutoRun|0)-1); } else { try{ fn(); }catch(e){} } }; /* v2.250.2: continuation battles inherit the auto brand */
 function _icoSrc(k){ if(typeof CURRENCY_ICON==="object"&&CURRENCY_ICON[k]) return CURRENCY_ICON[k]; if(typeof window!=="undefined"&&window.OFA&&window.OFA[k]) return window.OFA[k]; return ''; }
 function cicon(k,sz){ sz=sz||15; var u=_icoSrc(k); return u?'<img class="cIcon" style="width:'+sz+'px;height:'+sz+'px" src="'+u+'" alt="">':''; }
 function ficon(k,sz){ sz=sz||22; var u=_icoSrc(k); return u?'<img class="fIcon" style="width:'+sz+'px;height:'+sz+'px" src="'+u+'" alt="">':''; } /* v2.244: OFA fallback — mode_/dom_/feat_ art reachable everywhere */ function prestigeBadgeArt(p){ p=Math.max(0,Math.floor(p||0)); if(p<5) return null; var t=Math.min(50,Math.floor(p/5)*5); return "prestige_p"+(t<10?"0":"")+t; } function prestigeArtFrame(p){ p=Math.max(0,Math.floor(p||0)); if(p>=10)return "frame_hogwarts"; if(p>=7)return "frame_hufflepuff"; if(p>=5)return "frame_gryffindor"; if(p>=3)return "frame_ravenclaw"; if(p>=1)return "frame_slytherin"; return null; } function ofHomeTileIcon(nm){ var m={"Fellowship":"tab_greathall","War Table":"tab_holotable","Forge":"feat_forge","Expeditions":"expeditions"}; var k=m[nm]; return k?('<span class="ofHomeTileIcon">'+ficon(k,40)+'</span>'):''; }
@@ -3804,7 +3805,7 @@ function riftShowResult(state,extra){ injectRiftStyles(); injectGauntletStyles()
     r.querySelectorAll('[data-bless]').forEach(b=>{ b.onclick=()=>{ try{v172Float(b,b.querySelector('.gbName').textContent);}catch(e){} riftApplyBlessing(b.dataset.bless); }; });
   } else if(state==='fell' && R){ r.className='result lose'; const left=(extra&&extra.left)||0;
     r.innerHTML='<h2 style="color:#ffb84a">SQUAD FELL</h2><p style="margin:4px 0">Stage '+R.stage+' \u00b7 Score '+v168Num(riftScore())+'</p>'+mvpHtml+'<div class="riftFellSub"><b>'+left+'</b> '+R.label.replace(' Rift','')+' hero'+(left===1?'':'es')+' still ready. Send them in to hold the line.</div><div class="gRunBtns"><button class="mini-btn primary" id="riftNext">Send next squad</button><button class="mini-btn" id="riftRetire">Retire &amp; bank</button></div>';
-    const nx=document.getElementById('riftNext'); if(nx) nx.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} if(!riftDeployNext()){ const sum=riftEndRun('out'); riftShowResult('ended',sum); } }; if(nx && typeof autoAdvance!=='undefined' && autoAdvance){ try{clearAuto();}catch(e){} autoNext=setInterval(function(){ try{clearAuto();}catch(e){} try{ var _rn=document.getElementById('riftNext'); if(_rn) _rn.click(); }catch(e){} }, 850); }
+    const nx=document.getElementById('riftNext'); if(nx) nx.onclick=()=>{ try{document.getElementById('arena').classList.remove('show');}catch(e){} try{document.querySelector('.arena').classList.remove('arenaEnded');}catch(e){} if(!riftDeployNext()){ const sum=riftEndRun('out'); riftShowResult('ended',sum); } }; if(nx && typeof autoAdvance!=='undefined' && autoAdvance){ try{clearAuto();}catch(e){} autoNext=setInterval(function(){ try{clearAuto();}catch(e){} try{ var _rn=document.getElementById('riftNext'); if(_rn) window.__lqChain(function(){ _rn.click(); }); }catch(e){} }, 850); }
     const rt=document.getElementById('riftRetire'); if(rt) rt.onclick=()=>{ const sum=riftEndRun('retire'); riftShowResult('ended',sum); };
   } else { r.className='result lose'; const sum=extra||(S.rift&&S.rift.lastRun)||{stage:0,score:0,best:0,label:'Rift'};
     const claimed=Object.keys(ensureRift().claimedMs||{}).map(Number).sort((a,b)=>a-b);
@@ -7130,7 +7131,7 @@ function wireAuto(){
   /* v2.189.0: in Auto Resolve, chain like Clash — 500ms between stages instead of a 6s countdown */
   const _fast=(typeof autoResolve!=='undefined'&&autoResolve&&!battleReplay);
   let n=_fast?1:6; const cd=document.getElementById('cdn');
-  if(autoAdvance){ autoNext=setInterval(()=>{ n--; if(cd)cd.textContent=n; if(n<=0) nextBattle(); },_fast?500:1000); } else if(cd){ cd.textContent='off'; }
+  if(autoAdvance){ autoNext=setInterval(()=>{ n--; if(cd)cd.textContent=n; if(n<=0) window.__lqChain(nextBattle); },_fast?500:1000); } else if(cd){ cd.textContent='off'; }
   const an=document.getElementById('arenaNext'); if(an) an.onclick=nextBattle;
   const ar=document.getElementById('arenaReplay'); if(ar) ar.onclick=replayBattle;
   const al=document.getElementById('arenaLineup'); if(al) al.onclick=battleChangeLineup;
