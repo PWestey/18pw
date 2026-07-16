@@ -1237,13 +1237,13 @@ function prestigePolishSummaryHTML(){
 function prestigeHallHTML(){
   ensurePrestigeState();
   const total=totalPrestigeStars(), top=topPrestigeHeroes(3), m=nextPrestigeMilestone();
-  const rows=top.length?top.map(h=>{ const face=h.img?'<img src="'+h.img+'">':initials(h.name); return '<div class="prestigeHeroRow" data-prestigehero="'+h.id+'"><div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="pn">'+esc(h.name)+'</div><div class="pm">'+esc(h.ip)+' · '+h.role+' · PWR '+powerOf(h)+(prestigeCatchActive(h)?' · Catch-up active':'')+'</div></div><div class="ps">★'+(h.prestige||0)+'</div></div>'; }).join(''):'<div class="empty" style="padding:10px;margin-top:8px">No prestige heroes yet. Your first New Cycle will open the Hall.</div>';
+  const rows=top.length?top.map(h=>{ const face=h.img?'<img src="'+h.img+'">':initials(h.name); return '<div class="prestigeHeroRow" data-prestigehero="'+h.id+'"><div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="pn">'+esc(h.name)+'</div><div class="pm">'+esc(h.ip)+' · '+h.role+' · PWR '+fmtBig(powerOf(h))+(prestigeCatchActive(h)?' · Catch-up active':'')+'</div></div><div class="ps">★'+(h.prestige||0)+'</div></div>'; }).join(''):'<div class="empty" style="padding:10px;margin-top:8px">No prestige heroes yet. Your first New Cycle will open the Hall.</div>';
   return '<div class="prestigeHall"><div class="phh"><b>★ Prestige Hall</b><span>'+total+' total stars</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">A long-term showcase for favorite heroes who have begun new cycles.</p><div class="prestigeMini"><div class="mini"><b>'+total+'</b><span>Total ★</span></div><div class="mini"><b>'+Math.max(0,m.need)+'</b><span>To '+m.next+'★</span></div><div class="mini"><b>'+top.length+'</b><span>Prestiged</span></div></div><div class="catchupBox"><b>Catch-up:</b> prestiged heroes gain 3x EXP until they return to their previous cap. '+prestigeMilestoneBonusText()+'.</div>'+prestigePolishSummaryHTML()+rows+'<div class="lifeactions"><button class="primary" id="openPrestigeHall">Open Prestige Hall</button></div></div>';
 }
 function showPrestigeHall(){
   const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
   const total=totalPrestigeStars(), m=nextPrestigeMilestone(), heroes=topPrestigeHeroes(20);
-  const rows=heroes.length?heroes.map(h=>{ const face=h.img?'<img src="'+h.img+'">':initials(h.name), pct=prestigeCatchActive(h)?Math.min(100,h.level/prestigeCatchTarget(h)*100):100; return '<div class="prestigeHeroRow" data-prestigehero="'+h.id+'"><div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="pn">'+esc(h.name)+' · ★'+(h.prestige||0)+'</div><div class="pm">'+esc(heroArchetype(h)?.label||h.role)+' · Lv '+h.level+'/'+rankCap(h)+' · Bond Lv '+bondLevel(h)+' · PWR '+powerOf(h)+'</div><div class="xpbar" style="height:7px;margin-top:5px"><i style="width:'+pct+'%;background:linear-gradient(90deg,#ffb01f,#ff5d9e)"></i></div></div><div class="ps">'+(prestigeCatchActive(h)?'3x':'MAX')+'</div></div>'; }).join(''):'<div class="empty" style="padding:12px">No prestiged heroes yet.</div>';
+  const rows=heroes.length?heroes.map(h=>{ const face=h.img?'<img src="'+h.img+'">':initials(h.name), pct=prestigeCatchActive(h)?Math.min(100,h.level/prestigeCatchTarget(h)*100):100; return '<div class="prestigeHeroRow" data-prestigehero="'+h.id+'"><div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="pn">'+esc(h.name)+' · ★'+(h.prestige||0)+(((h.ascension|0)>0)?(' · ⬆ Asc '+(h.ascension|0)):'')+'</div><div class="pm">'+esc(heroArchetype(h)?.label||h.role)+' · Lv '+h.level+'/'+rankCap(h)+' · Bond Lv '+bondLevel(h)+' · PWR '+fmtBig(powerOf(h))+'</div><div class="xpbar" style="height:7px;margin-top:5px"><i style="width:'+pct+'%;background:linear-gradient(90deg,#ffb01f,#ff5d9e)"></i></div></div><div class="ps">'+(prestigeCatchActive(h)?'3x':'MAX')+'</div></div>'; }).join(''):'<div class="empty" style="padding:12px">No prestiged heroes yet.</div>';
   const hist=(S.prestigeHistory||[]).slice(0,6).map(x=>'<div class="winItem"><div class="wt">★ '+esc(x.name)+' reached ★'+x.prestige+'</div><div class="wm">New Cycle started · previous cap Lv '+(x.catchTarget||100)+'</div><div class="wd">'+new Date(x.at).toLocaleDateString()+'</div></div>').join('');
   box.innerHTML='<div class="prestigeCelebrate">★</div><h2>Prestige Hall</h2><p>Favorite heroes can keep cycling without being punished. The reset is temporary; the star is permanent.</p>'+
     '<div class="prestigeHall"><div class="phh"><b>Account Prestige</b><span>'+total+' total stars</span></div><div class="prestigeMini"><div class="mini"><b>'+total+'</b><span>Total ★</span></div><div class="mini"><b>'+m.next+'</b><span>Next goal</span></div><div class="mini"><b>'+Math.max(0,m.need)+'</b><span>Needed</span></div></div><div class="catchupBox"><b>Account bonus:</b> '+prestigeMilestoneBonusText()+'.<br><b>Catch-up:</b> 3x EXP until a prestiged hero reaches its pre-prestige cap.</div>'+prestigePolishSummaryHTML()+'</div>'+
@@ -1543,7 +1543,12 @@ function ascTick(){
   while(guard++<50){
     var best=null,bp=-1;
     var A=(S.heroes||[]);
-    for(var i=0;i<A.length;i++){ var h=A[i]; if(!h||!h.owned) continue; var t=(h.ascension|0)||0; if(t>=mx) continue; var p=(h.prestige|0)||0; if(p>bp){bp=p;best=h;} }
+    try{ /* v2.249: the scarcest investment obeys the Priority Board first */
+      var ids=(S.heroPriority||[]);
+      for(var q=0;q<ids.length;q++){ var ph=A.find(function(x){return x&&x.id===ids[q]&&x.owned;});
+        if(ph && ((ph.ascension|0)||0)<mx){ best=ph; break; } }
+    }catch(e){}
+    if(!best){ for(var i=0;i<A.length;i++){ var h=A[i]; if(!h||!h.owned) continue; var t=(h.ascension|0)||0; if(t>=mx) continue; var p=(h.prestige|0)||0; if(p>bp){bp=p;best=h;} } }
     if(!best) return;
     var cost=Math.round((TUNE.ascShardBase||3)*Math.pow(TUNE.ascCostGrowth||1.5,(best.ascension|0)||0));
     if((S.ascendantShards||0)>=cost){ S.ascendantShards-=cost; best.ascension=((best.ascension|0)||0)+1; }
@@ -2621,6 +2626,10 @@ function ensureForgeState(){
         if(t.gate!=='preCore'&&t.gate!=='preFull') t.gate='preFull';
       } });
   } }catch(e){} /* v2.245: Peptalk + protein shake ride PRE-GAMING mornings, by title, forever */
+  try{ if(S && Array.isArray(S.dailies)){
+    var _hasSR=S.dailies.some(function(t){ return t&&t.title&&/steward.{0,4}s?\s*(weekly\s*)?review/i.test(t.title); });
+    if(!_hasSR) S.dailies.push({id:uid(),title:"Steward\u2019s Weekly Review",diff:'med',freq:'weekly',domain:'home',done:false,notes:'Walk the 25 areas at the week\u2019s start \u2014 Notice \u00b7 Plan \u00b7 Execute \u00b7 Close the Loop. Plans forge quests automatically.'});
+  } }catch(e){} /* v2.250.1: the review has a standing appointment */
   try{ if(false){ } }catch(e){} /* v2.227.0: the v2.224 merge deleted the only preCore-tagged daily — the window could never be earned; the merged Pre-Gaming now carries the gate */
   if(!S.forge||typeof S.forge!=='object') S.forge={};
   if(!S.forge.domains||typeof S.forge.domains!=='object') S.forge.domains={};
@@ -2767,7 +2776,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.248.1-valor-quartermaster';
+const APP_BUILD='v2.250.1-steward-callout';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3035,6 +3044,11 @@ try{ CURRENCY_ICON.rooms='art/badges/badge_ror.webp?v=1'; }catch(e){}
 try{ CURRENCY_ICON.sinister='art/badges/badge_sinister.webp?v=1'; }catch(e){} /* v2.240 */
 try{ CURRENCY_ICON.icon_jedi='art/badges/icon_jedi.webp?v=1'; CURRENCY_ICON.icon_focus='art/badges/icon_focus.webp?v=1'; CURRENCY_ICON.icon_sound='art/badges/icon_sound.webp?v=1'; CURRENCY_ICON.icon_star='art/badges/icon_star.webp?v=1'; CURRENCY_ICON.icon_hall='art/badges/icon_hall.webp?v=1'; }catch(e){} /* v2.245: golden icon set */ /* v2.235: RoR war-card medallion */
 try{if(typeof CURRENCY_ICON==='object'){var _O=window.OFA;CURRENCY_ICON.gold=CURRENCY_ICON.credits=_O.credits;CURRENCY_ICON.crystals=CURRENCY_ICON.kyber=_O.kyber;CURRENCY_ICON.sparks=_O.sparks;CURRENCY_ICON.dust=CURRENCY_ICON.uru=_O.uru;CURRENCY_ICON.oath_icon="art/locations/art_6fa22810da.webp";CURRENCY_ICON.mission_board="art/locations/art_dcf1dc11de.webp";CURRENCY_ICON.ss_anne="art/locations/art_89b2e9532a.webp";CURRENCY_ICON.elune="art/locations/art_fd32c3ca0e.webp";CURRENCY_ICON.frame_slytherin="art/locations/art_154404e8b8.webp";CURRENCY_ICON.frame_ravenclaw="art/locations/art_a70773e08b.webp";CURRENCY_ICON.frame_gryffindor="art/locations/art_ec01b2d945.webp";CURRENCY_ICON.frame_hufflepuff="art/locations/art_655ae18806.webp";CURRENCY_ICON.frame_hogwarts="art/locations/art_18ff2c7061.webp";CURRENCY_ICON.prestige_p05="art/locations/prestige_p05.webp?v=2";CURRENCY_ICON.prestige_p10="art/locations/prestige_p10.webp?v=2";CURRENCY_ICON.prestige_p15="art/locations/prestige_p15.webp?v=2";CURRENCY_ICON.prestige_p20="art/locations/prestige_p20.webp?v=2";CURRENCY_ICON.prestige_p25="art/locations/prestige_p25.webp?v=2";CURRENCY_ICON.prestige_p30="art/locations/prestige_p30.webp?v=2";CURRENCY_ICON.prestige_p35="art/locations/prestige_p35.webp?v=2";CURRENCY_ICON.prestige_p40="art/locations/prestige_p40.webp?v=2";CURRENCY_ICON.prestige_p45="art/locations/prestige_p45.webp?v=2";CURRENCY_ICON.prestige_p50="art/locations/prestige_p50.webp?v=2";CURRENCY_ICON.rar_common="art/locations/art_7afb4cadbb.webp";CURRENCY_ICON.rar_rare="art/locations/art_8584a51406.webp";CURRENCY_ICON.rar_epic="art/locations/art_7f34d92d9e.webp";CURRENCY_ICON.rar_legendary="art/locations/art_3e6c1d529a.webp";CURRENCY_ICON.rar_mythic="art/locations/art_7daf7ecd6b.webp";CURRENCY_ICON.rar_eternal="art/locations/art_c94ec4b5f4.webp";CURRENCY_ICON.force=_O.force;CURRENCY_ICON.settings_gear="art/locations/art_d9bbe9a7f8.webp";CURRENCY_ICON.campaign=_O.mode_campaign;CURRENCY_ICON.tower=_O.mode_tower;CURRENCY_ICON.clash=_O.mode_clash;CURRENCY_ICON.raid=_O.mode_raid;CURRENCY_ICON.conquest=_O.mode_conquest;CURRENCY_ICON.gauntlet=_O.mode_gauntlet;CURRENCY_ICON.rift=_O.mode_rift;CURRENCY_ICON.arena=_O.mode_arena;CURRENCY_ICON.siege=_O.mode_siege;CURRENCY_ICON.expedition=_O.mode_expedition;CURRENCY_ICON.expeditions=_O.mode_expedition;CURRENCY_ICON.tab_missions=_O.tab_missions;CURRENCY_ICON.tab_hq=_O.tab_hq;CURRENCY_ICON.tab_greathall=_O.tab_greathall;CURRENCY_ICON.tab_holotable=_O.tab_holotable;CURRENCY_ICON.tab_archives=_O.tab_archives;CURRENCY_ICON.feat_forge=_O.feat_forge;CURRENCY_ICON.feat_crucible=_O.feat_crucible;;CURRENCY_ICON.stones=_O.stones;CURRENCY_ICON.cores=CURRENCY_ICON.heroCores=_O.iso8;CURRENCY_ICON.bossCores=_O.isoprime;CURRENCY_ICON.bossFrags=_O.isosliver;CURRENCY_ICON.tickets=CURRENCY_ICON.summonTickets=_O.holo;CURRENCY_ICON.momentum=_O.force;}}catch(e){}
+function fmtBig(n){ n=Math.round(n||0); var neg=n<0; if(neg) n=-n;
+  var out; if(n<1e4) out=String(n);
+  else { var U=[[1e18,'Qi'],[1e15,'Qa'],[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']];
+    out=String(n); for(var i=0;i<U.length;i++){ if(n>=U[i][0]){ var v=n/U[i][0]; out=(v>=100?Math.round(v):v>=10?v.toFixed(1):v.toFixed(2)).toString().replace(/\.0+$/,'')+U[i][1]; break; } } }
+  return (neg?'-':'')+out; } /* v2.249.1: one number language everywhere */
 function _icoSrc(k){ if(typeof CURRENCY_ICON==="object"&&CURRENCY_ICON[k]) return CURRENCY_ICON[k]; if(typeof window!=="undefined"&&window.OFA&&window.OFA[k]) return window.OFA[k]; return ''; }
 function cicon(k,sz){ sz=sz||15; var u=_icoSrc(k); return u?'<img class="cIcon" style="width:'+sz+'px;height:'+sz+'px" src="'+u+'" alt="">':''; }
 function ficon(k,sz){ sz=sz||22; var u=_icoSrc(k); return u?'<img class="fIcon" style="width:'+sz+'px;height:'+sz+'px" src="'+u+'" alt="">':''; } /* v2.244: OFA fallback — mode_/dom_/feat_ art reachable everywhere */ function prestigeBadgeArt(p){ p=Math.max(0,Math.floor(p||0)); if(p<5) return null; var t=Math.min(50,Math.floor(p/5)*5); return "prestige_p"+(t<10?"0":"")+t; } function prestigeArtFrame(p){ p=Math.max(0,Math.floor(p||0)); if(p>=10)return "frame_hogwarts"; if(p>=7)return "frame_hufflepuff"; if(p>=5)return "frame_gryffindor"; if(p>=3)return "frame_ravenclaw"; if(p>=1)return "frame_slytherin"; return null; } function ofHomeTileIcon(nm){ var m={"Fellowship":"tab_greathall","War Table":"tab_holotable","Forge":"feat_forge","Expeditions":"expeditions"}; var k=m[nm]; return k?('<span class="ofHomeTileIcon">'+ficon(k,40)+'</span>'):''; }
@@ -3174,7 +3188,7 @@ function rollover(){
 }
 const STREAK_MS=[[3,{cry:15}],[7,{cry:30,grace:1}],[14,{cry:50,grace:1}],[30,{cry:100,grace:2}],[50,{cry:150,grace:2}],[100,{cry:300,grace:3}]];
 /* G:nextStreakMs */
-function v175Detonate(title, sub, color){
+function v175Detonate(title, sub, color){ if(window.__lqLastAutoBattle&&typeof battleState!=='undefined'&&battleState&&!battleState.over) return;
   try{
     color=color||'#ffd95a';
     var fl=document.createElement('div'); fl.className='v174Flash'; fl.style.background='radial-gradient(circle,#fff,'+color+' 55%,transparent)'; document.body.appendChild(fl);
@@ -3440,7 +3454,7 @@ function startSiegeBattle(k,team){
   try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('siege')+' · '+dk.label+' · Wave '+waveIdx+(waveIdx%SIEGE_REWARD.milestoneEvery===0?' · BOSS WAVE':''); }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
-  document.getElementById('arena').classList.add('show');
+  if(window.__lqAutoRun>0){ window.__lqLastAutoBattle=true; } else { window.__lqLastAutoBattle=false; try{ if(window.__lqStopGChain) window.__lqStopGChain(); }catch(e){} document.getElementById('arena').classList.add('show'); } /* v2.248.2: headless auto · manual wins */
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner(dk.label+' Front · Wave '+waveIdx,(dk.color||'#b88af0')); }catch(e){}
@@ -3719,7 +3733,7 @@ function startRiftBattle(){ const R=ensureRift().run; if(!R||!R.alive) return;
   try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('rift')+' \u00b7 '+String(R.label||'').replace(/\s*Rift$/,'')+' \u00b7 Stage '+R.stage+(R.stage%RIFT_TUNE.bossEvery===0?' \u00b7 BOSS':''); }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
-  document.getElementById('arena').classList.add('show');
+  if(window.__lqAutoRun>0){ window.__lqLastAutoBattle=true; } else { window.__lqLastAutoBattle=false; try{ if(window.__lqStopGChain) window.__lqStopGChain(); }catch(e){} document.getElementById('arena').classList.add('show'); } /* v2.248.2: headless auto · manual wins */
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner(R.label+' \u00b7 Stage '+R.stage,RIFT_ELEM_COLOR[R.element]||'#b18bff'); }catch(e){}
@@ -3956,7 +3970,7 @@ function startGauntletBattle(){ const R=S.gauntlet&&S.gauntlet.run; if(!R||!R.al
   try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('gauntlet')+' · Floor '+R.floor+(R.floor%GAUNTLET_TUNE.bossEvery===0?' · BOSS':''); }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
-  document.getElementById('arena').classList.add('show');
+  if(window.__lqAutoRun>0){ window.__lqLastAutoBattle=true; } else { window.__lqLastAutoBattle=false; try{ if(window.__lqStopGChain) window.__lqStopGChain(); }catch(e){} document.getElementById('arena').classList.add('show'); } /* v2.248.2: headless auto · manual wins */
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner('Gauntlet · Floor '+R.floor,'#ff9f43'); }catch(e){}
@@ -4180,7 +4194,7 @@ function startArenaBattle(rank){ const arCond=arenaRivalCondition(rank); const t
   try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('arena')+' · '+rv.name+' · Rank '+rank+(rank%ARENA_TUNE.bossEvery===0?' · CHAMPION':''); }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
-  document.getElementById('arena').classList.add('show');
+  if(window.__lqAutoRun>0){ window.__lqLastAutoBattle=true; } else { window.__lqLastAutoBattle=false; try{ if(window.__lqStopGChain) window.__lqStopGChain(); }catch(e){} document.getElementById('arena').classList.add('show'); } /* v2.248.2: headless auto · manual wins */
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner('Challenging '+rv.name,'#ff6ec7'); }catch(e){}
@@ -4341,7 +4355,7 @@ function startConquestBattle(tier){ const mod=conquestModifier(tier); const team
   try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('conquest')+' · '+bn+' · '+mod.label; }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
-  document.getElementById('arena').classList.add('show');
+  if(window.__lqAutoRun>0){ window.__lqLastAutoBattle=true; } else { window.__lqLastAutoBattle=false; try{ if(window.__lqStopGChain) window.__lqStopGChain(); }catch(e){} document.getElementById('arena').classList.add('show'); } /* v2.248.2: headless auto · manual wins */
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner(mod.label,mod.color); }catch(e){}
@@ -5435,7 +5449,7 @@ function bondItems(gains,domain){ const out=(gains||[]).slice(0,4).map(b=>({txt:
 /* G:titleItems */
 function baseRewardItems(diff,chargeOverride){ const r=TASKREWARD[diff]||TASKREWARD.med, cr=CRYSTALS[diff]||CRYSTALS.med; const out=[]; out.push({txt:'Momentum +'+Math.round(momentumPct()*100)+'% idle',cls:'main'}); out.push({txt:'+'+cr+'◆ crystals',cls:'bonus'},{txt:'+'+r.g+'⦿ gold',cls:'bonus'}); if(r.d) out.push({txt:'+'+r.d+'❖ dust',cls:'bonus'}); return out; }
 function bondToast(gains){ if(!gains||!gains.length) return ''; return ' · 💞 '+gains[0].name+' +'+gains[0].xp+' Bond XP'+(gains.length>1?' +'+(gains.length-1)+' more':''); }
-function v176GoldFloat(el, text){ try{ if(!el||!el.getBoundingClientRect) return; var r=el.getBoundingClientRect(); var fx=document.createElement('div'); fx.className='v176Gold'; fx.textContent=text; fx.style.left=(r.left+r.width/2)+'px'; fx.style.top=(r.top-18)+'px'; document.body.appendChild(fx); setTimeout(function(){ if(fx.parentNode) fx.parentNode.removeChild(fx); },1350); }catch(e){} }
+function v176GoldFloat(el, text){ if(window.__lqLastAutoBattle&&typeof battleState!=='undefined'&&battleState&&!battleState.over) return; try{ if(!el||!el.getBoundingClientRect) return; var r=el.getBoundingClientRect(); var fx=document.createElement('div'); fx.className='v176Gold'; fx.textContent=text; fx.style.left=(r.left+r.width/2)+'px'; fx.style.top=(r.top-18)+'px'; document.body.appendChild(fx); setTimeout(function(){ if(fx.parentNode) fx.parentNode.removeChild(fx); },1350); }catch(e){} }
 function v176GoldFlash(){ try{ var g=document.createElement('div'); g.className='v176GoldFlash'; document.body.appendChild(g); setTimeout(function(){ if(g.parentNode) g.parentNode.removeChild(g); },720); }catch(e){} }
 function v176GoldenRoll(el, d){
   try{
@@ -5518,7 +5532,7 @@ function renderForge(v){ injectForgeStyles(); ensureLegendaryState(); var sh=S.l
     if(!inst){ forgePickIid=null; }
     else { var bp=legendBp(inst.key); html+='<div class="ofSecHead">Equip '+esc(bp?bp.name:'Legendary')+' \u00b7 Lv '+(inst.level||1)+' \u2014 choose a hero</div>';
       var owned=(S.heroes||[]).filter(function(h){return h&&h.owned;}).sort(function(a,b){return powerOf(b)-powerOf(a);});
-      owned.forEach(function(h){ var cur=legendOfHero(h); var note=(h.legendary===inst.iid)?'equipped here':(cur?('replaces '+((legendBp(cur.key)||{}).name||'current')):'empty slot'); html+='<button class="ofPickHero" data-eqhero="'+esc(h.id)+'"><span style="display:flex;flex-direction:column"><b>'+esc(h.name)+'</b><span>'+esc(h.role)+' \u00b7 \u2694 '+powerOf(h)+'</span></span><span>'+note+'</span></button>'; });
+      owned.forEach(function(h){ var cur=legendOfHero(h); var note=(h.legendary===inst.iid)?'equipped here':(cur?('replaces '+((legendBp(cur.key)||{}).name||'current')):'empty slot'); html+='<button class="ofPickHero" data-eqhero="'+esc(h.id)+'"><span style="display:flex;flex-direction:column"><b>'+esc(h.name)+'</b><span>'+esc(h.role)+' \u00b7 \u2694 '+fmtBig(powerOf(h))+'</span></span><span>'+note+'</span></button>'; });
       html+='<button class="go" id="forgePickCancel" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:6px">Cancel</button>';
     }
   }
@@ -6639,8 +6653,7 @@ function ofOutsideReveal(){
         try{ renderHUD(); }catch(e){}
         return;
       }
-      window.__ofOutside=false;
-      var a=document.getElementById('arena'); if(a) a.classList.add('show');
+      window.__ofOutside=false;       var a=document.getElementById('arena'); if(a&&!window.__lqLastAutoBattle) a.classList.add('show'); /* v2.248.2 */
     }
   }catch(e){}
 }
@@ -6745,7 +6758,7 @@ function startBattle(mode,opts){
   if(battleReplay) head='REPLAY · '+head; applyBattleScene(battleMode,head,sub);
   document.getElementById('arenaResult').style.display='none'; document.getElementById('arenaResult').className='result'; try{var _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded');}catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
-  document.getElementById('arena').classList.add('show');
+  if(window.__lqAutoRun>0){ window.__lqLastAutoBattle=true; } else { window.__lqLastAutoBattle=false; try{ if(window.__lqStopGChain) window.__lqStopGChain(); }catch(e){} document.getElementById('arena').classList.add('show'); } /* v2.248.2: headless auto · manual wins */
   wireBattleControls();
   battleLastReplay={mode:battleMode,stage:replayStage,floor:replayFloor};
   battleState={players,enemies,turn:0,events:[],replay:battleReplay,meta:battleLastReplay};
@@ -7003,6 +7016,7 @@ function floatSupport(el,n){ if(n>0) floatText(el,'SUP +'+Math.round(n),'support
 function abilityBanner(att,type){ try{ if(typeof window!=='undefined'&&window.__lqResolving) return; if(typeof battleSpeed!=='undefined' && battleSpeed!==1) return; if(!att) return; var nm=(typeof abilityName==='function')?abilityName(att,type):null; if(!nm) return; var b=document.getElementById('abilityBanner'); if(!b){ b=document.createElement('div'); b.id='abilityBanner'; b.style.cssText='position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:40;padding:6px 15px;border-radius:999px;background:linear-gradient(135deg,rgba(13,24,48,.93),rgba(18,36,63,.93));border:1px solid rgba(255,255,255,.16);box-shadow:0 4px 16px rgba(0,0,0,.5);font-size:13px;letter-spacing:.2px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .16s ease'; (document.querySelector('.arena')||document.body).appendChild(b); } var col=(att.color)||(typeof ROLECOLOR!=='undefined'&&ROLECOLOR[att.role])||'#8fd0ff'; b.innerHTML='<b style="color:'+col+'">'+esc(att.name||'')+'</b> <span style="color:#dfeaff;font-weight:600">'+esc(nm)+'</span>'; b.style.opacity='1'; clearTimeout(b.__t); b.__t=setTimeout(function(){ try{b.style.opacity='0';}catch(_e){} }, Math.max(1200,(typeof battleDelay==='function'?battleDelay():2000)-300)); }catch(e){} }
 function passiveBanner(text,color){
   if(!text) return;
+  if(window.__lqAutoRun>0) return; /* v2.248.2 */
   battleEvent(text,'trigger');
   try{document.querySelectorAll('.passiveToast').forEach(function(x){x.remove();});}catch(e){}
   const b=document.createElement('div'); b.className='passiveToast'; b.textContent=text;
@@ -8119,7 +8133,7 @@ function formationMultiplier(h,row){
 }
 function squadCandidateButtonHTML(h,mode){
   const arr=squad(mode), on=arr.includes(h.id), full=!on&&arr.length>=TUNE.teamSize, disabled=full?' disabled':''; const face=h.img?'<img src="'+h.img+'">':initials(h.name), p=passiveOf(h), a=heroArchetype(h); const idx=arr.indexOf(h.id), row=idx>=0?formationRow(idx):null, ev=row?formationEvaluationV139(h,row):null; const note=row?formationStatusChipV139(h,row)+' <span style="color:var(--muted)">'+esc(ev.summary)+'</span>':'<span class="slotstatus neutral">Preferred</span> <span style="color:var(--muted)">'+esc(preferredRowTextV139(h))+'</span>';
-  return '<button class="pickHero '+(on?'on':'')+'" data-pick="'+h.id+'"'+disabled+' style="'+(disabled?'opacity:.45':'')+'"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="pmeta"><span class="pname">'+esc(h.name)+'</span><span class="psub">'+esc(ipLabel(h.ip||h.ipName||''))+' · '+h.role+' · PWR '+powerOf(h)+(a?' · '+esc(a.label):'')+(p?' · '+esc(p.name):'')+'</span><span class="pnote">'+note+'</span></span><span class="status">'+(on?'✓':'＋')+'</span></button>';
+  return '<button class="pickHero '+(on?'on':'')+'" data-pick="'+h.id+'"'+disabled+' style="'+(disabled?'opacity:.45':'')+'"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="pmeta"><span class="pname">'+esc(h.name)+'</span><span class="psub">'+esc(ipLabel(h.ip||h.ipName||''))+' · '+h.role+' · PWR '+fmtBig(powerOf(h))+(a?' · '+esc(a.label):'')+(p?' · '+esc(p.name):'')+'</span><span class="pnote">'+note+'</span></span><span class="status">'+(on?'✓':'＋')+'</span></button>';
 }
 function suggestSquad(mode){
   mode=mode||campSub||'campaign';
@@ -8144,7 +8158,7 @@ function suggestSquad(mode){
 }
 function openSquadPicker(mode){
   mode=mode||campSub||'campaign'; const meta=SQUADS.find(s=>s[0]===mode)||SQUADS[0]; const arr=squad(mode); const allOwned=S.heroes.filter(h=>h.owned); const owned=squadPickerFiltered(allOwned); const s=document.getElementById('sheet');
-  const selected=arr.map((id,i)=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return ''; const row=formationRow(i), face=h.img?'<img src="'+h.img+'">':initials(h.name), ev=formationEvaluationV139(h,row); return '<div class="pickSlot '+row+' themeframe"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="slotmeta"><span class="slotname">'+(i+1)+'. '+esc(h.name)+'</span><span class="slotsub">'+(row==='front'?'Front Row':'Back Row')+' · '+esc(ipLabel(h.ip||''))+' · '+h.role+' · PWR '+powerOf(h)+'</span><span class="slotnote">'+formationStatusChipV139(h,row)+' <span style="color:var(--muted)">'+esc(ev.summary)+'</span></span></span><span class="slotbtns"><button data-move="up" data-id="'+h.id+'">↑</button><button data-move="down" data-id="'+h.id+'">↓</button><button data-move="'+(row==='front'?'back':'front')+'" data-id="'+h.id+'">'+(row==='front'?'Back':'Front')+'</button><button data-remove="'+h.id+'">×</button></span></div>'; }).join('') || '<span class="pill warn">No heroes assigned</span>';
+  const selected=arr.map((id,i)=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return ''; const row=formationRow(i), face=h.img?'<img src="'+h.img+'">':initials(h.name), ev=formationEvaluationV139(h,row); return '<div class="pickSlot '+row+' themeframe"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="slotmeta"><span class="slotname">'+(i+1)+'. '+esc(h.name)+'</span><span class="slotsub">'+(row==='front'?'Front Row':'Back Row')+' · '+esc(ipLabel(h.ip||''))+' · '+h.role+' · PWR '+fmtBig(powerOf(h))+'</span><span class="slotnote">'+formationStatusChipV139(h,row)+' <span style="color:var(--muted)">'+esc(ev.summary)+'</span></span></span><span class="slotbtns"><button data-move="up" data-id="'+h.id+'">↑</button><button data-move="down" data-id="'+h.id+'">↓</button><button data-move="'+(row==='front'?'back':'front')+'" data-id="'+h.id+'">'+(row==='front'?'Back':'Front')+'</button><button data-remove="'+h.id+'">×</button></span></div>'; }).join('') || '<span class="pill warn">No heroes assigned</span>';
   s.innerHTML='<div class="squadpicker"><h3>'+meta[2]+' Edit '+meta[1]+' Formation</h3>'+'<button data-suggest="1" style="width:100%;margin:2px 0 10px;background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a;border:none;font-weight:800">\u2728 Suggest Squad</button>'+walletHTML('Place durable heroes forward and fragile value heroes back for cleaner fights.')+'<div style="font-size:12px;color:var(--muted);font-weight:700;margin:8px 2px 10px">'+arr.length+'/'+TUNE.teamSize+' assigned · Slots 1-3 are Front Row, 4-6 are Back Row.</div>'+formationGuideHTMLV139()+formationLegendHTMLV139()+'<div class="pickSelected">'+selected+'</div>'+synergyPanelHTML(mode)+'<div class="formtip" style="margin-bottom:10px">Role bonuses stack with archetype row bonuses, so positioning matters more now.</div><div class="btnset" style="margin-bottom:8px"><button id="sqClear" class="ghost">Clear</button><button id="sqSaveTpl" class="ghost" style="flex:1">💾 Template</button><button id="sqDone" class="go">✓ Save &amp; Close</button></div>'+((S.lineupTemplates&&S.lineupTemplates.length)?'<div style="display:flex;gap:6px;margin-bottom:8px"><select id="sqTplSel" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:12px"><option value="">Load template…</option>'+(S.lineupTemplates.map((t,i)=>'<option value="'+i+'">'+esc(t.name)+'</option>').join(''))+'</select><button id="sqLoadTpl" class="ghost" style="padding:8px 12px">Apply</button><button id="sqDelTpl" class="ghost" style="padding:8px 10px;color:#ff6b6b">✕</button></div>':'')+squadPickerToolsHTML(allOwned.length,owned.length)+'<div id="sqCandidateList">'+owned.map(h=>squadCandidateButtonHTML(h,mode)).join('')+'</div></div>';
   showScrim('scrim');
   document.getElementById('sqDone').onclick=()=>{ hideScrim(); renderHUD(); render(); save(); };
@@ -8577,7 +8591,7 @@ function heroDetailTopV141(h,img,name,color){
   const a=heroArchetype(h), p=passiveOf(h), lcap=rankCap(h), plv=h.prestige||0;
   const portrait=img?'<img src="'+img+'">':(initials(name)||'?');
   return '<div class="heroTopV141">'+
-    '<div class="heroTitleV141"><h3>'+esc(name)+'</h3><div class="pwr">'+powerOf(h)+'<span>Power</span></div></div>'+ 
+    '<div class="heroTitleV141"><h3>'+esc(name)+'</h3><div class="pwr">'+fmtBig(powerOf(h))+'<span>Power</span></div></div>'+ 
     '<div class="heroStageV141">'+SLOTS.map(slot=>gearNodeV141(h,slot)).join('')+'<div class="heroPortraitV141 '+(img?'contain':'')+'" id="hPrev" style="background:linear-gradient(160deg,'+color+',#0008)">'+portrait+'</div></div>'+ 
     '<div class="gearLegendV141"><span><b>▲</b> better gear available</span><span>Tap a slot to manage gear</span></div>'+ 
     '<div class="heroMetaRowV141"><span class="miniChip gold">'+esc(RANKS[rankIdx(h)].name)+(plv>0?' ★'+plv:'')+'</span><span class="miniChip">Lv '+h.level+'/'+lcap+'</span><span class="miniChip">'+esc(h.role)+'</span><span class="miniChip">'+esc(a?a.label:'Specialist')+'</span>'+(p?'<span class="miniChip good">'+esc(p.name)+'</span>':'')+'</div>'+ 
@@ -8965,7 +8979,7 @@ function rosterCard(h,i){
     (ready?'<div class="lqReadyBadge">'+ready+'</div>':'')+
     ((h.prestige||0)>0?'<div class="lqPrestigeHalo"></div>':'')+
     ava+
-    '<div class="lqPowerTag">PWR '+powerOf(h)+'</div><div class="lqGearTag">⚙ '+gearScore(h)+'</div>'+
+    '<div class="lqPowerTag">PWR '+powerOf(h)+'</div><div class="lqGearTag">'+cicon('settings_gear',13)+' '+gearScore(h)+'</div>'+
     ((h.prestige||0)>0?'<div class="prestigeRibbon">'+prestigeFrameTier(h)+' · ★'+h.prestige+'</div>':'')+
     '<div class="hn">'+esc(h.name)+'</div>'+badrow+
     '<div class="hr">'+(rankIdx(h)>0?RANKS[rankIdx(h)].name:'Lv '+h.level)+' · '+lqRankStars(h)+' · ✦'+heroCP(h)+'</div>'+
@@ -9005,7 +9019,7 @@ function gearSetPanelV146(h){
   const info=gearSetInfoV146(h), last=S.gearProgress&&S.gearProgress.lastDrop?S.gearProgress.lastDrop:null;
   const slots=SLOTS.map(s=>{ const g=h.gear&&h.gear[s], c=g?gearColorV146(g.rarity):'var(--muted)'; return '<div class="slot '+(g?'on':'')+'" style="--rar:'+c+'"><div class="ic" style="color:'+c+'">'+(g?gearIconV146(g):slotArt(s,32))+'</div><div class="nm">'+SLOTNAME[s]+'</div><div class="pw">'+(g?'⚡'+gearPower(g):'Empty')+'</div></div>'; }).join('');
   const lastHtml=last?'<div class="gearRevealV146" style="--rar:'+gearColorV146(last.rarity)+'"><b>Latest Find: '+cap(last.rarity)+' '+SLOTNAME[last.slot]+'</b><p>Stage '+(last.stageFound||'?')+' · '+(last.when?timeAgo(last.when):'recently')+' · now in inventory.</p></div>':'';
-  return '<div class="gearSetV146"><div class="gh"><b>⚙ Gear Set</b><span>'+info.filled+'/4 equipped · ⚡'+info.score+'</span></div><div class="bar"><i style="width:'+info.pct+'%"></i></div><div class="slots">'+slots+'</div><div class="tip">'+(info.upgrades?('▲ '+info.upgrades+' better piece'+(info.upgrades===1?'':'s')+' available. Use Auto-equip best or tap a slot.'):info.filled<4?'Fill all four slots first. Missing slots give the biggest early power spike.':'Set complete. Upgrade levels, promote rarity, and chase higher-tier drops.')+'</div></div>'+lastHtml;
+  return '<div class="gearSetV146"><div class="gh"><b>'+cicon('settings_gear',15)+' Gear Set</b><span>'+info.filled+'/4 equipped · ⚡'+info.score+'</span></div><div class="bar"><i style="width:'+info.pct+'%"></i></div><div class="slots">'+slots+'</div><div class="tip">'+(info.upgrades?('▲ '+info.upgrades+' better piece'+(info.upgrades===1?'':'s')+' available. Use Auto-equip best or tap a slot.'):info.filled<4?'Fill all four slots first. Missing slots give the biggest early power spike.':'Set complete. Upgrade levels, promote rarity, and chase higher-tier drops.')+'</div></div>'+lastHtml;
 }
 function gearLadderVisualV146(){
   const w=gearLadder(Math.max(1,S.maxCleared||S.stage||1));
@@ -9062,7 +9076,7 @@ function openGearSheet(heroId){
       if(!items.length) html+='<div class="empty">No '+SLOTNAME[pickSlot]+' gear yet.<br>Win stages or finish tasks to find some.</div>'; else items.forEach(it=>html+=invItemHTML(it));
       html+='<button class="ghost" id="g_back" style="color:var(--ink)">Back</button>';
     }else{
-      html+='<div class="gearQuickActions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px"><button class="go" id="g_autobest" style="margin:0;background:linear-gradient(135deg,var(--accent),var(--accent2))">⚙ Auto-equip best</button><button class="go" id="g_unequipall" style="margin:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">↩ Unequip all</button></div>'+
+      html+='<div class="gearQuickActions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px"><button class="go" id="g_autobest" style="margin:0;background:linear-gradient(135deg,var(--accent),var(--accent2))">'+cicon('settings_gear',15)+' Auto-equip best</button><button class="go" id="g_unequipall" style="margin:0;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">↩ Unequip all</button></div>'+
         '<button class="go" id="g_upall" style="width:100%;margin:0 0 10px;background:linear-gradient(135deg,#3ad07a,#1d9e57);color:#04130b;font-weight:900">⬆ Upgrade All Gear</button><div class="lqSectionHeader"><b>Equipped Gear</b><span>tap a slot</span></div><div class="gearSlotsV146">'+SLOTS.map(equippedSlotHTML).join('')+'</div><button class="ghost" id="g_close" style="color:var(--ink)">Done</button>';
     }
     sheet.innerHTML=html;
@@ -10796,14 +10810,14 @@ function v161Card(h,i){
     '<div class="v161Portrait">'+v161Face(h)+((ready==='Rank'||ready==='Prestige')?'<div class="v161Ready">\u2b06 '+esc(ready)+'</div>':'')+'</div>'+((h.prestige||0)>0?'<div class="v161Prestige">★'+h.prestige+'</div>':'')+    
     '<div class="v161Name">'+esc(h.name)+'</div>'+    
     '<div class="v161Meta"><span>'+esc(ipLabel(h.ip))+'</span><span>'+v161RoleIcon(h.role)+' '+esc(roleLabel(h.role))+'</span><span>'+v161ArchIcon(h)+' '+esc(a?a.label:'Hero')+'</span>'+(dm?'<span>'+dm.icon+' '+esc(dm.label.split(' ')[0])+'</span>':'')+'</div>'+    
-    '<div class="v161Stats"><div><b>'+powerOf(h)+'</b><span>Power</span></div><div><b>⚙ '+gearScore(h)+'</b><span>Gear</span></div><div><b>'+RANKS[rankIdx(h)].name+'</b><span>Rank</span></div><div><b>✦ '+heroCP(h)+'</b><span>CP</span></div></div>';
+    '<div class="v161Stats"><div><b>'+fmtBig(powerOf(h))+'</b><span>Power</span></div><div><b>'+cicon('settings_gear',13)+' '+gearScore(h)+'</b><span>Gear</span></div><div><b>'+RANKS[rankIdx(h)].name+'</b><span>Rank</span></div><div><b>✦ '+fmtBig(heroCP(h))+'</b><span>CP</span></div></div>';
   const __im=d.querySelector('img[data-v161fill]'); if(__im){ __im.onerror=function(){ try{ this.replaceWith(Object.assign(document.createElement('span'),{textContent:initials(h.name),className:'v161Initials'})); }catch(e){} }; __im.src=h.img; }
   return d;
 }
 function v161CollectionHeader(total,owned,readyN,lineupN,wishN,bonus,clPct,nextCP){
   return '<div class="v161CollectionHero"><div class="v161CollectionTop"><div><h2>Collection</h2><div style="color:var(--muted);font-weight:800;font-size:12px;margin-top:3px">Portrait-first roster management</div></div><div class="owned">'+owned+' / '+total+'</div></div>'+    
     '<div class="xpbar" style="height:10px;margin:12px 0 7px"><i style="width:'+clPct+'%;background:linear-gradient(90deg,#36e0e6,#8bd0ff,#ffd95a)"></i></div>'+    
-    '<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:var(--muted)"><span>Collection Power '+gCP.toLocaleString()+'</span><span>Next Lv '+nextCP.toLocaleString()+'</span></div>'+    
+    '<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:var(--muted)"><span>Collection Power '+fmtBig(gCP).toLocaleString()+'</span><span>Next Lv '+fmtBig(nextCP).toLocaleString()+'</span></div>'+    
     '<div class="v161CPRow"><div><b>Lv '+gCL+'</b><span>Collection</span></div><div><b>+'+bonus+'%</b><span>All heroes</span></div><div><b>⬆ '+readyN+'</b><span>Ready</span></div><div><b>⚔ '+lineupN+'</b><span>Lineups</span></div><div><b>★ '+wishN+'</b><span>Wishlist</span></div><div><b>✦ '+totalPrestigeStars()+'</b><span>Prestige</span></div></div></div>';
 }
 function v161RenderRoster(v){
@@ -18099,7 +18113,7 @@ window.openRosterMgmt=function(){
     return '<div class="prestigeHeroRow ofPrestigeHallRow '+of2141FrameClass(x.frame)+'" data-prestigehero="'+h.id+'">'+
       '<div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div>'+
       '<div><div class="pn">'+esc(h.name)+' · P'+x.p+' · '+esc(x.tier.label)+'</div>'+
-      '<div class="pm">'+esc(heroArchetype(h)?.label||h.role)+' · Frame '+x.frame+' · +'+x.bonus+'% power · Lv '+h.level+'/'+rankCap(h)+(full?' · PWR '+powerOf(h):'')+'</div>'+
+      '<div class="pm">'+esc(heroArchetype(h)?.label||h.role)+' · Frame '+x.frame+' · +'+x.bonus+'% power · Lv '+h.level+'/'+rankCap(h)+(full?' · PWR '+fmtBig(powerOf(h)):'')+'</div>'+
       '<div class="xpbar" style="height:7px;margin-top:5px"><i style="width:'+pct+'%;background:linear-gradient(90deg,var(--pf1,#ffb01f),var(--pf2,#ff5d9e))"></i></div></div>'+
       '<div class="ps">'+(prestigeCatchActive(h)?'3x':'P'+x.p)+'</div></div>';
   }
@@ -20330,6 +20344,7 @@ function lqNavMode(k){
     else if(k==='strikes'){ try{ if(typeof of2149OpenWarTarget==='function') of2149OpenWarTarget('raid'); else navTo('battles'); }catch(e){} }
     else if(k==='crucible'){ navTo('forge'); }
     else if(k==='squadron'){ try{ openRosterMgmt(); }catch(e){} }
+    else if(k==='steward'){ try{ showStewardReview(0); }catch(e){} }
   }catch(e){}
 }
 
@@ -20374,6 +20389,7 @@ function lqPowerPanel(id){
     var rows=[
       ['Rank', F(function(){return rankMult(h);}), 'rank-ups (Iso-8 + credits)'],
       ['Prestige', F(function(){return prestigeMult(h);}), 'weekly cap = 3 + 4\u00d7domains \u2014 habit-gated'],
+      ['Ascension \u00b7 T'+((h.ascension|0)||0)+'/'+((TUNE.ascMaxTier||10)+((S&&S.ascCeilingBonus)|0)), F(function(){return (typeof ascMult==='function')?ascMult(h):1;}), 'shards flow to your Priority Board #1 \u2014 Sinister falls raise the ceiling'],
       ['Collection', F(function(){return collectionMult();}), 'heroes owned (account)'],
       ['Bonds', F(function(){return bondMult(h);}), 'fighting alongside friends'],
       ['Account', F(function(){return accountMult();}), 'campaign stages cleared (account)'],
@@ -20533,6 +20549,11 @@ function lqModeSummary(){
   try{ var _l=raidAttemptsLeft(); out.push({key:'strikes',label:'Boss Strikes',cad:'Daily',done:_l===0,stat:_l+'/'+((typeof RAID_SA!=='undefined'&&RAID_SA.attemptsPerDay)||3)+' today'}); }catch(e){}
   try{ var _sh=(S.legendShards|0)||0, _c=(typeof LEGENDARY_TUNE!=='undefined'&&LEGENDARY_TUNE.forgeCost)||1e9, _r=_sh>=_c; out.push({key:'crucible',label:'Crucible',cad:'Forge',done:_r,stat:_r?'READY — forge a legendary':(_sh+' / '+_c+' shards')}); }catch(e){} /* v2.233 */
   try{ out.push({key:'squadron',label:'Squadron Management',cad:'Ops',done:true,stat:'rank · gear · prestige'}); }catch(e){} /* v2.241: doorway restored (sweep casualty) */
+  try{ var _ows=(S.ownership&&S.ownership.st)||{}; var _tot=(window.LQ_OWN_AREAS||[]).length||25;
+    var _mon=(function(){ var x=new Date(); var dw=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-dw); return x.getTime(); })();
+    var _rev=(window.LQ_OWN_AREAS||[]).filter(function(ar){ var e=_ows[ar.id]; return e&&e.at>=_mon; }).length;
+    out.push({key:'steward',label:'Steward\u2019s Review',cad:'Weekly',done:_rev>=_tot,stat:_rev+' / '+_tot+' areas reviewed this week'});
+  }catch(e){} /* v2.250.1: the game surface reports on the ownership layer */
   try{ out=out.filter(function(m,i){ return out.findIndex(function(x){return x.key===m.key;})===i; }); }catch(e){} /* v2.233: dedupe (pre-existing double rift) */
   return out;
 }
@@ -20547,13 +20568,13 @@ function lqWeeklyDash(v){
     if(!v||v.querySelector('.lqModeDash')) return;
     lqDashStyles();
     var rows=lqModeSummary().map(function(m){
-      var _wb=m.win?('<span class="lqmWin '+m.win.status+'">'+({clear:'Winnable',close:'Close',under:'Under'}[m.win.status]||'')+'</span>'):''; var _mi={rift:'mode_rift',siege:'mode_siege',gauntlet:'mode_gauntlet',arena:'mode_arena',conquest:'mode_conquest',rooms:'rooms',strikes:'raidboss',crucible:'feat_crucible',squadron:'roleTank'}[m.key];
+      var _wb=m.win?('<span class="lqmWin '+m.win.status+'">'+({clear:'Winnable',close:'Close',under:'Under'}[m.win.status]||'')+'</span>'):''; var _mi={rift:'mode_rift',siege:'mode_siege',gauntlet:'mode_gauntlet',arena:'mode_arena',conquest:'mode_conquest',rooms:'rooms',strikes:'raidboss',crucible:'feat_crucible',squadron:'roleTank',steward:'dom_home'}[m.key];
       var _mic=(_mi&&typeof cicon==='function')?cicon(_mi,15):'';
       return '<div class="lqmRow lqmTap" data-lqmode="'+esc(m.key)+'"><span class="lqmDot '+(m.done?'on':'')+'"></span><span class="lqmName">'+_mic+(_mic?' ':'')+esc(m.label)+'</span><span class="lqmCad">'+esc(m.cad)+'</span>'+_wb+'<span class="lqmStat">'+esc(m.stat)+'</span><span class="lqmChev">›</span></div>';
     }).join('');
     var sec=document.createElement('section'); sec.className='lqModeDash';
-    var ht=lqHabitThrottle();var thr='<div class="lqmThr"><div class="lqmThrRow"><span class="lqmThrLbl">Habit Throttle</span><span class="lqmThrVal">'+ht.hit+' / '+ht.tot+' domains this week</span></div><div class="lqmThrBar"><div class="lqmThrFill" style="width:'+ht.pct+'%"></div></div><div class="lqmThrNote">'+(isFinite(prestigeWeeklyCap())?'Living your habits → higher weekly prestige cap':'Prestige cap off — new cycles unlimited')+'</div>'+(function(){ try{ var B=blessState(); var bl=0,bd=0; for(var k in B){ bl+=(B[k]|0); bd++; } var g=(S.grace||0); return '<div class="lqmThrNote" style="margin-top:3px">Blessings Lv '+bl+' · '+bd+' domains · kyber flows in as you live them'+(g>0?(' · \ud83d\udd4a '+g+' grace guarding streaks'):'')+'</div>'; }catch(e){ return ''; } })()+'</div>';var rec=lqRecommend();var recHTML=rec?('<div class="lqmRec lqmTap" data-lqmode="'+esc(rec.key)+'"><span class="lqmRecTag">Do Next</span><span class="lqmRecLbl">'+esc(rec.label)+'</span><span class="lqmRecWhy">'+esc(rec.reason)+'</span><span class="lqmChev">›</span></div>'):'';sec.innerHTML=thr+recHTML+'<div class="lqmHead">Battle Modes</div>'+rows+'<div class="lqmRow lqmTap" id="lqVaultRow"><span class="lqmDot on"></span><span class="lqmName">Vault &amp; Systems</span><span class="lqmCad">Ledger</span><span class="lqmStat">Every currency · every power source</span><span class="lqmChev">›</span></div>';
-    try{ if(v.firstChild){ v.insertBefore(sec, v.firstChild); } else { v.appendChild(sec); } }catch(e){ try{ v.appendChild(sec); }catch(_e){} }try{ sec.querySelectorAll('[data-lqmode]').forEach(function(el){ el.addEventListener('click',function(){ lqNavMode(el.getAttribute('data-lqmode')); }); }); }catch(e){}try{ var _vr=sec.querySelector('#lqVaultRow'); if(_vr) _vr.addEventListener('click',function(){ lqOpenLedger(); }); }catch(e){}
+    var ht=lqHabitThrottle();var thr='<div class="lqmThr"><div class="lqmThrRow"><span class="lqmThrLbl">Habit Throttle</span><span class="lqmThrVal">'+ht.hit+' / '+ht.tot+' domains this week</span></div><div class="lqmThrBar"><div class="lqmThrFill" style="width:'+ht.pct+'%"></div></div><div class="lqmThrNote">'+(isFinite(prestigeWeeklyCap())?'Living your habits → higher weekly prestige cap':'Prestige cap off — new cycles unlimited')+'</div>'+(function(){ try{ var B=blessState(); var bl=0,bd=0; for(var k in B){ bl+=(B[k]|0); bd++; } var g=(S.grace||0); return '<div class="lqmThrNote" style="margin-top:3px">Blessings Lv '+bl+' · '+bd+' domains · kyber flows in as you live them'+(g>0?(' · \ud83d\udd4a '+g+' grace guarding streaks'):'')+'</div>'; }catch(e){ return ''; } })()+'</div>';var rec=lqRecommend();var recHTML=rec?('<div class="lqmRec lqmTap" data-lqmode="'+esc(rec.key)+'"><span class="lqmRecTag">Do Next</span><span class="lqmRecLbl">'+esc(rec.label)+'</span><span class="lqmRecWhy">'+esc(rec.reason)+'</span><span class="lqmChev">›</span></div>'):'';sec.innerHTML=thr+recHTML+'<div class="lqmHead" style="display:flex;justify-content:space-between;align-items:center">Battle Modes<button id="lqAutoPause" style="background:'+((S.lqWeeklyAuto&&S.lqWeeklyAuto.pauseDay===((typeof periodKey==='function')?periodKey('daily'):''))?'rgba(255,176,31,.15);border:1px solid rgba(255,176,31,.5);color:#ffb01f':'rgba(122,240,168,.12);border:1px solid rgba(122,240,168,.45);color:#7af0a8')+';border-radius:9px;padding:4px 9px;font-size:10px;font-weight:900;font-family:Orbitron">'+((S.lqWeeklyAuto&&S.lqWeeklyAuto.pauseDay===((typeof periodKey==='function')?periodKey('daily'):''))?'\u23f8 PAUSED TODAY':'\u26a1 AUTO ON')+'</button></div>'+rows+'<div class="lqmRow lqmTap" id="lqVaultRow"><span class="lqmDot on"></span><span class="lqmName">Vault &amp; Systems</span><span class="lqmCad">Ledger</span><span class="lqmStat">Every currency · every power source</span><span class="lqmChev">›</span></div>';
+    try{ if(v.firstChild){ v.insertBefore(sec, v.firstChild); } else { v.appendChild(sec); } }catch(e){ try{ v.appendChild(sec); }catch(_e){} }try{ sec.querySelectorAll('[data-lqmode]').forEach(function(el){ el.addEventListener('click',function(){ lqNavMode(el.getAttribute('data-lqmode')); }); }); }catch(e){}try{ var _ap=sec.querySelector('#lqAutoPause'); if(_ap) _ap.onclick=function(ev){ ev.stopPropagation(); try{ if(!S.lqWeeklyAuto||typeof S.lqWeeklyAuto!=='object') S.lqWeeklyAuto={}; var dk=periodKey('daily'); S.lqWeeklyAuto.pauseDay=(S.lqWeeklyAuto.pauseDay===dk)?null:dk; save(); render(); toast(S.lqWeeklyAuto.pauseDay?'Auto-runner paused for today \u2014 the modes are yours':'Auto-runner back on duty'); }catch(e){} }; }catch(e){}try{ var _vr=sec.querySelector('#lqVaultRow'); if(_vr) _vr.addEventListener('click',function(){ lqOpenLedger(); }); }catch(e){}
   }catch(e){}
 }
 try{ if(typeof window!=='undefined'){ window.lqWeeklyDash=lqWeeklyDash; } }catch(e){}
@@ -22726,7 +22747,7 @@ function showAbilityMoment(u,skill,color){
     of2163InjectStyles(); of2163EnsureHeroGear(h);
     const a=heroArchetype(h), p=passiveOf(h), lcap=rankCap(h), plv=h.prestige||0, portrait=img?'<img src="'+img+'">':(initials(name)||'?');
     return '<div class="heroTopV141">'+
-      '<div class="heroTitleV141"><h3>'+esc(name)+'</h3><div class="pwr">'+powerOf(h)+'<span>Power</span></div></div>'+
+      '<div class="heroTitleV141"><h3>'+esc(name)+'</h3><div class="pwr">'+fmtBig(powerOf(h))+'<span>Power</span></div></div>'+
       '<div class="of2163HeroStage"><div class="of2163PortraitWrap"><div class="heroPortraitV141 '+(img?'contain':'')+'" id="hPrev" style="background:linear-gradient(160deg,'+color+',#0008)">'+portrait+'</div></div><div class="of2163GearGrid">'+GEAR_SLOT_ORDER.map(slot=>gearNodeV141(h,slot)).join('')+'</div></div>'+
       '<div class="gearLegendV141"><span><b>▲</b> role-fit upgrade available</span><span>Tap a slot to manage gear</span></div>'+
       '<div class="heroMetaRowV141"><span class="miniChip gold">'+esc(RANKS[rankIdx(h)].name)+(plv>0?' ★'+plv:'')+'</span><span class="miniChip">Lv '+h.level+'/'+lcap+'</span><span class="miniChip">'+esc(h.role)+'</span><span class="miniChip">'+esc(a?a.label:'Specialist')+'</span>'+(p?'<span class="miniChip good">'+esc(p.name)+'</span>':'')+'</div>'+
@@ -23289,7 +23310,7 @@ function roomStartRun(k,tier){
   try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent='Room of Requirement \u00b7 '+haz.name+' \u00b7 Tier '+tier; }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
-  document.getElementById('arena').classList.add('show');
+  if(window.__lqAutoRun>0){ window.__lqLastAutoBattle=true; } else { window.__lqLastAutoBattle=false; try{ if(window.__lqStopGChain) window.__lqStopGChain(); }catch(e){} document.getElementById('arena').classList.add('show'); } /* v2.248.2: headless auto · manual wins */
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner(haz.name+' \u00b7 Tier '+tier,haz.color); }catch(e){}
@@ -23423,7 +23444,7 @@ function startRaidStrike(){
   try{ const sub=document.getElementById('arenaSub'); if(sub) sub.textContent=ofModeTitle('raid')+' \u00b7 '+currentBoss().name+' \u00b7 Strike '+ensureRaidSA().runs; }catch(e){}
   try{ const ar=document.getElementById('arenaResult'); ar.style.display='none'; ar.className='result'; const _as=document.querySelector('.arena'); if(_as) _as.classList.remove('arenaEnded'); }catch(e){}
   drawUnits('enemySide',enemies,'enemy'); drawUnits('playerSide',players,'player');
-  document.getElementById('arena').classList.add('show');
+  if(window.__lqAutoRun>0){ window.__lqLastAutoBattle=true; } else { window.__lqLastAutoBattle=false; try{ if(window.__lqStopGChain) window.__lqStopGChain(); }catch(e){} document.getElementById('arena').classList.add('show'); } /* v2.248.2: headless auto · manual wins */
   try{ wireBattleControls(); }catch(e){}
   battleState={players:players,enemies:enemies,turn:0,events:[],replay:false,meta:null};
   try{ passiveBanner(currentBoss().name+' \u00b7 x'+amp.toFixed(2)+' habit power','#ffb01f'); }catch(e){}
@@ -24576,7 +24597,9 @@ function raidSAInjectPanel(){ try{
   function withResolve(run){
     var pA=(typeof autoAdvance!=='undefined')?autoAdvance:true, pR=(typeof autoResolve!=='undefined')?autoResolve:false;
     try{ autoAdvance=true; autoResolve=true; }catch(e){}
+    window.__lqAutoRun=(window.__lqAutoRun|0)+1;
     var ok=false; try{ var r=run(); ok=!!(r&&r.ok!==false); }catch(e){}
+    window.__lqAutoRun=Math.max(0,(window.__lqAutoRun|0)-1);
     var restored=false; function restore(){ if(restored) return; restored=true; try{ autoAdvance=pA; autoResolve=pR; }catch(e){} }
     if(!ok){ restore(); return false; }
     setTimeout(restore, 25000);
@@ -24584,12 +24607,14 @@ function raidSAInjectPanel(){ try{
   }
   var gChain=null;
   window.lqChainGauntlet=function(){ if(gChain) return; var TIER={epic:4,rare:3,uncommon:2,common:1}; var steps=0;
+    function act(fn){ window.__lqAutoRun=(window.__lqAutoRun|0)+1; try{ fn(); }catch(e){} window.__lqAutoRun=Math.max(0,(window.__lqAutoRun|0)-1); }
+    window.__lqStopGChain=function(){ try{ clearInterval(gChain); }catch(e){} gChain=null; };
     gChain=setInterval(function(){ try{
       steps++; var G=ensureGauntlet(), R=G.run;
       if(!R||!R.alive||steps>700){ clearInterval(gChain); gChain=null; try{ save(); }catch(e){} return; }
       if(R.pendingBoons&&R.pendingBoons.length){
         var best=R.pendingBoons.slice().sort(function(a,b){ return (TIER[(b.tier||'common')]||1)-(TIER[(a.tier||'common')]||1); })[0];
-        gauntletApplyBoon(best.key||best); return;
+        act(function(){ gauntletApplyBoon(best.key||best); }); return;
       }
       if(R.atCrossroads){
         try{ /* v2.248.1: spend Valor — it evaporates at run's end anyway */
@@ -24607,13 +24632,14 @@ function raidSAInjectPanel(){ try{
             break;
           }
         }catch(e){}
-        gauntletChoosePath('elite'); return; }
+        act(function(){ gauntletChoosePath('elite'); }); return; }
     }catch(e){} }, 900);
   }; /* v2.248: boons by tier, Elite path, resumable */
   var idx=0;
   function tick(){
     try{
       if(auto().autoWeeklyEvents===false) return;
+      try{ if(st().pauseDay===(function(){try{return periodKey('daily');}catch(e){return 'd';}})()) return; }catch(e){}
       if(typeof battleState!=='undefined'&&battleState&&!battleState.over) return;
       function dayk(){ try{ return periodKey('daily'); }catch(e){ return 'd'; } }
       function triedToday(k){ return st()[k+'Day']===dayk(); }
@@ -24637,6 +24663,15 @@ function raidSAInjectPanel(){ try{
           var started=withResolve(function(){ return gauntletStartRun(sq); });
           if(started) lqChainGauntlet();
           return started; }, /* v2.248: autopilot fields the strongest — progress over depth-thrift */
+        function(){ if(triedToday('campaign')||typeof startBattle!=='function') return false;
+          markTried('campaign');
+          return withResolve(function(){ startBattle('campaign'); return {ok:(typeof battleState!=='undefined')&&!!battleState}; }); },
+        function(){ if(triedToday('tower')||typeof startBattle!=='function') return false;
+          markTried('tower');
+          return withResolve(function(){ startBattle('tower'); return {ok:(typeof battleState!=='undefined')&&!!battleState}; }); },
+        function(){ if(triedToday('rift')||typeof riftStartRun!=='function') return false;
+          markTried('rift');
+          return withResolve(function(){ return riftStartRun(); }); },
         function(){ if(typeof siegeDeployNext!=='function'||typeof ensureSiege!=='function') return false;
           var sg=ensureSiege(), any=false;
           Object.keys(sg.fronts||{}).forEach(function(k){ try{ var r=siegeDeployNext(k); if(r&&r.ok) any=true; }catch(e){} });
@@ -24726,7 +24761,7 @@ function raidSAInjectPanel(){ try{
   var sfxPool={}, sfxLast={}, sfxSting=0;
   function sfxPair(n){ if(!sfxPool[n]){ try{ var a=new Audio('art/sfx/'+SFXF[n]+'?v=1'); a.preload='none'; a.volume=(n==='victory'||n==='defeat')?0.8:0.5; sfxPool[n]=[a,a.cloneNode(true)]; }catch(e){ sfxPool[n]=[]; } } return sfxPool[n]; }
   window.sfx=function(n,gap){ try{
-    if(typeof S==='undefined'||!S||S.sfxOn===false) return;
+    if(typeof S==='undefined'||!S||S.sfxOn===false) return; if(window.__lqLastAutoBattle&&typeof battleState!=='undefined'&&battleState&&!battleState.over) return; /* v2.249.3: silent only while an auto battle runs */
     if(typeof document!=='undefined'&&document.hidden) return;
     if(!SFXF[n]) return;
     var now=Date.now(); gap=gap||180;
