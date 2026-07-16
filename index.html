@@ -1378,7 +1378,7 @@ var FAQ_DATA=[
  {cat:'Concepts',q:'What is Forge level?',a:'A devotion tier for each Life Domain. It rises as you complete that domain habits and dailies - no shortcut, by design.',kw:'forge domain devotion habit'},
  {cat:'Concepts',q:'What is Bond?',a:'A per-hero power multiplier. It grows from living the domain habits and hero quests, plus a medium trickle from Clash clears.',kw:'bond power multiplier habit clash'},
  {cat:'Concepts',q:'How does gear and promotion work?',a:'Fill all 4 slots, level gear to its rarity cap, then promote with Stones to the next rarity - all the way to Eternal Lv 40. Use Equip Every Hero to spread gear and Salvage by stage to clear old drops.',kw:'gear promote stones rarity equip salvage level 40 slots'},
- {cat:'Concepts',q:'What are the Life Domains?',a:'Eight domains: Faith, Marriage, Fatherhood, Fitness, Work Leadership, Home Stewardship, Discipline and Rest, and Hobbies. Developing more heroes in a domain speeds that whole domain growth.',kw:'domains faith marriage fatherhood fitness work home discipline rest hobbies'},
+ {cat:'Concepts',q:'What are the Life Domains?',a:'Eight domains: Faith, Marriage, Fatherhood, Fitness, Work Leadership, Home Stewardship, Discipline and Rest, and Growth. Developing more heroes in a domain speeds that whole domain growth.',kw:'domains faith marriage fatherhood fitness work home discipline rest hobbies'},
  {cat:'Concepts',q:'What is Momentum and idle income?',a:'While you are away, heroes earn idle EXP, gold, and dust (capped at a number of hours). Completing dailies raises your Momentum multiplier, boosting all idle income.',kw:'momentum idle income away cap multiplier'}
 ];
 function openGameFAQ(){
@@ -2207,7 +2207,7 @@ const STRATEGY_CARDS=[
   {id:'family_shield',name:'Family Shield',tag:'Family',desc:'Marriage/Fatherhood actions give +20% Bond XP.',type:'bond',domains:['marriage','fatherhood'],mult:.20},
   {id:'deep_work',name:'Deep Work',tag:'Work',desc:'Work actions give +10 bonus Gold.',type:'gold',domains:['work'],amount:10},
   {id:'clean_house',name:'Clean House',tag:'Home',desc:'Home actions give +8 bonus Dust.',type:'dust',domains:['home'],amount:8},
-  {id:'sabbath_rhythm',name:'Sabbath Rhythm',tag:'Rest',desc:'Discipline/Hobbies actions give +15% Domain XP.',type:'domainXp',domains:['discipline','hobbies'],mult:.15},
+  {id:'sabbath_rhythm',name:'Sabbath Rhythm',tag:'Rest',desc:'Discipline/Growth actions give +15% Domain XP.',type:'domainXp',domains:['discipline','hobbies'],mult:.15},
   {id:'no_distraction',name:'No Distraction',tag:'Discipline',desc:'Discipline actions deal +20% raid damage.',type:'raid',domains:['discipline'],mult:.20},
   {id:'hearth_fire',name:'Hearth Fire',tag:'Marriage',desc:'Marriage actions give +1 bonus Crystal.',type:'crystal',domains:['marriage'],amount:1},
   {id:'fatherhood_guard',name:'Fatherhood Guard',tag:'Fatherhood',desc:'Fatherhood actions give +1 bonus Crystal.',type:'crystal',domains:['fatherhood'],amount:1}
@@ -2496,7 +2496,7 @@ const DOMAINS=[
   ['work','Work Leadership','#36e0e6','📊',['deep work','deep-work','standup','strategy','documentation','upward','okr','meeting','project work','team','presentation','1:1']],
   ['home','Home Stewardship','#37c46e','🏠',['chore','clean','laundry','dishes','budget','meal prep','cook','tidy','organize','repair','fix ','yard','grocery','home reset']],
   ['discipline','Rest / Discipline','#7c8aff','🌙',['sleep','rest','game-free','no phone','doomscroll','shutdown','wind down','screen time','boundary','wake up','no screens']],
-  ['hobbies','Hobbies','#f7c531','🎨',['read','photography','creative','hobby','gaming','draw','music','learn','book','guitar','paint']]
+  ['hobbies','Growth','#f7c531','🎨',['read','photography','creative','hobby','gaming','draw','music','learn','book','guitar','paint']]
 ];
 window.OFA={credits:"art/locations/ofa_credits_74e12b34.webp",kyber:"art/locations/ofa_kyber_04824fbb.webp",sparks:"art/locations/ofa_sparks_67c95a22.webp",uru:"art/locations/ofa_uru_2f59e1dc.webp",stones:"art/locations/ofa_stones_b94a5624.webp",iso8:"art/locations/ofa_iso8_ff37a9d8.webp",isoprime:"art/locations/ofa_isoprime_a25cab8d.webp",isosliver:"art/locations/ofa_isosliver_105d29eb.webp",holo:"art/locations/ofa_holo_af498ae3.webp",force:"art/locations/ofa_force_8a02b883.webp",tab_missions:"art/locations/art_c19bea49e5.webp",tab_hq:"art/locations/art_88bc677376.webp",tab_greathall:"art/locations/art_40d6b8f605.webp",tab_holotable:"art/locations/art_1b79d72189.webp",tab_archives:"art/locations/art_32eb74497d.webp",mode_campaign:"art/locations/ofa_mode_campaign_60e85bdf.webp",mode_tower:"art/locations/ofa_mode_tower_7eceaffc.webp",mode_clash:"art/locations/ofa_mode_clash_c7a2ed45.webp",mode_raid:"art/locations/ofa_mode_raid_c8b6923f.webp",mode_conquest:"art/locations/ofa_mode_conquest_404592b2.webp",mode_gauntlet:"art/locations/ofa_mode_gauntlet_2479e5db.webp",mode_rift:"art/locations/ofa_mode_rift_90b48755.webp",mode_arena:"art/locations/ofa_mode_arena_4137668f.webp",mode_expedition:"art/locations/ofa_mode_expedition_c70ffa5b.webp",mode_siege:"art/locations/ofa_mode_siege_a3884498.webp",feat_forge:"art/locations/ofa_feat_forge_3f9c8e10.webp",feat_crucible:"art/locations/ofa_feat_crucible_491df849.webp",dom_work:"art/locations/ofa_dom_work_a70155c2.webp",dom_faith:"art/locations/ofa_dom_faith_125707a4.webp",dom_fitness:"art/locations/ofa_dom_fitness_2af3fd0c.webp",dom_hobbies:"art/locations/ofa_dom_hobbies_e0723baa.webp",dom_marriage:"art/locations/ofa_dom_marriage_2fd01f36.webp",dom_fatherhood:"art/locations/ofa_dom_fatherhood_fddb2acc.webp",dom_home:"art/locations/ofa_dom_home_e679176d.webp",dom_discipline:"art/locations/ofa_dom_discipline_80510413.webp"};
 const DOMAIN_ART={faith:OFA.dom_faith,marriage:OFA.dom_marriage,fatherhood:OFA.dom_fatherhood,fitness:OFA.dom_fitness,work:OFA.dom_work,home:OFA.dom_home,discipline:OFA.dom_discipline,hobbies:OFA.dom_hobbies};
@@ -2776,7 +2776,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.251.1-endless-ladder';
+const APP_BUILD='v2.252.0-growth-domain';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
