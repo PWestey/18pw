@@ -2783,7 +2783,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.256.1-anvil-reprice';
+const APP_BUILD='v2.257.1-sweep-on-shield';
 const EXPECTED_ROSTER_COUNT=441;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -10745,7 +10745,7 @@ function v161InjectStyles(){
     .v161Name{position:relative;z-index:2;padding:0 9px;font-weight:950;font-size:14px;line-height:1.05;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
     .v161Meta{position:relative;z-index:2;padding:5px 8px 0;display:flex;justify-content:center;gap:4px;flex-wrap:wrap}.v161Meta span{font-size:8px;font-family:Orbitron;font-weight:950;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.055);border-radius:999px;padding:2px 5px;color:var(--muted);white-space:nowrap}
     .v161Stats{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:7px 8px 8px}.v161Stats div{background:rgba(4,8,17,.62);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:5px 4px;text-align:center;min-width:0}.v161Stats b{display:block;font-family:Orbitron;font-size:10px;color:#8bd0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v161Stats span{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.45px;color:var(--muted);font-weight:900;margin-top:1px}
-    .v161Squads{position:absolute;left:8px;top:42px;z-index:6;font-size:13px;display:flex;flex-direction:column;gap:2px}.v161Prestige{position:absolute;right:8px;bottom:40px;z-index:6;background:#050811d8;border:1px solid #ffd95a55;border-radius:999px;padding:2px 6px;color:#ffd95a;font-family:Orbitron;font-size:8px;font-weight:1000}
+    .v161Squads{position:absolute;left:8px;top:42px;z-index:6;font-size:13px;display:flex;flex-direction:column;gap:2px}.v161Prestige{position:absolute;right:8px;bottom:40px;z-index:6;background:#050811d8;border:1px solid #ffd95a55;border-radius:999px;padding:2px 6px;color:#ffd95a;font-family:Orbitron;font-size:8px;font-weight:1000}.v161Asc{position:absolute;right:8px;bottom:62px;z-index:6;background:#050811d8;border:1px solid #b88af066;border-radius:999px;padding:2px 6px;color:#c9a6ff;font-family:Orbitron;font-size:8px;font-weight:1000;text-shadow:0 0 6px rgba(184,138,240,.6)}
     .v161Grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.v161Grid.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.v161Grid.list{grid-template-columns:1fr}.v161Grid.list .v161RosterHero{min-height:112px;display:grid;grid-template-columns:92px 1fr;align-items:center}.v161Grid.list .v161Portrait{margin:9px;width:74px;height:74px}.v161Grid.list .v161Name{text-align:left;padding:0 9px}.v161Grid.list .v161Meta{justify-content:flex-start}.v161Grid.list .v161Stats{grid-template-columns:repeat(4,1fr);padding-right:10px}.v161Grid.list .v161TopRight{right:9px}.v161Grid.list .v161Stars{font-size:7px;left:6px;right:6px}
     .v161CollectionHero{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent) 22%,var(--line));border-radius:18px;padding:14px;background:linear-gradient(135deg,color-mix(in srgb,var(--panel) 92%,#050811),color-mix(in srgb,var(--panel2) 88%,#050811));box-shadow:0 18px 42px rgba(0,0,0,.28);margin-bottom:12px}.v161CollectionHero:before{content:"";position:absolute;inset:-25%;background:radial-gradient(circle at 12% 15%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 34%),radial-gradient(circle at 90% 10%,color-mix(in srgb,var(--accent2) 14%,transparent),transparent 32%);pointer-events:none}.v161CollectionHero>*{position:relative;z-index:2}
     .v161CollectionTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.v161CollectionTop h2{margin:0;font-family:Orbitron;font-size:20px;letter-spacing:1px}.v161CollectionTop .owned{font-family:Orbitron;color:#8bd0ff;font-weight:1000;font-size:13px;white-space:nowrap}.v161CPRow{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0 0}.v161CPRow div{background:rgba(4,8,17,.58);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:8px;text-align:center}.v161CPRow b{display:block;font-family:Orbitron;color:#ffd95a;font-size:12px}.v161CPRow span{display:block;font-size:9px;text-transform:uppercase;color:var(--muted);font-weight:900;letter-spacing:.45px;margin-top:2px}
@@ -10815,7 +10815,7 @@ function v161Card(h,i){
   }
   d.innerHTML=(rankIdx(h)>=6?'<div class="v161RaritySheen"></div>':'')+'<div class="v161TopRight" style="display:flex;gap:3px;align-items:center">'+((((h.prestige||0)>0)&&typeof LQ_PRESTIGE_TIER_ICON!=='undefined')?('<img class="lqPTier" src="'+LQ_PRESTIGE_TIER_ICON[prestigeTierIcon(h)]+'" alt="">'):v161EmblemBadge(h))+'</div>' /* v2.232: prestige icon replaces rank emblem when prestiged */+    
     '<div class="v161Lv">Lv '+effLevel(h)+(effLevel(h)>(h.level||1)?' <span style="color:#37d67a">↑</span>':'')+'</div>'+''+    
-    '<div class="v161Portrait">'+v161Face(h)+((ready==='Rank'||ready==='Prestige')?'<div class="v161Ready">\u2b06 '+esc(ready)+'</div>':'')+'</div>'+((h.prestige||0)>0?'<div class="v161Prestige">★'+h.prestige+'</div>':'')+    
+    '<div class="v161Portrait">'+v161Face(h)+((ready==='Rank'||ready==='Prestige')?'<div class="v161Ready">\u2b06 '+esc(ready)+'</div>':'')+'</div>'+((h.prestige||0)>0?'<div class="v161Prestige">★'+h.prestige+'</div>':'')+(((h.ascension|0)>0)?'<div class="v161Asc">\u2726'+(h.ascension|0)+'</div>':'')+    
     '<div class="v161Name">'+esc(h.name)+'</div>'+    
     '<div class="v161Meta"><span>'+esc(ipLabel(h.ip))+'</span><span>'+v161RoleIcon(h.role)+' '+esc(roleLabel(h.role))+'</span><span>'+v161ArchIcon(h)+' '+esc(a?a.label:'Hero')+'</span>'+(dm?'<span>'+dm.icon+' '+esc(dm.label.split(' ')[0])+'</span>':'')+'</div>'+    
     '<div class="v161Stats"><div><b>'+fmtBig(powerOf(h))+'</b><span>Power</span></div><div><b>'+cicon('settings_gear',13)+' '+gearScore(h)+'</b><span>Gear</span></div><div><b>'+RANKS[rankIdx(h)].name+'</b><span>Rank</span></div><div><b>✦ '+fmtBig(heroCP(h))+'</b><span>CP</span></div></div>';
@@ -19290,10 +19290,10 @@ function lqDashStyles(){
       +'.lqPF6{border-color:#c8e8ff!important;box-shadow:0 0 0 2px rgba(200,232,255,.75),0 0 0 5px rgba(150,190,255,.3),0 0 32px rgba(170,210,255,.4);animation:lqAurora 4s ease-in-out infinite}'
       +'.lqPF7{border-color:#e0c8ff!important;box-shadow:0 0 0 2.5px rgba(224,200,255,.8),0 0 0 6px rgba(180,130,255,.3),0 0 0 10px rgba(255,210,112,.15),0 0 36px rgba(200,160,255,.45);animation:lqAurora 3.5s ease-in-out infinite}'
       +'.lqPF8{border-color:#ffffff!important;box-shadow:0 0 0 2.5px rgba(255,255,255,.85),0 0 0 6px rgba(255,220,140,.4),0 0 0 11px rgba(180,140,255,.2),0 0 44px rgba(255,240,200,.55);animation:lqAurora 2.8s ease-in-out infinite}'
-      +'.lqAF1 .v161Portrait{box-shadow:inset 0 0 14px rgba(255,214,120,.30)}'
-      +'.lqAF2 .v161Portrait{box-shadow:inset 0 0 22px rgba(255,214,120,.50)}'
-      +'.lqAF3 .v161Portrait{box-shadow:inset 0 0 30px rgba(255,224,140,.70),inset 0 0 60px rgba(255,190,80,.25)}'
-      +'@keyframes lqHalo{0%,100%{box-shadow:inset 0 0 34px rgba(255,236,170,.75),inset 0 0 70px rgba(255,200,100,.3)}50%{box-shadow:inset 0 0 44px rgba(255,244,190,.9),inset 0 0 90px rgba(255,210,120,.4)}}'
+      +'.lqAF1 .v161Portrait{box-shadow:inset 0 0 0 2px rgba(184,138,240,.55),inset 0 0 20px rgba(184,138,240,.35)}'
+      +'.lqAF2 .v161Portrait{box-shadow:inset 0 0 0 2px rgba(200,160,255,.7),inset 0 0 28px rgba(190,145,255,.5)}'
+      +'.lqAF3 .v161Portrait{box-shadow:inset 0 0 0 3px rgba(215,180,255,.85),inset 0 0 36px rgba(200,160,255,.6),inset 0 0 70px rgba(160,110,255,.3)}'
+      +'@keyframes lqHalo{0%,100%{box-shadow:inset 0 0 0 3px rgba(225,195,255,.9),inset 0 0 40px rgba(205,165,255,.7),inset 0 0 80px rgba(165,115,255,.35)}50%{box-shadow:inset 0 0 0 3px rgba(240,220,255,1),inset 0 0 52px rgba(215,180,255,.85),inset 0 0 100px rgba(180,130,255,.45)}}'
       +'.lqAF4 .v161Portrait{animation:lqHalo 4s ease-in-out infinite}';
     document.head.appendChild(fc); } }catch(e){}
   st.textContent='.lqModeDash{margin:12px 0;padding:12px 14px;border:1px solid rgba(120,160,255,.18);border-radius:14px;background:linear-gradient(180deg,rgba(20,26,44,.55),rgba(12,16,30,.55));}.lqModeDash .lqmHead{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9ec3ff;margin-bottom:8px;}.lqmRow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,.05);}.lqmRow:first-of-type{border-top:0;}.lqmDot{width:8px;height:8px;border-radius:50%;background:#3d4560;flex:0 0 auto;}.lqmDot.on{background:#4fd1a6;box-shadow:0 0 6px rgba(79,209,166,.6);}.lqmName{font-weight:700;font-size:13px;color:#eaf0ff;flex:0 0 auto;min-width:112px;}.lqmCad{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8891ad;background:rgba(255,255,255,.05);padding:1px 6px;border-radius:6px;flex:0 0 auto;}.lqmStat{font-size:12px;color:#b6c0d8;margin-left:auto;text-align:right;}.lqmWin{font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:6px;flex:0 0 auto;}.lqmWin.clear{color:#0c1a12;background:#4fd1a6;}.lqmWin.close{color:#241c06;background:#e8c24a;}.lqmWin.under{color:#2a1216;background:#d76b7a;}.lqmThr{margin-bottom:12px;}.lqmThrRow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}.lqmThrLbl{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#c9b8ff;}.lqmThrVal{font-size:12px;font-weight:700;color:#eaf0ff;}.lqmThrBar{height:7px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;}.lqmThrFill{height:100%;border-radius:6px;background:linear-gradient(90deg,#7c5cff,#4fd1a6);}.lqmThrNote{font-size:10px;color:#8891ad;margin-top:5px;}.lqmTap{cursor:pointer;border-radius:8px;margin:0 -6px;padding-left:6px;padding-right:6px;transition:background .12s;}.lqmTap:hover{background:rgba(120,160,255,.10);}.lqmTap:active{background:rgba(120,160,255,.18);}.lqmChev{color:#6b7699;font-size:15px;font-weight:700;margin-left:8px;flex:0 0 auto;}.lqmRec{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:9px 11px;border-radius:10px;background:linear-gradient(90deg,rgba(124,92,255,.22),rgba(79,209,166,.14));border:1px solid rgba(124,92,255,.35);}.lqmRecTag{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#0c1a12;background:#4fd1a6;padding:2px 7px;border-radius:6px;flex:0 0 auto;}.lqmRecLbl{font-size:13px;font-weight:800;color:#eaf0ff;flex:0 0 auto;}.lqmRecWhy{font-size:11px;color:#c6cfe6;margin-left:auto;text-align:right;}#lqLedgerOverlay{display:none;position:fixed;inset:0;z-index:9000;background:rgba(4,8,18,.72);align-items:center;justify-content:center;padding:18px;}.lqlCard{position:relative;max-width:560px;width:100%;max-height:82vh;overflow:auto;background:linear-gradient(180deg,#141a2e,#0d1120);border:1px solid rgba(120,160,255,.28);border-radius:16px;padding:16px 16px 20px;}.lqlClose{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.08);border:0;color:#cfd8f2;border-radius:8px;width:30px;height:30px;font-size:14px;}.lqlHead{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9ec3ff;margin:2px 0 8px;}.lqlRow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.05);}.lqlIcon{flex:0 0 auto;}.lqlName{font-weight:800;font-size:13px;color:#eaf0ff;}.lqlVal{margin-left:auto;font-weight:800;font-size:13px;color:#4fd1a6;}.lqlSrc{flex-basis:100%;font-size:11px;color:#8f9ab8;line-height:1.35;}';
@@ -22144,9 +22144,10 @@ try{ showDungeons=showDungeonsRoR; }catch(e){}
 var battleRaidSA=null;
 const RAID_SA={ attemptsPerDay:3, slice:0.055, ampPerDomain:0.08, enemyFactor:0.14, squadSize:8 };
 function ensureRaidSA(){ const R=ensureRaid(); const day=periodKey('daily');
-  if(!R.sa||R.sa.day!==day) R.sa={day:day,used:0,runs:(R.sa&&R.sa.runs)||0,bestPct:(R.sa&&R.sa.bestPct)||0};
+  if(!R.sa||R.sa.day!==day){ var carry=0; try{ if(R.sa&&R.sa.day) carry=Math.min(18,(R.sa.bank|0)+Math.max(0,RAID_SA.attemptsPerDay-(R.sa.used|0))); }catch(e){}
+    R.sa={day:day,used:0,bank:carry,runs:(R.sa&&R.sa.runs)||0,bestPct:(R.sa&&R.sa.bestPct)||0}; }
   return R.sa; }
-function raidAttemptsLeft(){ const sa=ensureRaidSA(); return Math.max(0,RAID_SA.attemptsPerDay-(sa.used||0)); }
+function raidAttemptsLeft(){ const sa=ensureRaidSA(); return Math.max(0,RAID_SA.attemptsPerDay+(sa.bank|0)-(sa.used||0)); } /* v2.257.0: unused attempts bank (cap 18) so the Sunday sweep can spend the week's misses */
 function raidHabitAmp(){ try{ return 1+RAID_SA.ampPerDomain*Math.max(0,Math.min(8,domainsHitThisWeek())); }catch(e){ return 1; } }
 function raidSASquad(){ const ids=(typeof squad==='function'?squad('raid'):[])||[];
   let heroes=ids.map(id=>S.heroes.find(h=>h&&h.id===id&&h.owned)).filter(Boolean);
@@ -23375,11 +23376,14 @@ function raidSAInjectPanel(){ try{
   function tick(){
     try{
       if(auto().autoWeeklyEvents===false) return;
+      if(!(function(){ var s=st(); if((s.force|0)>0) return true; try{ if(new Date().getDay()===0 && s.doneWk!==wk()) return true; }catch(e){} return false; })()) return; /* v2.257.0: dormant all week — sweeps on Sunday or Run Now */
       try{ if(st().pauseDay===(function(){try{return periodKey('daily');}catch(e){return 'd';}})()) return; }catch(e){}
       if(typeof battleState!=='undefined'&&battleState&&!battleState.over) return;
       function dayk(){ try{ return periodKey('daily'); }catch(e){ return 'd'; } }
-      function triedToday(k){ return st()[k+'Day']===dayk(); }
-      function markTried(k){ st()[k+'Day']=dayk(); try{ save(); }catch(e){} }
+      function sid(){ return wk()+':'+((st().fseq|0)); }
+      function capOf(k){ return k==='gauntlet'?1:12; }
+      function triedToday(k){ var s=st(); if(benched(k)) return true; if(s[k+'Sw']!==sid()) return false; return ((s[k+'N']|0)>=capOf(k)); }
+      function markTried(k){ var s=st(); if(s[k+'Sw']!==sid()){ s[k+'Sw']=sid(); s[k+'N']=0; } s[k+'N']=(s[k+'N']|0)+1; if(!s.snapId||s.snapId!==sid()){ s.snapId=sid(); try{ s.snap={arena:(ensureArena().rank|0),conquest:(ensureConquest().tier|0),stage:(S.maxCleared|0),raid:0,at:Date.now()}; }catch(e){ s.snap={at:Date.now()}; } } try{ save(); }catch(e){} } /* v2.257.0: per-sweep caps replace per-day marks — ladders push repeatedly until wall or cap */
       var acts=[
         function(){ if(triedToday('arena')||typeof startArenaBattle!=='function') return false;
           var A=ensureArena(); markTried('arena'); return withResolve(function(){ return startArenaBattle((A.rank|0)+1); }); },
@@ -23408,6 +23412,13 @@ function raidSAInjectPanel(){ try{
         function(){ if(triedToday('rift')||typeof riftStartRun!=='function') return false;
           markTried('rift');
           return withResolve(function(){ return riftStartRun(); }); },
+        function(){ if(triedToday('clash')||typeof startBattle!=='function') return false;
+          markTried('clash');
+          return withResolve(function(){ startBattle('clash'); return {ok:(typeof battleState!=='undefined')&&!!battleState}; }); }, /* v2.257.0 */
+        function(){ if(typeof startRaidStrike!=='function'||typeof raidAttemptsLeft!=='function') return false;
+          if(raidAttemptsLeft()<=0) return false;
+          markTried('raid');
+          return withResolve(function(){ return startRaidStrike(); }); }, /* v2.257.0: Tera Raid — drains today's + banked attempts */
         function(){ if(typeof siegeDeployNext!=='function'||typeof ensureSiege!=='function') return false;
           var sg=ensureSiege(), any=false;
           Object.keys(sg.fronts||{}).forEach(function(k){ try{ var r=siegeDeployNext(k); if(r&&r.ok) any=true; }catch(e){} });
@@ -23416,11 +23427,54 @@ function raidSAInjectPanel(){ try{
       ];
       for(var n=0;n<acts.length;n++){ var j=(idx+n)%acts.length; if(acts[j]()){ idx=(j+1)%acts.length; return; } }
       idx=(idx+1)%acts.length;
+      try{ if(window.lqSweepFinalize) window.lqSweepFinalize(st(),wk(),sid()); }catch(e){} /* v2.257.0: full idle pass = sweep complete */
     }catch(e){}
   }
   try{ window.addEventListener('arenaEnded', function(ev){ try{ if(ev&&ev.detail&&ev.detail.win===false) bench('arena'); }catch(e){} }); }catch(e){}
   setTimeout(function(){ tick(); setInterval(tick, 75000); }, 15000);
   window.lqWeeklyAutoTick=tick;
+  window.lqRunSweepNow=function(){ var s=st(); s.force=1; s.fseq=(s.fseq|0)+1; try{ save(); }catch(e){} try{ toast('Sweep started \u2014 runs headless over the next minutes'); }catch(e){} try{ tick(); }catch(e){} };
+  window.lqSweepFinalize=function(s,wkk,sidv){
+    if(!s || s.doneSid===sidv) return;
+    if(typeof battleState!=='undefined'&&battleState&&!battleState.over) return;
+    var started=s.snapId===sidv && s.snap; if(!started) { if((s.force|0)>0){ s.force=0; try{ save(); }catch(e){} } return; }
+    s.doneSid=sidv; s.doneWk=wkk; var wasForced=(s.force|0)>0; s.force=0;
+    var rep={wk:wkk,at:Date.now(),forced:wasForced,modes:{}};
+    try{ rep.modes.arena={from:(s.snap.arena|0),to:(ensureArena().rank|0)}; }catch(e){}
+    try{ rep.modes.conquest={from:(s.snap.conquest|0),to:(ensureConquest().tier|0)}; }catch(e){}
+    try{ rep.modes.stage={from:(s.snap.stage|0),to:(S.maxCleared|0)}; }catch(e){}
+    ['gauntlet','rift','clash','raid'].forEach(function(k){ rep.modes[k]={tries:(s[k+'Sw']===sidv)?(s[k+'N']|0):0}; });
+    try{ var mv=(S.heroes||[]).filter(function(h){return h&&h.owned;}).sort(function(a,b){return powerOf(b)-powerOf(a);})[0];
+      if(mv){ var pv=(typeof CUSTOM_HERO_PASSIVES==='object')?CUSTOM_HERO_PASSIVES[mv.id]:null;
+        rep.mvp={name:mv.name,line:pv?(pv.name+' \u2014 '+pv.desc):(mv.name+' led the line.')}; } }catch(e){}
+    if(!Array.isArray(S.lqSweepLog)) S.lqSweepLog=[];
+    S.lqSweepLog.unshift(rep); S.lqSweepLog=S.lqSweepLog.slice(0,4);
+    try{ save(); }catch(e){}
+    try{ toast('\u2694 Sunday sweep complete \u2014 dispatch filed'); }catch(e){}
+    try{ if(window.lqSweepCardRefresh) window.lqSweepCardRefresh(); }catch(e){}
+  };
+  /* Run Now button + latest dispatch, injected beside the automation controls */
+  function lqSweepCard(){
+    var anchor=document.querySelector('.lqModeDash')||document.getElementById('compactSeg')||document.getElementById('motionSeg'); if(!anchor||!anchor.parentElement) return; /* v2.257.1: Shield tab (Battle Modes dash) first, Settings fallback */
+    var ex=document.getElementById('lqSweepCard'); if(ex) ex.remove();
+    var d=document.createElement('div'); d.id='lqSweepCard';
+    d.style.cssText='margin:10px 0;padding:10px 12px;border:1px solid rgba(232,179,75,.3);border-radius:12px;background:rgba(232,179,75,.06)';
+    var r=(S.lqSweepLog&&S.lqSweepLog[0])||null, body='';
+    if(r){ var bits=[];
+      if(r.modes.arena&&r.modes.arena.to>r.modes.arena.from) bits.push('Arena '+r.modes.arena.from+'\u2192'+r.modes.arena.to);
+      if(r.modes.conquest&&r.modes.conquest.to>r.modes.conquest.from) bits.push('Conquest '+r.modes.conquest.from+'\u2192'+r.modes.conquest.to);
+      if(r.modes.stage&&r.modes.stage.to>r.modes.stage.from) bits.push('Stage '+r.modes.stage.from+'\u2192'+r.modes.stage.to);
+      if(r.modes.raid&&r.modes.raid.tries) bits.push('Raid \u00d7'+r.modes.raid.tries);
+      if(r.modes.gauntlet&&r.modes.gauntlet.tries) bits.push('Gauntlet run');
+      body='<div style="font-size:11px;color:var(--muted);margin-top:4px">Last sweep ('+(r.forced?'manual':'Sunday')+'): '+(bits.length?bits.join(' \u00b7 '):'held the line')+'</div>'
+        +(r.mvp?'<div style="font-size:11px;color:#e8d9b0;margin-top:3px;font-style:italic">'+r.mvp.name+': \u201c'+r.mvp.line+'\u201d</div>':'');
+    } else { body='<div style="font-size:11px;color:var(--muted);margin-top:4px">Dormant all week \u2014 sweeps every mode on Sunday, or on demand.</div>'; }
+    d.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-family:Orbitron;font-size:12px;color:#e8b34b">\u2694 WEEKLY SWEEP</b><button id="lqSweepNow" style="background:rgba(232,179,75,.18);border:1px solid rgba(232,179,75,.55);color:#e8b34b;border-radius:9px;padding:7px 12px;font-weight:900;font-family:Orbitron;font-size:11px">Run Now</button></div>'+body;
+    anchor.parentElement.insertBefore(d, anchor);
+    var b=document.getElementById('lqSweepNow'); if(b) b.onclick=function(){ window.lqRunSweepNow(); lqSweepCard(); };
+  }
+  window.lqSweepCardRefresh=lqSweepCard;
+  setInterval(function(){ try{ if(!document.getElementById('lqSweepCard')) lqSweepCard(); }catch(e){} }, 4000);
 })();
 /* v2.245.1: global header framing removed — frames belong to the dailies section headers only */
   /* ===== v2.242.0: Daily Reorder =====
