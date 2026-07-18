@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.265.0-clashunstick'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.2-pokejobs6'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3538,10 +3538,11 @@ function expGenReq(r,existing){ const kinds=['role','element','fandom','affinity
 function expeditionGenOffers(day,bump){ const rng=expRng(expHashStr('exp'+day+'#'+(bump||0))); const medPow=expMedianHeroPower(); const N=6, offers=[];
   for(let i=0;i<N;i++){ const r=rng; const rar=expRollRarity(r); const dt=EXP_DUR[Math.floor(r()*EXP_DUR.length)]; const size=Math.min(8,4+Math.floor(r()*3)+rar.size); const reqs=[]; let nReq=Math.min(3,(r()<0.3?2:1)+rar.reqBump); for(let q=0;q<nReq;q++) reqs.push(expGenReq(r,reqs));
     const recPower=Math.round(size*medPow*(0.85+r()*0.55)); const dm=dt[2]; const rr=expRarityReward(rar,dm,r);
-    const baseReward={ gold:Math.round(1900*dm*(0.9+r()*0.3)), dust:Math.round(880*dm), exp:Math.round(2400*dm), cry:(dt[0]==='Long'?Math.round(9*dm):0)+rr.cry, cores:(dt[0]==='Short'?0:Math.round(5*dm))+rr.cores, stones:rr.stones, sparks:rr.sparks, tickets:rr.tickets };
+    const _gph=(typeof afkGoldRate==='function')?afkGoldRate():0, _dph=(typeof afkDustRate==='function')?afkDustRate():0, _xph=(typeof expRate==='function')?expRate():0; /* v2.266.1: jobs pay like the idle hours they represent (dm ~ 0.65x duration-hours) - anchored to live rates, self-scales with the account forever; legacy constants kept as floors so no account ever sees a nerf */
+    const baseReward={ gold:Math.round(Math.max(1900,_gph*4.8)*dm*(0.9+r()*0.3)), dust:Math.round(Math.max(880,_dph*4.8)*dm), exp:Math.round(Math.max(2400,_xph*2.4)*dm), /* v2.266.2: x3 idle anchor per Peter */ cry:(dt[0]==='Long'?Math.round(9*dm):0)+rr.cry, cores:(dt[0]==='Short'?0:Math.round(5*dm))+rr.cores, stones:rr.stones, sparks:rr.sparks, tickets:rr.tickets };
     offers.push({ id:'o'+day+'_'+(bump||0)+'_'+i, title:EXP_THEMES[Math.floor(r()*EXP_THEMES.length)], tier:dt[0], rarity:rar.key, rarityColor:rar.color, duration:dt[1], size:size, reqs:reqs, recPower:recPower, baseReward:baseReward }); }
   return offers; }
-function ensureExpeditions(){ if(!S.expeditions||typeof S.expeditions!=='object') S.expeditions={slots:3,active:[],offers:[],offersDay:'',lifetime:0}; const E=S.expeditions; if(!Array.isArray(E.active))E.active=[]; if(!Array.isArray(E.offers))E.offers=[]; if(!(E.slots>0))E.slots=3; if(typeof E.lifetime!=='number')E.lifetime=0; if(typeof E.seedBump!=='number')E.seedBump=0; if(typeof E.refreshesUsed!=='number')E.refreshesUsed=0; const day=siegeDayStamp(); if(E.refreshDay!==day){ E.refreshDay=day; E.refreshesUsed=0; } if(E.offersDay!==day || !E.offers.length){ E.seedBump=0; E.offers=expeditionGenOffers(day,0); E.offersDay=day; } return E; }
+function ensureExpeditions(){ if(!S.expeditions||typeof S.expeditions!=='object') S.expeditions={slots:3,active:[],offers:[],offersDay:'',lifetime:0}; const E=S.expeditions; if(!Array.isArray(E.active))E.active=[]; if(!Array.isArray(E.offers))E.offers=[]; if(!(E.slots>0))E.slots=3; if(E.slots<6)E.slots=6; /* v2.266.2: six crews out at once */ if(typeof E.lifetime!=='number')E.lifetime=0; if(typeof E.seedBump!=='number')E.seedBump=0; if(typeof E.refreshesUsed!=='number')E.refreshesUsed=0; const day=siegeDayStamp(); if(E.refreshDay!==day){ E.refreshDay=day; E.refreshesUsed=0; } if(E.offersDay!==day || !E.offers.length){ E.seedBump=0; E.offers=expeditionGenOffers(day,0); E.offersDay=day; } return E; }
 function expeditionRefresh(){ const E=ensureExpeditions(); const day=siegeDayStamp(); if(E.refreshDay!==day){ E.refreshDay=day; E.refreshesUsed=0; } if((E.refreshesUsed||0)>=EXP_FREE_REFRESHES) return {ok:false,reason:'none'}; E.seedBump=(E.seedBump||0)+1; E.offers=expeditionGenOffers(day,E.seedBump); E.refreshesUsed=(E.refreshesUsed||0)+1; return {ok:true,left:EXP_FREE_REFRESHES-(E.refreshesUsed||0)}; }
 function expeditionLockedSet(){ const E=ensureExpeditions(); const set=new Set(); E.active.forEach(a=>{ if(!a.collected) (a.heroIds||[]).forEach(id=>set.add(id)); }); return set; }
 function expeditionAutoFill(offer){ const locked=expeditionLockedSet(); const avail=expOwned().filter(h=>!locked.has(h.id)); if(avail.length<offer.size) return null;
@@ -15725,7 +15726,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     }catch(e){ try{ c7RenderBattle(); }catch(_e){} }
   }
   function c7RenderBattle(){ const o=document.getElementById('clashBattleOverlay'); if(!o||!battle7) return; const rows=['front','mid','back','rear','reserve']; /* v2.106 clash: front rank renders at top of stack, facing the descending swarm */ battle7.heroes.forEach(h=>h.acted=0); const advChart=['Flame','Grove','Stone','Storm','Tide','Flame'].map(e=>c7ElementBadge(e,true)).join('<span class="clashAdvArrow">▸</span>'); const headSub='Chapter '+battle7.chapter+' · Stage '+battle7.stage+' · '+c7FmtTime(battle7.timeLeft||0)+' left · '+battle7.lanes.length+' lanes'; const swarmStats='<div class="clashBattlePattern"><span>Spawned '+battle7.spawned+'/'+battle7.totalEnemies+'</span><span>Defeated '+battle7.defeated+'/'+battle7.totalEnemies+'</span><span>Leaks '+battle7.leaks+'/'+battle7.leakLimit+'</span><span>Pressure '+battle7.wave+'/'+battle7.maxWaves+'</span></div>'; const _cz=BATTLE_ZONES[(((battle7.chapter||1)-1)%BATTLE_ZONES.length+BATTLE_ZONES.length)%BATTLE_ZONES.length], _cbg=(typeof v156BgForClass==='function'&&_cz)?v156BgForClass(_cz.c):''; o.innerHTML='<div class="clashBattlePanel c7 hasArt '+(battle7.lanes.length===5?'five':'three')+'" style="--clashArt:url('+_cbg+')"><div class="clashBattleHead"><div><b>⚡ Squadron Clash</b><span>'+headSub+'</span></div><div class="clashBattleBtns"><button onclick="setClashSpeed()">'+c7SpeedValue()+'x</button><button onclick="toggleClashAutoBattle()">'+((S.clash&&S.clash.autoBattle)?((S.appSettings&&S.appSettings.autoMode==='resolve')?'Auto Resolve':'Auto Watch'):'Auto Off')+'</button><button onclick="skipClashBattle()" '+(battle7.ended?'disabled':'')+'>Resolve</button><button onclick="closeClashBattle()">✕</button></div></div>'+swarmStats+'<div class="clashAdvChart">'+advChart+'</div><div class="clashArenaGrid c7 '+(battle7.lanes.length===5?'five':'three')+'">'+battle7.lanes.map(l=>{ const t=c7LaneType(l,battle7.chapter,battle7.stage,battle7.pattern); return '<div class="clashLaneBattle '+(l.basic?'basic':'')+'" style="--laneEl:'+((t&&ELEMENT_META[t]&&ELEMENT_META[t].color)||'#9ca3af')+'"><div class="laneLabel">'+esc7(l.label)+' '+c7ElementBadge(t,true)+'</div><div class="enemyTrack">'+c7LaneEnemyHTML(l.key)+'</div><div class="heroStack">'+rows.map(r=>c7HeroCellHTML(l.key,r)).join('')+'</div></div>'; }).join('')+'</div><div class="clashBattleLog">'+esc7(battle7.log||'')+'</div>'+(battle7.ended?c7RenderResult():'')+'</div>'; }
-  window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); battle7._wd={t:battle7.tickCount||0,at:Date.now()}; if(battle7.watchdog) clearInterval(battle7.watchdog); battle7.watchdog=setInterval(c7Watchdog,1500); if(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode==='resolve'){ try{ if(typeof window.clashResolveOutside==='function'){ window.clashResolveOutside(); } else if(typeof window.skipClashBattle==='function'){ window.skipClashBattle(); } }catch(_e){} } }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
+  window.startClashBattle=function(){ try{ if(battle7&&!battle7.ended){ safeToast7('Clash battle already running'); return; } c7StartData(); c7OpenBattle(); c7SpawnQueued(); c7RenderBattle(); battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs)); battle7._wd={t:battle7.tickCount||0,at:Date.now()}; if(battle7.watchdog) clearInterval(battle7.watchdog); battle7.watchdog=setInterval(c7Watchdog,1500); if(typeof S!=='undefined'&&S.appSettings&&S.appSettings.autoMode==='resolve'&&S.clash&&S.clash.autoBattle){ try{ if(typeof window.clashResolveOutside==='function'){ window.clashResolveOutside(); } else if(typeof window.skipClashBattle==='function'){ window.skipClashBattle(); } }catch(_e){} } /* v2.265.1: instant-resolve needs BOTH flags — defeat flips autoBattle off, so a post-defeat start runs live, matching the modal's Auto Off */ }catch(e){ console.error('startClashBattle v7 failed',e); safeToast7('Clash battle failed to start: '+(e.message||e)); } };
   window.skipClashBattle=function(){ if(!battle7||battle7.ended||battle7.resolving) return; battle7.resolving=true;
     var run=battle7, guard=0;
     (function pump(){ if(!battle7||battle7!==run||battle7.ended) return; var n=0;
@@ -23404,20 +23405,21 @@ function raidSAInjectPanel(){ try{
   function tick(){
     try{
       if(auto().autoWeeklyEvents===false) return;
-      if(!(function(){ var s=st(); if((s.force|0)>0) return true; try{ if(new Date().getDay()===0 && s.doneWk!==wk()) return true; }catch(e){} return false; })()) return; /* v2.257.0: dormant all week — sweeps on Sunday or Run Now */
+      if(!(function(){ var s=st(); if((s.force|0)>0){ if(!s.forceAt||Date.now()-s.forceAt<43200000) return true; s.force=0; try{ save(); }catch(e){} } try{ if(new Date().getDay()===0 && s.doneWk!==wk()) return true; }catch(e){} return false; })()) return; /* v2.266.0: Run Now force expires after 12h - a stale flag was re-running the sweep on weekdays */ /* v2.257.0: dormant all week — sweeps on Sunday or Run Now */
       try{ if(st().pauseDay===(function(){try{return periodKey('daily');}catch(e){return 'd';}})()) return; }catch(e){}
       if(typeof battleState!=='undefined'&&battleState&&!battleState.over) return;
       function dayk(){ try{ return periodKey('daily'); }catch(e){ return 'd'; } }
       function sid(){ return wk()+':'+((st().fseq|0)); }
       function capOf(k){ return k==='gauntlet'?1:12; }
-      function triedToday(k){ var s=st(); if(benched(k)) return true; if(s[k+'Sw']!==sid()) return false; return ((s[k+'N']|0)>=capOf(k)); }
+      function modeOn(k){ try{ var m=st().modes; return !m || m[k]!==false; }catch(e){ return true; } } /* v2.266.0: per-mode sweep toggles, default on */
+      function triedToday(k){ var s=st(); if(!modeOn(k)) return true; if(benched(k)) return true; if(s[k+'Sw']!==sid()) return false; return ((s[k+'N']|0)>=capOf(k)); }
       function markTried(k){ var s=st(); s.lastAct=k; if(s[k+'Sw']!==sid()){ s[k+'Sw']=sid(); s[k+'N']=0; } s[k+'N']=(s[k+'N']|0)+1; if(!s.snapId||s.snapId!==sid()){ s.snapId=sid(); try{ s.snap={arena:(ensureArena().rank|0),conquest:(ensureConquest().tier|0),stage:(S.maxCleared|0),raid:0,at:Date.now()}; }catch(e){ s.snap={at:Date.now()}; } } try{ save(); }catch(e){} } /* v2.257.0: per-sweep caps replace per-day marks — ladders push repeatedly until wall or cap */
       var acts=[
         function(){ if(triedToday('arena')||typeof startArenaBattle!=='function') return false;
           var A=ensureArena(); markTried('arena'); return withResolve(function(){ return startArenaBattle((A.rank|0)+1); }); },
         function(){ if(triedToday('conquest')||typeof startConquestBattle!=='function') return false;
           var C=ensureConquest(); markTried('conquest'); return withResolve(function(){ return startConquestBattle((C.tier|0)+1); }); },
-        function(){ if(typeof gauntletStartRun!=='function') return false;
+        function(){ if(typeof gauntletStartRun!=='function'||!modeOn('gauntlet')) return false;
           try{ var Gx=ensureGauntlet(); if(Gx.run&&Gx.run.alive){ lqChainGauntlet(); return true; } }catch(e){}
           if(triedToday('gauntlet')) return false;
           var sq=[]; try{ var size=(typeof GAUNTLET_TUNE!=='undefined'&&GAUNTLET_TUNE.squadSize)||6;
@@ -23443,19 +23445,22 @@ function raidSAInjectPanel(){ try{
         function(){ if(triedToday('clash')||typeof startBattle!=='function') return false;
           markTried('clash');
           return withResolve(function(){ startBattle('clash'); return {ok:(typeof battleState!=='undefined')&&!!battleState}; }); }, /* v2.257.0 */
-        function(){ if(typeof startRaidStrike!=='function'||typeof raidAttemptsLeft!=='function') return false;
+        function(){ if(!modeOn('raid')) return false;
+          if(typeof startRaidStrike!=='function'||typeof raidAttemptsLeft!=='function') return false;
           if(raidAttemptsLeft()<=0) return false;
           markTried('raid');
           return withResolve(function(){ return startRaidStrike(); }); }, /* v2.257.0: Tera Raid — drains today's + banked attempts */
-        function(){ if(typeof window.advStrikesLeft!=='function'||typeof window.advStrike!=='function') return false;
+        function(){ if(!modeOn('sinister')) return false;
+          if(typeof window.advStrikesLeft!=='function'||typeof window.advStrike!=='function') return false;
           try{ if(typeof S==='undefined'||!S||!S.adversary||!S.adversary.faced) return false; }catch(e){ return false; }
           if(window.advStrikesLeft()<=0) return false;
           markTried('sinister');
           try{ window.advStrike({quiet:true}); return true; }catch(e){ return false; } }, /* v2.262.0: Sinister Ten - drains today's + banked strikes */
         function(){ if(typeof siegeDeployNext!=='function'||typeof ensureSiege!=='function') return false;
+          if(triedToday('siege')) return false;
           var sg=ensureSiege(), any=false;
           Object.keys(sg.fronts||{}).forEach(function(k){ try{ var r=siegeDeployNext(k); if(r&&r.ok) any=true; }catch(e){} });
-          if(any){ try{ save(); }catch(e){} }
+          if(any){ markTried('siege'); try{ save(); }catch(e){} } /* v2.266.0: cap siege like the ladders - an uncapped act blocked the idle pass, so lqSweepFinalize never ran and force never cleared */
           return any; }
       ];
       for(var n=0;n<acts.length;n++){ var j=(idx+n)%acts.length; if(acts[j]()){ idx=(j+1)%acts.length; return; } }
@@ -23485,7 +23490,7 @@ function raidSAInjectPanel(){ try{
     }; endBattle.__lqLossHook=true; })(); }catch(e){} /* v2.263.0: generic loss-detection - exact until-defeat for ladder modes, sweep-scoped */
   setTimeout(function(){ tick(); setInterval(tick, 75000); }, 15000);
   window.lqWeeklyAutoTick=tick;
-  window.lqRunSweepNow=function(){ var s=st(); s.force=1; s.fseq=(s.fseq|0)+1; try{ save(); }catch(e){} try{ toast('Sweep started \u2014 runs headless over the next minutes'); }catch(e){} try{ tick(); }catch(e){} };
+  window.lqRunSweepNow=function(){ var s=st(); s.force=1; s.forceAt=Date.now(); s.fseq=(s.fseq|0)+1; try{ save(); }catch(e){} try{ toast('Sweep started \u2014 runs headless over the next minutes'); }catch(e){} try{ tick(); }catch(e){} };
   window.lqSweepFinalize=function(s,wkk,sidv){
     if(!s || s.doneSid===sidv) return;
     if(typeof battleState!=='undefined'&&battleState&&!battleState.over) return;
@@ -23522,9 +23527,14 @@ function raidSAInjectPanel(){ try{
       body='<div style="font-size:11px;color:var(--muted);margin-top:4px">Last sweep ('+(r.forced?'manual':'Sunday')+'): '+(bits.length?bits.join(' \u00b7 '):'held the line')+'</div>'
         +(r.mvp?'<div style="font-size:11px;color:#e8d9b0;margin-top:3px;font-style:italic">'+r.mvp.name+': \u201c'+r.mvp.line+'\u201d</div>':'');
     } else { body='<div style="font-size:11px;color:var(--muted);margin-top:4px">Dormant all week \u2014 sweeps every mode on Sunday, or on demand.</div>'; }
-    d.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-family:Orbitron;font-size:12px;color:#e8b34b">\u2694 WEEKLY SWEEP</b><button id="lqSweepNow" style="background:rgba(232,179,75,.18);border:1px solid rgba(232,179,75,.55);color:#e8b34b;border-radius:9px;padding:7px 12px;font-weight:900;font-family:Orbitron;font-size:11px">Run Now</button></div>'+body;
+    var _mm=(S.lqWeeklyAuto&&S.lqWeeklyAuto.modes)||{};
+    var _MODES=[['arena','Arena'],['conquest','Conquest'],['gauntlet','Gauntlet'],['campaign','Campaign'],['tower','Tower'],['rift','Rift'],['clash','Clash'],['raid','Raid'],['sinister','Sinister'],['siege','Siege']];
+    var mrow='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">'+_MODES.map(function(p){ var on=_mm[p[0]]!==false;
+      return '<button data-swmode="'+p[0]+'" style="font-size:10px;padding:4px 8px;border-radius:8px;font-weight:800;border:1px solid '+(on?'rgba(232,179,75,.55)':'rgba(255,255,255,.18)')+';background:'+(on?'rgba(232,179,75,.16)':'rgba(0,0,0,.25)')+';color:'+(on?'#e8b34b':'var(--muted)')+'">'+p[1]+'</button>'; }).join('')+'</div>'; /* v2.266.0: per-mode sweep toggles */
+    d.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-family:Orbitron;font-size:12px;color:#e8b34b">\u2694 WEEKLY SWEEP</b><button id="lqSweepNow" style="background:rgba(232,179,75,.18);border:1px solid rgba(232,179,75,.55);color:#e8b34b;border-radius:9px;padding:7px 12px;font-weight:900;font-family:Orbitron;font-size:11px">Run Now</button></div>'+body+mrow;
     anchor.parentElement.insertBefore(d, anchor);
     var b=document.getElementById('lqSweepNow'); if(b) b.onclick=function(){ window.lqRunSweepNow(); lqSweepCard(); };
+    d.querySelectorAll('[data-swmode]').forEach(function(btn){ btn.onclick=function(){ try{ if(typeof S.lqWeeklyAuto!=='object') S.lqWeeklyAuto={}; var M=S.lqWeeklyAuto.modes=S.lqWeeklyAuto.modes||{}; var k=btn.getAttribute('data-swmode'); M[k]=(M[k]===false); if(typeof save==='function') save(); }catch(e){} lqSweepCard(); }; });
   }
   window.lqSweepCardRefresh=lqSweepCard;
   setInterval(function(){ try{ if(!document.getElementById('lqSweepCard')) lqSweepCard(); }catch(e){} }, 4000);
