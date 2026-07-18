@@ -169,6 +169,17 @@ async function writeLocalSaveObject(saveObj) {
     const existing = await idbGetRawSave();
     if (existing) localStorage.setItem("OF_PRE_CLOUD_RESTORE_" + Date.now(), existing);
   } catch (e) {}
+  /* CRITICAL: the game's save coalescer flushes on pagehide, so the reload below
+     would persist the OLD in-memory state right over this restore. Swap the global
+     game state to the restored object first — any late flush then writes the
+     restored save. Local custom portrait crops are carried over (device-local). */
+  try {
+    if (typeof S !== "undefined" && S && typeof S === "object") {
+      try { if (S.heroPortraits) saveObj.heroPortraits = S.heroPortraits; } catch (e) {}
+      try { if (S.portraitCustom) saveObj.portraitCustom = S.portraitCustom; } catch (e) {}
+      S = saveObj;
+    }
+  } catch (e) {}
   await idbPutRawSave(raw);
   markLocalSaveUpdated();
   alert("Cloud save restored. Oathforge will reload now.");

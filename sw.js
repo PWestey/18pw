@@ -11,7 +11,7 @@
    When offline, everything falls back to the last-cached copy.
    This intentionally contains NO auto-reload logic, so it cannot loop.
 */
-var CACHE = 'oathforge-cache-v2';
+var CACHE = 'oathforge-cache-v3';
 
 self.addEventListener('install', function (e) {
   // Activate this SW immediately instead of waiting for old tabs to close.
@@ -37,8 +37,17 @@ self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') { return; }
 
-  var path = '';
-  try { path = new URL(req.url).pathname; } catch (_) {}
+  var path = '', sameOrigin = true;
+  try {
+    var u = new URL(req.url);
+    path = u.pathname;
+    sameOrigin = (u.origin === self.location.origin);
+  } catch (_) {}
+
+  // Never intercept cross-origin traffic (Firebase auth/Firestore, gstatic CDN):
+  // caching long-poll responses bloats the cache under unique URLs, and the SW
+  // has no business sitting in the middle of auth flows. Let the browser handle it.
+  if (!sameOrigin) { return; }
 
   var isNav = (req.mode === 'navigate') || /\/$|\/index\.html$/.test(path);
   var isArt = path.indexOf('/art/') !== -1;
