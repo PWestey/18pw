@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.264.0-smoothness';
+const APP_BUILD='v2.265.0-clashunstick'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -15734,6 +15734,30 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     })(); };
   window.clashResolveOutside=function(){ try{ var o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); }catch(e){} try{ window.__clashOutside=true; }catch(e){} window.skipClashBattle(); };
   window.closeClashBattle=function(){ if(battle7&&battle7.timer) clearInterval(battle7.timer); if(battle7&&battle7.autoTimer) clearTimeout(battle7.autoTimer); if(battle7&&battle7.watchdog) clearInterval(battle7.watchdog); battle7=null; const o=document.getElementById('clashBattleOverlay'); if(o) o.remove(); try{ if(typeof render==='function') render(); }catch(e){} };
+  /* v2.265.0: clash anti-stick sentinel — observed on device: overlay left showing an
+     ended/stalled battle with no result panel after an auto-resolve retry (engine flags
+     wedged, e.g. by iOS suspending the page mid-resolve). Self-heal within ~6s:
+     ended-without-result -> re-render result, else close cleanly; live-but-stalled ->
+     clear _ticking/resolving flags and restart the timer so the watchdog can finish. */
+  setInterval(function(){ try{
+    var o=document.getElementById('clashBattleOverlay'); if(!o) return;
+    var hasRes=!!o.querySelector('.clashResult');
+    if(!battle7){ if(!hasRes) closeClashBattle(); return; }
+    if(battle7.ended){
+      if(!hasRes){ try{ c7RenderBattle(); }catch(e){}
+        if(!o.querySelector('.clashResult')) closeClashBattle(); }
+      return;
+    }
+    if(battle7.__sentinelTick===battle7.tickCount){
+      battle7.__stuckBeats=(battle7.__stuckBeats||0)+1;
+      if(battle7.__stuckBeats>=3){
+        battle7.__stuckBeats=0; battle7._ticking=false; battle7.resolving=false;
+        if(!battle7.timer) battle7.timer=setInterval(c7Tick,(typeof c7BattleInterval==='function'?c7BattleInterval():C7.tickMs));
+        if(!battle7.watchdog) battle7.watchdog=setInterval(c7Watchdog,1500);
+      }
+    } else { battle7.__stuckBeats=0; }
+    battle7.__sentinelTick=battle7.tickCount;
+  }catch(e){} }, 2000);
   window.c7BattleInterval=function(){ const sp=c7SpeedValue(); return sp===3?220:(sp===2?300:C7.tickMs); };
   window.setClashSpeed=function(){ if(!battle7||battle7.ended) return; const cur=c7SpeedValue(); battle7.speed=cur===1?2:cur===2?3:1; try{ if(S.clash) S.clash.speed=battle7.speed; if(typeof save==='function') save(); }catch(e){} if(battle7.timer) clearInterval(battle7.timer); battle7.timer=setInterval(c7Tick,c7BattleInterval()); c7RenderBattle(); };
   window.toggleClashAutoBattle=function(){ if(!S.clash) ensureClashState(); if(!S.appSettings) S.appSettings={}; var on=!!S.clash.autoBattle, res=(S.appSettings.autoMode==='resolve'); if(!on){ S.clash.autoBattle=true; S.appSettings.autoMode='watch'; } else if(!res){ S.appSettings.autoMode='resolve'; } else { S.clash.autoBattle=false; S.appSettings.autoMode='off'; } if(typeof save==='function') save(); var m=S.appSettings.autoMode; safeToast7(!S.clash.autoBattle?'Clash auto off.':(m==='resolve'?'Auto Resolve: stages resolve instantly and chain.':'Auto Watch: stages play out and chain.')); if(m==='resolve'&&S.clash.autoBattle){ try{ if(typeof window.skipClashBattle==='function') window.skipClashBattle(); }catch(_e){} } c7RenderBattle(); };
