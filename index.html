@@ -1237,13 +1237,13 @@ function prestigePolishSummaryHTML(){
 function prestigeHallHTML(){
   ensurePrestigeState();
   const total=totalPrestigeStars(), top=topPrestigeHeroes(3), m=nextPrestigeMilestone();
-  const rows=top.length?top.map(h=>{ const face=h.img?'<img src="'+h.img+'">':initials(h.name); return '<div class="prestigeHeroRow" data-prestigehero="'+h.id+'"><div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="pn">'+esc(h.name)+'</div><div class="pm">'+esc(h.ip)+' · '+h.role+' · PWR '+fmtBig(powerOf(h))+(prestigeCatchActive(h)?' · Catch-up active':'')+'</div></div><div class="ps">★'+(h.prestige||0)+'</div></div>'; }).join(''):'<div class="empty" style="padding:10px;margin-top:8px">No prestige heroes yet. Your first New Cycle will open the Hall.</div>';
+  const rows=top.length?top.map(h=>{ const face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name); return '<div class="prestigeHeroRow" data-prestigehero="'+h.id+'"><div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="pn">'+esc(h.name)+'</div><div class="pm">'+esc(h.ip)+' · '+h.role+' · PWR '+fmtBig(powerOf(h))+(prestigeCatchActive(h)?' · Catch-up active':'')+'</div></div><div class="ps">★'+(h.prestige||0)+'</div></div>'; }).join(''):'<div class="empty" style="padding:10px;margin-top:8px">No prestige heroes yet. Your first New Cycle will open the Hall.</div>';
   return '<div class="prestigeHall"><div class="phh"><b>★ Prestige Hall</b><span>'+total+' total stars</span></div><p style="margin:0;color:var(--muted);font-size:12px;font-weight:700;line-height:1.35">A long-term showcase for favorite heroes who have begun new cycles.</p><div class="prestigeMini"><div class="mini"><b>'+total+'</b><span>Total ★</span></div><div class="mini"><b>'+Math.max(0,m.need)+'</b><span>To '+m.next+'★</span></div><div class="mini"><b>'+top.length+'</b><span>Prestiged</span></div></div><div class="catchupBox"><b>Catch-up:</b> prestiged heroes gain 3x EXP until they return to their previous cap. '+prestigeMilestoneBonusText()+'.</div>'+prestigePolishSummaryHTML()+rows+'<div class="lifeactions"><button class="primary" id="openPrestigeHall">Open Prestige Hall</button></div></div>';
 }
 function showPrestigeHall(){
   const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
   const total=totalPrestigeStars(), m=nextPrestigeMilestone(), heroes=topPrestigeHeroes(20);
-  const rows=heroes.length?heroes.map(h=>{ const face=h.img?'<img src="'+h.img+'">':initials(h.name), pct=prestigeCatchActive(h)?Math.min(100,h.level/prestigeCatchTarget(h)*100):100; return '<div class="prestigeHeroRow" data-prestigehero="'+h.id+'"><div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="pn">'+esc(h.name)+' · ★'+(h.prestige||0)+(((h.ascension|0)>0)?(' · ⬆ Asc '+(h.ascension|0)):'')+'</div><div class="pm">'+esc(heroArchetype(h)?.label||h.role)+' · Lv '+h.level+'/'+rankCap(h)+' · Bond Lv '+bondLevel(h)+' · PWR '+fmtBig(powerOf(h))+'</div><div class="xpbar" style="height:7px;margin-top:5px"><i style="width:'+pct+'%;background:linear-gradient(90deg,#ffb01f,#ff5d9e)"></i></div></div><div class="ps">'+(prestigeCatchActive(h)?'3x':'MAX')+'</div></div>'; }).join(''):'<div class="empty" style="padding:12px">No prestiged heroes yet.</div>';
+  const rows=heroes.length?heroes.map(h=>{ const face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name), pct=prestigeCatchActive(h)?Math.min(100,h.level/prestigeCatchTarget(h)*100):100; return '<div class="prestigeHeroRow" data-prestigehero="'+h.id+'"><div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="pn">'+esc(h.name)+' · ★'+(h.prestige||0)+(((h.ascension|0)>0)?(' · ⬆ Asc '+(h.ascension|0)):'')+'</div><div class="pm">'+esc(heroArchetype(h)?.label||h.role)+' · Lv '+h.level+'/'+rankCap(h)+' · Bond Lv '+bondLevel(h)+' · PWR '+fmtBig(powerOf(h))+'</div><div class="xpbar" style="height:7px;margin-top:5px"><i style="width:'+pct+'%;background:linear-gradient(90deg,#ffb01f,#ff5d9e)"></i></div></div><div class="ps">'+(prestigeCatchActive(h)?'3x':'MAX')+'</div></div>'; }).join(''):'<div class="empty" style="padding:12px">No prestiged heroes yet.</div>';
   const hist=(S.prestigeHistory||[]).slice(0,6).map(x=>'<div class="winItem"><div class="wt">★ '+esc(x.name)+' reached ★'+x.prestige+'</div><div class="wm">New Cycle started · previous cap Lv '+(x.catchTarget||100)+'</div><div class="wd">'+new Date(x.at).toLocaleDateString()+'</div></div>').join('');
   box.innerHTML='<div class="prestigeCelebrate">★</div><h2>Prestige Hall</h2><p>Favorite heroes can keep cycling without being punished. The reset is temporary; the star is permanent.</p>'+
     '<div class="prestigeHall"><div class="phh"><b>Account Prestige</b><span>'+total+' total stars</span></div><div class="prestigeMini"><div class="mini"><b>'+total+'</b><span>Total ★</span></div><div class="mini"><b>'+m.next+'</b><span>Next goal</span></div><div class="mini"><b>'+Math.max(0,m.need)+'</b><span>Needed</span></div></div><div class="catchupBox"><b>Account bonus:</b> '+prestigeMilestoneBonusText()+'.<br><b>Catch-up:</b> 3x EXP until a prestiged hero reaches its pre-prestige cap.</div>'+prestigePolishSummaryHTML()+'</div>'+
@@ -1696,7 +1696,7 @@ function heroQuestCounts(){
   return {all,ready,claimed,locked:S.heroes.filter(h=>h.owned&&bondLevel(h)>=5&&bondLevel(h)<7)};
 }
 function heroQuestRowHTML(h,compact){
-  const s=heroQuestStatus(h), r=heroQuestReward(h), face=h.img?'<img src="'+h.img+'">':initials(h.name), a=heroArchetype(h), locked=!s.eligible;
+  const s=heroQuestStatus(h), r=heroQuestReward(h), face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name), a=heroArchetype(h), locked=!s.eligible;
   return '<div class="heroQuestRow '+(locked?'locked':s.claimed?'claimed':s.ready?'ready':'')+'"><div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="hn">'+esc(h.name)+' · '+esc(heroQuestName(h))+'</div><div class="hm">'+esc(a?a.label:h.role)+' · Bond Lv '+bondLevel(h)+' · '+(locked?'Unlocks at Bond Lv 7':Math.min(s.prog,s.req)+'/'+s.req+' weekly affinity actions')+'<br>'+esc(heroQuestDesc(h))+'</div><div class="xpbar" style="height:7px;margin-top:5px"><i style="width:'+s.pct+'%;background:'+(s.ready?'#ffb01f':'#ff5d9e')+'"></i></div></div><div class="hs">'+(locked?'LOCK':s.claimed?'DONE':s.ready?'READY':'+'+(s.req-s.prog))+'</div>'+(compact?'':'<button data-heroquest="'+h.id+'" class="'+(s.claimed?'donebtn':s.ready?'claim':'')+'" '+((!s.ready||s.claimed)?'disabled':'')+'>'+(s.claimed?'Claimed':s.ready?'Claim':'Open')+'</button>')+'</div>';
 }
 function heroQuestSummaryHTML(){ /* Pass A v2.210.0: zero callers; of2154 wrapper is typeof-guarded. */ return ''; }
@@ -1726,7 +1726,7 @@ function showBondJournal(id){
   const h=S.heroes.find(x=>x.id===id)||topBondedHeroes(1)[0]; if(!h) return;
   const box=document.getElementById('revealBox'), modal=document.getElementById('revealModal'); if(!box||!modal)return;
   const p=bondProgress(h), pass=passiveOf(h), tasks=bondTaskSuggestions(h);
-  const face=h.img?'<img src="'+h.img+'" style="width:100%;height:100%;object-fit:cover">':initials(h.name);
+  const face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'" style="width:100%;height:100%;object-fit:cover">':initials(h.name);
   const taskHTML=tasks.length?tasks.map(t=>'<div class="bondTask" data-taskid="'+t.id+'"><div class="bt">'+(DKEY[domainOf(t)]?DKEY[domainOf(t)].icon+' ':'')+esc(t.title)+'</div><div class="bm">'+esc(domainLabel(domainOf(t)))+' · '+cap(t.diff)+' · '+rewardPreview(t)+'</div></div>').join(''):'<div class="empty" style="padding:10px;margin-top:8px">No matching open tasks right now. Any affinity task you add later will build this bond.</div>';
   box.innerHTML='<div class="ico">💞</div><h2>'+esc(h.name)+'</h2><p style="margin-bottom:10px">'+esc(h.ip)+' · '+h.role+' · '+affChips(h.aff)+'</p>'+
     '<div style="width:74px;height:74px;border-radius:18px;margin:0 auto 10px;background:linear-gradient(160deg,'+h.color+',#0008);display:grid;place-items:center;overflow:hidden;font-family:Orbitron;font-size:22px;font-weight:900">'+face+'</div>'+
@@ -1856,7 +1856,7 @@ function roomHero(k){
 }
 function roomCardHTML(k){
   const meta=DKEY[k], room=SANCTUARY_ROOMS[k], dm=domainMeta(k), lv=roomLevel(k), h=roomHero(k);
-  const face=h?(h.img?'<img src="'+h.img+'">':initials(h.name)):'—';
+  const face=h?(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name)):'—';
   const assigned=!!assignedHero(k), bonus=assignmentBonus(k);
   return '<div class="roomCard" style="--roomColor:'+meta.color+'" data-room="'+k+'"><div class="roomTop"><div class="roomName">'+meta.icon+' '+esc(room.name)+(assigned?'<span class="assignBadge">ASSIGNED</span>':'')+'</div><div class="roomLv">Room Lv '+lv+'</div></div>'+
     '<div class="roomDesc">'+esc(roomStageName(lv))+' · '+esc(room.desc)+'</div>'+
@@ -1884,7 +1884,7 @@ function showRoomAssign(k){
     return bm-am || (isFavorite(b.id)?1:0)-(isFavorite(a.id)?1:0) || bondLevel(b)-bondLevel(a) || powerOf(b)-powerOf(a);
   });
   const rows=sorted.map(h=>{
-    const match=Array.isArray(h.aff)&&h.aff.includes(k), current=cur&&cur.id===h.id, face=h.img?'<img src="'+h.img+'">':initials(h.name);
+    const match=Array.isArray(h.aff)&&h.aff.includes(k), current=cur&&cur.id===h.id, face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name);
     const preview=Math.min(15,Math.round(((match?0.05:0.03)+0.01*Math.min(10,bondLevel(h)))*100));
     return '<div class="assignHero '+(match?'match ':'')+(current?'current':'')+'" data-assign="'+h.id+'"><div class="aface" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div><div><div class="an">'+esc(h.name)+(current?' · Assigned':'')+'</div><div class="am">'+esc(h.ip)+' · '+h.role+' · Bond Lv '+bondLevel(h)+' · '+(match?'Domain match':'Off-domain support')+'</div></div><div class="as">+'+preview+'%</div></div>';
   }).join('') || '<div class="empty" style="padding:12px">No owned heroes yet.</div>';
@@ -2776,7 +2776,7 @@ function clashSquad(){ ensureClashState(); return S.clashSquad; }
 function clashTeamPower(){ ensureClashState(); return clashSquad().reduce((s,id)=>{const h=(S.heroes||[]).find(x=>x.id===id); return s+(h?powerOf(h):0);},0); }
 function ensureStarterClashSquad(){ ensureClashState(); if(S.clashSquad.length>=12) return; const owned=(S.heroes||[]).filter(h=>h&&h.owned).sort((a,b)=>powerOf(b)-powerOf(a)); owned.forEach(h=>{ if(S.clashSquad.length<12 && !S.clashSquad.includes(h.id)) S.clashSquad.push(h.id); }); }
 function clashElementWheelHTML(){ const chain=['Flame','Grove','Stone','Storm','Tide']; return '<div class="clashWheel"><div class="cwTitle">Type Wheel</div><div class="cwChain">'+chain.map(t=>elementBadge(t,true)+'<span class="arr">›</span>').join('').replace(/<span class="arr">›<\/span>$/,'')+'</div><div class="cwSub">Flame beats Grove · Grove beats Stone · Stone beats Storm · Storm beats Tide · Tide beats Flame</div></div>'; }
-function clashFormationPreviewHTML(){ ensureStarterClashSquad(); const ids=clashSquad(); const cells=[]; CLASH_LANES.forEach(l=>CLASH_ROWS.forEach(r=>{ const idx=cells.length, h=(S.heroes||[]).find(x=>x.id===ids[idx]); cells.push('<div class="clashSlot"><div class="csRow">'+cap(r)+'</div><div class="csFace" style="background:'+(h?h.color:'#111827')+'">'+(h?(h.img?'<img src="'+h.img+'" alt="">':h.name.slice(0,2).toUpperCase()):'—')+'</div><div class="csMeta">'+(h?elementBadge(h.elementType,true)+' '+esc(h.clashRole||'Role'):'Empty')+'</div></div>'); })); return '<div class="clashFormation">'+cells.join('')+'</div>'; }
+function clashFormationPreviewHTML(){ ensureStarterClashSquad(); const ids=clashSquad(); const cells=[]; CLASH_LANES.forEach(l=>CLASH_ROWS.forEach(r=>{ const idx=cells.length, h=(S.heroes||[]).find(x=>x.id===ids[idx]); cells.push('<div class="clashSlot"><div class="csRow">'+cap(r)+'</div><div class="csFace" style="background:'+(h?h.color:'#111827')+'">'+(h?(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'" alt="">':h.name.slice(0,2).toUpperCase()):'—')+'</div><div class="csMeta">'+(h?elementBadge(h.elementType,true)+' '+esc(h.clashRole||'Role'):'Empty')+'</div></div>'); })); return '<div class="clashFormation">'+cells.join('')+'</div>'; }
 function clashFoundationHTML(){ ensureClashState(); ensureStarterClashSquad(); const c=S.clash; const tp=clashTeamPower(); const progress=Math.round(((c.stage-1)/80)*100); return '<div class="stagecard" style="border-color:#cdbcff66"><h3>⚡ '+ofModeTitle('clash')+'</h3><p>Chapter '+c.chapter+' · Stage '+c.stage+'/80 · lane strategy mode</p></div>'+clashElementWheelHTML()+'<div class="team-strip"><div class="lab"><span>Clash Squad · 12 slots</span><b>PWR '+tp+'</b></div>'+clashFormationPreviewHTML()+'<div class="clashNote">'+ofModeTitle('clash')+' uses lane formations, automatic combat, and elemental counters.</div></div><div class="battleWorld" style="--worldColor:#cdbcff"><div class="bwHead"><b>⚡ Procedural Chapter Track</b><span>seeded foundation</span></div><div class="battleWorldStats"><div class="bws"><b>C'+c.chapter+'</b><span>chapter</span></div><div class="bws"><b>'+c.stage+'</b><span>stage</span></div><div class="bws"><b>'+progress+'%</b><span>chapter</span></div></div></div>'; }
 function domainOf(it){ return it&&it.domain&&DKEY[it.domain]?it.domain:null; }
 function domainLabel(k){ return DKEY[k]?DKEY[k].label:''; }
@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.262.0-sinistersweep';
+const APP_BUILD='v2.264.0-smoothness';
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3632,7 +3632,7 @@ function expRewardText(r){ r=r||{}; const p=['+'+v168Num(r.gold||0)+_cig('gold',
 function _cig(k,gl){ try{ if(typeof cicon==='function'&&typeof CURRENCY_ICON==='object'&&CURRENCY_ICON[k]) return ' '+cicon(k,13); }catch(e){} return ' '+gl; }
 function expActiveCardHTML(a){ const ready=expeditionReady(a), left=expeditionTimeLeft(a);
   const heroes=(a.heroIds||[]).map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
-  const ports=heroes.map(h=>'<div class="expPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('');
+  const ports=heroes.map(h=>'<div class="expPort">'+(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('');
   const rp=expeditionRewardFor(a);
   const foot=ready
     ? '<button class="expCollect" data-collect="'+a.id+'">Collect — '+expRewardText(rp)+'</button>'
@@ -3827,7 +3827,7 @@ function riftShowResult(state,extra){ injectRiftStyles(); injectGauntletStyles()
 function renderRift(v){ injectExpStyles(); injectGauntletStyles(); injectRiftStyles(); const R=ensureRift(); const t=riftTodayElement();
   const col=RIFT_ELEM_COLOR[t.key]||'#b18bff';
   const eligible=riftEligibleAll(); const squad=riftBuildSquad().map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean);
-  const ports=squad.map(h=>'<div class="expPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('')||'<span style="color:var(--muted);font-size:12px">No eligible heroes today.</span>';
+  const ports=squad.map(h=>'<div class="expPort">'+(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('')||'<span style="color:var(--muted);font-size:12px">No eligible heroes today.</span>';
   const dailies=riftDailiesDone(); const atkPct=Math.round((riftHabitAtk()-1)*100); const scoreMult=riftHabitScore().toFixed(2);
   const best=R.best[t.key]||0, bestSc=R.bestScore[t.key]||0;
   const claimed=ensureRift().claimedMs||{};
@@ -4079,7 +4079,7 @@ function renderGauntlet(v){ injectExpStyles(); injectGauntletStyles(); const G=e
   const ports=squad.map(h=>{ const mlt=gauntletUseMult(h.id); let cls='', tag='';
     if(mlt>1.001){ nFresh++; cls=' fresh'; tag='<span class="portTag good">+25%</span>'; }
     else if(mlt<0.999){ nTired++; cls=' fatigued'; tag='<span class="portTag warn">−35%</span>'; }
-    return '<div class="expPort'+cls+'">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+tag+'</div>'; }).join('')||'<span style="color:var(--muted);font-size:12px">No heroes owned yet.</span>';
+    return '<div class="expPort'+cls+'">'+(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':esc(initials(h.name)))+tag+'</div>'; }).join('')||'<span style="color:var(--muted);font-size:12px">No heroes owned yet.</span>';
   const lockedN=gauntletOwned().filter(h=>gauntletLocked(h.id)).length;
   let optLine='';
   if(squad.length){ const parts=[]; if(nFresh>0) parts.push('<b>'+nFresh+'</b> fresh (+25%)'); if(nTired>0) parts.push('<b>'+nTired+'</b> tired (−35%)');
@@ -4249,10 +4249,10 @@ function arenaShowResult(win, info){ injectArenaStyles(); const A=ensureArena();
 function renderArena(v){ injectExpStyles(); injectGauntletStyles(); injectArenaStyles(); const A=ensureArena();
   const nextRank=A.rank+1, rv=arenaRival(nextRank), rivP=arenaRivalPower(nextRank);
   const arCond=arenaRivalCondition(nextRank); const myTeam=arenaPlayerTeam(arCond), myPow=myTeam.reduce((s,h)=>s+powerOf(h),0);
-  const rivPorts=rv.members.map(h=>'<div class="expPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('')||'<span style="color:var(--muted);font-size:12px">No rival available.</span>';
+  const rivPorts=rv.members.map(h=>'<div class="expPort">'+(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':esc(initials(h.name)))+'</div>').join('')||'<span style="color:var(--muted);font-size:12px">No rival available.</span>';
   let nOut=0; const teamSlice=myTeam.slice(0,ARENA_TUNE.teamSize);
   const myPorts=teamSlice.map(h=>{ const out=arCond&&arCond.mult(h)<0.999; if(out) nOut++;
-    return '<div class="expPort'+(out?' outshone':'')+'">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+(out?'<span class="portTag cut">−25%</span>':'')+'</div>'; }).join('')||'<span style="color:var(--muted);font-size:12px">No heroes owned yet.</span>';
+    return '<div class="expPort'+(out?' outshone':'')+'">'+(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':esc(initials(h.name)))+(out?'<span class="portTag cut">−25%</span>':'')+'</div>'; }).join('')||'<span style="color:var(--muted);font-size:12px">No heroes owned yet.</span>';
   const nCounter=teamSlice.length-nOut;
   const optLine=arCond?('<div class="optSummary">Auto-optimized vs <b>'+esc(arCond.target)+'</b>: fielding <b>'+nCounter+'</b> counter'+(nCounter===1?'':'s')+' from other fandoms'+(nOut>0?(' · '+nOut+' '+esc(arCond.target)+' hero'+(nOut===1?'':'es')+' still strong enough to field (−25%)'):'')+'.</div>'):'';
   const edge=myTeam.length?(myPow>=rivP?'<span class="arEdge good">You outpower them</span>':'<span class="arEdge bad">They outpower you — level up or try anyway</span>'):'';
@@ -4428,7 +4428,7 @@ function renderConquest(v){ injectExpStyles(); injectGauntletStyles(); injectAre
   const tier=C.tier+1, mod=conquestModifier(tier), eff=conquestModEffect(mod), team=conquestBestTeam(mod);
   const champ=conquestChampion(mod), champId=champ?champ.id:null, aura=champId?(CONQUEST_TUNE.champAura||1.2):1, auraPct=Math.round((aura-1)*100);
   const tpow=team.reduce((s,h)=>s+Math.round(powerOf(h)*(h.id===champId?1:mod.mult(h)*aura)),0), boss=conquestBossName(tier), bpow=conquestBossPower(tier,mod), first=!C.clears[tier];
-  const ports=team.map(h=>{ const isC=(h.id===champId); const m=mod.mult(h); const cls=isC?' champ':(m>1.001?' boost':(m<0.999?' supp':'')); const tag=isC?'<span class="portTag champ">YOU</span>':''; return '<div class="expPort'+cls+'">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+tag+'</div>'; }).join('')||'<span style="color:var(--muted);font-size:12px">No heroes owned yet.</span>';
+  const ports=team.map(h=>{ const isC=(h.id===champId); const m=mod.mult(h); const cls=isC?' champ':(m>1.001?' boost':(m<0.999?' supp':'')); const tag=isC?'<span class="portTag champ">YOU</span>':''; return '<div class="expPort'+cls+'">'+(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':esc(initials(h.name)))+tag+'</div>'; }).join('')||'<span style="color:var(--muted);font-size:12px">No heroes owned yet.</span>';
   const champLine=champ?(' · ★ '+esc(champ.name)+' leads (+'+auraPct+'% to reserves)'):'';
   let effLine;
   if(mod.lock){ const eligN=conquestEligiblePool(mod).length, sc=Math.round(conquestEnemyScale(mod)*100); effLine='Lockout active · '+eligN+' eligible heroes · enemy scaled to your reserves ('+sc+'%)'+champLine; }
@@ -4501,7 +4501,7 @@ function bondHeartStr(lv){ let s=''; for(let i=0;i<BOND_TUNE.maxLv;i++) s+= i<lv
 function bondCardHTML(h){ const b=bondHero(h); const need=bondNeedFor(b.lv+1), prev=bondNeedFor(b.lv); const pct=b.lv>=BOND_TUNE.maxLv?100:Math.max(4,Math.round((b.xp-prev)/Math.max(1,need-prev)*100));
   const dk=DKEY[bondPrimaryDomain(h)]||{label:''};
   let lore=''; for(let L=1;L<=b.lv;L++){ const line=bondLoreLine(h,L); if(line) lore+='<div class="bondBeat">'+esc(line)+'</div>'; }
-  return '<div class="bondCard" data-bond="'+h.id+'"><div class="bondTop"><div class="bondPort">'+(h.img?'<img src="'+h.img+'">':esc(initials(h.name)))+'</div><div class="bondInfo"><div class="bondName">'+esc(h.name)+'</div><div class="bondHearts">'+bondHeartStr(b.lv)+'</div><div class="bondDomain">'+esc(dk.label)+'</div></div></div>'+(b.lv<BOND_TUNE.maxLv?'<div class="bondBar"><i style="width:'+pct+'%"></i></div>':'')+'<div class="bondLore">'+(lore||'<div class="bondBeat">A bond is forming.</div>')+'</div></div>'; }
+  return '<div class="bondCard" data-bond="'+h.id+'"><div class="bondTop"><div class="bondPort">'+(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':esc(initials(h.name)))+'</div><div class="bondInfo"><div class="bondName">'+esc(h.name)+'</div><div class="bondHearts">'+bondHeartStr(b.lv)+'</div><div class="bondDomain">'+esc(dk.label)+'</div></div></div>'+(b.lv<BOND_TUNE.maxLv?'<div class="bondBar"><i style="width:'+pct+'%"></i></div>':'')+'<div class="bondLore">'+(lore||'<div class="bondBeat">A bond is forming.</div>')+'</div></div>'; }
 function renderBonds(v){ injectExpStyles(); injectBondStyles(); const B=ensureBonds(); const stt=bondStats();
   const owned=S.heroes.filter(h=>h&&h.owned);
   const bonded=owned.filter(h=>bondHero(h).lv>=1).sort((a,b)=>bondHero(b).lv-bondHero(a).lv||bondHero(b).xp-bondHero(a).xp);
@@ -5428,7 +5428,7 @@ function showTaskDopamine(item,kind,charged,gains){
     const dmg=pseudoTaskDamage(item.diff,h,loot), weak=loot.raid&&loot.raid.weak;
     let box=document.getElementById('taskBurst');
     if(!box){ box=document.createElement('div'); box.id='taskBurst'; box.className='taskburst'; document.body.appendChild(box); }
-    const face=h?(h.img?'<img src="'+h.img+'">':initials(h.name)):'⚡';
+    const face=h?(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name)):'⚡';
     const bg=h?('linear-gradient(160deg,'+h.color+',#0008)'):'linear-gradient(160deg,var(--a),#0008)';
     const bond=(gains&&gains.length)?gains[0].name+' +'+gains[0].xp+' Bond XP':'Bond XP tracked';
     const dg=lastDomainGain&&lastDomainGain.k===domain?lastDomainGain:null;
@@ -5710,7 +5710,7 @@ function openUnlockSheet(id){
   const h=S.heroes.find(x=>x.id===id); if(!h||h.owned) return;
   const s=document.getElementById('sheet'); const wished=(S.wishlist||[]).includes(id), canT=S.crystals>=UNLOCK_TARGET;
   s.innerHTML='<h3>🔒 Locked Hero</h3>'+
-    '<div class="avapick"><div class="prev" style="background:linear-gradient(160deg,'+h.color+',#0008);'+(h.img?'overflow:hidden':'filter:grayscale(.35)')+'">'+(h.img?'<img src="'+h.img+'" alt="" style="width:100%;height:100%;object-fit:cover">':initials(h.name))+'</div>'+
+    '<div class="avapick"><div class="prev" style="background:linear-gradient(160deg,'+h.color+',#0008);'+(h.img?'overflow:hidden':'filter:grayscale(.35)')+'">'+(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'" alt="" style="width:100%;height:100%;object-fit:cover">':initials(h.name))+'</div>'+
       '<div class="up"><div style="font-family:Orbitron;font-weight:800;font-size:17px;color:var(--ink)">'+esc(h.name)+'</div><small>'+esc(h.ip)+' · '+h.role+'</small></div></div>'+
     '<div style="font-size:13px;color:var(--muted);font-weight:600;margin:2px 2px 10px">Unlocking adds this hero to your collection (+10 Collection Power immediately, more as you invest) and lets you field, level, rank, and prestige them.</div>'+
     '<div style="margin:0 2px 12px">'+affChips(h.aff)+'</div>'+
@@ -5833,7 +5833,7 @@ function renderCampaign(v){
       '<div class="empty">Cleared '+S.maxCleared+' stages · idle/hr (×'+momentumMult().toFixed(2)+' Momentum): +'+Math.round(expRate()*momentumMult())+' ✦ · +'+Math.round(afkGoldRate()*momentumMult())+' ⦿ · +'+Math.round(afkDustRate()*momentumMult())+' ❖ · gear & cores scale with stage · capped at '+(TUNE.afkCapHours||12)+'h away</div>';
     const fb=document.getElementById('fightBtn'); if(fb) fb.onclick=()=>startBattle('campaign');
     let dummyHp=100;
-    ambient=setInterval(()=>{
+    ambient=setInterval(()=>{ if(document.hidden) return;
       const fs=document.querySelectorAll('.team-row .slot.full');
       const hpEl=document.getElementById('dummyHp'), face=document.getElementById('dummyFace');
       if(!fs.length||!hpEl) return;
@@ -7929,7 +7929,7 @@ function showReveal(h,opts){ opts=opts||{};
   const _tierName=(RANKS[rankIdx(h)]&&RANKS[rankIdx(h)].name)||'Recruit'; const _tc=lqTierColor(_tierName.toLowerCase());
   recalcCollection();
   const nextCP=cpForLevel(gCL+1), curBase=cpForLevel(gCL), clPct=Math.min(100,Math.max(0,(gCP-curBase)/(nextCP-curBase)*100));
-  const ava=h.img?'<img src="'+h.img+'" style="width:100%;height:100%;object-fit:cover;border-radius:18px">':initials(h.name);
+  const ava=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'" style="width:100%;height:100%;object-fit:cover;border-radius:18px">':initials(h.name);
   const albums=(lastUnlockAlbums&&lastUnlockAlbums.length)?lastUnlockAlbums.slice():[];
   const again = opts.fromSummon && canRandomUnlock();
   const canAddCampaign = !inSquad('campaign',h.id) && squad('campaign').length<TUNE.teamSize;
@@ -8114,7 +8114,7 @@ function formationLegendHTMLV139(){ return '<div class="formationLegend"><div cl
 function formationGuideHTMLV139(){ return '<div class="formationGuide"><div class="guide"><b>Front = pressure</b><span>More incoming hits. Great for durable heroes and frontline archetypes.</span></div><div class="guide"><b>Back = safety</b><span>Safer targeting. Best for Supports, Casters, Healers, Marksmen, and utility heroes.</span></div></div>'; }
 function formationSlotHTML(mode,i){
   const id=squad(mode)[i], h=id?S.heroes.find(x=>x.id===id):null, row=formationRow(i);
-  if(h){ const ava=h.img?'<img src="'+h.img+'">':initials(h.name), ev=formationEvaluationV139(h,row); return '<div class="slot full '+row+' themeframe" data-lineup-edit="'+mode+'" style="cursor:pointer" title="'+esc(ev.summary)+'"><span class="pos">'+(i+1)+'</span>'+formationBadgeHTMLV139(h,row)+'<div class="ava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+ava+'</div></div>'; }
+  if(h){ const ava=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name), ev=formationEvaluationV139(h,row); return '<div class="slot full '+row+' themeframe" data-lineup-edit="'+mode+'" style="cursor:pointer" title="'+esc(ev.summary)+'"><span class="pos">'+(i+1)+'</span>'+formationBadgeHTMLV139(h,row)+'<div class="ava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+ava+'</div></div>'; }
   return '<div class="slot '+row+' themeframe" data-lineup-edit="'+mode+'" style="cursor:pointer"><span class="pos">'+(i+1)+'</span><span class="slotpref neutral">+</span>+</div>';
 }
 function formationHTML(mode){ let front='',back=''; for(let i=0;i<3;i++) front+=formationSlotHTML(mode,i); for(let i=3;i<6;i++) back+=formationSlotHTML(mode,i); return '<div class="formation">'+formationLegendHTMLV139()+'<div class="formrow front themeframe"><div class="rowlab"><span>Front Row</span><span>Pressure / survivability</span></div><div class="team-row">'+front+'</div></div><div class="formrow back themeframe"><div class="rowlab"><span>Back Row</span><span>Safety / support</span></div><div class="team-row">'+back+'</div></div><div class="formtip">Role bonuses stack with archetype row bonuses, so placement matters more now.</div>'+synergyPanelHTML(mode)+'</div>'; }
@@ -8143,7 +8143,7 @@ function formationMultiplier(h,row){
   if(e==='frontline'&&row==='front'){ hp*=1.06; risk*=1.10; } if(e==='supportAura'&&row==='back'){ support*=1.10; hp*=1.04; } if(e==='protector'&&row==='front') hp*=1.05; if(e==='reckless') risk*=1.06; if(e==='taunt') risk*=1.45; return {hp,atk,risk,support};
 }
 function squadCandidateButtonHTML(h,mode){
-  const arr=squad(mode), on=arr.includes(h.id), full=!on&&arr.length>=TUNE.teamSize, disabled=full?' disabled':''; const face=h.img?'<img src="'+h.img+'">':initials(h.name), p=passiveOf(h), a=heroArchetype(h); const idx=arr.indexOf(h.id), row=idx>=0?formationRow(idx):null, ev=row?formationEvaluationV139(h,row):null; const note=row?formationStatusChipV139(h,row)+' <span style="color:var(--muted)">'+esc(ev.summary)+'</span>':'<span class="slotstatus neutral">Preferred</span> <span style="color:var(--muted)">'+esc(preferredRowTextV139(h))+'</span>';
+  const arr=squad(mode), on=arr.includes(h.id), full=!on&&arr.length>=TUNE.teamSize, disabled=full?' disabled':''; const face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name), p=passiveOf(h), a=heroArchetype(h); const idx=arr.indexOf(h.id), row=idx>=0?formationRow(idx):null, ev=row?formationEvaluationV139(h,row):null; const note=row?formationStatusChipV139(h,row)+' <span style="color:var(--muted)">'+esc(ev.summary)+'</span>':'<span class="slotstatus neutral">Preferred</span> <span style="color:var(--muted)">'+esc(preferredRowTextV139(h))+'</span>';
   return '<button class="pickHero '+(on?'on':'')+'" data-pick="'+h.id+'"'+disabled+' style="'+(disabled?'opacity:.45':'')+'"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="pmeta"><span class="pname">'+esc(h.name)+'</span><span class="psub">'+esc(ipLabel(h.ip||h.ipName||''))+' · '+h.role+' · PWR '+fmtBig(powerOf(h))+(a?' · '+esc(a.label):'')+(p?' · '+esc(p.name):'')+'</span><span class="pnote">'+note+'</span></span><span class="status">'+(on?'✓':'＋')+'</span></button>';
 }
 function suggestSquad(mode){
@@ -8169,7 +8169,7 @@ function suggestSquad(mode){
 }
 function openSquadPicker(mode){
   mode=mode||campSub||'campaign'; const meta=SQUADS.find(s=>s[0]===mode)||SQUADS[0]; const arr=squad(mode); const allOwned=S.heroes.filter(h=>h.owned); const owned=squadPickerFiltered(allOwned); const s=document.getElementById('sheet');
-  const selected=arr.map((id,i)=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return ''; const row=formationRow(i), face=h.img?'<img src="'+h.img+'">':initials(h.name), ev=formationEvaluationV139(h,row); return '<div class="pickSlot '+row+' themeframe"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="slotmeta"><span class="slotname">'+(i+1)+'. '+esc(h.name)+'</span><span class="slotsub">'+(row==='front'?'Front Row':'Back Row')+' · '+esc(ipLabel(h.ip||''))+' · '+h.role+' · PWR '+fmtBig(powerOf(h))+'</span><span class="slotnote">'+formationStatusChipV139(h,row)+' <span style="color:var(--muted)">'+esc(ev.summary)+'</span></span></span><span class="slotbtns"><button data-move="up" data-id="'+h.id+'">↑</button><button data-move="down" data-id="'+h.id+'">↓</button><button data-move="'+(row==='front'?'back':'front')+'" data-id="'+h.id+'">'+(row==='front'?'Back':'Front')+'</button><button data-remove="'+h.id+'">×</button></span></div>'; }).join('') || '<span class="pill warn">No heroes assigned</span>';
+  const selected=arr.map((id,i)=>{ const h=S.heroes.find(x=>x.id===id); if(!h)return ''; const row=formationRow(i), face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name), ev=formationEvaluationV139(h,row); return '<div class="pickSlot '+row+' themeframe"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="slotmeta"><span class="slotname">'+(i+1)+'. '+esc(h.name)+'</span><span class="slotsub">'+(row==='front'?'Front Row':'Back Row')+' · '+esc(ipLabel(h.ip||''))+' · '+h.role+' · PWR '+fmtBig(powerOf(h))+'</span><span class="slotnote">'+formationStatusChipV139(h,row)+' <span style="color:var(--muted)">'+esc(ev.summary)+'</span></span></span><span class="slotbtns"><button data-move="up" data-id="'+h.id+'">↑</button><button data-move="down" data-id="'+h.id+'">↓</button><button data-move="'+(row==='front'?'back':'front')+'" data-id="'+h.id+'">'+(row==='front'?'Back':'Front')+'</button><button data-remove="'+h.id+'">×</button></span></div>'; }).join('') || '<span class="pill warn">No heroes assigned</span>';
   s.innerHTML='<div class="squadpicker"><h3>'+meta[2]+' Edit '+meta[1]+' Formation</h3>'+'<button data-suggest="1" style="width:100%;margin:2px 0 10px;background:linear-gradient(135deg,#36e0e6,#3a7bd5);color:#04222a;border:none;font-weight:800">\u2728 Suggest Squad</button>'+walletHTML('Place durable heroes forward and fragile value heroes back for cleaner fights.')+'<div style="font-size:12px;color:var(--muted);font-weight:700;margin:8px 2px 10px">'+arr.length+'/'+TUNE.teamSize+' assigned · Slots 1-3 are Front Row, 4-6 are Back Row.</div>'+formationGuideHTMLV139()+formationLegendHTMLV139()+'<div class="pickSelected">'+selected+'</div>'+synergyPanelHTML(mode)+'<div class="formtip" style="margin-bottom:10px">Role bonuses stack with archetype row bonuses, so positioning matters more now.</div><div class="btnset" style="margin-bottom:8px"><button id="sqClear" class="ghost">Clear</button><button id="sqSaveTpl" class="ghost" style="flex:1">💾 Template</button><button id="sqDone" class="go">✓ Save &amp; Close</button></div>'+((S.lineupTemplates&&S.lineupTemplates.length)?'<div style="display:flex;gap:6px;margin-bottom:8px"><select id="sqTplSel" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:12px"><option value="">Load template…</option>'+(S.lineupTemplates.map((t,i)=>'<option value="'+i+'">'+esc(t.name)+'</option>').join(''))+'</select><button id="sqLoadTpl" class="ghost" style="padding:8px 12px">Apply</button><button id="sqDelTpl" class="ghost" style="padding:8px 10px;color:#ff6b6b">✕</button></div>':'')+squadPickerToolsHTML(allOwned.length,owned.length)+'<div id="sqCandidateList">'+owned.map(h=>squadCandidateButtonHTML(h,mode)).join('')+'</div></div>';
   showScrim('scrim');
   document.getElementById('sqDone').onclick=()=>{ hideScrim(); renderHUD(); render(); save(); };
@@ -8932,7 +8932,7 @@ function archetypeBadgeHTML(h){ const a=heroArchetype(h); return a?badgeHTML((LQ
 function heroFaceHTML(h,opts){
   opts=opts||{};
   const cls=opts.cls||'', rk='rank-'+lqRankKey(h), color=opts.frameColor||roleColor(h.role);
-  const inner=h.sprite&&!opts.noSprite?'<canvas class="sprcanvas" width="128" height="128" data-spr="'+h.id+'"></canvas>':(h.img?'<img src="'+h.img+'">':initials(h.name));
+  const inner=h.sprite&&!opts.noSprite?'<canvas class="sprcanvas" width="128" height="128" data-spr="'+h.id+'"></canvas>':(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name));
   return '<div class="ava lqHeroFrame '+rk+' '+cls+'" style="--hero-color:'+h.color+';--frame-color:'+color+';background:linear-gradient(160deg,'+h.color+',#0008)">'+inner+(opts.noStars?'':'<div class="lqRankBand">'+lqRankStars(h)+'</div>')+'</div>';
 }
 function gearNodeV141(h,slot){
@@ -9221,7 +9221,7 @@ function injectLifeBaseVisualStylesV148(){
 function roomPowerForV148(k){ const h=assignedHero(k); const m=domainMeta(k); return Math.round((m.lv||1)*10+(m.xp||0)/10+(h?Math.max(5,Math.round(powerOf(h)/50)):0)); }
 function sanctuaryRoomNodeV148(k){
   const meta=DKEY[k], room=SANCTUARY_ROOMS[k]||{name:meta.label,desc:''}, m=domainMeta(k), h=assignedHero(k), weekly=domainCount(k), quiet=weekly===0, ready=(m.pct||0)>=85;
-  const face=h?(h.img?'<img src="'+h.img+'">':initials(h.name)): '+';
+  const face=h?(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name)): '+';
   const hero=h?'<span class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span>'+esc(h.name)+'<br><small>'+esc(h.role)+' · Bond '+bondLevel(h)+'</small></span>':'<span class="face" style="background:rgba(255,255,255,.07);border:1px dashed var(--line)">+</span><span>Assign guardian<br><small>tap room</small></span>';
   const hint=quiet?'Quiet this week':ready?'Room upgrade soon':(h?'Guarded':'Needs hero');
   return '<button class="roomNodeV148 '+(quiet?'quiet ':'')+(ready?'ready':'')+'" data-roomtile="'+k+'" style="--roomColor:'+meta.color+'"><div class="rIcon">'+meta.icon+'</div><div class="rName">'+esc(room.name)+'</div><div class="rLevel">Lv '+(m.lv||1)+' · '+roomPowerForV148(k)+'</div><div class="rHero">'+hero+'</div><div class="rBar"><i style="width:'+Math.max(4,Math.min(100,m.pct||0))+'%"></i></div><span class="rHint">'+hint+'</span></button>';
@@ -10455,7 +10455,7 @@ function v157SanctuarySVG(){
 }
 function v157GuardHTML(h,k){
   if(!h) return '<span>Needs hero</span>';
-  const face=h.img?'<img src="'+h.img+'">':initials(h.name);
+  const face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name);
   return '<span class="v157GuardFace" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span>'+esc(h.name)+'</span>';
 }
 function v157RoomTileHTML(k){
@@ -10477,7 +10477,7 @@ if(__v157_roomCardHTML){
   roomCardHTML = function(k){
     v157InjectStyles();
     const meta=DKEY[k], room=SANCTUARY_ROOMS[k], dm=domainMeta(k), lv=roomLevel(k), h=roomHero(k), assigned=!!assignedHero(k), bonus=assignmentBonus(k), r=v157RoomMeta(k);
-    const face=h?(h.img?'<img src="'+h.img+'">':initials(h.name)):'—';
+    const face=h?(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name)):'—';
     return '<div class="roomCard v157RoomCard" style="--roomColor:'+meta.color+';--roomArt:url('+v157RoomSVG(k)+')" data-room="'+k+'"><div class="v157RoomArt"><div class="v157RoomIcon">'+meta.icon+'</div><div class="v157RoomGuard">'+v157GuardHTML(assignedHero(k),k)+'</div></div><div class="roomBody"><div class="roomTop"><div class="roomName">'+meta.icon+' '+esc(room.name)+(assigned?'<span class="assignBadge">ASSIGNED</span>':'')+'</div><div class="roomLv">Room Lv '+lv+'</div></div><div class="roomDesc">'+esc(roomStageName(lv))+' · '+esc(room.desc)+' · '+esc(r.label)+'</div><div class="roomStage">'+[1,2,3,4,5].map(i=>'<span class="'+(i<=lv?'on':'')+'"></span>').join('')+'</div><div class="roomHero"><div class="face" style="background:linear-gradient(160deg,'+(h?h.color:meta.color)+',#0008)">'+face+'</div><div>'+(h?esc(h.name)+' · Bond Lv '+bondLevel(h):'No bonded hero yet')+'<br><span style="color:var(--muted)">Domain Lv '+dm.lv+' · '+Math.floor(dm.xp)+' XP</span></div></div><div class="roomBonus">'+(assigned?('Assignment bonus: +'+Math.round(bonus*100)+'% Domain/Bond XP'):'Tap to assign a hero')+'</div></div></div>';
   };
 }
@@ -10552,7 +10552,7 @@ function v158Readiness(info,sq){
 }
 function v158HeroUnit(h,i){
   if(!h) return '<div class="v158Unit empty"><div class="v158Portrait">'+(i+1)+'</div><div class="v158Name">Open Slot</div><div class="v158Sub">Tap Edit</div></div>';
-  const face=h.img?'<img src="'+h.img+'">':initials(h.name), color=roleColor(h.role), row=formationRow(i);
+  const face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name), color=roleColor(h.role), row=formationRow(i);
   return '<div class="v158Unit hero '+row+'" style="--uColor:'+color+'"><span class="v158Lv">Lv '+effLevel(h)+'</span><span class="v158Role">'+(LQ_ROLE_ICON&&LQ_ROLE_ICON[h.role]?LQ_ROLE_ICON[h.role]:h.role[0])+'</span><div class="v158Portrait hero">'+face+'</div><div class="v158Name">'+esc(h.name)+'</div><div class="v158Sub">PWR '+powerOf(h)+' · '+(row==='front'?'Front':'Back')+'</div></div>';
 }
 function v158EnemyUnit(e,i){
@@ -10563,7 +10563,7 @@ function v158EnemyUnit(e,i){
 }
 function v158MiniHero(h){
   if(!h) return '';
-  const face=h.img?'<img src="'+h.img+'">':initials(h.name), color=roleColor(h.role);
+  const face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name), color=roleColor(h.role);
   return '<div class="v158Mini" style="--uColor:'+color+'"><div class="pic">'+face+'</div><div class="n">'+esc(h.name)+'</div></div>';
 }
 function v158StageHTML(mode){
@@ -15455,7 +15455,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     const cells=[];
     for(let i=0;i<need;i++){
       const slot=c7SlotMeta(i,ch), h=(S.heroes||[]).find(x=>x.id===ids[i]), laneType=slot.basic?null:(pattern[slot.typeKey||slot.lane]||null), m=h?c7Match(h.elementType,laneType):'neutral';
-      cells.push('<button class="clashSlot c7 '+m+' '+(slot.basic?'basic':'')+'" onclick="openClashSquadEditor('+i+')"><div class="csRow">'+esc7(slot.laneLabel)+' · '+cap7(slot.row)+'</div><div class="csFace" style="background:'+(h?h.color:'#111827')+'">'+(h?(h.img?'<img src="'+h.img+'" alt="">':esc7(h.name.slice(0,2).toUpperCase())):'—')+'</div><div class="csMeta">'+(h?c7ElementBadge(h.elementType,true)+' '+esc7(h.clashRole||'Role'):'Empty')+'</div></button>');
+      cells.push('<button class="clashSlot c7 '+m+' '+(slot.basic?'basic':'')+'" onclick="openClashSquadEditor('+i+')"><div class="csRow">'+esc7(slot.laneLabel)+' · '+cap7(slot.row)+'</div><div class="csFace" style="background:'+(h?h.color:'#111827')+'">'+(h?(h.img?'<img loading="lazy" decoding="async" src="'+h.img+'" alt="">':esc7(h.name.slice(0,2).toUpperCase())):'—')+'</div><div class="csMeta">'+(h?c7ElementBadge(h.elementType,true)+' '+esc7(h.clashRole||'Role'):'Empty')+'</div></button>');
     }
     return '<div class="clashFormation c7 '+(lanes.length===5?'five':'three')+'">'+cells.join('')+'</div>';
   };
@@ -16832,7 +16832,7 @@ window.openRosterMgmt=function(){
   }
 
   function of2141PrestigeHeroRow(h,full){
-    var x=of2141Sync(h), face=h.img?'<img src="'+h.img+'">':initials(h.name), pct=prestigeCatchActive(h)?Math.min(100,h.level/prestigeCatchTarget(h)*100):100;
+    var x=of2141Sync(h), face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name), pct=prestigeCatchActive(h)?Math.min(100,h.level/prestigeCatchTarget(h)*100):100;
     return '<div class="prestigeHeroRow ofPrestigeHallRow '+of2141FrameClass(x.frame)+'" data-prestigehero="'+h.id+'">'+
       '<div class="face" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</div>'+
       '<div><div class="pn">'+esc(h.name)+' · P'+x.p+' · '+esc(x.tier.label)+'</div>'+
@@ -23387,7 +23387,7 @@ function raidSAInjectPanel(){ try{
       function sid(){ return wk()+':'+((st().fseq|0)); }
       function capOf(k){ return k==='gauntlet'?1:12; }
       function triedToday(k){ var s=st(); if(benched(k)) return true; if(s[k+'Sw']!==sid()) return false; return ((s[k+'N']|0)>=capOf(k)); }
-      function markTried(k){ var s=st(); if(s[k+'Sw']!==sid()){ s[k+'Sw']=sid(); s[k+'N']=0; } s[k+'N']=(s[k+'N']|0)+1; if(!s.snapId||s.snapId!==sid()){ s.snapId=sid(); try{ s.snap={arena:(ensureArena().rank|0),conquest:(ensureConquest().tier|0),stage:(S.maxCleared|0),raid:0,at:Date.now()}; }catch(e){ s.snap={at:Date.now()}; } } try{ save(); }catch(e){} } /* v2.257.0: per-sweep caps replace per-day marks — ladders push repeatedly until wall or cap */
+      function markTried(k){ var s=st(); s.lastAct=k; if(s[k+'Sw']!==sid()){ s[k+'Sw']=sid(); s[k+'N']=0; } s[k+'N']=(s[k+'N']|0)+1; if(!s.snapId||s.snapId!==sid()){ s.snapId=sid(); try{ s.snap={arena:(ensureArena().rank|0),conquest:(ensureConquest().tier|0),stage:(S.maxCleared|0),raid:0,at:Date.now()}; }catch(e){ s.snap={at:Date.now()}; } } try{ save(); }catch(e){} } /* v2.257.0: per-sweep caps replace per-day marks — ladders push repeatedly until wall or cap */
       var acts=[
         function(){ if(triedToday('arena')||typeof startArenaBattle!=='function') return false;
           var A=ensureArena(); markTried('arena'); return withResolve(function(){ return startArenaBattle((A.rank|0)+1); }); },
@@ -23440,6 +23440,25 @@ function raidSAInjectPanel(){ try{
     }catch(e){}
   }
   try{ window.addEventListener('arenaEnded', function(ev){ try{ if(ev&&ev.detail&&ev.detail.win===false) bench('arena'); }catch(e){} }); }catch(e){}
+  try{ (function(){ if(typeof endBattle!=='function'||endBattle.__lqLossHook) return; var __prevEB=endBattle;
+    endBattle=function(win){ var mk=null, wasOver=false;
+      try{ wasOver=!!(typeof battleState!=='undefined'&&battleState&&battleState.over);
+        var s=st(); var sweepLive=(s.snapId===sid()&&s.doneSid!==sid());
+        if(!sweepLive){ mk=null; }
+        else if(typeof battleArena!=='undefined'&&battleArena) mk='arena';
+        else if(typeof battleConquest!=='undefined'&&battleConquest) mk='conquest';
+        else if(typeof battleSiege!=='undefined'&&battleSiege) mk=null;
+        else if(typeof battleGauntlet!=='undefined'&&battleGauntlet) mk=null;
+        else if(typeof battleRaidSA!=='undefined'&&battleRaidSA) mk=null;
+        else if(typeof battleRift!=='undefined'&&battleRift) mk=null;
+        else if(typeof battleRoom!=='undefined'&&battleRoom) mk=null;
+        else if(typeof battleMode!=='undefined'&&battleMode==='tower') mk='tower';
+        else if(typeof battleMode!=='undefined'&&battleMode==='campaign'&&s.lastAct==='campaign') mk='campaign';
+      }catch(e){}
+      var r=__prevEB.apply(this,arguments);
+      try{ if(mk&&!wasOver&&win===false) bench(mk); }catch(e){}
+      return r;
+    }; endBattle.__lqLossHook=true; })(); }catch(e){} /* v2.263.0: generic loss-detection - exact until-defeat for ladder modes, sweep-scoped */
   setTimeout(function(){ tick(); setInterval(tick, 75000); }, 15000);
   window.lqWeeklyAutoTick=tick;
   window.lqRunSweepNow=function(){ var s=st(); s.force=1; s.fseq=(s.fseq|0)+1; try{ save(); }catch(e){} try{ toast('Sweep started \u2014 runs headless over the next minutes'); }catch(e){} try{ tick(); }catch(e){} };
@@ -23455,7 +23474,8 @@ function raidSAInjectPanel(){ try{
     ['gauntlet','rift','clash','raid','sinister'].forEach(function(k){ rep.modes[k]={tries:(s[k+'Sw']===sidv)?(s[k+'N']|0):0}; });
     try{ var mv=(S.heroes||[]).filter(function(h){return h&&h.owned;}).sort(function(a,b){return powerOf(b)-powerOf(a);})[0];
       if(mv){ var pv=(typeof CUSTOM_HERO_PASSIVES==='object')?CUSTOM_HERO_PASSIVES[mv.id]:null;
-        rep.mvp={name:mv.name,line:pv?(pv.name+' \u2014 '+pv.desc):(mv.name+' led the line.')}; } }catch(e){}
+        var uq=(typeof HERO_ULT_QUOTES==='object'&&HERO_ULT_QUOTES)?HERO_ULT_QUOTES[mv.id]:null;
+        rep.mvp={name:mv.name,line:uq?(uq.charAt(0)==='('?uq:'\u201c'+uq+'\u201d'):(pv?(pv.name+' \u2014 '+pv.desc):(mv.name+' led the line.'))}; } }catch(e){} /* v2.263.0: dispatch speaks in the hero's own voice */
     if(!Array.isArray(S.lqSweepLog)) S.lqSweepLog=[];
     S.lqSweepLog.unshift(rep); S.lqSweepLog=S.lqSweepLog.slice(0,4);
     try{ save(); }catch(e){}
