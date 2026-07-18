@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.2-pokejobs6'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.3-runnerretired'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -23513,6 +23513,7 @@ function raidSAInjectPanel(){ try{
   };
   /* Run Now button + latest dispatch, injected beside the automation controls */
   function lqSweepCard(){
+    try{ var _ex=document.getElementById('lqSweepCard'); if(_ex) _ex.remove(); }catch(e){} return; /* v2.266.3: runner retired - card removed */
     var anchor=document.querySelector('.lqModeDash')||document.getElementById('compactSeg')||document.getElementById('motionSeg'); if(!anchor||!anchor.parentElement) return; /* v2.257.1: Shield tab (Battle Modes dash) first, Settings fallback */
     var ex=document.getElementById('lqSweepCard'); if(ex) ex.remove();
     var d=document.createElement('div'); d.id='lqSweepCard';
@@ -23537,7 +23538,7 @@ function raidSAInjectPanel(){ try{
     d.querySelectorAll('[data-swmode]').forEach(function(btn){ btn.onclick=function(){ try{ if(typeof S.lqWeeklyAuto!=='object') S.lqWeeklyAuto={}; var M=S.lqWeeklyAuto.modes=S.lqWeeklyAuto.modes||{}; var k=btn.getAttribute('data-swmode'); M[k]=(M[k]===false); if(typeof save==='function') save(); }catch(e){} lqSweepCard(); }; });
   }
   window.lqSweepCardRefresh=lqSweepCard;
-  setInterval(function(){ try{ if(!document.getElementById('lqSweepCard')) lqSweepCard(); }catch(e){} }, 4000);
+  /* v2.266.3: card-ensure interval removed with the runner */
 })();
 /* v2.245.1: global header framing removed — frames belong to the dailies section headers only */
   /* ===== v2.242.0: Daily Reorder =====
