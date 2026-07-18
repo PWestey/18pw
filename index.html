@@ -2786,7 +2786,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.3-runnerretired'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.6-oneultbanner'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -19337,8 +19337,8 @@ function lqWeeklyDash(v){
       return '<div class="lqmRow lqmTap" data-lqmode="'+esc(m.key)+'"><span class="lqmDot '+(m.done?'on':'')+'"></span><span class="lqmName">'+_mic+(_mic?' ':'')+esc(m.label)+'</span><span class="lqmCad">'+esc(m.cad)+'</span>'+_wb+'<span class="lqmStat">'+esc(m.stat)+'</span><span class="lqmChev">›</span></div>';
     }).join('');
     var sec=document.createElement('section'); sec.className='lqModeDash';
-    var ht=lqHabitThrottle();var thr='<div class="lqmThr"><div class="lqmThrRow"><span class="lqmThrLbl">Habit Throttle</span><span class="lqmThrVal">'+ht.hit+' / '+ht.tot+' domains this week</span></div><div class="lqmThrBar"><div class="lqmThrFill" style="width:'+ht.pct+'%"></div></div><div class="lqmThrNote">'+(isFinite(prestigeWeeklyCap())?'Living your habits → higher weekly prestige cap':'Prestige cap off — new cycles unlimited')+'</div>'+(function(){ try{ var B=blessState(); var bl=0,bd=0; for(var k in B){ bl+=(B[k]|0); bd++; } var g=(S.grace||0); return '<div class="lqmThrNote" style="margin-top:3px">Blessings Lv '+bl+' · '+bd+' domains · kyber flows in as you live them'+(g>0?(' · \ud83d\udd4a '+g+' grace guarding streaks'):'')+'</div>'; }catch(e){ return ''; } })()+'</div>';var rec=lqRecommend();var recHTML=rec?('<div class="lqmRec lqmTap" data-lqmode="'+esc(rec.key)+'"><span class="lqmRecTag">Do Next</span><span class="lqmRecLbl">'+esc(rec.label)+'</span><span class="lqmRecWhy">'+esc(rec.reason)+'</span><span class="lqmChev">›</span></div>'):'';sec.innerHTML=thr+recHTML+'<div class="lqmHead" style="display:flex;justify-content:space-between;align-items:center">Battle Modes<button id="lqAutoPause" style="background:'+((S.lqWeeklyAuto&&S.lqWeeklyAuto.pauseDay===((typeof periodKey==='function')?periodKey('daily'):''))?'rgba(255,176,31,.15);border:1px solid rgba(255,176,31,.5);color:#ffb01f':'rgba(122,240,168,.12);border:1px solid rgba(122,240,168,.45);color:#7af0a8')+';border-radius:9px;padding:4px 9px;font-size:10px;font-weight:900;font-family:Orbitron">'+((S.lqWeeklyAuto&&S.lqWeeklyAuto.pauseDay===((typeof periodKey==='function')?periodKey('daily'):''))?'\u23f8 PAUSED TODAY':'\u26a1 AUTO ON')+'</button></div>'+rows+'<div class="lqmRow lqmTap" id="lqVaultRow"><span class="lqmDot on"></span><span class="lqmName">Vault &amp; Systems</span><span class="lqmCad">Ledger</span><span class="lqmStat">Every currency · every power source</span><span class="lqmChev">›</span></div>';
-    try{ if(v.firstChild){ v.insertBefore(sec, v.firstChild); } else { v.appendChild(sec); } }catch(e){ try{ v.appendChild(sec); }catch(_e){} }try{ sec.querySelectorAll('[data-lqmode]').forEach(function(el){ el.addEventListener('click',function(){ lqNavMode(el.getAttribute('data-lqmode')); }); }); }catch(e){}try{ var _ap=sec.querySelector('#lqAutoPause'); if(_ap) _ap.onclick=function(ev){ ev.stopPropagation(); try{ if(!S.lqWeeklyAuto||typeof S.lqWeeklyAuto!=='object') S.lqWeeklyAuto={}; var dk=periodKey('daily'); S.lqWeeklyAuto.pauseDay=(S.lqWeeklyAuto.pauseDay===dk)?null:dk; save(); render(); toast(S.lqWeeklyAuto.pauseDay?'Auto-runner paused for today \u2014 the modes are yours':'Auto-runner back on duty'); }catch(e){} }; }catch(e){}try{ var _vr=sec.querySelector('#lqVaultRow'); if(_vr) _vr.addEventListener('click',function(){ lqOpenLedger(); }); }catch(e){}
+    var ht=lqHabitThrottle();var thr='<div class="lqmThr"><div class="lqmThrRow"><span class="lqmThrLbl">Habit Throttle</span><span class="lqmThrVal">'+ht.hit+' / '+ht.tot+' domains this week</span></div><div class="lqmThrBar"><div class="lqmThrFill" style="width:'+ht.pct+'%"></div></div><div class="lqmThrNote">'+(isFinite(prestigeWeeklyCap())?'Living your habits → higher weekly prestige cap':'Prestige cap off — new cycles unlimited')+'</div>'+(function(){ try{ var B=blessState(); var bl=0,bd=0; for(var k in B){ bl+=(B[k]|0); bd++; } var g=(S.grace||0); return '<div class="lqmThrNote" style="margin-top:3px">Blessings Lv '+bl+' · '+bd+' domains · kyber flows in as you live them'+(g>0?(' · \ud83d\udd4a '+g+' grace guarding streaks'):'')+'</div>'; }catch(e){ return ''; } })()+'</div>';var rec=lqRecommend();var recHTML=rec?('<div class="lqmRec lqmTap" data-lqmode="'+esc(rec.key)+'"><span class="lqmRecTag">Do Next</span><span class="lqmRecLbl">'+esc(rec.label)+'</span><span class="lqmRecWhy">'+esc(rec.reason)+'</span><span class="lqmChev">›</span></div>'):'';sec.innerHTML=thr+recHTML+'<div class="lqmHead" style="display:flex;justify-content:space-between;align-items:center">Battle Modes</div>'+rows+'<div class="lqmRow lqmTap" id="lqVaultRow"><span class="lqmDot on"></span><span class="lqmName">Vault &amp; Systems</span><span class="lqmCad">Ledger</span><span class="lqmStat">Every currency · every power source</span><span class="lqmChev">›</span></div>';
+    try{ if(v.firstChild){ v.insertBefore(sec, v.firstChild); } else { v.appendChild(sec); } }catch(e){ try{ v.appendChild(sec); }catch(_e){} }try{ sec.querySelectorAll('[data-lqmode]').forEach(function(el){ el.addEventListener('click',function(){ lqNavMode(el.getAttribute('data-lqmode')); }); }); }catch(e){}/* v2.266.5: lqAutoPause toggle removed - it paused the retired auto-runner, nothing reads pauseDay anymore */try{ var _vr=sec.querySelector('#lqVaultRow'); if(_vr) _vr.addEventListener('click',function(){ lqOpenLedger(); }); }catch(e){}
   }catch(e){}
 }
 try{ if(typeof window!=='undefined'){ window.lqWeeklyDash=lqWeeklyDash; } }catch(e){}
@@ -20217,6 +20217,11 @@ try{ window.enhanceHome=enhanceHome; }catch(e){}
 function showAbilityMoment(u,skill,color){
     try{
       if(!u||!skill) return;
+      /* v2.266.4: ability moments belong to VISIBLE battles only. Headless auto-resolve
+         battles (boot chains, instant resolves) were flashing skill cards over the home
+         screen - 41 banners per resolved battle in repro. */
+      try{ var _ar=document.getElementById('arena'); if(!_ar||!_ar.classList.contains('show')) return; }catch(e){ return; }
+      if(window.__lqAutoRun) return;
       const old=document.getElementById('of2162AbilityMoment');
       if(old) old.remove();
       const m=document.createElement('div');
@@ -20542,7 +20547,7 @@ function showAbilityMoment(u,skill,color){
       }
       battleEvent((u.name||'Hero')+' used '+_lqAb(s),'skill');
       setBattleLog((u.name||'Hero')+' used '+_lqAb(s)+'.');
-      showAbilityMoment(u,s,effectMeta(s.effect).color);
+      if(s.kind!=='ultimate') showAbilityMoment(u,s,effectMeta(s.effect).color); /* v2.266.6: ultimates own the star portrait banner - slot cards announce signatures/basics only (Peter: double ult popups) */
     }catch(e){ console.error(e); }
     finishCommandTurn();
   }
