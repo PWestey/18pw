@@ -2791,7 +2791,11 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
+<<<<<<< Updated upstream
 const APP_BUILD='v2.266.25-polish'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+=======
+const APP_BUILD='v2.266.26-runnerkill'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+>>>>>>> Stashed changes
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -23417,6 +23421,7 @@ function raidSAInjectPanel(){ try{
   }; /* v2.248: boons by tier, Elite path, resumable */
   var idx=0;
   function tick(){
+    return; /* v2.266.26: auto-runner fully eliminated per Peter — no automatic weekly sweep ever runs; the per-mode in-battle Auto Resolve toggle is the only automation left */
     try{
       if(auto().autoWeeklyEvents===false) return;
       if(!(function(){ var s=st(); if((s.force|0)>0){ if(!s.forceAt||Date.now()-s.forceAt<43200000) return true; s.force=0; try{ save(); }catch(e){} } try{ if(new Date().getDay()===0 && s.doneWk!==wk()) return true; }catch(e){} return false; })()) return; /* v2.266.0: Run Now force expires after 12h - a stale flag was re-running the sweep on weekdays */ /* v2.257.0: dormant all week — sweeps on Sunday or Run Now */
@@ -23502,7 +23507,8 @@ function raidSAInjectPanel(){ try{
       try{ if(mk&&!wasOver&&win===false) bench(mk); }catch(e){}
       return r;
     }; endBattle.__lqLossHook=true; })(); }catch(e){} /* v2.263.0: generic loss-detection - exact until-defeat for ladder modes, sweep-scoped */
-  setTimeout(function(){ tick(); setInterval(tick, 75000); }, 15000);
+  /* v2.266.26: weekly auto-sweep scheduler removed — the runner no longer self-fires on any interval, Sunday, or stale Run-Now flag. One-time cleanup below clears any lingering force/Sunday state in the existing save. */
+  setTimeout(function(){ try{ if(typeof S!=='undefined' && !S.v226626RunnerKill){ var _wa=st(); if(_wa){ _wa.force=0; _wa.forceAt=0; try{ _wa.doneWk=wk(); }catch(e){} } try{ var _au=auto(); if(_au) _au.autoWeeklyEvents=false; }catch(e){} S.v226626RunnerKill=1; if(typeof save==='function') save(); } }catch(e){} }, 3000);
   window.lqWeeklyAutoTick=tick;
   window.lqRunSweepNow=function(){ var s=st(); s.force=1; s.forceAt=Date.now(); s.fseq=(s.fseq|0)+1; try{ save(); }catch(e){} try{ toast('Sweep started \u2014 runs headless over the next minutes'); }catch(e){} try{ tick(); }catch(e){} };
   window.lqSweepFinalize=function(s,wkk,sidv){
