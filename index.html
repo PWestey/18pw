@@ -2791,7 +2791,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.30-consol2'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.31-consol3'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -7841,7 +7841,7 @@ function hideScrim(){document.querySelectorAll('.scrim').forEach(s=>s.classList.
 document.querySelectorAll('.scrim').forEach(s=>s.addEventListener('click',e=>{if(e.target===s)hideScrim();}));
 function esc(s){return(s+'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
 function flash(el){const c=el.closest('.card');if(c){c.classList.add('flashgood');setTimeout(()=>c.classList.remove('flashgood'),500);}}
-let toastT; function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1700);}
+let toastT; function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1700);/* v2.266.31 consol3: v152+v171 toast chain merged in (typeof guards preserve load-time semantics) */if(t&&typeof lq52Pulse==='function'){ lq52Pulse(t); if(/ready|complete|claimed|equipped|leveled|ranked/i.test(String(m||''))&&typeof lq52BurstAtEl==='function') lq52BurstAtEl(t,'#36e0e6',6,20); }try{ if(/complete|claimed|equipped|level|rank|victory|ready/i.test(String(m||''))) v171Feedback('reward'); }catch(e){}}
 function countUp(el, target, dur){
   if(!el) return; target=Math.round(target||0); dur=dur||750;
   if(target<=0){ el.textContent='0'; return; }
@@ -9839,8 +9839,7 @@ const __render_v152 = render;
 render = function(){ lq52Init(); const v=document.getElementById('view'); if(v&&!lq52Reduced()){ v.classList.remove('lq-view-in'); void v.offsetWidth; v.classList.add('lq-view-in'); } return __render_v152.apply(this,arguments); };
 const __rewardSummary_v152 = rewardSummary;
 rewardSummary = function(title,items){ __rewardSummary_v152(title,items); const box=document.getElementById('rewardPop'); if(box){ const tier=lq52InferTier(title,items); box.dataset.tier=tier; lq52Pulse(box); lq52BurstAtEl(box,tier==='high'?'#ffb01f':tier==='mid'?'#b16dff':'#36e0e6',tier==='high'?15:10,tier==='high'?54:34);} };
-const __toast_v152 = toast;
-toast = function(m){ __toast_v152(m); const t=document.getElementById('toast'); if(t){ lq52Pulse(t); if(/ready|complete|claimed|equipped|leveled|ranked/i.test(String(m||''))) lq52BurstAtEl(t,'#36e0e6',6,20); } };
+/* v2.266.31 consol3: v152 toast chain link merged into base */
 const __showReveal_v152 = showReveal;
 showReveal = function(h,opts){ const r=__showReveal_v152.apply(this,arguments); const box=document.getElementById('revealBox'); if(box){ lq52Pulse(box); lq52BurstAtEl(box,h&&h.color?h.color:'#ffd95a',18,62); } return r; };
 const __showAway_v152 = showAway;
@@ -12101,8 +12100,7 @@ function v171WorldReward(title,items,kind){
 /* Pass C1 v2.214.0: v171 home replacement excised. */
 const __v171_rewardSummary = rewardSummary;
 rewardSummary = function(title,items){ __v171_rewardSummary(title,items); try{ v171WorldReward(title,items,/level|rank|hero/i.test(String(title))?'level':'task'); }catch(e){} };
-const __v171_toast = toast;
-toast = function(m){ __v171_toast(m); try{ if(/complete|claimed|equipped|level|rank|victory|ready/i.test(String(m||''))) v171Feedback('reward'); }catch(e){} };
+/* v2.266.31 consol3: v171 toast chain link merged into base */
 const __v171_floatDmg = typeof floatDmg==='function'?floatDmg:null;
 if(__v171_floatDmg){ floatDmg=function(el,n,crit,kind){ __v171_floatDmg.apply(this,arguments); try{ v171Feedback(crit?'crit':'hit'); }catch(e){} }; }
 const __v171_passiveBanner = typeof passiveBanner==='function'?passiveBanner:null;
