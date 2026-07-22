@@ -2791,7 +2791,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.33-consol5'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.34-hallspeed'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -10729,7 +10729,7 @@ function v161InjectStyles(){
   if(document.getElementById('v161Styles')) return;
   const st=document.createElement('style'); st.id='v161Styles';
   st.textContent=`
-    .v161RosterHero{position:relative;border:1px solid color-mix(in srgb,var(--accent) 18%,var(--line));border-radius:18px;overflow:hidden;padding:0;background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 92%,#050811),color-mix(in srgb,var(--panel2) 92%,#050811));box-shadow:0 18px 40px rgba(0,0,0,.26),inset 0 0 0 1px rgba(255,255,255,.035);min-height:202px;cursor:pointer;animation:cardin .28s ease both}
+    .v161RosterHero{content-visibility:auto;contain-intrinsic-size:auto 177px auto 266px;position:relative;border:1px solid color-mix(in srgb,var(--accent) 18%,var(--line));border-radius:18px;overflow:hidden;padding:0;background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 92%,#050811),color-mix(in srgb,var(--panel2) 92%,#050811));box-shadow:0 18px 40px rgba(0,0,0,.26),inset 0 0 0 1px rgba(255,255,255,.035);min-height:202px;cursor:pointer;animation:cardin .28s ease both}
     .v161RosterHero:before{content:"";position:absolute;inset:0;background:radial-gradient(180px 100px at 50% 0%,color-mix(in srgb,var(--rarityColor,#8b97b5) 20%,transparent),transparent 70%);pointer-events:none;opacity:.85}
     .v161RosterHero.locked{filter:saturate(.72);opacity:.82}
     .v161RosterHero.favorite{box-shadow:0 18px 40px rgba(0,0,0,.28),0 0 20px rgba(255,155,215,.16),inset 0 0 0 1px rgba(255,255,255,.035)}
