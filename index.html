@@ -2791,7 +2791,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.29-consol1'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.30-consol2'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -4643,7 +4643,7 @@ function topPriorities(n){ return openActionItems().slice().sort((a,b)=>taskPrio
 function rewardPreview(it){ const k=domainOf(it); const cr=CRYSTALS[it.diff]||CRYSTALS.med; const bits=[]; if(k&&DKEY[k]) bits.push(DKEY[k].label+' XP'); else bits.push('Life XP'); bits.push('+'+cr+'◆'); bits.push('+Momentum'); return bits.join(' · '); }
 function nextUnlockHero(){ const locked=lockedHeroes(); if(!locked.length) return null; const wish=locked.filter(h=>(S.wishlist||[]).includes(h.id)); return (wish[0]||locked.find(h=>h.name==='Wolverine')||locked[0]); }
 function featuredHero(){ const owned=S.heroes.filter(h=>h.owned); if(!owned.length) return null; if(S.focus){ const f=owned.find(h=>h.id===S.focus); if(f) return f; } return owned.slice().sort((a,b)=>powerOf(b)-powerOf(a))[0]; }
-function viewAlias(vw){ return ({tasks:'quests',roster:'heroes',campaign:'battles',growth:'progress'}[vw]||vw||'home'); }
+function viewAlias(vw){ /* v2.266.30 consol2: 3-layer chain merged (base+v164+of2149), exact semantics incl. String coercion */ var raw=String(vw||'home'); return ({tasks:'quests',oaths:'quests',roster:'heroes',fellowship:'heroes',war:'battles',warTable:'battles','war-table':'battles',campaign:'battles',dungeons:'growth',domainDungeons:'growth',roomTrials:'growth',lifeBase:'growth',growth:'progress'}[raw]||raw||'home'); }
 function setNavActive(vw){ const cv=viewAlias(vw); document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',viewAlias(x.dataset.view)===cv)); }
 function navTo(vw){ clearTransientUI(); var _ar=document.getElementById('arena'); if(_ar && _ar.classList.contains('show')){ try{clearAuto();}catch(e){} if(battleTimer){clearInterval(battleTimer);battleTimer=null;} battleState=null; _ar.classList.remove('show','arenaEnded'); } view=viewAlias(vw); setNavActive(view); render(); }
 function renderQuests(v){ renderTasks(v); }
@@ -11338,8 +11338,7 @@ function lq64PatchDeveloperTools(){
     }
   }catch(e){}
 }
-const __viewAlias_v164 = viewAlias;
-viewAlias = function(vw){ return ({tasks:'quests',roster:'heroes',campaign:'battles',dungeons:'growth',domainDungeons:'growth',roomTrials:'growth',lifeBase:'growth'}[vw]||__viewAlias_v164(vw)||'home'); };
+/* v2.266.30 consol2: v164 viewAlias chain link merged into base */
 if(typeof enemyPower!=='function') function enemyPower(stage){ return typeof stageEnemyPower==='function'?stageEnemyPower(stage):Math.round(180+Math.max(1,stage||1)*120); }
 if(typeof towerPower!=='function') function towerPower(floor){ return typeof towerEnemyPower==='function'?towerEnemyPower(floor):Math.round(240+Math.max(1,floor||1)*140); }
 const __render_v164 = render;
@@ -18211,12 +18210,7 @@ function rerender(){
   };
 
   try{
-    var __of2149ViewAlias=viewAlias;
-    viewAlias=function(vw){
-      var raw=String(vw||'home');
-      var mapped={tasks:'quests',oaths:'quests',roster:'heroes',fellowship:'heroes',war:'battles',warTable:'battles','war-table':'battles',campaign:'battles'}[raw];
-      return mapped||__of2149ViewAlias(raw);
-    };
+    /* v2.266.30 consol2: of2149 viewAlias chain link merged into base */
   }catch(e){}
   try{
     setNavActive=function(vw){
