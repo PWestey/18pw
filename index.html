@@ -2791,7 +2791,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.32-consol4'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.33-consol5'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -18728,8 +18728,49 @@ function rerender(){
 
   ['render','renderHome','renderQuests','renderHeroes','renderBattles','renderGrowth','renderModes','renderHUD','setNavActive','openHeroSheet','showQuestBoard','openRosterMgmt'].forEach(wrap);
   /* v2.266.32 consol4: every-click 45ms full-doc label pass removed - clicks that change the DOM trigger the MutationObserver path anyway (measured: 18 redundant passes in 8s) */
+  /* v2.266.33 consol5: MutationObserver pass SCOPED to mutated subtrees instead of full-document.
+     Coverage is identical: added elements get labeled via their own root; text-node changes label via
+     their parent element; >80 added elements in one batch falls back to the original full-doc pass.
+     Before: every chunk of the 553-card roster fill (and every battle-tick DOM change) scheduled a
+     FULL-document rewrite. Measured 3.6s fill / 2.8s main-thread blocking at 553 scale. */
+  var __scopedPending=[]; var __scopedTimer=null;
+  function scheduleScoped(roots){
+    for(var i=0;i<roots.length;i++) __scopedPending.push(roots[i]);
+    if(__scopedTimer) return;
+    __scopedTimer=setTimeout(function(){
+      __scopedTimer=null;
+      var batch=__scopedPending; __scopedPending=[];
+      if(batch.length>80){ apply(document); return; }
+      var seen=[];
+      for(var i=0;i<batch.length;i++){
+        var r=batch[i];
+        if(!r||!r.isConnected) continue;
+        var skip=false;
+        for(var j=0;j<seen.length;j++){ if(seen[j]===r||(seen[j].contains&&seen[j].contains(r))){ skip=true; break; } }
+        if(skip) continue;
+        seen.push(r);
+        try{ apply(r); }catch(e){}
+      }
+    },0);
+  }
   try{
-    var mo=new MutationObserver(function(){ schedule(); });
+    var mo=new MutationObserver(function(muts){
+      try{
+        var roots=[], count=0, big=false;
+        for(var i=0;i<muts.length && !big;i++){
+          var m=muts[i];
+          for(var j=0;j<m.addedNodes.length;j++){
+            var n=m.addedNodes[j];
+            var r=(n.nodeType===1)?n:(n.nodeType===3?n.parentElement:null);
+            if(!r) continue;
+            roots.push(r);
+            if(++count>80){ big=true; break; }
+          }
+        }
+        if(big){ schedule(); return; }
+        if(roots.length) scheduleScoped(roots);
+      }catch(e){ schedule(); }
+    });
     mo.observe(document.body||document.documentElement,{childList:true,subtree:true});
   }catch(e){}
   apply(document);
