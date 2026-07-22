@@ -2791,7 +2791,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.31-consol3'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.32-consol4'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -18700,8 +18700,7 @@ function rerender(){
       applyHome(root);
       applyExact(root);
       applyPhrases(root);
-      applyWar(root);
-      applyHome(root);
+      /* v2.266.32 consol4: duplicate applyWar/applyHome second pass removed (ran twice per apply) */
     }catch(e){
       try{ console.warn('v2.152 label pass failed',e); }catch(_e){}
     }
@@ -18718,7 +18717,7 @@ function rerender(){
       var wrapped=function(){
         var ret=fn.apply(this,arguments);
         try{ apply(arguments&&arguments[0]&&arguments[0].nodeType?arguments[0]:document); }catch(e){}
-        setTimeout(function(){ apply(document); },35);
+        /* v2.266.32 consol4: 35ms deferred full-doc label pass removed - the body MutationObserver already schedules a debounced pass on any DOM change (measured: 32 redundant passes in 8s of use) */
         return ret;
       };
       wrapped.__of2152Wrapped=true;
@@ -18728,7 +18727,7 @@ function rerender(){
   }
 
   ['render','renderHome','renderQuests','renderHeroes','renderBattles','renderGrowth','renderModes','renderHUD','setNavActive','openHeroSheet','showQuestBoard','openRosterMgmt'].forEach(wrap);
-  document.addEventListener('click',function(){ setTimeout(function(){ apply(document); },45); },true);
+  /* v2.266.32 consol4: every-click 45ms full-doc label pass removed - clicks that change the DOM trigger the MutationObserver path anyway (measured: 18 redundant passes in 8s) */
   try{
     var mo=new MutationObserver(function(){ schedule(); });
     mo.observe(document.body||document.documentElement,{childList:true,subtree:true});
