@@ -2791,7 +2791,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.27-safeload'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.29-consol1'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3958,7 +3958,7 @@ function gauntletLocked(id){ return gauntletUses(id) >= (GAUNTLET_TUNE.lockAt||3
 function gauntletUseMult(id){ var u=gauntletUses(id); if(u<=0) return (GAUNTLET_TUNE.freshBonus||1.25); if(u===1) return 1; if(u===2) return (GAUNTLET_TUNE.usedTwice||0.65); return 0; }
 function gauntletEligible(){ return gauntletOwned().filter(h=>!gauntletLocked(h.id)); }
 /* G:gauntletFatigueMult */
-function gauntletDefaultSquad(){ return gauntletEligible().slice().sort((a,b)=>(powerOf(b)*gauntletUseMult(b.id))-(powerOf(a)*gauntletUseMult(a.id))).slice(0,GAUNTLET_TUNE.squadSize).map(h=>h.id); }
+/* v2.266.29 consolidation b1: gauntletDefaultSquad base decl removed (dead; live def preserved) */
 function gauntletStartRun(squadIds){ const G=ensureGauntlet(); if(!squadIds||!squadIds.length) squadIds=gauntletDefaultSquad();
   const heroes=squadIds.map(id=>S.heroes.find(h=>h&&h.id===id)).filter(Boolean); if(heroes.length<2) return {ok:false,reason:'noteam'};
   const baseLine=heroes.reduce((s,h)=>s+powerOf(h),0);
@@ -4033,13 +4033,7 @@ function gauntletEndRun(){ const G=ensureGauntlet(), R=G.run; if(!R) return null
   G.best=Math.max(G.best||0,floorReached); const shards=floorReached+((R&&R.bonusShards)||0); G.shards=(G.shards||0)+shards;
   const reward=gauntletMetaReward(floorReached); try{ siegeApplyReward(reward); }catch(e){}
   const summary={floor:floorReached,shards:shards,reward:reward,best:G.best}; G.lastRun=summary; G.run=null; return summary; }
-function gauntletEndBattle(win){ battleGauntlet=null; try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-  const G=ensureGauntlet(), R=G.run; if(!R){ return; }
-  (battleState&&battleState.players||[]).forEach(u=>{ R.hp[u.id]=Math.max(0,u.hp); if(u.hp<=0||u.dead) R.dead[u.id]=true; });
-  const livingLeft=R.squad.filter(id=>!R.dead[id]).length;
-  if(win && livingLeft>0){ const _pm=(R.pathMod&&R.pathMod.coins)||1; R.coins=(R.coins||0)+Math.round((8+2*Math.max(0,R.floor-1))*_pm); R.pathMod=null; R.pathElem=null; R.floor++; R.pendingBoons=gauntletBoonOffer(); try{ gauntletShowResult(true); }catch(e){ console.error(e); } }
-  else { const sum=gauntletEndRun(); try{ gauntletShowResult(false,sum); }catch(e){ console.error(e); } }
-  try{renderHUD();}catch(e){} try{save();}catch(e){} }
+/* v2.266.29 consolidation b1: gauntletEndBattle base decl removed (dead; live def preserved) */
 /* ===== end Endless Gauntlet engine ===== */
 
 /* ===== Endless Gauntlet UI (v2.31.0) ===== */
@@ -4199,7 +4193,7 @@ function arenaBuildEnemies(rank){ const rv=arenaRival(rank), total=arenaRivalPow
   return rv.members.map((h,i)=>{ let share; if(isBoss){ share=(i===0)? total*0.34 : total*0.66/Math.max(1,n-1); } else { share=total/n; }
     const hp=Math.max(40,Math.round(share*4)), atk=Math.max(8,Math.round(share*0.255));
     return arenaEnemyFromHero(h,hp,atk,isBoss&&i===0); }); }
-function arenaPlayerTeam(cond){ const pool=S.heroes.filter(h=>h&&h.owned); pool.sort(cond?((a,b)=>(powerOf(b)*cond.mult(b))-(powerOf(a)*cond.mult(a))):((a,b)=>powerOf(b)-powerOf(a))); return pool.slice(0,(typeof teamSize!=='undefined'?teamSize:8)); }
+/* v2.266.29 consolidation b1: arenaPlayerTeam base decl removed (dead; live def preserved) */
 function arenaDailyBuff(){ try{ const d=(S.dailies||[]).filter(x=>x&&x.done).length; return 1+Math.min(0.20,d*0.03); }catch(e){ return 1; } }
 function startArenaBattle(rank){ const arCond=arenaRivalCondition(rank); const team=arenaPlayerTeam(arCond); if(team.length<1) return {ok:false,reason:'noteam'}; try{musterMark(team.map(h=>h.id));}catch(e){}
   try{ clearAuto(); }catch(e){} try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
@@ -10766,7 +10760,7 @@ function v161InjectStyles(){
 .v161FilterBody{display:none;margin-top:8px}
 .v161FilterDock.open .v161FilterBody{display:block}
 .v161Toolbar{display:grid;grid-template-columns:1fr auto;gap:8px;margin:10px 0}.v161Toolbar input{width:100%;box-sizing:border-box;padding:11px 13px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:800}.v161ViewTog{display:flex;gap:5px}.v161ViewTog button{min-width:42px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-family:Orbitron;font-size:11px;font-weight:1000;padding:0 9px}.v161ViewTog button.on{color:#05131a;background:linear-gradient(135deg,#36e0e6,#8bd0ff);border-color:#8bd0ff}
-    .v161FilterDock{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,var(--bg) 84%,transparent);padding:2px 0 8px;margin-bottom:4px;backdrop-filter:blur(10px)}.v161Chips{display:flex;gap:6px;overflow:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent)}.v161Chips::-webkit-scrollbar{display:none}.v161Chips button{flex:0 0 auto;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-weight:950;font-size:11px;padding:7px 10px}.v161Chips button.on{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,var(--panel2)),color-mix(in srgb,var(--accent2) 18%,var(--panel2)));color:var(--ink);border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}.v161Selects{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:7px}.v161Selects select{min-width:0;padding:9px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800;font-size:12px}.v161Count{display:flex;justify-content:space-between;align-items:center;margin:8px 1px 10px;color:var(--muted);font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.45px}
+    .v161FilterDock{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,var(--bg) 84%,transparent);padding:2px 0 8px;margin-bottom:4px;backdrop-filter:blur(10px)}.v161Chips{display:flex;gap:6px;overflow:auto;padding-bottom:4px}.v161Chips button{flex:0 0 auto;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);font-weight:950;font-size:11px;padding:7px 10px}.v161Chips button.on{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,var(--panel2)),color-mix(in srgb,var(--accent2) 18%,var(--panel2)));color:var(--ink);border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}.v161Selects{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:7px}.v161Selects select{min-width:0;padding:9px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:800;font-size:12px}.v161Count{display:flex;justify-content:space-between;align-items:center;margin:8px 1px 10px;color:var(--muted);font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.45px}
     .v161AddHero{min-height:202px;border:1px dashed color-mix(in srgb,var(--accent) 32%,var(--line));border-radius:18px;display:grid;place-items:center;color:var(--muted);font-weight:950;text-align:center;background:rgba(255,255,255,.025)}.v161AddHero span{display:block;font-size:32px;color:var(--accent);margin-bottom:3px}
     @media(max-width:430px){.v161Grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.v161RosterHero{min-height:178px;border-radius:15px}.v161Portrait{margin:7px 7px 5px;border-radius:13px}.v161Name{font-size:12px}.v161Meta{padding:4px 5px 0;gap:3px}.v161Meta span{font-size:7px;padding:2px 4px}.v161Stats{gap:4px;padding:6px}.v161Stats b{font-size:9px}.v161Stats span{font-size:7px}.v161CPRow{grid-template-columns:repeat(3,1fr)}.v161Selects{grid-template-columns:1fr 1fr}.v161Grid.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.v161Grid.list .v161Stats{grid-template-columns:1fr 1fr}}
     /* ===== Rarity tier frames (mapped to the 8 RANKS) — card frame = rarity, portrait ring = role ===== */
@@ -16462,15 +16456,7 @@ window.openRosterMgmt=function(){
     };
     ensureArena.__of2140TeamSize=true;
   }
-  if(typeof arenaPlayerTeam==='function'&&!arenaPlayerTeam.__of2140Size){
-    arenaPlayerTeam=function(cond){
-      var n=Math.max(1,(ARENA_TUNE&&ARENA_TUNE.teamSize)||8);
-      var pool=(S.heroes||[]).filter(function(h){return h&&h.owned;});
-      pool.sort(cond?function(a,b){return (powerOf(b)*cond.mult(b))-(powerOf(a)*cond.mult(a));}:function(a,b){return powerOf(b)-powerOf(a);});
-      return pool.slice(0,n);
-    };
-    arenaPlayerTeam.__of2140Size=true;
-  }
+  /* v2.266.29 consolidation b1: arenaPlayerTeam dead v2140 block removed (dead; live def preserved) */
 
   if(typeof GAUNTLET_TUNE==='object'&&GAUNTLET_TUNE){
     GAUNTLET_TUNE.esc=Math.max(GAUNTLET_TUNE.esc||1.165,1.19);
@@ -16526,36 +16512,7 @@ window.openRosterMgmt=function(){
     };
     gauntletShowResult.__of2140Notice=true;
   }
-  if(typeof gauntletEndBattle==='function'&&!gauntletEndBattle.__of2140Rotation){
-    gauntletEndBattle=function(win){
-      battleGauntlet=null; try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
-      var G=ensureGauntlet(), R=G.run; if(!R) return;
-      var ids=of2140BattleHeroIds(), foughtFloor=R.floor||1;
-      (battleState&&battleState.players||[]).forEach(function(u){ R.hp[u.id]=Math.max(0,u.hp); if(u.hp<=0||u.dead) R.dead[u.id]=true; });
-      var livingLeft=R.squad.filter(function(id){return !R.dead[id];}).length;
-      of2140GrantWarTableBond(ids,Math.max(5,Math.round(5+foughtFloor*0.8)),'Gauntlet Floor '+foughtFloor,{benchPct:0.25});
-      if(win&&livingLeft>0){
-        R.squadClears=(R.squadClears||0)+1;
-        if(R.squadClears>=(GAUNTLET_TUNE.squadUseLimit||3)){
-          if(!of2140NextGauntletSquad(R)){
-            var endSum=gauntletEndRun();
-            try{ gauntletShowResult(false,endSum); }catch(e){ of2140Record('gauntlet end result',e); }
-            try{ renderHUD(); }catch(e){} try{ save(); }catch(e){}
-            return;
-          }
-        }
-        R.floor++;
-        of2140ClampGauntlet();
-        R.pendingBoons=gauntletBoonOffer();
-        try{ gauntletShowResult(true); }catch(e){ of2140Record('gauntlet win result',e); }
-      }else{
-        var sum=gauntletEndRun();
-        try{ gauntletShowResult(false,sum); }catch(e){ of2140Record('gauntlet loss result',e); }
-      }
-      try{ renderHUD(); }catch(e){} try{ save(); }catch(e){}
-    };
-    gauntletEndBattle.__of2140Rotation=true;
-  }
+  /* v2.266.29 consolidation b1: gauntletEndBattle dead v2140 block removed (dead; live def preserved) */
 
   if(typeof siegeEndBattle==='function'&&!siegeEndBattle.__of2140Bond){
     var __of2140_siegeEndBattle=siegeEndBattle;
@@ -17064,15 +17021,7 @@ window.openRosterMgmt=function(){
     expeditionAutoFill.__of2142Depth=true;
   }
 
-  if(typeof gauntletDefaultSquad==='function'){
-    gauntletDefaultSquad=function(){
-      var size=(GAUNTLET_TUNE&&GAUNTLET_TUNE.squadSize)||6, pool=gauntletEligible();
-      var anchor=of2142RosterDepthAnchor(gauntletOwned(),size,function(h){return gauntletUseMult(h.id);});
-      var min=anchor*(GAUNTLET_TUNE.baseFactor||0.13)*1.05;
-      return of2142WeakestViable(pool,size,function(h){return gauntletUseMult(h.id);},min).map(function(h){return h.id;});
-    };
-    gauntletDefaultSquad.__of2142Depth=true;
-  }
+  /* v2.266.29 consolidation b1: gauntletDefaultSquad dead v2140 block removed (dead; live def preserved) */
   if(typeof gauntletStartRun==='function'&&!gauntletStartRun.__of2142Depth){
     gauntletStartRun=function(squadIds){
       var G=ensureGauntlet();
@@ -17124,7 +17073,7 @@ window.openRosterMgmt=function(){
       return true;
     }catch(e){ try{ console.warn('Depth rotation failed',e); }catch(_e){} return false; }
   }
-  if(typeof gauntletEndBattle==='function'){
+  { /* v2.266.29 b1: guard relaxed - base decl removed, this IS gauntletEndBattle */
     gauntletEndBattle=function(win){
       battleGauntlet=null; try{ if(battleTimer){ clearInterval(battleTimer); battleTimer=null; } }catch(e){}
       var G=ensureGauntlet(), R=G.run; if(!R) return;
@@ -18065,8 +18014,8 @@ function rerender(){
   };
   window.of2140GrantWarTableBond=window.of2148GrantWarTableBond;
 
-  if(typeof gauntletDefaultSquad==='function'){
-    gauntletDefaultSquad=function(){
+  { /* v2.266.29 b1: guard relaxed - base decl removed, this IS gauntletDefaultSquad */
+    window.gauntletDefaultSquad=function(){
       of2148Tune();
       var size=(GAUNTLET_TUNE&&GAUNTLET_TUNE.squadSize)||8, pool=gauntletEligible();
       var anchor=of2148DepthAnchor(gauntletOwned(),size,function(h){return gauntletUseMult(h.id);});
@@ -18075,8 +18024,8 @@ function rerender(){
     };
     gauntletDefaultSquad.__of2148Depth=true;
   }
-  if(typeof arenaPlayerTeam==='function'){
-    arenaPlayerTeam=function(cond){
+  { /* v2.266.29 b1: guard relaxed - base decl removed, this IS arenaPlayerTeam */
+    window.arenaPlayerTeam=function(cond){
       of2148Tune();
       var n=(ARENA_TUNE&&ARENA_TUNE.teamSize)||8, pool=of2148Owned();
       pool.sort(cond?function(a,b){return (powerOf(b)*cond.mult(b))-(powerOf(a)*cond.mult(a));}:function(a,b){return powerOf(b)-powerOf(a);});
