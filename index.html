@@ -2791,7 +2791,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.39-onepregame'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.40-batchcalm'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3204,7 +3204,7 @@ function rollover(){
 }
 const STREAK_MS=[[3,{cry:15}],[7,{cry:30,grace:1}],[14,{cry:50,grace:1}],[30,{cry:100,grace:2}],[50,{cry:150,grace:2}],[100,{cry:300,grace:3}]];
 /* G:nextStreakMs */
-function v175Detonate(title, sub, color){ if(window.__lqLastAutoBattle&&typeof battleState!=='undefined'&&battleState&&!battleState.over) return;
+function v175Detonate(title, sub, color, force){ if(window.__lqLastAutoBattle&&typeof battleState!=='undefined'&&battleState&&!battleState.over) return; if(!force && typeof window!=='undefined' && Date.now() < (window.__ofBatchQuietUntil||0)) return; /* v2.266.40: batch-complete suppresses per-task detonations to avoid FX storm freeze */
   try{
     color=color||'#ffd95a';
     var fl=document.createElement('div'); fl.className='v174Flash'; fl.style.background='radial-gradient(circle,#fff,'+color+' 55%,transparent)'; document.body.appendChild(fl);
@@ -17714,7 +17714,7 @@ function rerender(){
 /* ===== v2.147.0 Stability Foundation ===== */
 (function(){
   'use strict';
-  var OF2147_FX_SELECTOR='.clashShot,.clashImpact,.battleFloat,.dmg,.critdmg,.shieldnum,.blocknum,.supportnum,.v171Orb,.v171WorldReward,.v171MeaningFlash,.lq53ClashBanner,.ultPortraitBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.v176Gold,.v176GoldFlash';
+  var OF2147_FX_SELECTOR='.clashShot,.clashImpact,.battleFloat,.dmg,.critdmg,.shieldnum,.blocknum,.supportnum,.v171Orb,.v171WorldReward,.v171MeaningFlash,.lq53ClashBanner,.ultPortraitBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.v176Gold,.v176GoldFlash,.v175Deto,.v174Flash';
   function of2147FxMax(){
     try{ return (typeof lq52Reduced==='function'&&lq52Reduced())?6:44; }catch(e){ return 44; }
   }
@@ -21885,6 +21885,8 @@ function showAbilityMoment(u,skill,color){
   }
   function completeSelected(){
     try{
+      /* v2.266.40: mute per-task detonations for the duration of the batch (loop + deferred 380ms streak timers), then show ONE summary burst. Rewards are unaffected. */
+      try{ window.__ofBatchQuietUntil=Date.now()+1600; }catch(_q){}
       pruneSelection();
       var ids=Array.from(selected);
       if(!ids.length){ try{ toast('Select one or more dailies first.'); }catch(e){} return; }
@@ -21897,6 +21899,8 @@ function showAbilityMoment(u,skill,color){
       if(!n){ try{ toast('Those dailies are already handled.'); }catch(e){} render(); return; }
       var items=rewardTextItems(total,n);
       try{ rewardSummary(n+' dailies complete',items); }catch(e){}
+      /* v2.266.40: single celebratory burst for the whole batch (force-bypasses the quiet window it set) */
+      try{ if(typeof v175Detonate==='function') v175Detonate(n+' Dailies Complete', total.names.slice(0,2).join(' \u00b7 ')+(n>2?(' \u00b7 +'+(n-2)+' more'):''), (n>=10?'#ffb01f':(n>=5?'#ff7a3d':'#8bd0ff')), true); }catch(e){}
       try{ toast('Completed '+n+' dail'+(n===1?'y':'ies')+' together.'); }catch(e){}
       try{
         S.lastActionResult={title:n+' dailies complete',kind:'daily',domain:null,domainLabel:'Dailies',domainIcon:'✓',diff:'med',at:Date.now(),rewards:items.map(function(x){return x.txt||x;}),progress:[total.names.slice(0,3).join(' · ')+(n>3?' +'+(n-3)+' more':''),(total.chests[0]||'Batch completion kept rewards and progress together.')],next:(typeof nextGoalLine==='function'?nextGoalLine():''),hero:null,heroMoment:null};
