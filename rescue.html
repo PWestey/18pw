@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Oathforge — Save Rescue</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:#0d1117;color:#e6edf3;
+       font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       -webkit-text-size-adjust:100%}
+  h1{font-size:19px;margin:0 0 4px}
+  .sub{color:#8b949e;font-size:13px;margin:0 0 16px}
+  .card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px;margin:0 0 12px}
+  .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8b949e;margin:0 0 6px}
+  .val{font-size:14px;word-break:break-all}
+  .ok{color:#3fb950}.bad{color:#f85149}.warn{color:#d29922}
+  button{display:block;width:100%;padding:15px;margin:0 0 10px;border:0;border-radius:12px;
+         font-size:16px;font-weight:700;color:#fff;background:#238636;
+         -webkit-appearance:none;cursor:pointer}
+  button.alt{background:#1f6feb}
+  button.gray{background:#30363d}
+  button:disabled{opacity:.45}
+  pre{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px;
+      font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-all;margin:0}
+  textarea{width:100%;height:150px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;
+           border-radius:8px;padding:8px;font-size:11px;font-family:ui-monospace,Menlo,monospace}
+  .row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid #21262d}
+  .row:last-child{border-bottom:0}
+  .row span:first-child{color:#8b949e}
+  .row span:last-child{font-weight:700;text-align:right}
+</style>
+</head>
+<body>
+
+<h1>Oathforge — Save Rescue</h1>
+<p class="sub">Reads your save directly from storage. Does not load the game. Nothing is modified.</p>
+
+<div class="card">
+  <div class="lbl">Status</div>
+  <div class="val" id="status">Scanning…</div>
+</div>
+
+<div class="card" id="statsCard" style="display:none">
+  <div class="lbl">Save contents</div>
+  <div id="stats"></div>
+</div>
+
+<button id="dl" disabled>Download backup (.json)</button>
+<button id="copy" class="alt" disabled>Copy save to clipboard</button>
+<button id="diag" class="gray" disabled>Show diagnostic report</button>
+
+<div class="card" id="diagCard" style="display:none">
+  <div class="lbl">Diagnostic — paste this to Claude</div>
+  <textarea id="diagOut" readonly></textarea>
+</div>
+
+<div class="card">
+  <div class="lbl">Storage scan</div>
+  <pre id="log"></pre>
+</div>
+
+<script>
+var KEY='lifequest_afk_v1';
+var RAW=null, SRC='', PARSED=null;
+var logEl=document.getElementById('log');
+function log(m){ logEl.textContent += m + '\n'; }
+function setStatus(html){ document.getElementById('status').innerHTML = html; }
+
+function idbGet(dbName, storeName, key){
+  return new Promise(function(res){
+    var req;
+    try{ req = indexedDB.open(dbName); }catch(e){ return res({err:'open threw: '+e.message}); }
+    req.onerror = function(){ res({err:'open error'}); };
+    req.onsuccess = function(){
+      var db = req.result;
+      if(!db.objectStoreNames.contains(storeName)){ db.close(); return res({err:'no store "'+storeName+'"'}); }
+      var tx, rq;
+      try{
+        tx = db.transaction(storeName,'readonly');
+        rq = tx.objectStore(storeName).get(key);
+      }catch(e){ db.close(); return res({err:'tx threw: '+e.message}); }
+      rq.onsuccess = function(){ var v = rq.result; db.close(); res({value: (v==null?null:v)}); };
+      rq.onerror = function(){ db.close(); res({err:'get error'}); };
+    };
+    req.onblocked = function(){ res({err:'blocked'}); };
+  });
+}
+
+function idbListKeys(dbName, storeName){
+  return new Promise(function(res){
+    var req;
+    try{ req = indexedDB.open(dbName); }catch(e){ return res([]); }
+    req.onerror=function(){ res([]); };
+    req.onsuccess=function(){
+      var db=req.result;
+      if(!db.objectStoreNames.contains(storeName)){ db.close(); return res([]); }
+      try{
+        var rq=db.transaction(storeName,'readonly').objectStore(storeName).getAllKeys();
+        rq.onsuccess=function(){ var k=rq.result||[]; db.close(); res(k); };
+        rq.onerror=function(){ db.close(); res([]); };
+      }catch(e){ db.close(); res([]); }
+    };
+  });
+}
+
+function fmtBytes(n){
+  if(n<1024) return n+' B';
+  if(n<1048576) return (n/1024).toFixed(1)+' KB';
+  return (n/1048576).toFixed(2)+' MB';
+}
+
+function statRow(k,v){
+  return '<div class="row"><span>'+k+'</span><span>'+v+'</span></div>';
+}
+
+(async function(){
+  log('origin: '+location.origin);
+
+  // 1) IndexedDB 'lifequest' / 'sheets'
+  log('\n-- IndexedDB: lifequest/sheets --');
+  var r = await idbGet('lifequest','sheets',KEY);
+  if(r.err){ log('  '+KEY+': '+r.err); }
+  else if(r.value==null){ log('  '+KEY+': not found'); }
+  else { RAW = (typeof r.value==='string')? r.value : JSON.stringify(r.value); SRC='IndexedDB'; log('  '+KEY+': FOUND ('+fmtBytes(RAW.length)+')'); }
+
+  var keys = await idbListKeys('lifequest','sheets');
+  if(keys.length){ log('  all keys ('+keys.length+'): '+keys.slice(0,40).join(', ')); }
+
+  // 2) localStorage fallback
+  log('\n-- localStorage --');
+  try{
+    var ls = localStorage.getItem(KEY);
+    if(ls){
+      log('  '+KEY+': FOUND ('+fmtBytes(ls.length)+')');
+      if(!RAW){ RAW=ls; SRC='localStorage'; }
+      else { log('  (IDB copy is newer/primary; using IDB)'); }
+    } else { log('  '+KEY+': not found'); }
+    var all=[]; for(var i=0;i<localStorage.length;i++) all.push(localStorage.key(i));
+    if(all.length) log('  all keys ('+all.length+'): '+all.slice(0,40).join(', '));
+  }catch(e){ log('  localStorage error: '+e.message); }
+
+  if(!RAW){
+    setStatus('<span class="bad">No save found at this origin.</span><br>Make sure this page is opened from the same address as the app.');
+    return;
+  }
+
+  setStatus('<span class="ok">Save found in '+SRC+'</span> — '+fmtBytes(RAW.length));
+  document.getElementById('dl').disabled=false;
+  document.getElementById('copy').disabled=false;
+
+  try{
+    PARSED = JSON.parse(RAW);
+    document.getElementById('diag').disabled=false;
+    var S=PARSED;
+    var dailies=S.dailies||[], habits=S.habits||[], heroes=S.heroes||[];
+    var doneD=dailies.filter(function(d){return d&&d.done;}).length;
+    var owned=heroes.filter(function(h){return h&&h.owned;}).length;
+    document.getElementById('stats').innerHTML =
+      statRow('Save version', S.v!=null?S.v:'?') +
+      statRow('Built by', S.appBuild||'?') +
+      statRow('Last saved', S.lastSavedAt? new Date(S.lastSavedAt).toLocaleString() : '?') +
+      statRow('Campaign stage', S.stage!=null?S.stage:'?') +
+      statRow('Heroes owned', owned+' / '+heroes.length) +
+      statRow('Dailies', doneD+' done / '+dailies.length) +
+      statRow('Habits', habits.length) +
+      statRow('Prestiges', S.prestigeCount!=null?S.prestigeCount:'?');
+    document.getElementById('statsCard').style.display='block';
+    log('\n-- parse: OK --');
+  }catch(e){
+    log('\n-- parse: FAILED -- '+e.message);
+    setStatus('<span class="warn">Save found ('+fmtBytes(RAW.length)+') but it will not parse as JSON.</span> Download it anyway — the raw bytes are still recoverable.');
+  }
+})();
+
+document.getElementById('dl').onclick=function(){
+  try{
+    var d=new Date(), p=function(n){return (n<10?'0':'')+n;};
+    var name='oathforge-rescue-'+d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+'.json';
+    var blob=new Blob([RAW],{type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download=name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },1500);
+    log('\ndownload triggered: '+name);
+  }catch(e){ log('\ndownload failed: '+e.message+' — use Copy instead'); }
+};
+
+document.getElementById('copy').onclick=function(){
+  var btn=this;
+  function done(ok){ btn.textContent = ok? 'Copied ✓' : 'Copy failed — select text below'; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(RAW).then(function(){done(true);},function(){fallback();});
+  } else fallback();
+  function fallback(){
+    var ta=document.createElement('textarea');
+    ta.value=RAW; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); done(ok);
+  }
+};
+
+document.getElementById('diag').onclick=function(){
+  var S=PARSED||{};
+  var out={
+    appBuild:S.appBuild, saveVersion:S.v,
+    lastSavedAt:S.lastSavedAt? new Date(S.lastSavedAt).toISOString():null,
+    saveBytes:RAW?RAW.length:0, source:SRC,
+    stage:S.stage, tower:S.towerFloor, prestige:S.prestigeCount,
+    heroesTotal:(S.heroes||[]).length,
+    heroesOwned:(S.heroes||[]).filter(function(h){return h&&h.owned;}).length,
+    heroPortraitsInSave:Object.keys(S.heroPortraits||{}).length,
+    dailies:(S.dailies||[]).length,
+    dailiesDone:(S.dailies||[]).filter(function(d){return d&&d.done;}).length,
+    habits:(S.habits||[]).length,
+    topLevelKeys:Object.keys(S).length,
+    biggestKeys:(function(){
+      var sizes=[];
+      Object.keys(S).forEach(function(k){
+        try{ sizes.push([k, JSON.stringify(S[k]).length]); }catch(e){ sizes.push([k,-1]); }
+      });
+      return sizes.sort(function(a,b){return b[1]-a[1];}).slice(0,12)
+                  .map(function(x){return x[0]+':'+x[1];});
+    })()
+  };
+  document.getElementById('diagOut').value=JSON.stringify(out,null,2);
+  document.getElementById('diagCard').style.display='block';
+};
+</script>
+</body>
+</html>
