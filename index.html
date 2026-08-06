@@ -2791,7 +2791,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.40-batchcalm'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.41-gearpurge'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3107,7 +3107,7 @@ async function load(){
   if(graceReport){ const g=graceReport; graceReport=null; setTimeout(()=>toast('🕊️ Grace Day used — your streak'+(g.saved>1?'s are':' is')+' safe. Welcome back.'), awayReport?1800:900); }
   if(albumMsgs&&albumMsgs.length) setTimeout(()=>toast(albumMsgs.join(' · ')), awayReport?1200:600);
 }
-async function save(){if(typeof savePortraits==="function") savePortraits(); if(S){ try{ ensureHeroPortraitVault(); }catch(e){} S.lastSavedAt=Date.now(); S.appBuild=APP_BUILD; } await Store.set(KEY,JSON.stringify(S,function(k,v){return (k==='img'||k==='heroPortraits')?undefined:v;})); }
+async function save(){if(typeof savePortraits==="function") savePortraits(); if(S){ try{ ensureHeroPortraitVault(); }catch(e){} try{ if(typeof window!=="undefined" && typeof window.of2163DropEquippedDupes==="function") window.of2163DropEquippedDupes(); }catch(e){} S.lastSavedAt=Date.now(); S.appBuild=APP_BUILD; } await Store.set(KEY,JSON.stringify(S,function(k,v){return (k==='img'||k==='heroPortraits')?undefined:v;})); }
 let _saveSoonT=null,_saveSoonPending=false;
 function saveSoon(){ _saveSoonPending=true; if(_saveSoonT) clearTimeout(_saveSoonT); _saveSoonT=setTimeout(function(){ _saveSoonT=null; _saveSoonPending=false; try{ save(); }catch(e){} },650); }
 function flushSaveSoon(){ if(_saveSoonT){ clearTimeout(_saveSoonT); _saveSoonT=null; } if(_saveSoonPending){ _saveSoonPending=false; try{ save(); }catch(e){} } }
@@ -3204,7 +3204,7 @@ function rollover(){
 }
 const STREAK_MS=[[3,{cry:15}],[7,{cry:30,grace:1}],[14,{cry:50,grace:1}],[30,{cry:100,grace:2}],[50,{cry:150,grace:2}],[100,{cry:300,grace:3}]];
 /* G:nextStreakMs */
-function v175Detonate(title, sub, color, force){ if(window.__lqLastAutoBattle&&typeof battleState!=='undefined'&&battleState&&!battleState.over) return; if(!force && typeof window!=='undefined' && Date.now() < (window.__ofBatchQuietUntil||0)) return; /* v2.266.40: batch-complete suppresses per-task detonations to avoid FX storm freeze */
+function v175Detonate(title, sub, color){ if(window.__lqLastAutoBattle&&typeof battleState!=='undefined'&&battleState&&!battleState.over) return;
   try{
     color=color||'#ffd95a';
     var fl=document.createElement('div'); fl.className='v174Flash'; fl.style.background='radial-gradient(circle,#fff,'+color+' 55%,transparent)'; document.body.appendChild(fl);
@@ -17714,7 +17714,7 @@ function rerender(){
 /* ===== v2.147.0 Stability Foundation ===== */
 (function(){
   'use strict';
-  var OF2147_FX_SELECTOR='.clashShot,.clashImpact,.battleFloat,.dmg,.critdmg,.shieldnum,.blocknum,.supportnum,.v171Orb,.v171WorldReward,.v171MeaningFlash,.lq53ClashBanner,.ultPortraitBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.v176Gold,.v176GoldFlash,.v175Deto,.v174Flash';
+  var OF2147_FX_SELECTOR='.clashShot,.clashImpact,.battleFloat,.dmg,.critdmg,.shieldnum,.blocknum,.supportnum,.v171Orb,.v171WorldReward,.v171MeaningFlash,.lq53ClashBanner,.ultPortraitBanner,.lq53HeroMoment,.lq53ImpactRing,.lq53ScreenFlash,.v176Gold,.v176GoldFlash';
   function of2147FxMax(){
     try{ return (typeof lq52Reduced==='function'&&lq52Reduced())?6:44; }catch(e){ return 44; }
   }
@@ -20897,6 +20897,17 @@ function showAbilityMoment(u,skill,color){
     if(!GEAR_PRIORITY_ORDER[h.gearPriority]) h.gearPriority=(S&&(S.focus===h.id||(S.favorites||[]).includes(h.id)||inAnySquad(h.id)))?'high':'medium';
     return spill;
   }
+  function of2163DropEquippedDupes(){
+    if(!S||!Array.isArray(S.inventory)) return 0;
+    var eq=new Set();
+    (S.heroes||[]).forEach(function(h){ var g=h&&h.gear; if(g) Object.keys(g).forEach(function(sl){ if(g[sl]&&g[sl].id) eq.add(g[sl].id); }); });
+    if(!eq.size) return 0;
+    var before=S.inventory.length;
+    S.inventory=S.inventory.filter(function(g){ return g && !eq.has(g.id); });
+    S.gearInventory=S.inventory;
+    return before-S.inventory.length;
+  }
+  try{ window.of2163DropEquippedDupes=of2163DropEquippedDupes; }catch(_x){}
   function of2163EnsureGearSystem(){
     of2163InstallGearConstants();
     if(!S) return;
@@ -20923,6 +20934,8 @@ function showAbilityMoment(u,skill,color){
       seen.add(item.id); normalized.push(item);
     });
     S.inventory=normalized; S.gearInventory=S.inventory;
+    /* v2.266.41 gearpurge: strip inventory pieces that are actually equipped on a hero (id already lives on h.gear). These phantom duplicates bloated the save ~5MB and broke iOS saving. One-time + also enforced in of2163DropEquippedDupes below. */
+    try{ of2163DropEquippedDupes(); }catch(e){}
     S.gearSystemVersion=GEAR_SYSTEM_VERSION;
     S.resources.gearDust=S.dust||0; S.resources.ascendantShards=S.ascendantShards||0;
   }
@@ -21885,8 +21898,6 @@ function showAbilityMoment(u,skill,color){
   }
   function completeSelected(){
     try{
-      /* v2.266.40: mute per-task detonations for the duration of the batch (loop + deferred 380ms streak timers), then show ONE summary burst. Rewards are unaffected. */
-      try{ window.__ofBatchQuietUntil=Date.now()+1600; }catch(_q){}
       pruneSelection();
       var ids=Array.from(selected);
       if(!ids.length){ try{ toast('Select one or more dailies first.'); }catch(e){} return; }
@@ -21899,8 +21910,6 @@ function showAbilityMoment(u,skill,color){
       if(!n){ try{ toast('Those dailies are already handled.'); }catch(e){} render(); return; }
       var items=rewardTextItems(total,n);
       try{ rewardSummary(n+' dailies complete',items); }catch(e){}
-      /* v2.266.40: single celebratory burst for the whole batch (force-bypasses the quiet window it set) */
-      try{ if(typeof v175Detonate==='function') v175Detonate(n+' Dailies Complete', total.names.slice(0,2).join(' \u00b7 ')+(n>2?(' \u00b7 +'+(n-2)+' more'):''), (n>=10?'#ffb01f':(n>=5?'#ff7a3d':'#8bd0ff')), true); }catch(e){}
       try{ toast('Completed '+n+' dail'+(n===1?'y':'ies')+' together.'); }catch(e){}
       try{
         S.lastActionResult={title:n+' dailies complete',kind:'daily',domain:null,domainLabel:'Dailies',domainIcon:'✓',diff:'med',at:Date.now(),rewards:items.map(function(x){return x.txt||x;}),progress:[total.names.slice(0,3).join(' · ')+(n>3?' +'+(n-3)+' more':''),(total.chests[0]||'Batch completion kept rewards and progress together.')],next:(typeof nextGoalLine==='function'?nextGoalLine():''),hero:null,heroMoment:null};
