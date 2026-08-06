@@ -1018,7 +1018,7 @@ const TUNE={
   roleBase:{Tank:{hp:330,atk:20},DPS:{hp:150,atk:44},Support:{hp:215,atk:30}},
   heroScale:lvl=>1+0.18*(lvl-1),
   // v2.3 re-correction: ENEMIES are the single tuning lever. Hero-side buffs pulled back.
-  enemyHpBase:120,enemyHpMult:1.30, enemyAtkBase:16, enemyGrowth:1.016,
+  enemyHpBase:120,enemyHpMult:1.30, enemyAtkBase:16, enemyGrowth:1.016, enemyPowerMult:1,
   towerHpBase:170, towerAtkBase:23, towerGrowth:1.018,
   accountPowerPer:0,                     // OFF — passive hero buff removed (was double-dipping with enemy nerf)
   gearStageScale:0.012,                  // gear power +1.2% per stage found (softened from 0.04)
@@ -1047,6 +1047,7 @@ const TUNE={
 };
 const TUNE_DEFAULTS={};
 ['convEnabled','convFragPerCore','convWeeklyCoreCap','convWeeklyBonus','convRateDust','convRateCrystal','convRateSpark','convUseSparks','convBossEnabled','convWeeklyBossCap','convBossCapBase','convBossCapPerDomain','convBossRateDust','convBossRateCrystal','convBossRateSpark','floorRiseBase','floorRisePerDomain','floorCoreReserve','floorCorePerLevel','floorCoreMaxPerHr','prestigeCapBase','prestigeCapPerDomain','prestigeCapPerRep','prestigeUncapped','anvilRiseBase','anvilRisePerDomain','anvilPowerPerLevel','anvilCapPerLevel','blessMaxPerHr','blessCostBase','blessCostGrowth','blessPowerPerLevel','blessCrystalReserve','ascShardBase','ascCostGrowth','ascPowerPerTier','ascMaxTier','anvilMaxPerHr','anvilCostGrowth','anvilGoldBase','anvilDustBase','anvilGoldReserve','anvilDustReserve','enemyGrowth','towerGrowth','enemyHpBase','enemyAtkBase','towerHpBase','towerAtkBase','expPerHour','stageRateBonus','bossEvery','bossRewardMult','prestigeFloorPct','prestigeCatchMult','prestigeLevelBonus','resonanceTopN','gearDropMult','clashGoldMult','clashDustMult','clashBondBase','clashBondPerStage','clashStoneBase','clashStonePerStage','clashStageGrowth','clashEliteMult','clashBossMult','clashChapterBossMult','clashReplayRewardMult','clashHeroAdv','clashHeroDis','clashEnemyAdv','clashEnemyDis','clashOptAdvWeight','clashOptDisWeight','clashCapPerChapter','clashWallTau','ecoDrainPct','ecoFloorFrac','ecoFloorGoldMin','ecoFloorDustMin','ecoFloorCryMin','ecoFloatFrac','ecoSinkMinGold','ecoSinkMinCry','convCoreCapBase','convCoreCapPerDomain','convCoreCapPerRep','convBossCapPerRep'].forEach(k=>{ if(typeof TUNE[k]==='number') TUNE_DEFAULTS[k]=TUNE[k]; });
+TUNE_DEFAULTS.enemyPowerMult=1;
 function applyTuneOverrides(){ try{ if(S&&S.tuneOverrides){ Object.keys(S.tuneOverrides).forEach(k=>{ const v=S.tuneOverrides[k]; if(typeof v==='number'&&isFinite(v)&&typeof TUNE[k]==='number') TUNE[k]=v; }); } }catch(e){} }
 function devTuneFilter(q){ q=(q||'').trim().toLowerCase(); var rows=document.querySelectorAll('.devTuneRow'); for(var i=0;i<rows.length;i++){ var t=(rows[i].getAttribute('data-tune')||'').toLowerCase(); rows[i].style.display=(!q||t.indexOf(q)>=0)?'':'none'; } var gs=document.querySelectorAll('.devTuneGroup'); for(var j=0;j<gs.length;j++){ var rr=gs[j].querySelectorAll('.devTuneRow'),vis=0; for(var k=0;k<rr.length;k++){ if(rr[k].style.display!=='none') vis++; } gs[j].style.display=vis?'':'none'; } }
 function devSetStage(n){ n=Math.max(1,Math.round(+n||1)); S.stage=n; if(n>(S.maxCleared||0)) S.maxCleared=n; save(); renderHUD(); render(); toast('Campaign set to Stage '+n); }
@@ -2791,7 +2792,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.266.41-gearpurge'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.266.42-difficulty'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -6524,6 +6525,8 @@ function battleSceneFor(mode,stage){
   return campaignZoneFor(stage);
 }
 function enemyFromSpec(spec,hp,atk,boss){
+  /* v2.266.42: player difficulty dial scales campaign & tower enemy stats. em>=0.05 guard keeps win-ratio math finite. */
+  var em=Math.max(0.05,(TUNE.enemyPowerMult||1)); hp=Math.max(1,Math.round(hp*em)); atk=Math.max(1,Math.round(atk*em));
   return {name:spec[0],img:null,color:spec[1],role:spec[2]||'DPS',elementType:inferEnemyElementType(spec[0],boss),hp,max:hp,atk,side:'e',dead:false,boss:!!boss};
 }
 function buildStageEnemiesFromZone(zone,stage,g){
@@ -22376,6 +22379,16 @@ function raidSAInjectPanel(){ try{
     lqApplyPace();
     try{ toast('Speed: '+(S.paceFine>0?'+':'')+(S.paceFine||0)+'% '+(S.paceFine>0?'faster':S.paceFine<0?'slower':'(profile baseline)')); }catch(e){}
   };
+  window.lqNudgeDifficulty=function(delta){
+    S.difficultyPct=Math.max(-95,(S.difficultyPct||0)+delta); /* v2.266.42: floor -95 keeps enemies >=5% power so win-ratio math stays finite; no upper cap — harder is unbounded */
+    if(!S.tuneOverrides) S.tuneOverrides={};
+    S.tuneOverrides.enemyPowerMult=Math.max(0.05,Math.round((1+(S.difficultyPct||0)/100)*1000)/1000);
+    try{ applyTuneOverrides(); }catch(e){}
+    try{ save(); }catch(e){}
+    try{ toast('Difficulty: '+(S.difficultyPct>0?('+'+S.difficultyPct+'% \u2014 enemies tougher'):S.difficultyPct<0?(S.difficultyPct+'% \u2014 enemies weaker'):'(baseline)')); }catch(e){}
+    try{ renderHUD(); }catch(e){}
+    try{ render(); }catch(e){}
+  };
 
   /* ---------- Collection complete ---------- */
   function lqDone(){ try{ return S&&Array.isArray(S.heroes)&&S.heroes.length>0&&(typeof ownedCount==='function')&&ownedCount()>=S.heroes.length; }catch(e){ return false; } }
@@ -22511,6 +22524,7 @@ function raidSAInjectPanel(){ try{
         '<div class="v2195Pace">'+['relaxed','standard','spicy'].map(function(k){ return '<button type="button" data-pace="'+k+'">'+k.charAt(0).toUpperCase()+k.slice(1)+'</button>'; }).join('')+'</div>'+
         '<div class="v2195PaceNote" id="v2195PaceNote"></div>'+
         '<div class="v2195Master" style="margin-top:0"><div><b>Fine speed</b><span id="v2195FineNote">Profile baseline</span></div><div class="v2195Seg" style="min-width:150px"><button type="button" id="v2195FineDown">−5%</button><button type="button" id="v2195FineUp">+5%</button></div></div>'+
+        '<div class="v2195Master"><div><b>Difficulty</b><span id="v2195DiffNote">Baseline</span></div><div class="v2195Seg" style="min-width:150px"><button type="button" id="v2195DiffDown">−5%</button><button type="button" id="v2195DiffUp">+5%</button></div></div>'+
         '<div class="v2195Master"><div><b>Full Autopilot</b><span>Auto-equip, hand-me-downs, salvage (upgrades always kept), rank-ups from dust overflow, muster claims, cleanup, daily backup.</span></div><button type="button" id="v2195Master">—</button></div>'+
         '<details><summary>Individual switches</summary>'+
           row('auto','autoSalvageCommons','Auto-salvage junk gear','Roster-upgrade guard: anything useful is always kept.')+
@@ -22549,6 +22563,7 @@ function raidSAInjectPanel(){ try{
         var note=p.querySelector('#v2195PaceNote'); if(note) note.textContent=PACE_DESC[pace]||'';
         var fine=(S&&S.paceFine)||0;
         var fn=p.querySelector('#v2195FineNote'); if(fn) fn.textContent=fine===0?'Profile baseline · steps of 5% · no upper cap':((fine>0?'+':'')+fine+'% '+(fine>0?'faster':'slower')+' than '+pace);
+        var diff=(S&&S.difficultyPct)||0; var dfn=p.querySelector('#v2195DiffNote'); if(dfn) dfn.textContent=diff===0?'Baseline · steps of 5% · lower = easier':((diff>0?'+':'')+diff+'% '+(diff>0?'harder (enemies tougher)':'easier (enemies weaker)'));
         var feel=(ensureAppSettings().gameFeelIntensity)||'medium';
         p.querySelectorAll('[data-feel]').forEach(function(b){ b.classList.toggle('on',b.dataset.feel===feel); });
       }
@@ -22561,6 +22576,8 @@ function raidSAInjectPanel(){ try{
       p.querySelectorAll('[data-pace]').forEach(function(b){ b.onclick=function(){ lqSetPace(b.dataset.pace); refresh(); }; });
       var fd=p.querySelector('#v2195FineDown'); if(fd) fd.onclick=function(){ lqNudgePace(-5); refresh(); };
       var fu=p.querySelector('#v2195FineUp'); if(fu) fu.onclick=function(){ lqNudgePace(5); refresh(); };
+      var dd=p.querySelector('#v2195DiffDown'); if(dd) dd.onclick=function(){ lqNudgeDifficulty(-5); refresh(); };
+      var du=p.querySelector('#v2195DiffUp'); if(du) du.onclick=function(){ lqNudgeDifficulty(5); refresh(); };
       p.querySelectorAll('[data-feel]').forEach(function(b){ b.onclick=function(){ ensureAppSettings().gameFeelIntensity=b.dataset.feel; save(); refresh(); }; });
       refresh();
     }catch(e){ try{ console.warn('v2195 settings inject failed',e); }catch(_e){} }
