@@ -2792,7 +2792,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.271.1-reforged-war-table-hotfix'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.272.0-reforged-reward-auto-role'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3104,6 +3104,7 @@ function rfHydrateCompactSave(state){
       h.bondXp=Math.max(0,Number(st.bondXp)||0);
       h.prestige=Math.max(0,Number(st.prestige)||0);
       if(st.role) h.role=st.role;
+      if(st.roleCustom) h.roleCustom=true;
       if(st.archetype) h.archetype=st.archetype;
       if(st.archKey) h.archKey=st.archKey;
       if(Array.isArray(st.aff)&&st.aff.length) h.aff=st.aff.slice();
@@ -3125,6 +3126,7 @@ function rfCompactHeroForSave(h){
   }
   var o={id:h.id,bondXp:Math.max(0,Number(h.bondXp)||0),prestige:Math.max(0,Number(h.prestige)||0),owned:h.owned!==false};
   if(h.role) o.role=h.role;
+  if(h.roleCustom) o.roleCustom=true;
   if(h.archetype) o.archetype=h.archetype;
   if(h.archKey) o.archKey=h.archKey;
   if(Array.isArray(h.aff)&&h.aff.length) o.aff=h.aff.slice();
@@ -23404,7 +23406,7 @@ function raidSAInjectPanel(){ try{
   gainExp=function(amount){amount=Math.max(0,Number(amount)||0);if(!amount)return;var ids=[];try{if(typeof battleState!=='undefined'&&battleState&&Array.isArray(battleState.players)&&battleState.players.length)ids=battleState.players.map(function(u){return u&&u.id;}).filter(Boolean);}catch(e){}if(!ids.length){try{ids=Array.from(activeIds());}catch(e){}}if(!ids.length)ids=allHeroes().slice(0,8).map(function(h){return h.id;});var seen={},v=rfVanguardBond();ids.forEach(function(id){if(!id||seen[id])return;seen[id]=1;var h=heroById(id);if(h)rfGrantBond(h,amount*RF.idleExpToBond,'Training',true,v);});};
   window.of2140GrantWarTableBond=function(ids,base,source){var used=[],seen={},v=rfVanguardBond();(ids||[]).forEach(function(id){if(!id||seen[id])return;seen[id]=1;var h=heroById(id);if(h&&h.owned){var g=rfGrantBond(h,Math.max(1,base||1),source||'War Table',true,v);if(g)used.push(g);}});try{save();}catch(e){}return{used:used,bench:[]};};
 
-  try{var __rfEndBattle=endBattle;endBattle=function(win){var ids=[],enemyAvg=0;try{ids=((battleState&&battleState.players)||[]).map(function(u){return u&&u.id;}).filter(Boolean);var es=((battleState&&battleState.enemies)||[]);enemyAvg=es.length?es.reduce(function(s,e){return s+((e&&e.max)||0);},0)/es.length:0;}catch(e){}var v=rfVanguardBond();if(!(battleGauntlet&&window.__draftGauntletActive)){ids.forEach(function(id){var h=heroById(id);if(!h)return;var raw=RF.deployBond;try{if(enemyAvg>hpOf(h)*2)raw*=RF.trialByFire;}catch(e){}rfGrantBond(h,raw,'Combat deployment',true,v);if(win)rfGrantBond(h,RF.victoryBond,'Combat victory',true,v);});}var r=__rfEndBattle.apply(this,arguments);return r;};window.endBattle=endBattle;}catch(e){}
+  try{var __rfEndBattle=endBattle;endBattle=function(win){var ids=[],enemyAvg=0;try{ids=((battleState&&battleState.players)||[]).map(function(u){return u&&u.id;}).filter(Boolean);var es=((battleState&&battleState.enemies)||[]);enemyAvg=es.length?es.reduce(function(s,e){return s+((e&&e.max)||0);},0)/es.length:0;}catch(e){}var v=rfVanguardBond();if(!battleReplay&&!(battleGauntlet&&window.__draftGauntletActive)){ids.forEach(function(id){var h=heroById(id);if(!h)return;var raw=RF.deployBond;try{if(enemyAvg>hpOf(h)*2)raw*=RF.trialByFire;}catch(e){}rfGrantBond(h,raw,'Combat deployment',true,v);if(win)rfGrantBond(h,RF.victoryBond,'Combat victory',true,v);});}var r=__rfEndBattle.apply(this,arguments);return r;};window.endBattle=endBattle;}catch(e){}
 
   currencyWallet=function(){return '';};taskLoot=function(){try{lastTaskLoot={};}catch(e){}return'';};grantLegendaryShards=function(){return 0;};legendShardTag=function(){return'';};grantForgeXp=function(){return 0;};forgeXpTag=function(){return'';};v176GoldenRoll=function(){};try{grantTicket=function(){return 0;};grantTicketShard=function(){return'';};}catch(e){}randomCostText=function(){return'All heroes unlocked';};try{randomUnlock=function(){toast('Every hero already stands in the Great Hall.');return null;};}catch(e){}
   baseRewardItems=function(){return[{txt:'Momentum '+Math.round(momentumPct()*100)+'%',cls:'main'},{txt:'Bond + Domain progress',cls:'bond'}];};rewardPreview=function(it){var k=domainOf(it),lab=(k&&DKEY[k])?DKEY[k].label:'Life';return lab+' XP · Bond · Momentum';};
@@ -23469,7 +23471,21 @@ function raidSAInjectPanel(){ try{
   window.renderRoster=rfRenderGreatHall;renderRoster=rfRenderGreatHall;renderHeroes=rfRenderGreatHall;
 
   openHeroSheet=function(id){
-    var h=heroById(id);if(!h){toast('Hero not found');return;}var pr=rfPrestigeProgress(h),p=null;try{p=passiveOf(h);}catch(e){}var m=rfCatchupMult(h),vg=rfVanguardBond(),aff='';try{aff=affChips(h.aff);}catch(e){}var s=document.getElementById('sheet');if(!s)return;s.innerHTML='<div class="rfHeroSheet"><div class="ofRfHeroTop"><div class="ofRfHeroPortrait" style="--hc:'+E(h.color||'#36e0e6')+'">'+face(h)+'</div><div><div class="ofRfHeroName">'+E(h.name)+'</div><div class="ofRfHeroMeta">'+E((typeof ipLabel==='function')?ipLabel(h.ip):h.ip)+' · '+E(h.role||'Hero')+'</div><div class="ofRfHeroStars">Prestige ★'+pr.p+'</div></div></div><div class="ofRfHeroStats"><div><b>'+N(pr.x)+'</b><span>Lifetime Bond</span></div><div><b>'+N(powerOf(h))+'</b><span>Power</span></div><div><b>×'+m+'</b><span>Catch-up</span></div><div><b>'+N(vg)+'</b><span>Vanguard</span></div></div><div class="ofRfHeroBarRow"><span>Next Prestige ★'+(pr.p+1)+'</span><span>'+N(pr.need)+' Bond remaining</span></div><div class="xpbar"><i style="width:'+Math.max(2,Math.round(pr.pct))+'%;background:linear-gradient(90deg,#ff5d9e,#ffb01f)"></i></div><div style="margin-top:10px">'+aff+'</div>'+(p?'<div class="ofRfHeroNote"><b style="color:var(--ink)">'+E(p.name)+'</b> · '+E(p.desc||'Signature ability')+'</div>':'')+'<div class="ofRfHeroNote">Prestige is automatic. '+(m>1?'This hero earns ×'+m+' accelerated Bond until they approach 80% of your Vanguard.':'This hero is within 80% of your Vanguard and earns normal Bond.')+'</div><div class="ofRfHeroActions"><button class="primary" id="rfFocus">'+(S.focus===h.id?'★ Focus Hero':'☆ Make Focus')+'</button><button id="rfFav">'+((typeof isFavorite==='function'&&isFavorite(h.id))?'♥ Favorite':'♡ Favorite')+'</button><button id="rfJournal">Bond Journal</button><button id="rfClose">Close</button></div></div>';showScrim('scrim');s.querySelector('#rfFocus').onclick=function(){S.focus=(S.focus===h.id?null:h.id);save();openHeroSheet(h.id);};s.querySelector('#rfFav').onclick=function(){toggleFavorite(h.id);save();openHeroSheet(h.id);};s.querySelector('#rfJournal').onclick=function(){hideScrim();showBondJournal(h.id);};s.querySelector('#rfClose').onclick=hideScrim;
+    var h=heroById(id);if(!h){toast('Hero not found');return;}
+    var pr=rfPrestigeProgress(h),p=null;try{p=passiveOf(h);}catch(e){}
+    var m=rfCatchupMult(h),vg=rfVanguardBond(),aff='',canon='DPS';
+    try{aff=affChips(h.aff);}catch(e){}
+    try{var base=rfStaticHeroMap().get(h.id);canon=base&&base.role?normalizeRole(base.role):'DPS';}catch(e){}
+    var role=normalizeRole(h.role||canon),s=document.getElementById('sheet');if(!s)return;
+    function roleBtn(r,icon,desc){return '<button type="button" class="ofRfRoleBtn'+(role===r?' on':'')+'" data-rfrole="'+r+'"><b>'+icon+' '+r+'</b><span>'+desc+'</span></button>';}
+    s.innerHTML='<div class="rfHeroSheet"><div class="ofRfHeroTop"><div class="ofRfHeroPortrait" style="--hc:'+E(h.color||'#36e0e6')+'">'+face(h)+'</div><div><div class="ofRfHeroName">'+E(h.name)+'</div><div class="ofRfHeroMeta">'+E((typeof ipLabel==='function')?ipLabel(h.ip):h.ip)+' · '+E(role)+'</div><div class="ofRfHeroStars">Prestige ★'+pr.p+'</div></div></div><div class="ofRfHeroStats"><div><b>'+N(pr.x)+'</b><span>Lifetime Bond</span></div><div><b>'+N(powerOf(h))+'</b><span>Power</span></div><div><b>×'+m+'</b><span>Catch-up</span></div><div><b>'+N(vg)+'</b><span>Vanguard</span></div></div><div class="ofRfHeroBarRow"><span>Next Prestige ★'+(pr.p+1)+'</span><span>'+N(pr.need)+' Bond remaining</span></div><div class="xpbar"><i style="width:'+Math.max(2,Math.round(pr.pct))+'%;background:linear-gradient(90deg,#ff5d9e,#ffb01f)"></i></div><div style="margin-top:10px">'+aff+'</div><div class="ofRfRolePanel"><div class="ofRfRoleHead"><div><b>Combat Role</b><span>Change how this hero fights. This affects stats, team logic, Clash role and Draft Gauntlet.</span></div><button type="button" id="rfRoleReset"'+(role===canon?' disabled':'')+'>Reset · '+E(canon)+'</button></div><div class="ofRfRoleGrid">'+roleBtn('Tank','🛡','High HP · protects the line')+roleBtn('DPS','⚔','High damage · finishes fights')+roleBtn('Support','✦','Utility · healing and team support')+'</div></div>'+(p?'<div class="ofRfHeroNote"><b style="color:var(--ink)">'+E(p.name)+'</b> · '+E(p.desc||'Signature ability')+'</div>':'')+'<div class="ofRfHeroNote">Prestige is automatic. '+(m>1?'This hero earns ×'+m+' accelerated Bond until they approach 80% of your Vanguard.':'This hero is within 80% of your Vanguard and earns normal Bond.')+'</div><div class="ofRfHeroActions"><button class="primary" id="rfFocus">'+(S.focus===h.id?'★ Focus Hero':'☆ Make Focus')+'</button><button id="rfFav">'+((typeof isFavorite==='function'&&isFavorite(h.id))?'♥ Favorite':'♡ Favorite')+'</button><button id="rfJournal">Bond Journal</button><button id="rfClose">Close</button></div></div>';
+    showScrim('scrim');
+    s.querySelectorAll('[data-rfrole]').forEach(function(b){b.onclick=function(){var nr=normalizeRole(b.dataset.rfrole);if(nr===h.role&&h.roleCustom)return;h.role=nr;h.roleCustom=true;try{h.clashRole=inferClashRole(h);}catch(e){}RF.searchText.delete(h.id);try{recalcCollection();}catch(e){}save();toast(h.name+' is now '+nr+(h.clashRole?' · Clash: '+h.clashRole:'')+'.');openHeroSheet(h.id);};});
+    var rr=s.querySelector('#rfRoleReset');if(rr)rr.onclick=function(){h.role=canon;try{delete h.roleCustom;}catch(e){}try{h.clashRole=(typeof BALANCED_CLASH_ROLES!=='undefined'&&BALANCED_CLASH_ROLES[h.id])?BALANCED_CLASH_ROLES[h.id]:inferClashRole(h);}catch(e){}RF.searchText.delete(h.id);try{recalcCollection();}catch(e){}save();toast(h.name+' reset to '+canon+'.');openHeroSheet(h.id);};
+    s.querySelector('#rfFocus').onclick=function(){S.focus=(S.focus===h.id?null:h.id);save();openHeroSheet(h.id);};
+    s.querySelector('#rfFav').onclick=function(){toggleFavorite(h.id);save();openHeroSheet(h.id);};
+    s.querySelector('#rfJournal').onclick=function(){hideScrim();showBondJournal(h.id);};
+    s.querySelector('#rfClose').onclick=hideScrim;
   };window.openHeroSheet=openHeroSheet;
 
   function rfJournal(title,filter){var vg=rfVanguardBond(),a=allHeroes().filter(filter||function(){return true;}).sort(function(x,y){return rfBond(y)-rfBond(x);}).slice(0,100),o=document.createElement('div');o.className='ofRfJournal';o.innerHTML='<div class="ofRfJournalCard"><div class="ofRfJournalHead"><div><h3 style="margin:0">'+E(title)+'</h3><div style="color:var(--muted);font-size:11px;font-weight:750;margin-top:3px">Vanguard Bond '+N(vg)+' · top eight average</div></div><button id="rfJClose">Close</button></div><div style="margin-top:10px">'+a.map(function(h){var p=rfPrestigeForBond(rfBond(h)),m=rfCatchupMult(h,vg);return'<div class="ofRfJournalRow"><div>'+face(h)+'</div><div><b>'+E(h.name)+'</b><span>'+E((typeof ipLabel==='function')?ipLabel(h.ip):h.ip)+' · Bond '+N(rfBond(h))+(m>1?' · ×'+m+' catch-up':'')+'</span></div><strong>★'+p+'</strong></div>';}).join('')+'</div></div>';document.body.appendChild(o);o.querySelector('#rfJClose').onclick=function(){o.remove();};o.onclick=function(e){if(e.target===o)o.remove();};}
@@ -23715,5 +23731,122 @@ window.DRAFT_GAUNTLET_TUNE=DG;window.dgStartNew=dgStartNew;window.dgTeamRating=d
 /* ===== end v2.271.0 Draft Gauntlet ===== */
 
 </script>
+
+<style id="ofV272Styles">
+/* ===== v2.272.0 Reward Normalization + Auto Resolve + Combat Roles ===== */
+.ofRfRolePanel{border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line));background:rgba(255,255,255,.025);border-radius:14px;padding:10px;margin-top:10px}.ofRfRoleHead{display:flex;justify-content:space-between;gap:10px;align-items:center}.ofRfRoleHead b{display:block;font:900 11px Orbitron}.ofRfRoleHead span{display:block;color:var(--muted);font-size:10px;font-weight:750;margin-top:2px;line-height:1.3}.ofRfRoleHead button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:9px;padding:7px 8px;font-size:9px;font-weight:900}.ofRfRoleHead button:disabled{opacity:.35}.ofRfRoleGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}.ofRfRoleBtn{border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.18);color:var(--ink);padding:9px 6px;text-align:center}.ofRfRoleBtn.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent)}.ofRfRoleBtn b{display:block;font-size:10px}.ofRfRoleBtn span{display:block;color:var(--muted);font-size:8px;font-weight:700;line-height:1.25;margin-top:3px}
+.v272AutoCard{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid #ffd27a55;background:linear-gradient(135deg,rgba(255,210,122,.10),rgba(255,255,255,.025));border-radius:15px;padding:11px 12px;margin:10px 0 13px}.v272AutoCard b{display:block;font:900 11px Orbitron;color:#ffd27a}.v272AutoCard span{display:block;color:var(--muted);font-size:10px;font-weight:750;line-height:1.3;margin-top:2px}.v272AutoModes{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.v272AutoModes button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:9px;padding:7px 9px;font-size:9px;font-weight:950}.v272AutoModes button.on{border-color:#ffd27a;color:#1a1204;background:#ffd27a}.v272SubAuto{margin-left:auto;display:flex;gap:4px}.v272SubAuto button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:8px;padding:5px 7px;font-size:8px;font-weight:900}.v272SubAuto button.on{background:#ffd27a;color:#1a1204;border-color:#ffd27a}.v272RewardNote{border:1px solid rgba(122,240,168,.25);background:rgba(122,240,168,.07);border-radius:11px;padding:8px 10px;margin:8px 0;color:#aef6c6;font-size:11px;font-weight:850;line-height:1.35}.v272RewardNote b{color:#d9ffe5}
+@media(max-width:620px){.ofRfRoleGrid{grid-template-columns:1fr}.v272AutoCard{align-items:flex-start;flex-direction:column}.v272AutoModes{justify-content:flex-start}.ofRfRoleHead{align-items:flex-start;flex-direction:column}}
+</style>
+<script id="ofV272RewardAutoRole">
+/* ===== v2.272.0 REFORGED REWARD NORMALIZATION + AUTO RESOLVE SURFACE ===== */
+(function(){
+  'use strict';
+  window.__ofV272=true;
+  function mode(){try{return(S&&S.appSettings&&S.appSettings.autoMode)||'watch';}catch(e){return'watch';}}
+  function setMode(m){
+    if(m!=='off'&&m!=='watch'&&m!=='resolve')m='watch';
+    try{if(!S.appSettings)S.appSettings={};S.appSettings.autoMode=m;}catch(e){}
+    try{autoAdvance=m!=='off';autoResolve=m==='resolve';}catch(e){}
+    try{if(S.clash)S.clash.autoBattle=m!=='off';}catch(e){}
+    try{save();}catch(e){}
+    try{if(typeof ofRefreshAutoPills==='function')ofRefreshAutoPills();}catch(e){}
+    try{var v=document.getElementById('view');decorateAuto(v);}catch(e){}
+    try{toast(m==='resolve'?'Auto Resolve ON — trivial battles simulate silently and chain until a wall.':(m==='watch'?'Auto Watch ON — battles play visibly and advance.':'Battle automation OFF.'));}catch(e){}
+  }
+  window.v272SetAutoMode=setMode;
+  function buttons(cls){var m=mode();return '<div class="'+cls+'"><button data-v272auto="off" class="'+(m==='off'?'on':'')+'">Off</button><button data-v272auto="watch" class="'+(m==='watch'?'on':'')+'">Watch</button><button data-v272auto="resolve" class="'+(m==='resolve'?'on':'')+'">⚡ Resolve</button></div>';}
+  function wire(root){if(!root)return;root.querySelectorAll('[data-v272auto]').forEach(function(b){b.onclick=function(e){try{e.preventDefault();e.stopPropagation();}catch(_e){}setMode(b.dataset.v272auto);};});}
+  function decorateAuto(v){
+    if(!v)return;
+    try{
+      var hero=v.querySelector('.of2149WarHero');
+      if(hero&&!v.querySelector('.v272AutoCard')){hero.insertAdjacentHTML('afterend','<div class="v272AutoCard"><div><b>Battle Automation</b><span>Use Resolve to burn through trivial Campaign/Tower stages behind the scenes. It stops chaining when you lose. Draft choices remain manual.</span></div>'+buttons('v272AutoModes')+'</div>');wire(v.querySelector('.v272AutoCard'));}
+      var bar=v.querySelector('.of2149SubBar');
+      if(bar&&!bar.querySelector('.v272SubAuto')){bar.insertAdjacentHTML('beforeend',buttons('v272SubAuto'));wire(bar);}
+      var cur=mode();v.querySelectorAll('[data-v272auto]').forEach(function(b){b.classList.toggle('on',b.dataset.v272auto===cur);});
+    }catch(e){}
+  }
+  window.v272DecorateAuto=decorateAuto;
+  try{var rb=renderBattles;renderBattles=function(v){var r=rb.apply(this,arguments);decorateAuto(v);return r;};window.renderBattles=renderBattles;}catch(e){}
+  try{var rm=renderModes;renderModes=function(v){var r=rm.apply(this,arguments);decorateAuto(v);return r;};window.renderModes=renderModes;}catch(e){}
+
+  function ids(){try{return((battleState&&battleState.players)||[]).map(function(u){return u&&u.id;}).filter(Boolean);}catch(e){return[];}}
+  function grantTo(ids0,raw,source){var v=typeof rfVanguardBond==='function'?rfVanguardBond():0,out=[];(ids0||[]).forEach(function(id){var h=typeof heroById==='function'?heroById(id):null;if(!h)return;var g=typeof rfGrantBond==='function'?rfGrantBond(h,raw,source,true,v):null;if(g)out.push(g);});return out;}
+  function insertNote(text){try{var r=document.getElementById('arenaResult');if(!r)return;var old=r.querySelector('.v272RewardNote');if(old)old.remove();var first=r.querySelector('p');if(first)first.insertAdjacentHTML('afterend','<div class="v272RewardNote">'+text+'</div>');else r.insertAdjacentHTML('beforeend','<div class="v272RewardNote">'+text+'</div>');}catch(e){}}
+  function stripGhost(){try{var r=document.getElementById('arenaResult');if(!r)return;r.querySelectorAll('p').forEach(function(p){var t=p.textContent||'';if(/Loot:|Boss Core|Spark|Stone|\bgear\b|Hero Cores|\bGold\b|\bDust\b/i.test(t))p.remove();});}catch(e){}}
+
+  /* Campaign: replace inherited EXP->Bond runaway with the intentionally capped Reforged curve. */
+  try{
+    var oldGain=gainExp;
+    gainExp=function(amount){
+      try{
+        if(window.__v272CampaignRewardCtx){
+          var ctx=window.__v272CampaignRewardCtx,st=Math.max(1,Number(ctx.stage)||1),boss=st%(TUNE.bossEvery||5)===0;
+          var extra=boss?(10+Math.min(20,st*.20)):Math.min(15,st*.15);
+          grantTo(ctx.ids||[],extra,'Campaign Stage '+st+(boss?' Boss':''));
+          window.__v272CampaignLast={stage:st,boss:boss,extra:extra};
+          return;
+        }
+      }catch(e){}
+      return oldGain.apply(this,arguments);
+    };window.gainExp=gainExp;
+  }catch(e){}
+
+  /* Tower: ordinary floors stay at the base combat Bond. Mini/major floors become real Bond milestones. */
+  try{
+    var oldEnd=endBattle;
+    endBattle=function(win){
+      var bm=null,f=0,st=0,ps=[],isDG=false;
+      try{bm=battleMode;f=Number(S.tower)||1;st=Number(S.stage)||1;ps=ids();isDG=!!(battleGauntlet&&window.__draftGauntletActive);}catch(e){}
+      if(win&&!isDG&&bm==='campaign'&&!battleReplay)window.__v272CampaignRewardCtx={stage:st,ids:ps.slice()};
+      var ret;try{ret=oldEnd.apply(this,arguments);}finally{window.__v272CampaignRewardCtx=null;}
+      try{
+        if(win&&!isDG&&bm==='tower'&&!battleReplay){
+          var major=f%(TUNE.towerMajorEvery||50)===0,mini=!major&&f%(TUNE.towerMiniEvery||10)===0,extra=major?30:(mini?10:0);
+          if(extra>0)grantTo(ps,extra,'Tower Floor '+f+(major?' Major':' Mini'));
+          if(major&&typeof rfGrantRosterBond==='function'){rfGrantRosterBond(5,'Tower Floor '+f+' milestone',false);try{addWin('Tower Milestone','Cleared Floor '+f+'.','hobbies');}catch(e){}}
+          try{save();}catch(e){}
+          setTimeout(function(){stripGhost();insertNote('<b>Reforged reward:</b> '+(major?'50':mini?'30':'20')+' base Bond per deployed hero'+(major?' · +5 Bond to the entire roster':'')+' · Vanguard catch-up applies.');},0);
+        }else if(win&&!isDG&&bm==='campaign'&&!battleReplay){
+          var boss=st%(TUNE.bossEvery||5)===0,extra2=boss?(10+Math.min(20,st*.20)):Math.min(15,st*.15),base=Math.round((20+extra2)*10)/10;
+          setTimeout(function(){stripGhost();insertNote('<b>Reforged reward:</b> about '+base+' base Bond per deployed hero'+(boss?' · Boss clear':'')+' · capped scaling · Vanguard catch-up applies.');},0);
+        }
+      }catch(e){}
+      return ret;
+    };window.endBattle=endBattle;
+  }catch(e){}
+
+  /* Raid milestones now pay explicit roster Bond; 100% keeps Grace. */
+  try{
+    raidTierLabel=function(t){return({25:'+5 roster Bond',50:'+10 roster Bond',75:'+20 roster Bond',100:'+40 roster Bond + Grace'})[t]||'';};
+    grantRaidTier=function(t){var b=({25:5,50:10,75:20,100:40})[t]||0;if(b&&typeof rfGrantRosterBond==='function')rfGrantRosterBond(b,'Raid '+t+'% milestone',false);if(t===100){S.grace=(S.grace||0)+1;try{addWin('Raid Boss Defeated',currentBoss().name+' defeated.','hobbies');}catch(e){}}return 'Raid '+t+'% · +'+b+' roster Bond'+(t===100?' · +1 Grace':'');};
+    grantRaidOverkill=function(){var b=5;if(typeof rfGrantRosterBond==='function')rfGrantRosterBond(b,'Raid overkill',false);return 'Overkill · +'+b+' roster Bond';};
+    window.raidTierLabel=raidTierLabel;window.grantRaidTier=grantRaidTier;window.grantRaidOverkill=grantRaidOverkill;
+  }catch(e){}
+
+  /* Room clears: explicit room-specific Bond on top of the universal battle reward. */
+  try{
+    var oldRoom=roomEndBattle;
+    roomEndBattle=function(win){
+      var rb=null,ps=[],first=false,tier=1,k='';
+      try{rb=battleRoom?Object.assign({},battleRoom):null;ps=ids();if(rb){tier=Number(rb.tier)||1;k=rb.k||'';var rr=ensureRooms();first=tier>((rr.clears&&rr.clears[k])|0);}}catch(e){}
+      var ret=oldRoom.apply(this,arguments);
+      if(win&&rb){var extra=5+Math.min(15,tier)+(first?5:0);grantTo(ps,extra,'Room '+k+' Tier '+tier+(first?' first clear':''));try{save();}catch(e){}setTimeout(function(){insertNote('<b>Room Bond:</b> +'+extra+' additional Bond per deployed hero'+(first?' · first-clear bonus':'')+' · catch-up applies.');},0);}return ret;
+    };window.roomEndBattle=roomEndBattle;
+  }catch(e){}
+
+  /* War Table copy now speaks Reforged reward language. */
+  function rewriteCards(v){try{if(!v)return;var q=function(t){return v.querySelector('[data-war-target="'+t+'"] .of2149WarDesc');};var a=q('campaign');if(a)a.textContent='Push the main road for capped hero Bond and Stage progression.';a=q('tower');if(a)a.textContent='Climb focused floors; every 10th and 50th floor becomes a Bond milestone.';a=q('clash');if(a)a.textContent='Chapter fights with first-clear and training Bond rewards.';a=q('raid');if(a)a.textContent='Weekly boss pressure with roster-wide Bond milestones and Grace at 100%.';a=q('rooms');if(a)a.textContent='Domain trials with explicit hero Bond and first-clear bonuses.';}catch(e){}}
+  try{var rb2=renderBattles;renderBattles=function(v){var r=rb2.apply(this,arguments);rewriteCards(v);decorateAuto(v);return r;};window.renderBattles=renderBattles;}catch(e){}
+  try{var rm2=renderModes;renderModes=function(v){var r=rm2.apply(this,arguments);rewriteCards(v);decorateAuto(v);return r;};window.renderModes=renderModes;}catch(e){}
+
+  /* Sync existing saved preference to runtime on boot and expose QA helpers. */
+  try{if(typeof lqAutoRestore==='function')lqAutoRestore();}catch(e){}
+  window.__V272_QA={setAuto:setMode,autoMode:mode,campaignExtra:function(stage){stage=Math.max(1,Number(stage)||1);var boss=stage%(TUNE.bossEvery||5)===0;return boss?(10+Math.min(20,stage*.20)):Math.min(15,stage*.15);},towerBase:function(f){f=Math.max(1,Number(f)||1);return f%(TUNE.towerMajorEvery||50)===0?50:(f%(TUNE.towerMiniEvery||10)===0?30:20);},raidBond:function(t){return({25:5,50:10,75:20,100:40})[t]||0;}};
+})();
+/* ===== end v2.272.0 ===== */
+</script>
+
 </body>
 </html>
