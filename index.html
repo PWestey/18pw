@@ -1038,7 +1038,7 @@ const TUNE={
   streakBonusPer:3, streakBonusCap:3,  // +1h charge per 3-day streak, capped
   teamSize:8, habitChargeCap:3, dailyChargeCap:24, maxStoredCharge:48,  // heroes per battle team + charge safeguards
   clashStageGrowth:1.012, clashEliteMult:1.15, clashBossMult:1.35, clashChapterBossMult:1.75, clashReplayRewardMult:0.2,
-  clashHeroAdv:2.0, clashHeroDis:0.5, clashEnemyAdv:1.5, clashEnemyDis:0.75, clashOptAdvWeight:1.6, clashOptDisWeight:0.45, clashCapPerChapter:0.5, clashWallTau:10, /* v2.193.1 ideal (measured): boost saturates at cap×tau (+5.0) — deep-game chapter bosses ~1/3 win, normals always farmable, never bricks. Measured: tau 9=all wins, 10=bosses 1/3 @ch100, 11=bosses 0/3. */
+  clashHeroAdv:2.0, clashHeroDis:0.5, clashEnemyAdv:1.5, clashEnemyDis:0.75, clashOptAdvWeight:2.1, clashOptDisWeight:0.45, clashCapPerChapter:0.5, clashWallTau:10, /* v2.193.1 ideal (measured): boost saturates at cap×tau (+5.0) — deep-game chapter bosses ~1/3 win, normals always farmable, never bricks. Measured: tau 9=all wins, 10=bosses 1/3 @ch100, 11=bosses 0/3. */
   /* v2.191.0: drain 5%→15%/day + price float 0.8%→2% — ~3× hoard burn at similar level pace (levels/day ≈ drain/float × habit amp) */
   ecoDrainPct:0.15, ecoFloorFrac:0.25, ecoFloorGoldMin:5000000, ecoFloorDustMin:5000000, ecoFloorCryMin:8000, ecoFloatFrac:0.02, ecoSinkMinGold:25000, ecoSinkMinCry:25,
   convCoreCapBase:25, convCoreCapPerDomain:5, convCoreCapPerRep:1, convBossCapPerRep:0.3,
@@ -2792,7 +2792,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.272.3-reforged-clash-portrait-hotfix'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.272.5-reforged-clash-first-clear-reset'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -3163,6 +3163,21 @@ async function load(){
   try{ S=rfHydrateCompactSave(S); }catch(e){}
   try{ if(typeof loadPortraits==='function') await loadPortraits(); }catch(e){}
   migrate();
+  /* v2.272.5: one-time Clash reward restoration. Rewind only Clash progress/first-clear history;
+     preserve heroes, Bond, squads, seed, speed, and every other game mode. */
+  try{
+    if(!S.rfClashFirstClearResetV2725){
+      try{ if(typeof ensureClashState==='function') ensureClashState(); }catch(_e){}
+      if(!S.clash||typeof S.clash!=='object') S.clash={};
+      S.clash.chapter=1;
+      S.clash.stage=1;
+      S.clash.clears={};
+      S.clash.lastResult=null;
+      S.clash.autoBattle=false;
+      S.rfClashFirstClearResetV2725=Date.now();
+      try{ console.info('Oathforge v2.272.5: Clash reset to Chapter 1 · Stage 1; first-clear rewards restored.'); }catch(_e){}
+    }
+  }catch(e){ try{console.warn('Clash first-clear reset skipped',e);}catch(_e){} }
   applyTuneOverrides();
   recalcCollection();
   const albumMsgs=checkAlbums();
@@ -15389,6 +15404,57 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     }
     return picks;
   }
+
+  /* v2.272.4: typed-lane counter floor.
+     Global best-pair scoring remains the first pass, but every typed lane is then
+     guaranteed at least 3 advantageous heroes when the roster can supply them.
+     Role floors are protected while making the least-cost replacements. */
+  function c7OptimizeCounterCoverage(picks,owned,ch,pattern,boss,minPerLane){
+    const lanes=c7Lanes(ch), target=Math.max(0,Math.min(C7_ROWS.length,Math.floor(minPerLane||3)));
+    const minTank=c7IsFive(ch)?2:1, minUtility=c7IsFive(ch)?2:1, maxUtility=c7IsFive(ch)?4:2;
+    const isUtility=h=>!!(h&&(h.clashRole==='Support'||h.clashRole==='Healer'));
+    const counts=()=>{
+      let tank=0,utility=0;
+      (picks||[]).forEach(id=>{ const h=c7HeroById(id); if(!h)return; if(h.clashRole==='Tank')tank++; if(isUtility(h))utility++; });
+      return {tank,utility};
+    };
+    lanes.forEach(lane=>{
+      const laneType=c7LaneType(lane,ch,c7Stage(),pattern);
+      if(!laneType) return;
+      const idxs=[];
+      for(let i=0;i<picks.length;i++){ const slot=c7SlotMeta(i,ch); if(slot.lane===lane.key) idxs.push(i); }
+      const advPool=owned.filter(h=>c7Match(h.elementType,laneType)==='advantage');
+      const desired=Math.min(target,idxs.length,advPool.length);
+      const isAdvIdx=i=>{ const h=c7HeroById(picks[i]); return !!(h&&c7Match(h.elementType,laneType)==='advantage'); };
+      let have=idxs.filter(isAdvIdx).length, guard=0;
+      while(have<desired && guard++<12){
+        const picked=new Set((picks||[]).filter(Boolean));
+        const candidates=advPool.filter(h=>!picked.has(h.id));
+        if(!candidates.length) break;
+        const rc=counts();
+        let best=null,bestDelta=-Infinity;
+        candidates.forEach(cand=>{
+          idxs.forEach(i=>{
+            if(isAdvIdx(i)) return;
+            const cur=c7HeroById(picks[i]), curTank=!!(cur&&cur.clashRole==='Tank'), candTank=cand.clashRole==='Tank',
+                  curUtil=isUtility(cur), candUtil=isUtility(cand);
+            const tankAfter=rc.tank-(curTank?1:0)+(candTank?1:0);
+            const utilAfter=rc.utility-(curUtil?1:0)+(candUtil?1:0);
+            if(tankAfter<minTank||utilAfter<minUtility||utilAfter>maxUtility) return;
+            const slot=c7SlotMeta(i,ch);
+            let delta=c7HeroScore(cand,slot,pattern,boss)-(cur?c7HeroScore(cur,slot,pattern,boss):0);
+            if(cur&&cand.clashRole===cur.clashRole) delta+=Math.abs(delta)*.03+0.01; /* tie-break toward role stability */
+            if(delta>bestDelta){ bestDelta=delta; best={i,cand}; }
+          });
+        });
+        if(!best) break;
+        picks[best.i]=best.cand.id;
+        have=idxs.filter(isAdvIdx).length;
+      }
+    });
+    return picks;
+  }
+
   window.clashAutoOptimize=function(showToast){
     try{
       const ch=c7Chapter(), st=c7Stage(), need=c7SlotCount(ch), pattern=c7Pattern(ch,st), boss=c7Boss(ch,st), owned=c7Owned().slice();
@@ -15406,11 +15472,12 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
       c7OptimizeRoleCoverage(picks,owned,['Tank'],c7IsFive(ch)?2:1,ch,pattern,boss);
       c7OptimizeRoleCoverage(picks,owned,['Healer','Support'],c7IsFive(ch)?2:1,ch,pattern,boss);
       c7CapRoleCoverage(picks,owned,['Healer','Support'],c7IsFive(ch)?4:2,ch,pattern,boss);
+      c7OptimizeCounterCoverage(picks,owned,ch,pattern,boss,3);
       let finalIds=picks.filter(Boolean).slice(0,need);
       // Preserve role-aware slot placement from the per-slot pass; do NOT re-sort by power (that scrambled the formation).
       S[c7SquadKey(ch)]=finalIds;
       if(typeof save==='function') save();
-      if(showToast) safeToast7(c7IsFive(ch)?'5-lane Clash squad optimized.':'Clash squad optimized.');
+      if(showToast) safeToast7(c7IsFive(ch)?'5-lane Clash optimized · 3+ counters per typed lane.':'Clash squad optimized · counter coverage secured.');
       if(document.getElementById('clashSquadEditorOverlay')) openClashSquadEditor(window.__clashEditingSlot||0);
       if(typeof render==='function') render();
     }catch(e){ console.error('clashAutoOptimize v7 failed',e); if(showToast) safeToast7('Optimize failed: '+(e.message||e)); }
@@ -15452,7 +15519,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
     const nodes=[]; for(let i=0;i<8;i++){ const s=(i+1)*10, pattern=chapterData.patterns[i], boss=chapterData.bosses[i], active=getClashPatternIndexForStage(currentStage)===i, cleared=currentStage>s; nodes.push('<div class="clashSeg '+(active?'active ':'')+(cleared?'cleared ':'')+(s===80?'final':'')+'"><div class="segTop"><b>'+(s===80?'Final':'Boss')+' '+s+'</b><span>'+esc7(c7BossBehaviorLabel(boss.behavior))+'</span></div><div class="segTypes">'+(c7IsFive(ch)?c7ElementBadge(null,true):'')+elementBadge(pattern.left,true)+elementBadge(pattern.center,true)+elementBadge(pattern.right,true)+(c7IsFive(ch)?c7ElementBadge(null,true):'')+'</div></div>'); }
     return '<div class="clashChapterPath">'+nodes.join('')+'</div>';
   }
-  function c7RewardPreviewHTML(ch,stage,kind){ const first=clashIsFirstClear(ch,stage), r=getClashRewardPreview(ch,stage,kind,first); return '<div class="clashRewardPreview"><div class="clashBoxHead"><b>🎁 '+(first?'First-clear rewards':'Replay rewards')+'</b><span>'+cap7(kind)+'</span></div><div class="clashRewardGrid"><div><b>⦿ '+r.gold+'</b><span>Gold</span></div><div><b>❖ '+r.dust+'</b><span>Dust</span></div><div><b>♥ '+r.bondXp+'</b><span>Bond XP</span></div></div>'+(r.extra&&r.extra.length?'<div class="clashExtras">'+r.extra.map(esc7).join(' · ')+'</div>':'')+'</div>'; }
+  function c7RewardPreviewHTML(ch,stage,kind){ const first=clashIsFirstClear(ch,stage), r=getClashRewardPreview(ch,stage,kind,first); return '<div class="clashRewardPreview"><div class="clashBoxHead"><b>🎁 '+(first?'First-clear rewards':'Replay rewards')+'</b><span>'+cap7(kind)+'</span></div><div class="clashRewardGrid"><div><b>⦿ '+r.gold+'</b><span>Gold</span></div><div><b>❖ '+r.dust+'</b><span>Dust</span></div><div><b>♥ '+r.bondXp+'</b><span>Squad Bond</span></div></div>'+(r.extra&&r.extra.length?'<div class="clashExtras">'+r.extra.map(esc7).join(' · ')+'</div>':'')+'</div>'; }
   window.clashFoundationHTML=function(){
     try{ if(typeof ensureClashState==='function') ensureClashState(); c7EnsureSquad(c7Chapter()); }catch(e){}
     const c=S.clash, ch=c.chapter||1, stage=c.stage||1, cd=getClashChapterData(ch), idx=getClashPatternIndexForStage(stage), pattern=cd.patterns[idx], kind=getClashStageKind(stage), progress=Math.round(((stage-1)/80)*100), tp=clashTeamPower(), slots=c7SlotCount(ch);
@@ -15655,7 +15722,7 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
   function c7ApplyRewards(win){
     const c=S.clash, key=c.chapter+'-'+c.stage, kind=battle7.kind, denom=Math.max(1,battle7.heroes.length), ids=battle7.heroes.map(h=>h.id);
     if(!win){
-      const training=getClashRewardPreview(c.chapter,c.stage,kind,true), perHeroBond=Math.max(1,Math.round((training.bondXp||0)/denom));
+      const training=getClashRewardPreview(c.chapter,c.stage,kind,false), perHeroBond=Math.max(1,Math.round((training.bondXp||0)/denom));
       if(window.of2140GrantWarTableBond) window.of2140GrantWarTableBond(ids,perHeroBond,'Clash Training '+c.chapter+'-'+c.stage,{benchPct:0.25});
       else battle7.heroes.forEach(h=>{ const real=(S.heroes||[]).find(x=>x.id===h.id); if(real) real.bondXp=(real.bondXp||0)+perHeroBond; });
       return {first:false,reward:{gold:0,dust:0,stones:0,bondXp:training.bondXp||0,extra:['bond training']}};
@@ -23701,7 +23768,19 @@ function raidSAInjectPanel(){ try{
   heroQuestEligible=function(h){return!!(h&&h.owned&&rfBond(h)>=25);};heroQuestReq=function(h){return Math.max(2,Math.min(6,2+rfPrestigeForBond(rfBond(h))));};
   grantBalanceChest=function(){var W=ensureLifeWeek(),st=balanceChestStatus();if(!st.tier){toast('Touch '+st.missing+' more life domain'+(st.missing===1?'':'s')+'.');return;}if(W.balanceClaimed)return;W.balanceClaimed=true;var b=st.n>=8?30:st.n>=6?20:10;rfGrantRosterBond(b,'Balanced week',false);if(st.n>=8)S.grace=(S.grace||0)+1;toast('Balanced week secured · +'+b+' roster Bond'+(st.n>=8?' · +1 Grace':'')+'.');};
   try{claimHeroQuest=function(id){var h=(S.heroes||[]).find(function(x){return x&&x.id===id;});if(!h)return;var st=heroQuestStatus(h);if(st.claimed||!st.ready)return;var H=ensureHeroQuests(),r=heroQuestReward(h);H.claimed[h.id]=true;var g=rfGrantBond(h,Math.max(8,(r&&r.bond)||12),'Hero Quest',true,rfVanguardBond());try{addWin('Hero Quest Complete',h.name+' completed '+heroQuestName(h)+'.',(h.aff||[])[0]||null);}catch(e){}try{toast('Hero Quest: '+h.name+' +'+Math.round(g.xp)+' Bond');}catch(e){}};}catch(e){}
-  try{getClashRewardPreview=function(ch,st,kind,first){var globalStage=(ch-1)*80+st,b=Math.round(8+Math.min(55,globalStage*.45));if(kind==='elite')b=Math.round(b*1.25);if(kind==='boss')b=Math.round(b*1.8);if(kind==='chapterBoss')b=Math.round(b*2.5);if(!first)b=Math.max(3,Math.round(b*.35));return{gold:0,dust:0,stones:0,bondXp:b,extra:[first?'first clear':'training']};};}catch(e){}
+  try{getClashRewardPreview=function(ch,st,kind,first){
+    var globalStage=Math.max(1,(Math.max(1,Number(ch)||1)-1)*80+Math.max(1,Number(st)||1));
+    /* Reforged Clash payout is intentionally per participating hero, then represented
+       here as a squad pool because C7 divides bondXp by hero count on award. */
+    var each=Math.round(10+Math.min(20,globalStage*.10));
+    if(kind==='elite')each=Math.round(each*1.25);
+    if(kind==='boss')each=Math.round(each*1.60);
+    if(kind==='chapterBoss')each=Math.round(each*2.20);
+    if(!first)each=Math.max(2,Math.round(each*.20));
+    var squadSize=(Math.max(1,Number(ch)||1)>=2)?25:15;
+    var total=each*squadSize;
+    return{gold:0,dust:0,stones:0,bondXp:total,bondEach:each,extra:[each+' Bond each · '+(first?'first clear':'training/replay')]};
+  };}catch(e){}
   try{siegeWaveReward=function(w){return{exp:0,bond:Math.max(5,5+Math.min(18,w))};};siegeMilestoneReward=function(depth){return depth>0&&depth%5===0?{milestone:depth}:null;};siegeApplyReward=function(){};siegeHaulChipsHTML=function(){return'';};expeditionRewardFor=function(){return{gold:0,dust:0,exp:0,cry:0,cores:0,stones:0,sparks:0,tickets:0};};expRewardText=function(){return'Crew Bond · catch-up applies';};riftApplyReward=function(){};gauntletMetaReward=function(){return{gold:0,dust:0,cores:0,cry:0};};arenaRankReward=function(){return{gold:0,dust:0,exp:0,cores:0};};arenaTierReward=function(rank){return{milestone:rank};};conquestFirstClearReward=function(t){return{gold:0,dust:0,cores:0,cry:0,exp:0,tokens:0};};conquestRepeatReward=function(t){return{gold:0,dust:0,cores:0,cry:0,exp:0,tokens:0};};conquestApplyReward=function(){};conquestRewardChips=function(){return'';};roomReward=function(){return{};};}catch(e){}
 
   /* Event-driven idle Bond. No 1.5-second save loop. */
@@ -24282,6 +24361,12 @@ window.DRAFT_GAUNTLET_TUNE=DG;window.dgStartNew=dgStartNew;window.dgTeamRating=d
     if(r.removed&&r.removed.length){try{save();}catch(e){}try{renderHUD();render();}catch(e){}}
   })();
 })();
+</script>
+<script id="ofClash2724Marker">
+/* v2.272.4 — Clash optimizer counter coverage + Reforged Bond restoration.
+   First clears: 10–30 Bond per hero normal (boss multipliers apply).
+   Replays/training: 20% rate. Typed lanes target >=3 advantageous heroes. */
+try{window.OATHFORGE_CLASH_2724={counterFloor:3,firstClearEachMin:10,firstClearEachMax:30,replayRate:.20,optAdvWeight:2.1};}catch(e){}
 </script>
 </body>
 </html>
