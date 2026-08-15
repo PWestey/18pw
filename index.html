@@ -2792,7 +2792,7 @@ function affChips(aff){ return (aff||[]).map(k=>DKEY[k]?'<span style="display:in
 function metaChips(h){ const bits=[]; if(h.archetype) bits.push('<span style="display:inline-block;font-size:11px;font-weight:900;padding:2px 9px;border-radius:9px;background:'+h.color+'24;color:'+h.color+';margin:0 6px 6px 0">✦ '+esc(h.archetype)+'</span>'); (h.tags||[]).slice(0,6).forEach(t=>bits.push('<span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;background:#ffffff12;color:var(--muted);margin:0 6px 6px 0">#'+esc(t)+'</span>')); return bits.join(''); }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const SAVE_VERSION=32;
-const APP_BUILD='v2.272.0-reforged-reward-auto-role'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
+const APP_BUILD='v2.272.3-reforged-clash-portrait-hotfix'; try{ window.OATHFORGE_VERSION=APP_BUILD; }catch(e){} /* v2.264.1: expose build for oathforge-cloud.js metadata */
 const EXPECTED_ROSTER_COUNT=553;
 function fmtSaved(ts){ if(!ts) return 'Not yet'; try{return new Date(ts).toLocaleString([], {month:'short',day:'2-digit',hour:'numeric',minute:'2-digit'});}catch(e){return 'Unknown';} }
 function storageLabel(){ try{ if(location.protocol==='file:') return 'Local file'; return location.host||'Preview'; }catch(e){ return 'Preview'; } }
@@ -15756,6 +15756,289 @@ if(__clashPass1Render){ render=function(){ injectClashPass1Styles(); return __cl
 .clashAdvChart .clashAdvArrow{opacity:.5;font-weight:900;font-size:11px;color:#c7cfe6}
 .laneLabel{display:inline-flex;gap:4px;align-items:center}
 </style>
+<style id="ofClashCanonicalPortraitsV2723">
+/* ===== v2.272.3 — canonical Squadron Clash portrait/layout sizing =====
+   Static by design: Clean Core must not depend on historical render-wrapper
+   style injectors for preview/editor/battle portrait geometry. */
+
+/* Hub formation preview */
+.clashFormation.c7{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:6px!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:8px 0 0!important;
+  align-items:stretch!important;
+  overflow:visible!important;
+}
+.clashFormation.c7.five{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+.clashFormation.c7 .clashSlot.c7{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:auto!important;
+  min-height:92px!important;
+  margin:0!important;
+  padding:6px 4px!important;
+  overflow:hidden!important;
+  border:1px solid var(--line)!important;
+  border-radius:11px!important;
+  background:var(--bg)!important;
+  color:var(--ink)!important;
+  text-align:center!important;
+  font-family:Rajdhani,system-ui,sans-serif!important;
+}
+.clashFormation.c7 .clashSlot.c7.advantage{border-color:#37d67a66!important;background:#37d67a0d!important}
+.clashFormation.c7 .clashSlot.c7.disadvantage{border-color:#ff5d6c55!important;background:#ff5d6c0d!important}
+.clashFormation.c7 .clashSlot.c7 .csRow{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0 0 4px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-family:Orbitron,system-ui,sans-serif!important;
+  font-size:8px!important;
+  line-height:1.15!important;
+  font-weight:1000!important;
+  letter-spacing:.35px!important;
+  color:var(--muted)!important;
+  text-transform:uppercase!important;
+}
+.clashFormation.c7 .clashSlot.c7 .csFace{
+  display:block!important;
+  flex:0 0 44px!important;
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  min-height:44px!important;
+  max-width:44px!important;
+  max-height:44px!important;
+  aspect-ratio:1/1!important;
+  box-sizing:border-box!important;
+  margin:0 auto 5px!important;
+  padding:0!important;
+  border-radius:11px!important;
+  overflow:hidden!important;
+  line-height:0!important;
+}
+.clashFormation.c7 .clashSlot.c7 .csFace img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:100%!important;
+  min-height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:cover!important;
+  object-position:center top!important;
+  margin:0!important;
+  padding:0!important;
+}
+.clashFormation.c7 .clashSlot.c7 .csMeta{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:8px!important;
+  line-height:1.2!important;
+  font-weight:850!important;
+  color:var(--muted)!important;
+}
+
+/* Squad editor: static geometry, independent of old injected styles */
+.clashEditGrid.c7{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:6px!important;
+  width:100%!important;
+  max-width:100%!important;
+}
+.clashEditGrid.c7.five{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+.clashEditGrid.c7 .clashEditSlot{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  padding:6px 4px!important;
+  border-radius:11px!important;
+}
+.clashEditGrid.c7 .cesTop,
+.clashEditGrid.c7 .cesName,
+.clashEditGrid.c7 .cesSub{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.clashEditGrid.c7 .cesFace{
+  display:block!important;
+  flex:0 0 42px!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  min-height:42px!important;
+  max-width:42px!important;
+  max-height:42px!important;
+  aspect-ratio:1/1!important;
+  margin:5px auto!important;
+  padding:0!important;
+  border-radius:11px!important;
+  overflow:hidden!important;
+  line-height:0!important;
+}
+.clashEditGrid.c7 .cesFace img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:cover!important;
+  object-position:center top!important;
+  margin:0!important;
+}
+
+/* Candidate list */
+.clashCandidate{
+  box-sizing:border-box!important;
+  display:grid!important;
+  grid-template-columns:42px minmax(0,1fr) auto!important;
+  gap:9px!important;
+  align-items:center!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.clashCandidate .ccFace{
+  display:block!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  min-height:42px!important;
+  max-width:42px!important;
+  max-height:42px!important;
+  aspect-ratio:1/1!important;
+  padding:0!important;
+  border-radius:12px!important;
+  overflow:hidden!important;
+  line-height:0!important;
+}
+.clashCandidate .ccFace img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:cover!important;
+  object-position:center top!important;
+  margin:0!important;
+}
+.clashCandidate .ccMeta{min-width:0!important;overflow:hidden!important}
+
+/* Live Clash battle portraits */
+.clashBattleOverlay.c7 .heroTile{
+  box-sizing:border-box!important;
+  flex:0 0 36px!important;
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  min-height:36px!important;
+  max-width:36px!important;
+  max-height:36px!important;
+  aspect-ratio:1/1!important;
+  padding:0!important;
+  overflow:hidden!important;
+  line-height:0!important;
+}
+.clashBattleOverlay.c7 .heroTile img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:cover!important;
+  object-position:center top!important;
+  margin:0!important;
+}
+
+/* iPhone sizing */
+@media(max-width:430px){
+  .clashFormation.c7.three{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+  }
+  .clashFormation.c7.three .clashSlot.c7{
+    min-height:86px!important;
+    padding:5px 3px!important;
+  }
+  .clashFormation.c7.three .clashSlot.c7 .csFace{
+    flex-basis:40px!important;
+    width:40px!important;height:40px!important;
+    min-width:40px!important;min-height:40px!important;
+    max-width:40px!important;max-height:40px!important;
+  }
+  .clashFormation.c7.five{
+    grid-template-columns:repeat(5,minmax(56px,1fr))!important;
+    gap:3px!important;
+    overflow-x:auto!important;
+    padding-bottom:3px!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .clashFormation.c7.five .clashSlot.c7{
+    min-width:56px!important;
+    min-height:78px!important;
+    padding:4px 2px!important;
+  }
+  .clashFormation.c7.five .clashSlot.c7 .csFace{
+    flex-basis:34px!important;
+    width:34px!important;height:34px!important;
+    min-width:34px!important;min-height:34px!important;
+    max-width:34px!important;max-height:34px!important;
+  }
+  .clashEditGrid.c7.five{
+    grid-template-columns:repeat(5,minmax(56px,1fr))!important;
+    overflow-x:auto!important;
+    padding-bottom:3px!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .clashEditGrid.c7.five .clashEditSlot{min-width:56px!important}
+  .clashEditGrid.c7.five .cesFace{
+    flex-basis:32px!important;
+    width:32px!important;height:32px!important;
+    min-width:32px!important;min-height:32px!important;
+    max-width:32px!important;max-height:32px!important;
+  }
+  .clashBattleOverlay.c7 .heroTile{
+    flex-basis:28px!important;
+    width:28px!important;height:28px!important;
+    min-width:28px!important;min-height:28px!important;
+    max-width:28px!important;max-height:28px!important;
+  }
+}
+</style>
 <style id="ofStrikeV1">
 .ofStrikeOverlay{position:fixed;inset:0;z-index:2147483600;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(3,6,14,.78);backdrop-filter:blur(10px);opacity:0;transition:opacity .18s}
 .ofStrikeOverlay.show{opacity:1}
@@ -23848,5 +24131,157 @@ window.DRAFT_GAUNTLET_TUNE=DG;window.dgStartNew=dgStartNew;window.dgTeamRating=d
 /* ===== end v2.272.0 ===== */
 </script>
 
+
+<script id="ofReforgedBenchBondV2721">
+/* ===== v2.272.1 Reforged Bench Bond Tuning =====
+   Tiny Oath-wide Bond now scales gently for heroes far behind Vanguard.
+   This is deliberately NOT combat catch-up: active use remains dramatically faster. */
+(function(){
+  'use strict';
+  var BASE_GLOBAL=.05, CATCH_START=100;
+  function heroBond(h){return Math.max(0,Number(h&&h.bondXp)||0);}
+  function globalOathPct(h,v){
+    v=Math.max(0,Number(v)||0);
+    if(v<CATCH_START)return BASE_GLOBAL;
+    var r=heroBond(h)/Math.max(1,v);
+    if(r>=.80)return .05;
+    if(r>=.60)return .075;
+    if(r>=.40)return .10;
+    if(r>=.10)return .15;
+    return .20;
+  }
+  window.rfGlobalOathPct=globalOathPct;
+
+  gainBond=function(domain,amount){
+    if(!(amount>0))return[];
+    var notable=[],base=Math.max(.1,Number(amount)||1),v=(typeof rfVanguardBond==='function'?rfVanguardBond():0);
+    (S&&Array.isArray(S.heroes)?S.heroes:[]).forEach(function(h){
+      if(!h||!h.owned)return;
+      var global=base*globalOathPct(h,v);
+      var match=(domain&&Array.isArray(h.aff)&&h.aff.indexOf(domain)>=0)?base:0;
+      var focus=(S.focus===h.id)?base*2:0;
+      if(global>0&&typeof rfGrantBond==='function')rfGrantBond(h,global,'Oath roster',false,v);
+      if(match+focus>0&&typeof rfGrantBond==='function'){
+        var g=rfGrantBond(h,match+focus,(domain||'Life')+' Oath',true,v);
+        if(g){g.focus=focus>0;g.match=match>0;notable.push(g);}
+      }
+    });
+    notable.sort(function(a,b){return (b.focus?1:0)-(a.focus?1:0)||(b.prestigeUp||0)-(a.prestigeUp||0)||(b.xp-a.xp)||a.name.localeCompare(b.name);});
+    try{recalcCollection();}catch(e){}
+    return notable;
+  };
+  window.gainBond=gainBond;
+})();
+/* ===== end v2.272.1 ===== */
+</script>
+
+
+<style id="ofCampaignTowerExclusiveStyles">
+.squadpicker .pickHero.exclusiveLocked{border-color:#ffb01f88;background:linear-gradient(135deg,rgba(255,176,31,.10),rgba(255,255,255,.025));opacity:.72}
+.squadpicker .pickHero.exclusiveLocked .status{color:#ffcf6a;font-size:10px;letter-spacing:.04em}
+.squadpicker .pickHero.exclusiveLocked .pnote{color:#ffcf6a}
+.squadpicker .exclusiveTag{display:inline-block;border:1px solid #ffb01f66;background:#ffb01f12;color:#ffcf6a;border-radius:999px;padding:2px 7px;font-size:9px;font-weight:1000;letter-spacing:.04em;text-transform:uppercase;margin-right:5px}
+</style>
+<script id="ofCampaignTowerExclusiveV22722">
+(function(){
+  'use strict';
+  function isExclusiveMode(mode){ return mode==='campaign'||mode==='tower'; }
+  function otherMode(mode){ return mode==='campaign'?'tower':mode==='tower'?'campaign':null; }
+  function modeLabel(mode){ return mode==='campaign'?'Campaign':mode==='tower'?'Tower':String(mode||'Squad'); }
+  function heroFor(id){ try{return (typeof heroById==='function'?heroById(id):(S.heroes||[]).find(function(h){return h&&h.id===id;}));}catch(e){return null;} }
+  function enforceExclusive(opts){
+    opts=opts||{};
+    try{
+      if(typeof S==='undefined'||!S) return {removed:[]};
+      if(!S.squads) S.squads={campaign:[],tower:[],raid:[]};
+      if(!Array.isArray(S.squads.campaign)) S.squads.campaign=[];
+      if(!Array.isArray(S.squads.tower)) S.squads.tower=[];
+      var cset=new Set(S.squads.campaign), removed=[];
+      S.squads.tower=S.squads.tower.filter(function(id){ if(cset.has(id)){removed.push(id);return false;} return true; });
+      if(removed.length&&opts.toast!==false){
+        var names=removed.slice(0,2).map(function(id){var h=heroFor(id);return h?h.name:'Hero';}).join(', ');
+        try{toast('Campaign/Tower exclusivity restored · '+names+(removed.length>2?' +'+(removed.length-2):'')+' removed from Tower.');}catch(e){}
+      }
+      return {removed:removed};
+    }catch(e){ return {removed:[]}; }
+  }
+  window.rfEnforceCampaignTowerExclusive=enforceExclusive;
+
+  try{
+    var __ctToggle=toggleSquad;
+    toggleSquad=function(mode,id){
+      if(!isExclusiveMode(mode)) return __ctToggle.apply(this,arguments);
+      enforceExclusive({toast:false});
+      var arr=squad(mode), i=arr.indexOf(id);
+      if(i>=0){ arr.splice(i,1); return true; }
+      if(arr.length>=TUNE.teamSize){ try{toast(modeLabel(mode)+' squad is full ('+TUNE.teamSize+')');}catch(e){} return false; }
+      var other=otherMode(mode), otherArr=squad(other), oi=otherArr.indexOf(id);
+      if(oi>=0){
+        var h=heroFor(id), name=h?h.name:'This hero', ok=true;
+        try{ok=confirm(name+' is active in '+modeLabel(other)+'. Move '+name+' to '+modeLabel(mode)+'?\n\nThis removes '+name+' from '+modeLabel(other)+'.');}catch(e){ok=true;}
+        if(!ok) return false;
+        otherArr.splice(oi,1);
+        arr.push(id);
+        try{toast(name+' moved from '+modeLabel(other)+' to '+modeLabel(mode)+'.');}catch(e){}
+        return true;
+      }
+      arr.push(id); return true;
+    };
+    window.toggleSquad=toggleSquad;
+  }catch(e){}
+
+  try{
+    var __ctCandidate=squadCandidateButtonHTML;
+    squadCandidateButtonHTML=function(h,mode){
+      if(!isExclusiveMode(mode)) return __ctCandidate.apply(this,arguments);
+      enforceExclusive({toast:false});
+      var arr=squad(mode), on=arr.indexOf(h.id)>=0, other=otherMode(mode), locked=!on&&squad(other).indexOf(h.id)>=0;
+      var full=!on&&arr.length>=TUNE.teamSize, disabled=full?' disabled':'';
+      var face=h.img?'<img loading="lazy" decoding="async" src="'+h.img+'">':initials(h.name), p=passiveOf(h), a=heroArchetype(h);
+      var idx=arr.indexOf(h.id), row=idx>=0?formationRow(idx):null, ev=row?formationEvaluationV139(h,row):null;
+      var note=row?formationStatusChipV139(h,row)+' <span style="color:var(--muted)">'+esc(ev.summary)+'</span>':(locked?'<span class="exclusiveTag">'+modeLabel(other)+'</span><span>Active there · tap to move</span>':'<span class="slotstatus neutral">Preferred</span> <span style="color:var(--muted)">'+esc(preferredRowTextV139(h))+'</span>');
+      var status=on?'✓':full?'FULL':locked?'MOVE':'＋';
+      return '<button class="pickHero '+(on?'on ':'')+(locked?'exclusiveLocked':'')+'" data-pick="'+h.id+'"'+(locked?' data-locked-by="'+other+'"':'')+disabled+' style="'+(full?'opacity:.45':'')+'"><span class="miniava" style="background:linear-gradient(160deg,'+h.color+',#0008)">'+face+'</span><span class="pmeta"><span class="pname">'+esc(h.name)+'</span><span class="psub">'+esc(ipLabel(h.ip||h.ipName||''))+' · '+h.role+' · PWR '+fmtBig(powerOf(h))+(a?' · '+esc(a.label):'')+(p?' · '+esc(p.name):'')+'</span><span class="pnote">'+note+'</span></span><span class="status">'+status+'</span></button>';
+    };
+    window.squadCandidateButtonHTML=squadCandidateButtonHTML;
+  }catch(e){}
+
+  try{
+    var __ctSuggest=suggestSquad;
+    suggestSquad=function(mode){
+      mode=mode||campSub||'campaign';
+      if(!isExclusiveMode(mode)) return __ctSuggest.apply(this,arguments);
+      enforceExclusive({toast:false});
+      var size=TUNE.teamSize||6, other=otherMode(mode), locked=new Set(squad(other));
+      var owned=(S.heroes||[]).filter(function(h){return h&&h.owned&&!locked.has(h.id);});
+      if(!owned.length){try{toast('No heroes available outside the '+modeLabel(other)+' roster.');}catch(e){}return;}
+      var zw=function(h){try{return ((typeof ofZoneAtkMult==='function')&&ofZoneAtkMult(h,mode)>1)?1.35:1;}catch(e){return 1;}};
+      var byPower=owned.slice().sort(function(a,b){return powerOf(b)*zw(b)-powerOf(a)*zw(a);}), used=new Set(), pick=[];
+      var take=function(h){if(h&&!used.has(h.id)&&pick.length<size){used.add(h.id);pick.push(h.id);}};
+      var bestRole=function(r){return byPower.find(function(h){return h.role===r&&!used.has(h.id);});};
+      take(bestRole('Tank'));take(bestRole('Support'));take(bestRole('DPS'));
+      byPower.forEach(function(h){if(pick.length<size)take(h);});
+      if(!S.squads)S.squads={campaign:[],tower:[],raid:[]};S.squads[mode]=pick.slice(0,size);
+      try{save();}catch(e){}
+      var roles=pick.map(function(id){var h=heroFor(id);return h&&h.role;}), c=function(r){return roles.filter(function(x){return x===r;}).length;};
+      try{toast('Suggested exclusive '+modeLabel(mode)+': '+c('Tank')+' Tank / '+c('DPS')+' DPS / '+c('Support')+' Support.');}catch(e){}
+    };
+    window.suggestSquad=suggestSquad;
+  }catch(e){}
+
+  try{
+    var __ctSave=save;
+    save=async function(){ enforceExclusive({toast:false}); return __ctSave.apply(this,arguments); };
+    window.save=save;
+  }catch(e){}
+
+  var bootTries=0;
+  (function bootExclusive(){
+    if(typeof S==='undefined'||!S||typeof squad!=='function'){if(bootTries++<80)setTimeout(bootExclusive,100);return;}
+    var r=enforceExclusive({toast:true});
+    if(r.removed&&r.removed.length){try{save();}catch(e){}try{renderHUD();render();}catch(e){}}
+  })();
+})();
+</script>
 </body>
 </html>
